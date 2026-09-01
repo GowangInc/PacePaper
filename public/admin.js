@@ -1,4 +1,6 @@
 import { ApiError, announce, api, connectSocket, humanSubject, setView } from "/app.js";
+import { renderInkSubmission } from "/ink-canvas.js";
+import { mountPaperBuilder } from "/paper-builder.js";
 
 let stopSocket;
 let refreshTimer;
@@ -141,7 +143,7 @@ function renderPapers(state) {
   list.replaceChildren();
   sessionPaper.replaceChildren();
   option(sessionPaper, "", "Choose paper");
-  if (state.papers.length === 0) emptyState(list, "Add a quick PDF paper or upload structured paper files.");
+  if (state.papers.length === 0) emptyState(list, "Choose an exam in the Paper Builder to add your first practice paper.");
   for (const paper of state.papers) {
     option(sessionPaper, paper.id, `${paper.title} · ${paper.level}`);
     const row = document.createElement("li");
@@ -152,7 +154,9 @@ function renderPapers(state) {
     metadata.textContent = `${paper.subjectLabel ?? humanSubject(paper.subject)} · ${paper.level} · ${paper.paper}`;
     main.append(title, metadata);
     const duration = document.createElement("code");
-    duration.textContent = `${paper.durationMinutes} min`;
+    duration.textContent = paper.readingTimeMinutes
+      ? `${paper.readingTimeMinutes} min read + ${paper.durationMinutes} min write`
+      : `${paper.durationMinutes} min`;
     row.append(main, duration);
     list.append(row);
   }
@@ -203,9 +207,175 @@ function renderSessions(state) {
   }
 }
 
+function copy(tag, className, value) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  element.textContent = value;
+  return element;
+}
+
+function formatAssessmentSession(value) {
+  if (!value || value === "custom") return "Practice session";
+  const match = /^(may|november)-(\d{4})$/i.exec(value);
+  if (match) return `${match[1][0].toUpperCase()}${match[1].slice(1)} ${match[2]}`;
+  return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatPaperTime(session) {
+  if (!session.durationMinutes) return "Teacher-defined timing";
+  const writing = `${session.durationMinutes} minute${session.durationMinutes === 1 ? "" : "s"} writing`;
+  return session.readingTimeMinutes
+    ? `${session.readingTimeMinutes} minute${session.readingTimeMinutes === 1 ? "" : "s"} reading · ${writing}`
+    : writing;
+}
+
+function appendMetadata(list, label, value, className = "") {
+  const item = document.createElement("div");
+  if (className) item.className = className;
+  item.append(copy("dt", "", label), copy("dd", "", value));
+  list.append(item);
+}
+
+function appendQuestionResources(container, question, resourcesByKey, renderedResources) {
+  const resources = (question.resourceKeys ?? [])
+    .map((key) => resourcesByKey.get(key))
+    .filter((resource) => resource && !renderedResources.has(resource.key));
+  if (resources.length === 0) return;
+
+  const section = document.createElement("section");
+  section.className = "submission-resources";
+  section.append(copy("h4", "", resources.length === 1 ? "Question resource" : "Question resources"));
+  for (const resource of resources) {
+    renderedResources.add(resource.key);
+    const item = document.createElement("figure");
+    item.className = "submission-resource";
+    item.dataset.kind = resource.kind;
+    if (resource.kind === "image" && resource.url) {
+      const image = document.createElement("img");
+      image.src = resource.url;
+      image.alt = resource.label;
+      item.append(image);
+    } else if (resource.kind === "text") {
+      item.append(copy("blockquote", "submission-resource-text", resource.text ?? ""));
+    } else {
+      const description = resource.kind === "audio"
+        ? "Listening audio · available in the digital examination"
+        : "PDF document · supplied with the digital examination";
+      item.append(copy("p", "submission-resource-reference", description));
+    }
+    item.append(copy("figcaption", "", resource.label));
+    section.append(item);
+  }
+  container.append(section);
+}
+
+function renderSubmissionAnswer(question, answer) {
+  const content = document.createElement("div");
+  content.className = "submission-answer";
+  if (!answer) {
+    content.classList.add("empty-state");
+    content.textContent = "No response recorded";
+  } else if (question.type === "essay") {
+    content.innerHTML = answer;
+  } else if (question.type === "ink" && question.ink) {
+    content.replaceChildren(renderInkSubmission(answer, question.ink));
+  } else {
+    content.textContent = answer;
+  }
+  return content;
+}
+
+function renderCandidatePaper(data, response) {
+  const paper = document.createElement("section");
+  paper.className = "candidate-paper";
+  paper.setAttribute("aria-label", `${response.studentName}'s candidate paper`);
+
+  const header = document.createElement("header");
+  header.className = "candidate-paper-header";
+  header.append(
+    copy("p", "candidate-paper-kicker", "DigitalDP practice examination · candidate response"),
+    copy("h2", "", data.session.paperTitle),
+  );
+  const subject = [data.session.subjectLabel, data.session.level, data.session.paper].filter(Boolean).join(" · ");
+  if (subject) header.append(copy("p", "candidate-paper-subject", subject));
+
+  const metadata = document.createElement("dl");
+  metadata.className = "candidate-paper-metadata";
+  appendMetadata(metadata, "Candidate", response.studentName, "candidate-paper-identity");
+  appendMetadata(metadata, "Candidate code", response.candidateCode, "candidate-paper-code");
+  appendMetadata(metadata, "Class", data.session.className);
+  appendMetadata(metadata, "Assessment session", formatAssessmentSession(data.session.assessmentSession));
+  appendMetadata(metadata, "Source status", ({
+    "teacher-authored": "Teacher-authored",
+    "school-authorized": "School-authorized or licensed",
+    "official-public-reference": "Official public specimen — reference only",
+    "unknown-local-only": "Unknown rights — local-only",
+  })[data.session.sourceClassification] ?? "Not recorded");
+  appendMetadata(metadata, "Paper", data.session.paper ?? "Practice paper");
+  if (data.session.maximumMarks) appendMetadata(metadata, "Maximum marks", String(data.session.maximumMarks));
+  if (data.session.subjectWeightPercent) appendMetadata(metadata, "Subject weighting", `${data.session.subjectWeightPercent}%`);
+  appendMetadata(metadata, "Time allowed", formatPaperTime(data.session));
+  const timestamp = response.submittedAt ?? response.updatedAt;
+  appendMetadata(
+    metadata,
+    response.submittedAt ? "Submitted" : "Last saved",
+    new Date(timestamp).toLocaleString(),
+    "candidate-paper-submission-state",
+  );
+  header.append(metadata);
+  paper.append(header);
+
+  if (data.session.instructions) {
+    const instructions = document.createElement("section");
+    instructions.className = "candidate-paper-instructions";
+    instructions.append(copy("h3", "", "Instructions"), copy("p", "", data.session.instructions));
+    paper.append(instructions);
+  }
+
+  const answers = document.createElement("div");
+  answers.className = "submission-answers";
+  const resourcesByKey = new Map((data.resources ?? []).map((resource) => [resource.key, resource]));
+  const hasScopedResources = data.questions.some((question) => (question.resourceKeys ?? []).length > 0);
+  const sharedResourceKeys = [...resourcesByKey.keys()];
+  const renderedResources = new Set();
+  for (const [index, question] of data.questions.entries()) {
+    const answer = response.answers[question.id] ?? "";
+    const item = document.createElement("article");
+    item.className = "candidate-question";
+    const heading = document.createElement("header");
+    heading.className = "candidate-question-heading";
+    heading.append(
+      copy("span", "candidate-question-number", String(index + 1).padStart(2, "0")),
+      copy("h3", "", question.label),
+    );
+    if (question.marks) heading.append(copy("span", "candidate-question-marks", `[${question.marks}]`));
+    const prompt = copy("p", "submission-prompt", question.prompt);
+    item.append(heading, prompt);
+    appendQuestionResources(
+      item,
+      hasScopedResources ? question : { ...question, resourceKeys: sharedResourceKeys },
+      resourcesByKey,
+      renderedResources,
+    );
+    item.append(renderSubmissionAnswer(question, answer));
+    answers.append(item);
+  }
+  paper.append(answers);
+
+  const footer = document.createElement("footer");
+  footer.className = "candidate-paper-footer";
+  footer.append(copy("span", "", "End of candidate response"), copy("code", "", response.candidateCode));
+  paper.append(footer);
+  return paper;
+}
+
 function renderSubmissions(data) {
   document.querySelector("#submissions-title").textContent = data.session.paperTitle;
   document.querySelector("#submissions-context").textContent = `${data.session.className} · ${data.responses.length} candidate${data.responses.length === 1 ? "" : "s"}`;
+  const printAll = document.querySelector("#print-submissions");
+  printAll.disabled = data.responses.length === 0;
+  printAll.textContent = data.responses.length === 1 ? "Print or save PDF" : "Print all or save PDF";
+
   const list = document.querySelector("#submission-list");
   list.replaceChildren();
   if (data.responses.length === 0) {
@@ -214,41 +384,21 @@ function renderSubmissions(data) {
   for (const response of data.responses) {
     const record = document.createElement("details");
     record.className = "submission-record";
+    record.dataset.responseId = response.responseId;
     const summary = document.createElement("summary");
-    const identity = document.createElement("strong");
-    identity.textContent = response.studentName;
-    const code = document.createElement("code");
-    code.textContent = response.candidateCode;
-    const state = document.createElement("span");
+    const identity = copy("strong", "", response.studentName);
+    const code = copy("code", "", response.candidateCode);
     const timestamp = response.submittedAt ?? response.updatedAt;
-    state.textContent = `${response.submittedAt ? "Submitted" : "Last saved"} ${new Date(timestamp).toLocaleString()}`;
+    const state = copy("span", "", `${response.submittedAt ? "Submitted" : "Last saved"} ${new Date(timestamp).toLocaleString()}`);
     summary.append(identity, code, state);
-    record.append(summary);
 
-    const answers = document.createElement("div");
-    answers.className = "submission-answers";
-    for (const question of data.questions) {
-      const answer = response.answers[question.id] ?? "";
-      const item = document.createElement("article");
-      const heading = document.createElement("h3");
-      heading.textContent = question.label;
-      const prompt = document.createElement("p");
-      prompt.className = "submission-prompt";
-      prompt.textContent = question.prompt;
-      const content = document.createElement("div");
-      content.className = "submission-answer";
-      if (!answer) {
-        content.classList.add("empty-state");
-        content.textContent = "No response";
-      } else if (question.type === "essay") {
-        content.innerHTML = answer;
-      } else {
-        content.textContent = answer;
-      }
-      item.append(heading, prompt, content);
-      answers.append(item);
-    }
-    record.append(answers);
+    const actions = document.createElement("div");
+    actions.className = "submission-screen-actions";
+    const printOne = copy("button", "compact", "Print this candidate");
+    printOne.type = "button";
+    printOne.dataset.printResponse = response.responseId;
+    actions.append(printOne);
+    record.append(summary, actions, renderCandidatePaper(data, response));
     list.append(record);
   }
   document.querySelector("#submissions-dialog").showModal();
@@ -256,6 +406,36 @@ function renderSubmissions(data) {
 
 async function openSubmissions(sessionId) {
   renderSubmissions(await api(`/api/admin/sessions/${sessionId}/responses`));
+}
+
+async function printSubmissions(responseId = null) {
+  const list = document.querySelector("#submission-list");
+  const records = [...list.querySelectorAll(".submission-record")];
+  const printable = responseId
+    ? records.filter((record) => record.dataset.responseId === responseId)
+    : records;
+  if (printable.length === 0) return;
+
+  list.dataset.printMode = responseId ? "single" : "all";
+  records.forEach((record) => {
+    const position = printable.indexOf(record);
+    record.toggleAttribute("data-print-target", position !== -1);
+    record.toggleAttribute("data-print-first", position === 0);
+  });
+  printable.forEach((record) => { record.open = true; });
+
+  const images = printable.flatMap((record) => [...record.querySelectorAll("img")]);
+  await Promise.all(images.map((image) => image.complete || typeof image.decode !== "function"
+    ? undefined
+    : image.decode().catch(() => undefined)));
+  window.addEventListener("afterprint", () => {
+    delete list.dataset.printMode;
+    records.forEach((record) => {
+      record.removeAttribute("data-print-target");
+      record.removeAttribute("data-print-first");
+    });
+  }, { once: true });
+  window.print();
 }
 
 function renderState(state) {
@@ -316,6 +496,12 @@ async function importPaper(form) {
   }
 }
 
+async function addBuiltPaper(data) {
+  await api("/api/admin/papers", { method: "POST", body: data });
+  await refreshState(true);
+  announce("Paper added to the library", "success");
+}
+
 function bindDashboard() {
   document.querySelector("#logout").addEventListener("click", async () => {
     await api("/api/logout", { method: "POST" });
@@ -365,9 +551,10 @@ function bindDashboard() {
     }
   });
 
-  document.querySelector("#print-submissions").addEventListener("click", () => {
-    document.querySelectorAll(".submission-record").forEach((record) => { record.open = true; });
-    window.print();
+  document.querySelector("#print-submissions").addEventListener("click", () => printSubmissions());
+  document.querySelector("#submission-list").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-print-response]");
+    if (button) printSubmissions(button.dataset.printResponse);
   });
 
   document.querySelectorAll("[data-jump]").forEach((link) => {
@@ -433,55 +620,24 @@ async function renderDashboard() {
 
         <section id="papers" class="admin-section two-column-section">
           <div>
-            <div class="section-heading"><div><h2>Paper library</h2><p>Add a simple writing paper from a PDF or upload a prepared structured paper.</p></div></div>
+            <div class="section-heading"><div><h2>Paper library</h2><p>Create a paper with the guided builder or import a prepared package.</p></div></div>
             <ul id="paper-list" class="paper-list"></ul>
           </div>
           <div class="form-stack">
-            <form id="quick-paper-form" data-paper-form class="utility-form" method="post" enctype="multipart/form-data">
-              <input name="format" type="hidden" value="quick">
-              <fieldset><legend>Quick PDF paper</legend>
-                <p class="form-help">For one written response beside a PDF. Use a structured package for reading, listening or multiple questions.</p>
-                <label for="quick-title">Paper title</label><input id="quick-title" name="title" required maxlength="160">
-                <label for="quick-subject">Subject</label><select id="quick-subject" name="subject" required>
-                  <option value="english-a-language-literature">English A: Language and Literature</option>
-                  <option value="english-a-literature">English A: Literature</option>
-                  <option value="english-b">English B</option>
-                </select>
-                <label for="quick-level">Level</label><select id="quick-level" name="level" required>
-                  <option>SL</option><option>HL</option><option>SL/HL</option>
-                </select>
-                <label for="quick-paper">Paper label</label><input id="quick-paper" name="paper" value="Paper 1" required maxlength="80">
-                <label for="quick-duration">Duration in minutes</label><input id="quick-duration" name="durationMinutes" type="number" min="5" max="360" value="75" required>
-                <label for="quick-pdf">Paper PDF</label><input id="quick-pdf" name="pdf" type="file" accept="application/pdf,.pdf" required aria-describedby="quick-pdf-help">
-                <small id="quick-pdf-help">Maximum 50 MB. The PDF appears beside the writing area.</small>
-                <label for="quick-instructions">Instructions</label><textarea id="quick-instructions" name="instructions" rows="3" required maxlength="20000">Read the paper and write your response.</textarea>
-                <label for="quick-prompt">Response prompt</label><textarea id="quick-prompt" name="prompt" rows="3" required maxlength="10000">Write your response.</textarea>
-                <div class="inline-fields">
-                  <label for="quick-minimum">Minimum words <input id="quick-minimum" name="wordCountMin" type="number" min="1" max="10000"></label>
-                  <label for="quick-maximum">Maximum words <input id="quick-maximum" name="wordCountMax" type="number" min="1" max="10000"></label>
-                </div>
-                <button type="submit">Add PDF paper</button>
-              </fieldset>
-            </form>
+            <div id="paper-builder"></div>
 
-            <form id="package-form" data-paper-form class="utility-form" method="post" enctype="multipart/form-data">
-              <input name="format" type="hidden" value="package">
-              <fieldset><legend>Structured paper package</legend>
-                <p class="form-help">For reading tabs, listening audio, multiple questions or question choices.</p>
-                <label for="paper-package">Paper files</label><input id="paper-package" name="packageFiles" type="file" accept="application/json,.json,application/pdf,image/png,image/jpeg,image/webp,audio/mpeg,audio/mp4,audio/ogg,audio/wav" multiple required aria-describedby="package-help">
-                <small id="package-help">Select <code>paper.json</code> and every referenced PDF, image or audio file together.</small>
-                <details class="requirements">
-                  <summary>Package requirements</summary>
-                  <ul>
-                    <li><code>paper.json</code> and every referenced asset in one folder.</li>
-                    <li>Essay, reading or listening mode; up to 100 questions and 30 resources.</li>
-                    <li>PDF, PNG, JPEG, WebP, MP3, M4A, OGG or WAV assets.</li>
-                    <li>Maximum 50 MB per asset and 200 MB for all assets.</li>
-                  </ul>
-                </details>
-                <button type="submit">Add paper package</button>
-              </fieldset>
-            </form>
+            <details class="advanced-import">
+              <summary>Advanced: import a prepared paper package</summary>
+              <form id="package-form" data-paper-form class="utility-form" method="post" enctype="multipart/form-data">
+                <input name="format" type="hidden" value="package">
+                <fieldset><legend>Structured paper package</legend>
+                  <p class="form-help">For paper files prepared outside the guided builder.</p>
+                  <label for="paper-package">Paper files</label><input id="paper-package" name="packageFiles" type="file" accept="application/json,.json,application/pdf,image/png,image/jpeg,image/webp,audio/mpeg,audio/mp4,audio/ogg,audio/wav" multiple required aria-describedby="package-help">
+                  <small id="package-help">Select <code>paper.json</code> and every referenced PDF, image or audio file together.</small>
+                  <button type="submit">Add paper package</button>
+                </fieldset>
+              </form>
+            </details>
 
             <details class="advanced-import">
               <summary>Advanced: manifest and separate assets</summary>
@@ -514,12 +670,13 @@ async function renderDashboard() {
     </div>
     <dialog id="submissions-dialog" class="exam-dialog submissions-dialog">
       <form method="dialog">
-        <header><p class="eyebrow">Submissions</p><h2 id="submissions-title">Candidate responses</h2><p id="submissions-context"></p></header>
+        <header><p class="eyebrow">Completed papers</p><h2 id="submissions-title">Candidate responses</h2><p id="submissions-context"></p><p>Open a candidate to review their complete paper. Print one candidate or create a single PDF for the class.</p></header>
         <div id="submission-list" class="submission-list"></div>
         <footer><button id="print-submissions" type="button">Print or save PDF</button><button value="close">Close</button></footer>
       </form>
     </dialog>
   `);
+  mountPaperBuilder(document.querySelector("#paper-builder"), addBuiltPaper);
   bindDashboard();
   await refreshState(true);
   stopSocket?.();

@@ -8,11 +8,12 @@ DigitalDP is an independent internal practice tool. It is not the IB Digital Exa
 
 - Teacher account setup and sign-in
 - Classes, candidate codes, PINs, and individual extra time
-- PDF writing papers and structured reading/listening packages
+- Exam-first Paper Builder with researched 2026 presets plus a separate first-assessment-2027 Psychology preview
+- PDF, image, text, and controlled-play audio resources, including media attached to individual questions
+- Separate reading and writing phases, with individual extra time applied to writing only
 - Timed sessions with autosave, local unsaved-work recovery, and automatic deadline submission
-- Rich-text, short-answer, and single-choice responses
-- Live teacher status updates and printable submission review
-- Work in progress: a teacher Paper Builder and digital-ink working areas
+- Rich-text, short-answer, single-choice, and paginated digital-ink responses
+- Live teacher status updates and printable/PDF candidate submission review
 
 ## Run locally
 
@@ -41,15 +42,16 @@ public/           Browser interface
 src/              Validation, authentication, paper model, and SQLite access
 paper-authoring/  Structured paper-package authoring guidance
 resources/ib/     Retained official/public IB reference material and provenance
+resources/private/ Local copyrighted references excluded from Git
 research/         Assessment findings and product-design decisions
 server.ts         Bun HTTP, API, static-file, and WebSocket server
 ```
 
 ## Source and rights policy
 
-Course guides, subject briefs, specimen materials, and related references belong under `resources/ib/`, grouped by subject family. Every retained item must have a source URL, retrieval date, curriculum or first-assessment year when known, SHA-256 checksum, and access/rights note.
+Official course guides, specimen materials, and related references belong under `resources/ib/`, grouped by subject family. Every retained item must have a source URL, retrieval date, curriculum or first-assessment year when known, SHA-256 checksum, and access/rights note.
 
-Only official, publicly accessible material should be copied into the repository. Paywalled, school-portal-only, or questionably mirrored papers should be recorded as unavailable rather than copied. Keep this repository private; source material remains subject to its original rights and licensing terms.
+Reference binaries under `resources/` are retained locally and ignored by Git; the repository tracks provenance catalogues and derived product requirements. User-supplied, licensed, portal-only, or questionably mirrored papers belong only under the ignored `resources/private/` tree. Keep this repository private; source material remains subject to its original rights and licensing terms.
 
 ## Verification
 

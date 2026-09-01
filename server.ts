@@ -41,6 +41,8 @@ import {
   sanitizeRichText,
   type PaperManifest,
 } from "./src/papers.ts";
+import { normalizeInkAnswer } from "./src/ink.ts";
+import { examTiming } from "./src/timing.ts";
 
 interface SocketData {
   role: Role;
@@ -67,6 +69,8 @@ class HttpError extends Error {
 
 const port = Number(process.env.PORT ?? 9148);
 if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error("PORT must be a valid TCP port");
+const RESPONSE_BODY_BYTES = 12_000_000;
+const DEADLINE_GRACE_MS = 5_000;
 
 const STATIC_FILES: Record<string, string> = {
   "/": "public/index.html",
@@ -79,8 +83,10 @@ const STATIC_FILES: Record<string, string> = {
   "/student": "public/index.html",
   "/app.js": "public/app.js",
   "/admin.js": "public/admin.js",
+  "/paper-builder.js": "public/paper-builder.js",
   "/student.js": "public/student.js",
   "/exam.js": "public/exam.js",
+  "/ink-canvas.js": "public/ink-canvas.js",
   "/styles.css": "public/styles.css",
   "/tokens.css": "tokens.css",
 };
@@ -125,11 +131,13 @@ function optionalInteger(value: unknown, label: string, min: number, max: number
   return number;
 }
 
-async function jsonBody(request: Request): Promise<Record<string, unknown>> {
+async function jsonBody(request: Request, maxBytes = 1_000_000): Promise<Record<string, unknown>> {
   const length = Number(request.headers.get("content-length") ?? 0);
-  if (length > 1_000_000) throw new HttpError("Request body is too large", 413);
+  if (length > maxBytes) throw new HttpError("Request body is too large", 413);
   try {
-    return asRecord(await request.json());
+    const raw = await request.text();
+    if (new TextEncoder().encode(raw).byteLength > maxBytes) throw new HttpError("Request body is too large", 413);
+    return asRecord(JSON.parse(raw) as unknown);
   } catch (error) {
     if (error instanceof HttpError) throw error;
     throw new HttpError("Request body must be valid JSON", 400);
@@ -140,8 +148,14 @@ function clientAddress(request: Request, server: Server<SocketData>): string {
   return server.requestIP(request)?.address ?? "unknown";
 }
 
-function deadlineFor(exam: { startedAt: number; durationMinutes: number; extraMinutes: number }): number {
-  return exam.startedAt + (exam.durationMinutes + exam.extraMinutes) * 60_000;
+function timingFor(exam: { startedAt: number; durationMinutes: number; extraMinutes: number; manifestJson: string }) {
+  const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
+  return examTiming({
+    startedAt: exam.startedAt,
+    readingTimeMinutes: manifest.readingTimeMinutes ?? 0,
+    durationMinutes: exam.durationMinutes,
+    extraMinutes: exam.extraMinutes,
+  });
 }
 
 function publish(server: Server<SocketData>, topic: string, type: string): void {
@@ -178,6 +192,9 @@ async function validatedResponse(body: Record<string, unknown>, manifest: PaperM
     } else if (question.type === "short") {
       if (rawAnswer.length > 20_000) throw new HttpError(`Answer ${questionId} is too long`, 400);
       answers[questionId] = rawAnswer;
+    } else if (question.type === "ink") {
+      if (!question.ink) throw new HttpError(`Question ${questionId} has no working-space configuration`, 400);
+      answers[questionId] = normalizeInkAnswer(rawAnswer, question.ink);
     } else {
       if (!question.options?.includes(rawAnswer)) throw new HttpError(`Answer ${questionId} is not a valid choice`, 400);
       answers[questionId] = rawAnswer;
@@ -330,11 +347,35 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     return json({
       session: {
         id: results.id,
+        paperId: results.paperId,
         className: results.className,
         paperTitle: results.paperTitle,
         status: results.status,
+        assessmentSession: manifest.assessmentSession,
+        sourceClassification: manifest.sourceClassification,
+        subjectLabel: manifest.subjectLabel,
+        level: manifest.level,
+        paper: manifest.paper,
+        durationMinutes: manifest.durationMinutes,
+        readingTimeMinutes: manifest.readingTimeMinutes,
+        maximumMarks: manifest.maximumMarks,
+        subjectWeightPercent: manifest.subjectWeightPercent,
+        instructions: manifest.instructions,
       },
-      questions: manifest.questions.map(({ id, label, prompt, type }) => ({ id, label, prompt, type })),
+      resources: manifest.resources.map((resource) => ({
+        ...resource,
+        file: undefined,
+        url: resource.file ? `/api/assets/${results.paperId}/${resource.key}` : undefined,
+      })),
+      questions: manifest.questions.map(({ id, label, prompt, type, ink, resourceKeys, marks }) => ({
+        id,
+        label,
+        prompt,
+        type,
+        ink,
+        resourceKeys,
+        marks,
+      })),
       responses: results.responses.map((response) => ({
         responseId: response.responseId,
         studentName: response.studentName,
@@ -377,8 +418,8 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     const exam = getStudentExam(student.id);
     if (!exam) return json({ status: "waiting", student: { name: student.name }, serverTime: Date.now() });
 
-    const deadline = deadlineFor(exam);
-    if (exam.submittedAt === null && Date.now() >= deadline) {
+    const timing = timingFor(exam);
+    if (exam.submittedAt === null && Date.now() >= timing.deadline + DEADLINE_GRACE_MS) {
       submitResponse(exam.responseId);
       exam.submittedAt = Date.now();
       publish(server, "admin", "admin-state");
@@ -387,7 +428,13 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     return json({
       status: exam.submittedAt === null ? "live" : "submitted",
       student: { name: student.name, extraMinutes: student.extraMinutes },
-      session: { id: exam.sessionId, startedAt: exam.startedAt, deadline },
+      session: {
+        id: exam.sessionId,
+        startedAt: exam.startedAt,
+        readingEndsAt: timing.readingEndsAt,
+        deadline: timing.deadline,
+        phase: Date.now() < timing.readingEndsAt ? "reading" : "writing",
+      },
       paper: publicManifest(manifest, exam.paperId),
       response: {
         selectedQuestionId: exam.selectedQuestionId,
@@ -407,12 +454,11 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     const exam = getStudentExam(actor.actorId);
     if (!exam) throw new HttpError("No live examination", 404);
     if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
-    if (Date.now() >= deadlineFor(exam)) {
-      if (exam.submittedAt === null) submitResponse(exam.responseId);
-      throw new HttpError("Time has expired and the response was submitted", 409);
-    }
+    const timing = timingFor(exam);
+    const now = Date.now();
+    if (now < timing.readingEndsAt) throw new HttpError("Answering is locked during reading time", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const validated = await validatedResponse(await jsonBody(request), manifest);
+    const validated = await validatedResponse(await jsonBody(request, RESPONSE_BODY_BYTES), manifest);
     if (validated.sessionId !== exam.sessionId) throw new HttpError("Examination session changed", 409);
     const payload: ResponsePayload = {
       answersJson: JSON.stringify(validated.answers),
@@ -420,6 +466,15 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
       flagsJson: JSON.stringify(validated.flags),
       notepad: validated.notepad,
     };
+    if (now >= timing.deadline) {
+      if (now <= timing.deadline + DEADLINE_GRACE_MS) {
+        const submittedAt = saveAndSubmitResponse(exam.responseId, payload);
+        publish(server, "admin", "admin-state");
+        return json({ savedAt: submittedAt, submittedAt, expired: true });
+      }
+      if (exam.submittedAt === null) submitResponse(exam.responseId);
+      throw new HttpError("Time has expired and the response was submitted", 409);
+    }
     saveResponse(exam.responseId, payload);
     touchStudent(actor.actorId);
     publish(server, "admin", "admin-state");
@@ -431,9 +486,16 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     const exam = getStudentExam(actor.actorId);
     if (!exam) throw new HttpError("No live examination", 404);
     if (exam.sessionStatus !== "live" || exam.submittedAt !== null) throw new HttpError("Response is not available", 409);
+    const timing = timingFor(exam);
+    const now = Date.now();
+    if (now < timing.readingEndsAt) throw new HttpError("Answering is locked during reading time", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const validated = await validatedResponse(await jsonBody(request), manifest);
+    const validated = await validatedResponse(await jsonBody(request, RESPONSE_BODY_BYTES), manifest);
     if (validated.sessionId !== exam.sessionId) throw new HttpError("Examination session changed", 409);
+    if (now > timing.deadline + DEADLINE_GRACE_MS) {
+      submitResponse(exam.responseId);
+      throw new HttpError("Time has expired and the last saved response was submitted", 409);
+    }
     const submittedAt = saveAndSubmitResponse(exam.responseId, {
       answersJson: JSON.stringify(validated.answers),
       selectedQuestionId: validated.selectedQuestionId,
@@ -449,7 +511,9 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     const exam = getStudentExam(actor.actorId);
     if (!exam) throw new HttpError("No live examination", 404);
     if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
-    if (exam.submittedAt !== null || Date.now() >= deadlineFor(exam)) throw new HttpError("Response is not available", 409);
+    const timing = timingFor(exam);
+    const now = Date.now();
+    if (exam.submittedAt !== null || now < timing.readingEndsAt || now >= timing.deadline) throw new HttpError("Response is not available", 409);
     const body = await jsonBody(request);
     if (requiredText(body.sessionId, "Session", 64) !== exam.sessionId) throw new HttpError("Examination session changed", 409);
     const resourceKey = requiredText(body.resourceKey, "Audio resource", 64);

@@ -2,3 +2,16 @@ node_modules/
 data/
 *.log
 .DS_Store
+.playwright-cli/
+resources/private/
+resources/**/*.pdf
+resources/**/*.png
+resources/**/*.jpg
+resources/**/*.jpeg
+resources/**/*.webp
+resources/**/*.mp3
+resources/**/*.m4a
+resources/**/*.wav
+resources/**/*.ogg
+resources/**/*.mp4
+resources/**/*.flac

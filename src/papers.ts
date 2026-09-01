@@ -1,12 +1,21 @@
+import { parseInkSettings, type InkSettings } from "./ink.ts";
+
 export const LEVELS = ["SL", "HL", "SL/HL"] as const;
 export const PAPER_MODES = ["essay", "reading", "listening"] as const;
-export const QUESTION_TYPES = ["essay", "short", "single-choice"] as const;
+export const QUESTION_TYPES = ["essay", "short", "single-choice", "ink"] as const;
 export const RESOURCE_KINDS = ["text", "document", "image", "audio"] as const;
+export const SOURCE_CLASSIFICATIONS = [
+  "teacher-authored",
+  "school-authorized",
+  "official-public-reference",
+  "unknown-local-only",
+] as const;
 
 export type Level = (typeof LEVELS)[number];
 export type PaperMode = (typeof PAPER_MODES)[number];
 export type QuestionType = (typeof QUESTION_TYPES)[number];
 export type ResourceKind = (typeof RESOURCE_KINDS)[number];
+export type SourceClassification = (typeof SOURCE_CLASSIFICATIONS)[number];
 
 export interface PaperResource {
   key: string;
@@ -23,19 +32,27 @@ export interface PaperQuestion {
   prompt: string;
   type: QuestionType;
   resourceKeys: string[];
+  marks?: number;
   options?: string[];
   wordCountMin?: number;
   wordCountMax?: number;
+  ink?: InkSettings;
 }
 
 export interface PaperManifest {
   version: 1;
+  assessmentSession?: string;
+  examProfileId?: string;
+  sourceClassification: SourceClassification;
   title: string;
   subject: string;
   subjectLabel: string;
   level: Level;
   paper: string;
   durationMinutes: number;
+  readingTimeMinutes: number;
+  maximumMarks?: number;
+  subjectWeightPercent?: number;
   mode: PaperMode;
   instructions: string;
   selectionMode: "one" | "all";
@@ -151,6 +168,7 @@ function parseQuestion(value: unknown, index: number): PaperQuestion {
     prompt: text(source.prompt, `questions[${index}].prompt`, 10_000),
     type,
     resourceKeys: stringList(source.resourceKeys ?? [], `questions[${index}].resourceKeys`, 20),
+    marks: optionalInteger(source.marks, `questions[${index}].marks`, 1, 1_000),
   };
 
   if (type === "single-choice") {
@@ -158,6 +176,8 @@ function parseQuestion(value: unknown, index: number): PaperQuestion {
     if (options.length < 2) throw new Error(`questions[${index}].options needs at least two choices`);
     question.options = options;
   }
+
+  if (type === "ink") question.ink = parseInkSettings(source.ink, `questions[${index}].ink`);
 
   question.wordCountMin = optionalInteger(source.wordCountMin, `questions[${index}].wordCountMin`, 1, 10_000);
   question.wordCountMax = optionalInteger(source.wordCountMax, `questions[${index}].wordCountMax`, 1, 10_000);
@@ -197,12 +217,22 @@ export function parseManifest(value: unknown): PaperManifest {
   if (!KEY.test(subject)) throw new Error("manifest.subject must be a lowercase slug");
   return {
     version: 1,
+    assessmentSession: source.assessmentSession === undefined ? undefined : text(source.assessmentSession, "manifest.assessmentSession", 80),
+    examProfileId: source.examProfileId === undefined ? undefined : text(source.examProfileId, "manifest.examProfileId", 240),
+    sourceClassification: oneOf(
+      source.sourceClassification ?? "unknown-local-only",
+      SOURCE_CLASSIFICATIONS,
+      "manifest.sourceClassification",
+    ),
     title: text(source.title, "manifest.title", 160),
     subject,
     subjectLabel: text(source.subjectLabel, "manifest.subjectLabel", 100),
     level: oneOf(source.level, LEVELS, "manifest.level"),
     paper: text(source.paper, "manifest.paper", 80),
     durationMinutes: integer(source.durationMinutes, "manifest.durationMinutes", 5, 360),
+    readingTimeMinutes: optionalInteger(source.readingTimeMinutes, "manifest.readingTimeMinutes", 0, 60) ?? 0,
+    maximumMarks: optionalInteger(source.maximumMarks, "manifest.maximumMarks", 1, 1_000),
+    subjectWeightPercent: optionalInteger(source.subjectWeightPercent, "manifest.subjectWeightPercent", 1, 100),
     mode: oneOf(source.mode, PAPER_MODES, "manifest.mode"),
     instructions: text(source.instructions, "manifest.instructions", 20_000),
     selectionMode: oneOf(source.selectionMode ?? "all", ["one", "all"] as const, "manifest.selectionMode"),
@@ -294,6 +324,8 @@ async function parseQuickPaperUpload(form: FormData): Promise<ImportedPaper> {
     level: formText(form, "level", "Level", 8),
     paper: formText(form, "paper", "Paper label", 80),
     durationMinutes: Number(formText(form, "durationMinutes", "Duration", 3)),
+    readingTimeMinutes: 0,
+    sourceClassification: "unknown-local-only",
     mode: "essay",
     instructions: formText(form, "instructions", "Instructions", 20_000),
     selectionMode: "all",

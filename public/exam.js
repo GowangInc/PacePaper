@@ -1,4 +1,5 @@
 import { ApiError, announce, api, formatTime, setView } from "/app.js";
+import { createInkResponse, hasInkResponse } from "/ink-canvas.js";
 
 const RICH_TAGS = new Set([
   "div", "p", "br", "b", "strong", "i", "em", "u", "sup", "sub", "ol", "ul", "li",
@@ -99,6 +100,9 @@ export function mountExam(state, { onSubmitted }) {
   const timerKey = `digitaldp:timer:${sessionId}`;
   const controller = new AbortController();
   const { signal } = controller;
+  let questionController = new AbortController();
+  let questionSignal = questionController.signal;
+  signal.addEventListener("abort", () => questionController.abort(), { once: true });
   const serverOffset = state.serverTime - Date.now();
   let saveTimer;
   let tickTimer;
@@ -106,10 +110,15 @@ export function mountExam(state, { onSubmitted }) {
   let saving = null;
   let submitting = false;
   let expiredHandled = false;
+  let readingActive = Number(state.session.readingEndsAt) > Date.now() + serverOffset;
   let activeAudio = null;
   let activePane = "question";
-  let activeResourceKey = paper.resources[0]?.key ?? null;
   let activeQuestionId = response.selectedQuestionId ?? paper.questions[0]?.id ?? null;
+  const hasScopedResources = paper.questions.some((question) => question.resourceKeys.length > 0);
+  const initialQuestion = paper.questions.find((question) => question.id === activeQuestionId);
+  let activeResourceKey = initialQuestion?.resourceKeys.find((key) => resourceKeys.has(key))
+    ?? (!hasScopedResources ? paper.resources[0]?.key : null)
+    ?? null;
   let timerMode = localStorage.getItem(timerKey) ?? "countdown";
   let highlights = readJson(highlightKey, {});
   const audioElements = new Set();
@@ -174,6 +183,11 @@ export function mountExam(state, { onSubmitted }) {
         </nav>
       </header>
 
+      <div id="reading-banner" class="reading-banner" role="status" aria-live="polite" hidden>
+        <strong>Reading time</strong>
+        <span id="reading-copy">Review the materials and questions. Student entry areas will unlock automatically.</span>
+      </div>
+
       <div class="exam-workspace">
         <section id="resource-pane" class="exam-pane resource-pane" aria-label="Examination resources">
           <header class="pane-heading"><h2 id="resource-title">Resources</h2><div class="pane-zoom" aria-label="Resource zoom"><button type="button" data-zoom="resource" data-direction="out" aria-label="Zoom resource out">−</button><button type="button" data-zoom="resource" data-direction="in" aria-label="Zoom resource in">+</button></div></header>
@@ -224,7 +238,8 @@ export function mountExam(state, { onSubmitted }) {
   shell.dataset.split = "50";
   shell.dataset.resourceZoom = "1";
   shell.dataset.questionZoom = "1";
-  if (paper.resources.length === 0) shell.dataset.noResources = "true";
+  shell.dataset.phase = readingActive ? "reading" : "writing";
+  if (!activeResourceKey) shell.dataset.noResources = "true";
   document.querySelector("#exam-subject").textContent = `${paper.subjectLabel} · ${paper.level}`;
   document.querySelector("#exam-title").textContent = paper.title;
   document.querySelector("#paper-label").textContent = paper.paper;
@@ -257,15 +272,20 @@ export function mountExam(state, { onSubmitted }) {
 
   function persistLocal(timestamp = Date.now() + serverOffset) {
     draft.updatedAt = timestamp;
-    localStorage.setItem(draftKey, JSON.stringify({
-      sessionId,
-      selectedQuestionId: draft.selectedQuestionId,
-      answers: draft.answers,
-      flags: [...draft.flags],
-      notepad: draft.notepad,
-      unsaved: true,
-      updatedAt: draft.updatedAt,
-    }));
+    try {
+      localStorage.setItem(draftKey, JSON.stringify({
+        sessionId,
+        selectedQuestionId: draft.selectedQuestionId,
+        answers: draft.answers,
+        flags: [...draft.flags],
+        notepad: draft.notepad,
+        unsaved: true,
+        updatedAt: draft.updatedAt,
+      }));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   function setSaveStatus(message, tone = "") {
@@ -275,24 +295,25 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function markDirty() {
-    if (submitting) return;
+    if (submitting || readingActive) return;
     dirty = true;
-    persistLocal();
-    setSaveStatus("Saved on this device", "local");
+    const backedUp = persistLocal();
+    setSaveStatus(backedUp ? "Saved on this device" : "Saving to server…", backedUp ? "local" : "");
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveNow, 1_200);
   }
 
   async function saveNow() {
     if (saving) return saving;
-    if (!dirty || submitting) return;
+    if (!dirty || submitting || readingActive) return;
     dirty = false;
     setSaveStatus("Saving…");
     saving = api("/api/student/response", { method: "PUT", body: payload() })
-      .then(({ savedAt }) => {
+      .then(({ savedAt, expired }) => {
         draft.updatedAt = savedAt;
         if (!dirty) localStorage.removeItem(draftKey);
         setSaveStatus(`Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`, "saved");
+        if (expired) onSubmitted();
       })
       .catch((error) => {
         dirty = true;
@@ -311,6 +332,7 @@ export function mountExam(state, { onSubmitted }) {
 
   function attempted(question) {
     const answer = draft.answers[question.id] ?? "";
+    if (question.type === "ink" && question.ink) return hasInkResponse(answer, question.ink);
     return question.type === "essay" ? wordCount(answer) > 0 : answer.trim().length > 0;
   }
 
@@ -321,25 +343,37 @@ export function mountExam(state, { onSubmitted }) {
     return "Answered";
   }
 
-  function relevantQuestions() {
-    if (!activeResourceKey) return paper.questions;
-    const linked = paper.questions.filter((question) => question.resourceKeys.length === 0 || question.resourceKeys.includes(activeResourceKey));
-    return linked.length > 0 ? linked : paper.questions;
+  function resourcesForQuestion(questionId) {
+    if (!hasScopedResources) return paper.resources;
+    const question = paper.questions.find((item) => item.id === questionId);
+    const keys = new Set(question?.resourceKeys ?? []);
+    return paper.resources.filter((resource) => keys.has(resource.key));
+  }
+
+  function syncResourcesToQuestion(questionId) {
+    const available = resourcesForQuestion(questionId);
+    if (!available.some((resource) => resource.key === activeResourceKey)) {
+      activeResourceKey = available[0]?.key ?? null;
+    }
+    renderResourceTabs();
+    renderResource();
   }
 
   function updateFlagTool() {
     const tool = document.querySelector("#flag-tool");
     const flagged = activeQuestionId ? draft.flags.has(activeQuestionId) : false;
-    tool.disabled = !activeQuestionId;
+    tool.disabled = readingActive || !activeQuestionId;
     tool.setAttribute("aria-pressed", String(flagged));
     tool.textContent = flagged ? "Flagged" : "Flag";
   }
 
   function setActiveQuestion(id) {
     if (!questionIds.has(id)) return;
+    const changed = activeQuestionId !== id;
     activeQuestionId = id;
     updateFlagTool();
     document.querySelectorAll(".question-card").forEach((card) => card.toggleAttribute("data-active", card.dataset.questionId === id));
+    if (changed) syncResourcesToQuestion(id);
   }
 
   function captureEditor(editor, question, changed = true) {
@@ -360,6 +394,13 @@ export function mountExam(state, { onSubmitted }) {
     const selection = getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
+  }
+
+  function beginQuestionRender() {
+    questionController.abort();
+    questionController = new AbortController();
+    questionSignal = questionController.signal;
+    savedRanges.clear();
   }
 
   function makeEditor(question) {
@@ -403,15 +444,15 @@ export function mountExam(state, { onSubmitted }) {
     const count = textBlock("p", "word-count", "");
     responseArea.append(toolbar, editor, count);
 
-    editor.addEventListener("focus", () => setActiveQuestion(question.id), { signal });
-    editor.addEventListener("input", () => captureEditor(editor, question), { signal });
+    editor.addEventListener("focus", () => setActiveQuestion(question.id), { signal: questionSignal });
+    editor.addEventListener("input", () => captureEditor(editor, question), { signal: questionSignal });
     editor.addEventListener("paste", (event) => {
       event.preventDefault();
       document.execCommand("insertText", false, event.clipboardData?.getData("text/plain") ?? "");
-    }, { signal });
+    }, { signal: questionSignal });
     toolbar.addEventListener("pointerdown", (event) => {
       if (event.target.closest("button")) event.preventDefault();
-    }, { signal });
+    }, { signal: questionSignal });
     toolbar.addEventListener("click", (event) => {
       const control = event.target.closest("button[data-command]");
       if (!control) return;
@@ -424,14 +465,14 @@ export function mountExam(state, { onSubmitted }) {
         document.execCommand(control.dataset.command, false);
       }
       captureEditor(editor, question);
-    }, { signal });
+    }, { signal: questionSignal });
     toolbar.querySelectorAll("select[data-format]").forEach((select) => {
       select.addEventListener("change", () => {
         restoreRange(editor, question.id);
         editor.focus();
         document.execCommand(select.dataset.format, false, select.value);
         captureEditor(editor, question);
-      }, { signal });
+      }, { signal: questionSignal });
     });
     captureEditor(editor, question, false);
     return responseArea;
@@ -444,7 +485,9 @@ export function mountExam(state, { onSubmitted }) {
     card.tabIndex = -1;
     const header = document.createElement("header");
     const label = textBlock("h3", "question-label", question.label);
+    if (question.marks) label.append(textBlock("span", "question-marks", ` [${question.marks}]`));
     const flag = button(draft.flags.has(question.id) ? "Flagged" : "Flag", "inline-flag", { "aria-pressed": String(draft.flags.has(question.id)) });
+    flag.disabled = readingActive;
     flag.addEventListener("click", () => {
       setActiveQuestion(question.id);
       if (draft.flags.has(question.id)) draft.flags.delete(question.id); else draft.flags.add(question.id);
@@ -452,10 +495,15 @@ export function mountExam(state, { onSubmitted }) {
       flag.textContent = draft.flags.has(question.id) ? "Flagged" : "Flag";
       updateFlagTool();
       markDirty();
-    }, { signal });
+    }, { signal: questionSignal });
     header.append(label, flag);
     card.append(header);
     if (includePrompt) card.append(textBlock("p", "question-prompt", question.prompt));
+    if (readingActive) {
+      card.append(textBlock("p", "reading-lock", "The student entry area opens when reading time ends."));
+      if (question.id === activeQuestionId) card.dataset.active = "";
+      return card;
+    }
 
     if (question.type === "essay") {
       card.append(makeEditor(question));
@@ -470,12 +518,23 @@ export function mountExam(state, { onSubmitted }) {
       input.setAttribute("autocapitalize", "off");
       input.setAttribute("translate", "no");
       answerLabel.append(input);
-      input.addEventListener("focus", () => setActiveQuestion(question.id), { signal });
+      input.addEventListener("focus", () => setActiveQuestion(question.id), { signal: questionSignal });
       input.addEventListener("input", () => {
         draft.answers[question.id] = input.value;
         markDirty();
-      }, { signal });
+      }, { signal: questionSignal });
       card.append(answerLabel);
+    } else if (question.type === "ink" && question.ink) {
+      card.append(createInkResponse({
+        value: draft.answers[question.id] ?? "",
+        settings: question.ink,
+        label: question.label,
+        signal: questionSignal,
+        onChange(value) {
+          draft.answers[question.id] = value;
+          markDirty();
+        },
+      }));
     } else {
       const choices = document.createElement("fieldset");
       choices.className = "answer-choices";
@@ -491,13 +550,13 @@ export function mountExam(state, { onSubmitted }) {
           setActiveQuestion(question.id);
           draft.answers[question.id] = choice;
           markDirty();
-        }, { signal });
+        }, { signal: questionSignal });
         label.append(input, document.createTextNode(choice));
         choices.append(label);
       }
       card.append(choices);
     }
-    card.addEventListener("pointerdown", () => setActiveQuestion(question.id), { signal });
+    card.addEventListener("pointerdown", () => setActiveQuestion(question.id), { signal: questionSignal });
     if (question.id === activeQuestionId) card.dataset.active = "";
     return card;
   }
@@ -516,15 +575,17 @@ export function mountExam(state, { onSubmitted }) {
       input.name = "selected-question";
       input.value = question.id;
       input.checked = draft.selectedQuestionId === question.id;
+      input.disabled = readingActive;
       const number = textBlock("strong", "", question.label);
+      if (question.marks) number.append(document.createTextNode(` [${question.marks}]`));
       const prompt = document.createTextNode(question.prompt);
       label.append(input, number, prompt);
       input.addEventListener("change", () => {
         draft.selectedQuestionId = question.id;
-        activeQuestionId = question.id;
+        setActiveQuestion(question.id);
         markDirty();
         renderQuestionPanel();
-      }, { signal });
+      }, { signal: questionSignal });
       choices.append(label);
     }
     viewer.append(intro, choices);
@@ -535,14 +596,18 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function renderQuestionPanel() {
+    beginQuestionRender();
     if (paper.selectionMode === "one" && paper.mode === "essay") {
       renderEssayChoice();
       return;
     }
     const viewer = document.querySelector("#question-viewer");
     viewer.replaceChildren();
-    const questions = relevantQuestions();
-    if (!questions.some((question) => question.id === activeQuestionId)) activeQuestionId = questions[0]?.id ?? null;
+    const questions = paper.questions;
+    if (!questions.some((question) => question.id === activeQuestionId)) {
+      activeQuestionId = questions[0]?.id ?? null;
+      syncResourcesToQuestion(activeQuestionId);
+    }
     for (const question of questions) viewer.append(makeQuestionCard(question));
     updateFlagTool();
   }
@@ -576,7 +641,7 @@ export function mountExam(state, { onSubmitted }) {
     function updateCount() {
       const used = Number(draft.audioPlays[resource.key] ?? 0);
       playCount.textContent = `${used} of ${maxPlays} plays`;
-      play.disabled = used >= maxPlays || Boolean(activeAudio);
+      play.disabled = readingActive || used >= maxPlays || Boolean(activeAudio);
     }
     updateCount();
     volume.addEventListener("input", () => { audio.volume = Number(volume.value); }, { signal });
@@ -650,18 +715,23 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function selectResource(key) {
-    if (!resourceKeys.has(key) || activeAudio) return;
+    if (!resourcesForQuestion(activeQuestionId).some((resource) => resource.key === key) || activeAudio) return;
     activeResourceKey = key;
-    const first = relevantQuestions()[0];
-    if (first) activeQuestionId = first.id;
     renderResource();
-    renderQuestionPanel();
   }
 
   function renderResourceTabs() {
     const tabs = document.querySelector("#resource-tabs");
     tabs.replaceChildren();
-    for (const resource of paper.resources) {
+    const available = resourcesForQuestion(activeQuestionId);
+    if (available.length === 0) {
+      activeResourceKey = null;
+      shell.dataset.noResources = "true";
+      return;
+    }
+    delete shell.dataset.noResources;
+    if (!available.some((resource) => resource.key === activeResourceKey)) activeResourceKey = available[0].key;
+    for (const resource of available) {
       const tab = button(resource.label, "resource-tab", { "aria-current": resource.key === activeResourceKey ? "page" : "false" });
       tab.dataset.resourceKey = resource.key;
       tab.addEventListener("click", () => selectResource(resource.key), { signal });
@@ -687,10 +757,7 @@ export function mountExam(state, { onSubmitted }) {
           draft.selectedQuestionId = question.id;
           markDirty();
         }
-        const resourceKey = question.resourceKeys.find((key) => resourceKeys.has(key));
-        if (resourceKey) activeResourceKey = resourceKey;
-        activeQuestionId = question.id;
-        renderResource();
+        setActiveQuestion(question.id);
         renderQuestionPanel();
         document.querySelector("#summary-dialog").close();
         requestAnimationFrame(() => document.querySelector(`[data-question-id="${CSS.escape(question.id)}"]`)?.focus());
@@ -732,8 +799,30 @@ export function mountExam(state, { onSubmitted }) {
 
   function tick() {
     const now = Date.now() + serverOffset;
+    const readingRemaining = Math.max(0, Number(state.session.readingEndsAt) - now);
+    const readingBanner = document.querySelector("#reading-banner");
+    if (readingActive && readingRemaining > 0) {
+      readingBanner.hidden = false;
+      document.querySelector("#reading-copy").textContent = `Review the materials and questions. Student entry areas unlock in ${formatTime(readingRemaining)}.`;
+      const timer = document.querySelector("#timer-tool");
+      timer.dataset.warning = "false";
+      timer.textContent = `Reading ${formatTime(readingRemaining)}`;
+      return;
+    }
+    if (readingActive) {
+      readingActive = false;
+      shell.dataset.phase = "writing";
+      readingBanner.hidden = true;
+      document.querySelector("#notepad-tool").disabled = false;
+      document.querySelector("#summary-tool").disabled = false;
+      document.querySelectorAll("[data-highlight], [data-clear-highlights]").forEach((control) => { control.disabled = false; });
+      renderResource();
+      renderQuestionPanel();
+      setSaveStatus("Writing time started", "saved");
+      if (dirty) saveTimer = setTimeout(saveNow, 1_200);
+    }
     const remaining = Math.max(0, state.session.deadline - now);
-    const elapsed = Math.max(0, now - state.session.startedAt);
+    const elapsed = Math.max(0, now - Number(state.session.readingEndsAt));
     const timer = document.querySelector("#timer-tool");
     timer.dataset.warning = String(remaining <= 5 * 60_000 && remaining > 0);
     if (timerMode === "hidden") timer.textContent = "Timer hidden";
@@ -746,6 +835,10 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function applyHighlight(color) {
+    if (readingActive) {
+      announce("Highlighting opens when writing time starts", "error");
+      return;
+    }
     const selection = getSelection();
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
       announce("Select text in a reading passage before choosing a highlight colour", "error");
@@ -768,6 +861,10 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function clearHighlights() {
+    if (readingActive) {
+      announce("Highlights cannot be changed during reading time", "error");
+      return;
+    }
     const copy = document.querySelector(".resource-copy");
     if (!copy) return;
     for (const mark of [...copy.querySelectorAll("mark")]) mark.replaceWith(...mark.childNodes);
@@ -867,6 +964,9 @@ export function mountExam(state, { onSubmitted }) {
   }, { signal }));
 
   applyPreferences();
+  document.querySelector("#notepad-tool").disabled = readingActive;
+  document.querySelector("#summary-tool").disabled = readingActive;
+  document.querySelectorAll("[data-highlight], [data-clear-highlights]").forEach((control) => { control.disabled = readingActive; });
   renderResourceTabs();
   renderResource();
   renderQuestionPanel();
@@ -878,7 +978,7 @@ export function mountExam(state, { onSubmitted }) {
     localStorage.setItem(instructionKey, "seen");
     document.querySelector("#instructions-dialog").showModal();
   }
-  if (dirty) {
+  if (dirty && !readingActive) {
     setSaveStatus("Recovered unsaved work", "local");
     saveTimer = setTimeout(saveNow, 1_200);
   }

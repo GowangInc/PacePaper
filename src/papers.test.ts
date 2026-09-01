@@ -9,6 +9,7 @@ const manifest = {
   level: "SL/HL",
   paper: "Paper 1",
   durationMinutes: 60,
+  readingTimeMinutes: 5,
   mode: "reading",
   instructions: "Read the source and answer every question.",
   selectionMode: "all",
@@ -18,7 +19,26 @@ const manifest = {
 
 describe("paper manifests", () => {
   test("accepts subject-extensible manifests", () => {
-    expect(parseManifest(manifest)).toMatchObject({ subject: "history", subjectLabel: "History" });
+    expect(parseManifest(manifest)).toMatchObject({
+      subject: "history",
+      subjectLabel: "History",
+      readingTimeMinutes: 5,
+      sourceClassification: "unknown-local-only",
+    });
+  });
+
+  test("accepts and validates source-rights classification", () => {
+    expect(parseManifest({ ...manifest, sourceClassification: "school-authorized" }).sourceClassification).toBe("school-authorized");
+    expect(() => parseManifest({ ...manifest, sourceClassification: "public-domain" })).toThrow("manifest.sourceClassification");
+  });
+
+  test("defaults legacy manifests to no separate reading period", () => {
+    const { readingTimeMinutes: _, ...legacy } = manifest;
+    expect(parseManifest(legacy).readingTimeMinutes).toBe(0);
+  });
+
+  test("rejects implausible reading periods", () => {
+    expect(() => parseManifest({ ...manifest, readingTimeMinutes: 61 })).toThrow("manifest.readingTimeMinutes");
   });
 
   test("rejects questions that reference missing resources", () => {
@@ -26,6 +46,24 @@ describe("paper manifests", () => {
       ...manifest,
       questions: [{ ...manifest.questions[0], resourceKeys: ["missing"] }],
     })).toThrow("references unknown resource missing");
+  });
+
+  test("accepts a configured handwritten-working response", () => {
+    expect(parseManifest({
+      ...manifest,
+      maximumMarks: 80,
+      subjectWeightPercent: 40,
+      questions: [{
+        ...manifest.questions[0],
+        marks: 8,
+        type: "ink",
+        ink: { pages: 2, background: "square-grid", allowTypedAlternative: true },
+      }],
+    })).toMatchObject({
+      maximumMarks: 80,
+      subjectWeightPercent: 40,
+      questions: [{ type: "ink", marks: 8, ink: { pages: 2, background: "square-grid", allowTypedAlternative: true } }],
+    });
   });
 });
 

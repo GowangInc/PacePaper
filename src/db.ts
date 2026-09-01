@@ -66,6 +66,7 @@ export interface PaperSummary {
   level: string;
   paper: string;
   durationMinutes: number;
+  readingTimeMinutes: number;
   mode: string;
   createdAt: number;
 }
@@ -131,6 +132,7 @@ export interface SessionResponseRow {
 
 export interface SessionResults {
   id: string;
+  paperId: string;
   className: string;
   paperTitle: string;
   status: ExamStatus;
@@ -403,6 +405,7 @@ export function createPaper(imported: ImportedPaper): PaperSummary {
     level: imported.manifest.level,
     paper: imported.manifest.paper,
     durationMinutes: imported.manifest.durationMinutes,
+    readingTimeMinutes: imported.manifest.readingTimeMinutes,
     mode: imported.manifest.mode,
     createdAt: now,
   };
@@ -417,6 +420,7 @@ export function listPapers(): PaperSummary[] {
            level,
            paper,
            duration_minutes AS durationMinutes,
+           COALESCE(json_extract(manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
            mode,
            created_at AS createdAt
       FROM papers
@@ -524,6 +528,7 @@ export function listExamSessions(): ExamSessionRow[] {
 export function getSessionResults(sessionId: string): SessionResults | null {
   const session = db.query<Omit<SessionResults, "responses">, { sessionId: string }>(`
     SELECT sessions.id,
+           papers.id AS paperId,
            classes.name AS className,
            papers.title AS paperTitle,
            sessions.status,
