@@ -1,5 +1,6 @@
 import type { Server } from "bun";
 import {
+  configureDemoAdmin,
   createAdmin,
   createClass,
   createExamSession,
@@ -10,12 +11,14 @@ import {
   findAdmin,
   findStudentLogin,
   getAsset,
+  getPaper,
   getSessionResults,
   getStudent,
   getStudentExam,
   incrementAudioPlay,
   listClasses,
   listExamSessions,
+  listPaperAssets,
   listPapers,
   listStudents,
   saveAndSubmitResponse,
@@ -37,11 +40,13 @@ import {
   revokeSession,
 } from "./src/auth.ts";
 import {
+  encodePortablePaper,
   parsePaperUpload,
   sanitizeRichText,
   type PaperManifest,
 } from "./src/papers.ts";
 import { normalizeInkAnswer } from "./src/ink.ts";
+import { isExpectedLoopbackAuthority } from "./src/loopback.ts";
 import { examTiming } from "./src/timing.ts";
 
 interface SocketData {
@@ -69,6 +74,11 @@ class HttpError extends Error {
 
 const port = Number(process.env.PORT ?? 9148);
 if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error("PORT must be a valid TCP port");
+const hostname = process.env.HOST ?? "127.0.0.1";
+if (!hostname.trim() || hostname.length > 255) throw new Error("HOST must be a valid hostname or address");
+if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(hostname.toLowerCase())) {
+  throw new Error("The admin/admin demo build may only bind to localhost. Use HOST=127.0.0.1.");
+}
 const RESPONSE_BODY_BYTES = 12_000_000;
 const DEADLINE_GRACE_MS = 5_000;
 
@@ -80,10 +90,15 @@ const STATIC_FILES: Record<string, string> = {
   "/student-workspace.png": "public/student-workspace.png",
   "/paper-authoring/SKILL.md": "paper-authoring/SKILL.md",
   "/admin": "public/index.html",
+  "/clock": "public/index.html",
   "/student": "public/index.html",
   "/app.js": "public/app.js",
   "/admin.js": "public/admin.js",
+  "/countdown.js": "public/countdown.js",
+  "/countdown-model.js": "public/countdown-model.js",
+  "/countdown.css": "public/countdown.css",
   "/paper-builder.js": "public/paper-builder.js",
+  "/paper-preview.js": "public/paper-preview.js",
   "/student.js": "public/student.js",
   "/exam.js": "public/exam.js",
   "/ink-canvas.js": "public/ink-canvas.js",
@@ -92,7 +107,7 @@ const STATIC_FILES: Record<string, string> = {
 };
 
 const SECURITY_HEADERS: Record<string, string> = {
-  "Content-Security-Policy": "default-src 'self'; base-uri 'none'; connect-src 'self' ws: wss:; font-src 'self'; form-action 'self'; frame-ancestors 'self'; frame-src 'self'; img-src 'self' data:; media-src 'self'; object-src 'none'; script-src 'self'; style-src 'self'",
+  "Content-Security-Policy": "default-src 'self'; base-uri 'none'; connect-src 'self' ws: wss:; font-src 'self'; form-action 'self'; frame-ancestors 'self'; frame-src 'self'; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; script-src 'self'; style-src 'self'",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
   "Referrer-Policy": "no-referrer",
@@ -316,7 +331,14 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     if (!/^\d{4,12}$/.test(pin)) throw new HttpError("PIN needs 4–12 digits", 400);
     const created = createStudent({ classId, name, candidateCode, pinHash: await Bun.password.hash(pin), extraMinutes });
     publish(server, "admin", "admin-state");
-    return json(created, 201);
+    return json({
+      id: created.id,
+      classId: created.classId,
+      name: created.name,
+      candidateCode: created.candidateCode,
+      extraMinutes: created.extraMinutes,
+      createdAt: created.createdAt,
+    }, 201);
   }
 
   if (path === "/api/admin/papers" && method === "POST") {
@@ -325,6 +347,28 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     const created = createPaper(imported);
     publish(server, "admin", "admin-state");
     return json(created, 201);
+  }
+
+  const paperExportMatch = path.match(/^\/api\/admin\/papers\/([a-f0-9-]+)\/export$/);
+  if (paperExportMatch && method === "GET") {
+    requireRole(request, "admin");
+    const stored = getPaper(paperExportMatch[1] as string);
+    if (!stored) throw new HttpError("Paper not found", 404);
+    if (
+      !["teacher-authored", "school-authorized"].includes(stored.manifest.sourceClassification)
+      || !stored.manifest.exportAuthorized
+    ) {
+      throw new HttpError("This paper is not explicitly authorized for portable export", 403);
+    }
+    const bytes = await encodePortablePaper(stored.manifest, listPaperAssets(stored.row.id));
+    const filename = `${stored.manifest.title.normalize("NFKD").replace(/[^a-z0-9]+/giu, "-").replace(/^-|-$/gu, "").slice(0, 80) || "digitaldp-paper"}.digitaldp-paper`;
+    return responseWithSecurity(new Response(bytes, {
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        "Content-Type": "application/vnd.digitaldp.paper+gzip",
+      },
+    }));
   }
 
   if (path === "/api/admin/sessions" && method === "POST") {
@@ -360,6 +404,8 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
         readingTimeMinutes: manifest.readingTimeMinutes,
         maximumMarks: manifest.maximumMarks,
         subjectWeightPercent: manifest.subjectWeightPercent,
+        mode: manifest.mode,
+        selectionMode: manifest.selectionMode,
         instructions: manifest.instructions,
       },
       resources: manifest.resources.map((resource) => ({
@@ -549,14 +595,19 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
   throw new HttpError("Endpoint not found", 404);
 }
 
+configureDemoAdmin("admin", await Bun.password.hash("admin"));
+console.warn("DigitalDP demo login is admin / admin. Existing teacher credentials and teacher sessions are replaced at startup.");
+
 const server = Bun.serve<SocketData>({
-  hostname: "0.0.0.0",
+  hostname,
   port,
-  maxRequestBodySize: 210_000_000,
+  maxRequestBodySize: 72_000_000,
   async fetch(request, activeServer) {
     const url = new URL(request.url);
     try {
+      if (!isExpectedLoopbackAuthority(url, port)) throw new HttpError("Misdirected request", 421);
       if (url.pathname === "/ws") {
+        assertSameOrigin(request);
         const actor = authFromRequest(request);
         if (!actor) return json({ error: "Authentication required" }, 401);
         const student = actor.role === "student" ? getStudent(actor.actorId) : null;
@@ -596,4 +647,4 @@ const server = Bun.serve<SocketData>({
 
 deleteExpiredAuthSessions();
 setInterval(deleteExpiredAuthSessions, 60 * 60 * 1000).unref();
-console.log(`DigitalDP is listening on http://0.0.0.0:${server.port}`);
+console.log(`DigitalDP is listening on http://${hostname}:${server.port}`);

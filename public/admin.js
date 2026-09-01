@@ -63,12 +63,13 @@ function renderSetup() {
 function renderLogin() {
   authFrame(
     "Teacher sign in",
-    "Use the teacher account configured on this DigitalDP server.",
+    "Demo login: admin / admin. Startup replaces existing teacher credentials, so keep this build on this computer.",
     `
       <label for="username">Username</label>
-      <input id="username" name="username" autocomplete="username" maxlength="40" required>
+      <input id="username" name="username" value="admin" autocomplete="username" maxlength="40" required>
       <label for="password">Password</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <input id="password" name="password" type="password" value="admin" autocomplete="current-password" required aria-describedby="temporary-login-help">
+      <small id="temporary-login-help">Temporary development-only credentials.</small>
     `,
     "Sign in",
   );
@@ -151,13 +152,42 @@ function renderPapers(state) {
     const title = document.createElement("strong");
     title.textContent = paper.title;
     const metadata = document.createElement("small");
-    metadata.textContent = `${paper.subjectLabel ?? humanSubject(paper.subject)} · ${paper.level} · ${paper.paper}`;
+    const rightsLabel = ({
+      "teacher-authored": "teacher-authored",
+      "school-authorized": "school-authorized",
+      "official-public-reference": "official reference",
+      "unknown-local-only": "local-only",
+    })[paper.sourceClassification] ?? "rights not recorded";
+    metadata.textContent = `${paper.subjectLabel ?? humanSubject(paper.subject)} · ${paper.level} · ${paper.paper} · ${rightsLabel}`;
     main.append(title, metadata);
+    const actions = document.createElement("div");
+    actions.className = "paper-list-actions";
     const duration = document.createElement("code");
     duration.textContent = paper.readingTimeMinutes
       ? `${paper.readingTimeMinutes} min read + ${paper.durationMinutes} min write`
       : `${paper.durationMinutes} min`;
-    row.append(main, duration);
+    const canExport = ["teacher-authored", "school-authorized"].includes(paper.sourceClassification)
+      && paper.exportAuthorized;
+    if (canExport) {
+      const exportLink = document.createElement("a");
+      exportLink.className = "quiet-action compact";
+      exportLink.href = `/api/admin/papers/${paper.id}/export`;
+      exportLink.download = "";
+      exportLink.textContent = "Export";
+      exportLink.setAttribute("aria-label", `Export ${paper.title}`);
+      actions.append(duration, exportLink);
+    } else {
+      const localOnly = document.createElement("small");
+      localOnly.className = "paper-local-only";
+      localOnly.textContent = ["teacher-authored", "school-authorized"].includes(paper.sourceClassification)
+        ? "Export not authorized"
+        : "Export blocked";
+      localOnly.title = paper.exportAuthorized
+        ? "Reference-only and local-only sources stay on this installation"
+        : "Portable export requires a separate teacher attestation";
+      actions.append(duration, localOnly);
+    }
+    row.append(main, actions);
     list.append(row);
   }
 }
@@ -174,7 +204,7 @@ function renderSessions(state) {
     title.textContent = session.paperTitle;
     const metadata = document.createElement("span");
     const status = session.status === "draft" ? "ready" : session.status;
-    metadata.textContent = `${session.className} · ${status}`;
+    metadata.textContent = `${session.className} · ${status} · ${formatPaperTime(session)}`;
     detail.append(title, metadata);
 
     const counts = document.createElement("span");
@@ -186,13 +216,20 @@ function renderSessions(state) {
     const actions = document.createElement("div");
     actions.className = "session-actions";
     if (session.status !== "ended") {
+      const countdown = document.createElement("a");
+      countdown.href = `/clock?session=${encodeURIComponent(session.id)}`;
+      countdown.target = "_blank";
+      countdown.rel = "noopener";
+      countdown.className = "clock-launch compact";
+      countdown.textContent = "Open clock ↗";
+      countdown.setAttribute("aria-label", `Open countdown for ${session.paperTitle} in a new tab`);
       const lifecycle = document.createElement("button");
       lifecycle.type = "button";
       lifecycle.dataset.sessionId = session.id;
       lifecycle.dataset.action = session.status === "draft" ? "start" : "end";
       lifecycle.className = session.status === "draft" ? "primary-action compact" : "danger-action compact";
       lifecycle.textContent = session.status === "draft" ? "Start exam" : "End exam";
-      actions.append(lifecycle);
+      actions.append(countdown, lifecycle);
     }
     if (session.status !== "draft") {
       const responses = document.createElement("button");
@@ -236,15 +273,15 @@ function appendMetadata(list, label, value, className = "") {
   list.append(item);
 }
 
-function appendQuestionResources(container, question, resourcesByKey, renderedResources) {
+function appendQuestionResources(container, question, resourcesByKey, renderedResources, headingLabel = null) {
   const resources = (question.resourceKeys ?? [])
     .map((key) => resourcesByKey.get(key))
     .filter((resource) => resource && !renderedResources.has(resource.key));
   if (resources.length === 0) return;
 
   const section = document.createElement("section");
-  section.className = "submission-resources";
-  section.append(copy("h4", "", resources.length === 1 ? "Question resource" : "Question resources"));
+  section.className = headingLabel ? "submission-resources candidate-paper-resources" : "submission-resources";
+  section.append(copy("h4", "", headingLabel ?? (resources.length === 1 ? "Question resource" : "Question resources")));
   for (const resource of resources) {
     renderedResources.add(resource.key);
     const item = document.createElement("figure");
@@ -259,7 +296,7 @@ function appendQuestionResources(container, question, resourcesByKey, renderedRe
       item.append(copy("blockquote", "submission-resource-text", resource.text ?? ""));
     } else {
       const description = resource.kind === "audio"
-        ? "Listening audio · available in the digital examination"
+        ? `Listening audio · available in the digital examination · maximum ${resource.maxPlays ?? 2} play${(resource.maxPlays ?? 2) === 1 ? "" : "s"}`
         : "PDF document · supplied with the digital examination";
       item.append(copy("p", "submission-resource-reference", description));
     }
@@ -272,6 +309,7 @@ function appendQuestionResources(container, question, resourcesByKey, renderedRe
 function renderSubmissionAnswer(question, answer) {
   const content = document.createElement("div");
   content.className = "submission-answer";
+  content.dataset.answerType = question.type;
   if (!answer) {
     content.classList.add("empty-state");
     content.textContent = "No response recorded";
@@ -314,6 +352,10 @@ function renderCandidatePaper(data, response) {
   appendMetadata(metadata, "Paper", data.session.paper ?? "Practice paper");
   if (data.session.maximumMarks) appendMetadata(metadata, "Maximum marks", String(data.session.maximumMarks));
   if (data.session.subjectWeightPercent) appendMetadata(metadata, "Subject weighting", `${data.session.subjectWeightPercent}%`);
+  const selectedQuestion = data.questions.find((question) => question.id === response.selectedQuestionId);
+  if (data.session.selectionMode === "one" && data.session.mode === "essay") {
+    appendMetadata(metadata, "Selected prompt", selectedQuestion?.label ?? "No prompt selected", "candidate-paper-selection");
+  }
   appendMetadata(metadata, "Time allowed", formatPaperTime(data.session));
   const timestamp = response.submittedAt ?? response.updatedAt;
   appendMetadata(
@@ -336,28 +378,61 @@ function renderCandidatePaper(data, response) {
   answers.className = "submission-answers";
   const resourcesByKey = new Map((data.resources ?? []).map((resource) => [resource.key, resource]));
   const hasScopedResources = data.questions.some((question) => (question.resourceKeys ?? []).length > 0);
-  const sharedResourceKeys = [...resourcesByKey.keys()];
+  const referencedResourceKeys = new Set(data.questions.flatMap((question) => question.resourceKeys ?? []));
+  const commonResourceKeys = data.questions.length
+    ? [...resourcesByKey.keys()].filter((key) => data.questions.every((question) => (question.resourceKeys ?? []).includes(key)))
+    : [];
+  const sharedResourceKeys = hasScopedResources
+    ? [...new Set([...commonResourceKeys, ...[...resourcesByKey.keys()].filter((key) => !referencedResourceKeys.has(key))])]
+    : [...resourcesByKey.keys()];
   const renderedResources = new Set();
+  appendQuestionResources(
+    paper,
+    { resourceKeys: sharedResourceKeys },
+    resourcesByKey,
+    renderedResources,
+    sharedResourceKeys.length === 1 ? "Paper resource" : "Paper resources",
+  );
   for (const [index, question] of data.questions.entries()) {
     const answer = response.answers[question.id] ?? "";
     const item = document.createElement("article");
     item.className = "candidate-question";
     const heading = document.createElement("header");
     heading.className = "candidate-question-heading";
+    const questionTitle = copy("h3", "", question.label);
+    if (question.id === response.selectedQuestionId) {
+      questionTitle.append(copy("span", "candidate-question-selection", "Selected prompt"));
+    }
     heading.append(
       copy("span", "candidate-question-number", String(index + 1).padStart(2, "0")),
-      copy("h3", "", question.label),
+      questionTitle,
     );
     if (question.marks) heading.append(copy("span", "candidate-question-marks", `[${question.marks}]`));
     const prompt = copy("p", "submission-prompt", question.prompt);
     item.append(heading, prompt);
     appendQuestionResources(
       item,
-      hasScopedResources ? question : { ...question, resourceKeys: sharedResourceKeys },
+      {
+        ...question,
+        resourceKeys: hasScopedResources
+          ? (question.resourceKeys ?? []).filter((key) => !sharedResourceKeys.includes(key))
+          : [],
+      },
       resourcesByKey,
       renderedResources,
     );
-    item.append(renderSubmissionAnswer(question, answer));
+    if (
+      data.session.selectionMode === "one" &&
+      data.session.mode === "essay" &&
+      response.selectedQuestionId &&
+      question.id !== response.selectedQuestionId
+    ) {
+      const notSelected = copy("div", "submission-answer candidate-question-not-selected", "Not selected by candidate");
+      notSelected.dataset.answerType = "not-selected";
+      item.append(notSelected);
+    } else {
+      item.append(renderSubmissionAnswer(question, answer));
+    }
     answers.append(item);
   }
   paper.append(answers);
@@ -624,6 +699,15 @@ async function renderDashboard() {
             <ul id="paper-list" class="paper-list"></ul>
           </div>
           <div class="form-stack">
+            <form id="portable-paper-form" data-paper-form class="utility-form paper-portability" method="post" enctype="multipart/form-data">
+              <input name="format" type="hidden" value="portable">
+              <fieldset><legend>Import a saved paper</legend>
+                <p class="form-help">A single DigitalDP paper file includes its questions, settings and permitted attachments.</p>
+                <label for="portable-paper">DigitalDP paper file</label><input id="portable-paper" name="portablePaper" type="file" accept=".digitaldp-paper,application/vnd.digitaldp.paper+gzip" required>
+                <button type="submit">Import paper</button>
+              </fieldset>
+            </form>
+
             <div id="paper-builder"></div>
 
             <details class="advanced-import">
@@ -655,7 +739,7 @@ async function renderDashboard() {
 
         <section id="sessions" class="admin-section two-column-section">
           <div>
-            <div class="section-heading"><div><h2>Exams</h2><p>Choose a class and paper, then start when students are ready.</p></div></div>
+            <div class="section-heading"><div><h2>Exams</h2><p>Choose a class and paper, then start when students are ready.</p></div><a class="clock-launch" href="/clock" target="_blank" rel="noopener">Open countdown display ↗</a></div>
             <ul id="session-list" class="session-list"></ul>
           </div>
           <form id="session-form" class="utility-form" method="post">

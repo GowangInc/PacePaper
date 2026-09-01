@@ -1,3 +1,4 @@
+import { gunzip, gzip } from "node:zlib";
 import { parseInkSettings, type InkSettings } from "./ink.ts";
 
 export const LEVELS = ["SL", "HL", "SL/HL"] as const;
@@ -44,6 +45,7 @@ export interface PaperManifest {
   assessmentSession?: string;
   examProfileId?: string;
   sourceClassification: SourceClassification;
+  exportAuthorized: boolean;
   title: string;
   subject: string;
   subjectLabel: string;
@@ -72,11 +74,22 @@ export interface ImportedPaper {
   assets: ImportedAsset[];
 }
 
+export interface PortablePaperAsset {
+  filename: string;
+  mime: string;
+  data: Uint8Array;
+}
+
 const KEY = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const FILE_NAME = /^[^/\\\u0000]{1,128}$/;
 const MAX_MANIFEST_BYTES = 1_000_000;
-const MAX_ASSET_BYTES = 50_000_000;
-const MAX_TOTAL_ASSET_BYTES = 200_000_000;
+const MAX_ASSET_BYTES = 40_000_000;
+const MAX_TOTAL_ASSET_BYTES = 64_000_000;
+const MAX_PORTABLE_ASSET_BYTES = 40_000_000;
+const MAX_PORTABLE_TOTAL_ASSET_BYTES = 64_000_000;
+const MAX_PORTABLE_FILE_BYTES = 70_000_000;
+const MAX_PORTABLE_JSON_BYTES = 90_000_000;
+const PORTABLE_FORMAT = "digitaldp-paper";
 const ALLOWED_MIME: Record<string, true> = {
   "application/pdf": true,
   "image/png": true,
@@ -130,6 +143,12 @@ function stringList(value: unknown, label: string, maxItems: number): string[] {
 
 function optionalInteger(value: unknown, label: string, min: number, max: number): number | undefined {
   return value === undefined ? undefined : integer(value, label, min, max);
+}
+
+function optionalBoolean(value: unknown, label: string): boolean {
+  if (value === undefined) return false;
+  if (typeof value !== "boolean") throw new Error(`${label} must be true or false`);
+  return value;
 }
 
 function parseResource(value: unknown, index: number): PaperResource {
@@ -224,6 +243,7 @@ export function parseManifest(value: unknown): PaperManifest {
       SOURCE_CLASSIFICATIONS,
       "manifest.sourceClassification",
     ),
+    exportAuthorized: optionalBoolean(source.exportAuthorized, "manifest.exportAuthorized"),
     title: text(source.title, "manifest.title", 160),
     subject,
     subjectLabel: text(source.subjectLabel, "manifest.subjectLabel", 100),
@@ -241,8 +261,34 @@ export function parseManifest(value: unknown): PaperManifest {
   };
 }
 
-function inferredMime(file: File): string {
-  if (ALLOWED_MIME[file.type]) return file.type;
+function normalizedMime(value: string): string {
+  return value === "audio/x-wav" ? "audio/wav" : value;
+}
+
+function ascii(bytes: Uint8Array, start: number, length: number): string {
+  return String.fromCharCode(...bytes.subarray(start, start + length));
+}
+
+function sniffedMime(bytes: Uint8Array): string | undefined {
+  if (bytes.length >= 5 && ascii(bytes, 0, 5) === "%PDF-") return "application/pdf";
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 &&
+    bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a
+  ) return "image/png";
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes.length >= 12 && ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WEBP") return "image/webp";
+  if (bytes.length >= 4 && ascii(bytes, 0, 4) === "OggS") return "audio/ogg";
+  if (bytes.length >= 12 && ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WAVE") return "audio/wav";
+  if (bytes.length >= 12 && ascii(bytes, 4, 4) === "ftyp") return "audio/mp4";
+  if (
+    (bytes.length >= 3 && ascii(bytes, 0, 3) === "ID3") ||
+    (bytes.length >= 2 && bytes[0] === 0xff && (bytes[1]! & 0xe0) === 0xe0)
+  ) return "audio/mpeg";
+  return undefined;
+}
+
+function inferredMime(file: File, bytes: Uint8Array): string {
   const extension = file.name.toLowerCase().split(".").pop();
   const byExtension: Record<string, string> = {
     pdf: "application/pdf",
@@ -255,9 +301,11 @@ function inferredMime(file: File): string {
     ogg: "audio/ogg",
     wav: "audio/wav",
   };
-  const mime = extension ? byExtension[extension] : undefined;
-  if (!mime) throw new Error(`Unsupported asset type: ${file.name}`);
-  return mime;
+  const claimed = normalizedMime(ALLOWED_MIME[file.type] ? file.type : (extension ? byExtension[extension] ?? "" : ""));
+  if (!claimed) throw new Error(`Unsupported asset type: ${file.name}`);
+  const detected = sniffedMime(bytes);
+  if (!detected || normalizedMime(detected) !== claimed) throw new Error(`${file.name} does not match its declared file type`);
+  return detected;
 }
 
 async function importedPaper(manifest: PaperManifest, uploads: File[]): Promise<ImportedPaper> {
@@ -276,16 +324,131 @@ async function importedPaper(manifest: PaperManifest, uploads: File[]): Promise<
   for (const resource of needed) {
     const file = files.get(resource.file as string);
     if (!file) throw new Error(`Missing asset: ${resource.file}`);
-    if (file.size > MAX_ASSET_BYTES) throw new Error(`${file.name} exceeds 50 MB`);
+    if (file.size > MAX_ASSET_BYTES) throw new Error(`${file.name} exceeds 40 MB`);
     totalBytes += file.size;
-    if (totalBytes > MAX_TOTAL_ASSET_BYTES) throw new Error("Paper assets exceed 200 MB in total");
-    const mime = inferredMime(file);
+    if (totalBytes > MAX_TOTAL_ASSET_BYTES) throw new Error("Paper assets exceed 64 MB in total");
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const mime = inferredMime(file, bytes);
     if (resource.kind === "document" && mime !== "application/pdf") throw new Error(`${file.name} must be a PDF`);
     if (resource.kind === "image" && !mime.startsWith("image/")) throw new Error(`${file.name} must be an image`);
     if (resource.kind === "audio" && !mime.startsWith("audio/")) throw new Error(`${file.name} must be audio`);
-    assets.push({ assetKey: resource.key, filename: file.name, mime, bytes: new Uint8Array(await file.arrayBuffer()) });
+    assets.push({ assetKey: resource.key, filename: file.name, mime, bytes });
   }
   return { manifest, assets };
+}
+
+function ownedArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const owned = new Uint8Array(bytes.byteLength);
+  owned.set(bytes);
+  return owned.buffer;
+}
+
+function gzipBytes(bytes: Uint8Array): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    gzip(bytes, { level: 6 }, (error, result) => error ? reject(error) : resolve(new Uint8Array(result)));
+  });
+}
+
+function gunzipBytes(bytes: Uint8Array): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    gunzip(bytes, { maxOutputLength: MAX_PORTABLE_JSON_BYTES }, (error, result) => {
+      if (error) reject(error);
+      else resolve(new Uint8Array(result));
+    });
+  });
+}
+
+export async function encodePortablePaper(manifest: PaperManifest, assets: PortablePaperAsset[]): Promise<ArrayBuffer> {
+  const validatedManifest = parseManifest(manifest);
+  const expectedNames = new Set(validatedManifest.resources.flatMap((resource) => resource.file ? [resource.file] : []));
+  const suppliedNames = new Set(assets.map((asset) => asset.filename));
+  if (assets.length > 30 || suppliedNames.size !== assets.length) throw new Error("Portable paper assets are invalid");
+  if (expectedNames.size !== suppliedNames.size || [...expectedNames].some((name) => !suppliedNames.has(name))) {
+    throw new Error("Portable paper assets do not match the manifest");
+  }
+  let totalBytes = 0;
+  for (const asset of assets) {
+    if (!FILE_NAME.test(asset.filename)) throw new Error("Portable paper asset filename is invalid");
+    if (asset.data.byteLength > MAX_PORTABLE_ASSET_BYTES) throw new Error(`${asset.filename} exceeds the 40 MB portable limit`);
+    totalBytes += asset.data.byteLength;
+    if (totalBytes > MAX_PORTABLE_TOTAL_ASSET_BYTES) throw new Error("Portable paper assets exceed 64 MB in total");
+    const detected = sniffedMime(asset.data);
+    if (!detected || normalizedMime(detected) !== normalizedMime(asset.mime)) {
+      throw new Error(`${asset.filename} does not match its declared file type`);
+    }
+  }
+  const payload = {
+    format: PORTABLE_FORMAT,
+    version: 1,
+    manifest: validatedManifest,
+    assets: assets.map((asset) => ({
+      filename: asset.filename,
+      mime: asset.mime,
+      data: Buffer.from(asset.data).toString("base64"),
+    })),
+  };
+  const encoded = new TextEncoder().encode(JSON.stringify(payload));
+  if (encoded.byteLength > MAX_PORTABLE_JSON_BYTES) throw new Error("Portable paper exceeds the export limit");
+  return ownedArrayBuffer(await gzipBytes(encoded));
+}
+
+function base64Bytes(value: unknown, label: string): Uint8Array {
+  if (typeof value !== "string" || value.length > Math.ceil(MAX_PORTABLE_ASSET_BYTES * 4 / 3) + 4) {
+    throw new Error(`${label} is invalid`);
+  }
+  if (value.length % 4 !== 0) throw new Error(`${label} is not valid base64`);
+  const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0;
+  const contentLength = value.length - padding;
+  for (let index = 0; index < contentLength; index += 1) {
+    const code = value.charCodeAt(index);
+    const valid =
+      (code >= 65 && code <= 90) ||
+      (code >= 97 && code <= 122) ||
+      (code >= 48 && code <= 57) ||
+      code === 43 || code === 47;
+    if (!valid) throw new Error(`${label} is not valid base64`);
+  }
+  for (let index = contentLength; index < value.length; index += 1) {
+    if (value[index] !== "=") throw new Error(`${label} is not valid base64`);
+  }
+  return new Uint8Array(Buffer.from(value, "base64"));
+}
+
+async function parsePortablePaper(file: File): Promise<ImportedPaper> {
+  if (file.size === 0) throw new Error("Choose a DigitalDP paper file");
+  if (file.size > MAX_PORTABLE_FILE_BYTES) throw new Error("Portable paper exceeds 70 MB");
+  let decoded: Uint8Array;
+  try {
+    decoded = await gunzipBytes(new Uint8Array(await file.arrayBuffer()));
+  } catch {
+    throw new Error("DigitalDP paper file is damaged or has an unsupported format");
+  }
+
+  let source: Record<string, unknown>;
+  try {
+    source = record(JSON.parse(new TextDecoder().decode(decoded)) as unknown, "portable paper");
+  } catch (error) {
+    if (error instanceof SyntaxError) throw new Error("DigitalDP paper file is not valid JSON");
+    throw error;
+  }
+  if (source.format !== PORTABLE_FORMAT || source.version !== 1) {
+    throw new Error("DigitalDP paper file has an unsupported version");
+  }
+  if (!Array.isArray(source.assets) || source.assets.length > 30) {
+    throw new Error("Portable paper assets must contain at most 30 items");
+  }
+  let totalBytes = 0;
+  const uploads = source.assets.map((value, index) => {
+    const asset = record(value, `portable paper assets[${index}]`);
+    const filename = text(asset.filename, `portable paper assets[${index}].filename`, 128);
+    if (!FILE_NAME.test(filename)) throw new Error(`portable paper assets[${index}].filename has an invalid name`);
+    const mime = text(asset.mime, `portable paper assets[${index}].mime`, 100);
+    const bytes = base64Bytes(asset.data, `portable paper assets[${index}].data`);
+    totalBytes += bytes.byteLength;
+    if (totalBytes > MAX_PORTABLE_TOTAL_ASSET_BYTES) throw new Error("Portable paper assets exceed 64 MB in total");
+    return new File([ownedArrayBuffer(bytes)], filename, { type: mime });
+  });
+  return importedPaper(parseManifest(source.manifest), uploads);
 }
 
 async function manifestFile(file: File): Promise<PaperManifest> {
@@ -326,6 +489,7 @@ async function parseQuickPaperUpload(form: FormData): Promise<ImportedPaper> {
     durationMinutes: Number(formText(form, "durationMinutes", "Duration", 3)),
     readingTimeMinutes: 0,
     sourceClassification: "unknown-local-only",
+    exportAuthorized: false,
     mode: "essay",
     instructions: formText(form, "instructions", "Instructions", 20_000),
     selectionMode: "all",
@@ -346,6 +510,11 @@ async function parseQuickPaperUpload(form: FormData): Promise<ImportedPaper> {
 export async function parsePaperUpload(form: FormData): Promise<ImportedPaper> {
   const format = form.get("format");
   if (format === "quick") return parseQuickPaperUpload(form);
+  if (format === "portable") {
+    const portable = form.get("portablePaper");
+    if (!(portable instanceof File)) throw new Error("Choose a DigitalDP paper file");
+    return parsePortablePaper(portable);
+  }
   if (format === "package") {
     const files = form.getAll("packageFiles").filter((item): item is File => item instanceof File && item.size > 0);
     const manifests = files.filter((file) => file.name === "paper.json");

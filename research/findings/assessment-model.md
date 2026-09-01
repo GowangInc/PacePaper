@@ -169,4 +169,6 @@ DigitalDP now records one paper-level rights classification. A later schema shou
 - `private/unverified reference — local only`;
 - `unknown — block sharing/publication`.
 
+Portable export is a separate decision: the current builder defaults to local-only and requires an explicit teacher attestation that the paper and every attachment may be copied. Classification alone is not redistribution permission.
+
 The licensed [IB Questionbank](https://questionbank.ibo.org/) and authenticated [Programme Resource Centre](https://resources.ibo.org/) are the legitimate routes for official content. Public availability is not permission to bundle an IB asset into the application; the relevant guides and papers retain explicit copyright and third-party-platform restrictions.

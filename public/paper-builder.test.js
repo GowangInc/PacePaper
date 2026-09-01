@@ -1,5 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { COURSES, packageData } from "./paper-builder.js";
+import {
+  BUILDER_LEVELS,
+  COURSES,
+  levelsForCourse,
+  packageData,
+  paperPreviewData,
+  papersForLevel,
+  valueForLevel,
+} from "./paper-builder.js";
 
 function builderForm(values = {}) {
   const controls = {
@@ -16,13 +24,85 @@ function builderForm(values = {}) {
     "#builder-duration": { value: "90" },
     "#builder-reading-time": { value: "5" },
     "#builder-instructions": { value: "Answer every question." },
-    "#builder-source-classification": { value: "teacher-authored" },
+    "#builder-source-classification": { value: "unknown-local-only" },
+    "#builder-export-authorized": { checked: false },
     ...values,
   };
   return { querySelector: (selector) => controls[selector] };
 }
 
 describe("Paper Builder exam presets", () => {
+  test("offers SL, HL and a safe combined level in stable order", () => {
+    const mathematics = COURSES.find((course) => course.value === "mathematics-analysis-approaches");
+    expect(BUILDER_LEVELS).toEqual(["SL", "HL", "SL/HL"]);
+    expect(levelsForCourse(mathematics, "may-2026")).toEqual(BUILDER_LEVELS);
+    expect(papersForLevel(mathematics, "may-2026", "SL/HL").map((paper) => paper.value)).toEqual(["paper-1", "paper-2"]);
+    const paper1 = mathematics.papers.find((paper) => paper.value === "paper-1");
+    expect(valueForLevel(paper1, "duration", "SL/HL")).toBe(120);
+    expect(valueForLevel(paper1, "maximumMarks", "SL/HL")).toBeUndefined();
+    expect(valueForLevel(paper1, "subjectWeightPercent", "SL/HL")).toBeUndefined();
+  });
+
+  test("builds preview data from the live combined-level fields without claiming one level's marks", () => {
+    const form = builderForm({
+      "#builder-level": { value: "SL/HL" },
+      "#builder-title": { value: "Combined mathematics sampler" },
+      "#builder-duration": { value: "120" },
+      "#builder-instructions": { value: "Complete the shared practice questions." },
+    });
+    const preview = paperPreviewData(form, [{
+      label: "Reasoning",
+      prompt: "Show two methods.",
+      type: "ink",
+      marks: "6",
+      inkPages: 2,
+      inkBackground: "square-grid",
+      mediaFiles: [],
+    }]);
+    expect(preview).toMatchObject({
+      title: "Combined mathematics sampler",
+      level: "SL/HL",
+      durationMinutes: 120,
+      maximumMarks: undefined,
+      subjectWeightPercent: undefined,
+      instructions: "Complete the shared practice questions.",
+      questions: [{ label: "Reasoning", prompt: "Show two methods.", marks: "6", type: "ink", inkPages: 2 }],
+    });
+  });
+
+  test("saves a combined-level starter as custom rather than claiming an official profile", async () => {
+    const form = builderForm({
+      "#builder-level": { value: "SL/HL" },
+      "#builder-duration": { value: "120" },
+      "#builder-pdf": { files: [new File(["formulae"], "formula-booklet.pdf", { type: "application/pdf" })] },
+    });
+    const data = packageData(form, [{
+      label: "Question 1",
+      prompt: "Show your working.",
+      type: "ink",
+      inkPages: 1,
+      inkBackground: "square-grid",
+      mediaFiles: [],
+    }]);
+    const manifest = JSON.parse(await data.getAll("packageFiles")[0].text());
+
+    expect(manifest).toMatchObject({ level: "SL/HL", durationMinutes: 120, assessmentSession: "custom-from-may-2026" });
+    expect(manifest.examProfileId).toBeUndefined();
+    expect(manifest.maximumMarks).toBeUndefined();
+    expect(manifest.subjectWeightPercent).toBeUndefined();
+  });
+
+  test("requires a separate explicit attestation for portable export", async () => {
+    const question = [{ label: "Question 1", prompt: "Explain your reasoning.", type: "short", mediaFiles: [] }];
+    const local = JSON.parse(await packageData(builderForm(), question).getAll("packageFiles")[0].text());
+    const authorized = JSON.parse(await packageData(builderForm({
+      "#builder-source-classification": { value: "teacher-authored" },
+      "#builder-export-authorized": { checked: true },
+    }), question).getAll("packageFiles")[0].text());
+    expect(local).toMatchObject({ sourceClassification: "unknown-local-only", exportAuthorized: false });
+    expect(authorized).toMatchObject({ sourceClassification: "teacher-authored", exportAuthorized: true });
+  });
+
   test("every course exposes valid level-specific paper choices", () => {
     expect(new Set(COURSES.map((course) => course.value)).size).toBe(COURSES.length);
     for (const course of COURSES) {

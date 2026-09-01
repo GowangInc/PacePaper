@@ -1,3 +1,5 @@
+import { createPaperPreview } from "./paper-preview.js";
+
 const RESPONSE_PATTERNS = {
   analysis: {
     mode: "essay",
@@ -337,22 +339,54 @@ function selectedCourse(form) {
   return COURSES.find((course) => course.value === form.querySelector("#builder-subject").value);
 }
 
+export const BUILDER_LEVELS = ["SL", "HL", "SL/HL"];
+
+function paperSupportsLevel(paper, level) {
+  return level === "SL/HL"
+    ? paper.levels.includes("SL") && paper.levels.includes("HL")
+    : paper.levels.includes(level);
+}
+
+export function levelsForCourse(course, assessmentSession) {
+  const directLevels = new Set(course.papers
+    .filter((paper) => paper.sessions.includes(assessmentSession))
+    .flatMap((paper) => paper.levels));
+  if (directLevels.has("SL") && directLevels.has("HL")) directLevels.add("SL/HL");
+  return BUILDER_LEVELS.filter((level) => directLevels.has(level));
+}
+
+export function papersForLevel(course, assessmentSession, level) {
+  return course.papers.filter((paper) => (
+    paper.sessions.includes(assessmentSession) && paperSupportsLevel(paper, level)
+  ));
+}
+
 function selectedExam(form) {
   const assessmentSession = form.querySelector("#builder-session").value;
   const course = selectedCourse(form);
   const level = form.querySelector("#builder-level").value;
   const paperValue = form.querySelector("#builder-paper").value;
-  const paper = course?.papers.find((item) => (
-    item.value === paperValue && item.levels.includes(level) && item.sessions.includes(assessmentSession)
-  ));
+  const paper = course && papersForLevel(course, assessmentSession, level).find((item) => item.value === paperValue);
   return assessmentSession && course && level && paper ? { assessmentSession, course, level, paper } : null;
 }
 
-function valueForLevel(paper, property, level) {
-  return paper[`${property}ByLevel`]?.[level] ?? paper[property];
+export function valueForLevel(paper, property, level) {
+  const variants = paper[`${property}ByLevel`];
+  if (level !== "SL/HL") return variants?.[level] ?? paper[property];
+  if (!variants) return paper[property];
+  const sl = variants.SL ?? paper[property];
+  const hl = variants.HL ?? paper[property];
+  if (sl === hl) return sl;
+  if (property === "duration" && Number.isFinite(sl) && Number.isFinite(hl)) return Math.max(sl, hl);
+  return paper[property];
 }
 
 function questionForLevel(paper, level) {
+  if (level === "SL/HL") {
+    const sl = paper.questionByLevel?.SL;
+    const hl = paper.questionByLevel?.HL;
+    return { ...paper.question, ...(JSON.stringify(sl) === JSON.stringify(hl) ? sl : {}) };
+  }
   return { ...paper.question, ...(paper.questionByLevel?.[level] ?? {}) };
 }
 
@@ -370,6 +404,70 @@ function uniqueFiles(files) {
     if (names.has(file.name)) throw new Error(`Two resources are named ${file.name}. Rename one before adding the paper.`);
     names.add(file.name);
   }
+}
+
+function previewFile(file) {
+  const name = file.name.toLowerCase();
+  const kind = file.type === "application/pdf" || name.endsWith(".pdf")
+    ? "document"
+    : file.type.startsWith("audio/") || /\.(?:m4a|mp3|ogg|wav)$/u.test(name)
+      ? "audio"
+      : "image";
+  return { name: file.name, kind, file };
+}
+
+const SOURCE_CLASSIFICATION_LABELS = {
+  "teacher-authored": "Teacher-authored material",
+  "school-authorized": "School-authorized or licensed material",
+  "official-public-reference": "Official public specimen · reference only",
+  "unknown-local-only": "Unknown rights · local-only",
+};
+
+export function paperPreviewData(form, questions) {
+  const selection = selectedExam(form);
+  if (!selection) return null;
+  const { course, level, paper } = selection;
+  const allowedMaterials = new Set(paper.materials);
+  const maxPlays = Number(form.querySelector("#builder-audio-plays").value);
+  const sharedResources = [
+    ...(allowedMaterials.has("pdf") ? [...form.querySelector("#builder-pdf").files].map(previewFile) : []),
+    ...(allowedMaterials.has("audio")
+      ? [...form.querySelector("#builder-audio").files].map((file) => ({ ...previewFile(file), maxPlays }))
+      : []),
+  ];
+  const classification = form.querySelector("#builder-source-classification").value;
+  return {
+    title: form.querySelector("#builder-title").value.trim(),
+    subject: course.label,
+    level,
+    paper: form.querySelector("#builder-paper-label").value.trim(),
+    sessionLabel: form.querySelector("#builder-session").selectedOptions?.[0]?.textContent ?? selection.assessmentSession,
+    readingTimeMinutes: Number(form.querySelector("#builder-reading-time").value),
+    durationMinutes: Number(form.querySelector("#builder-duration").value),
+    maximumMarks: valueForLevel(paper, "maximumMarks", level),
+    subjectWeightPercent: valueForLevel(paper, "subjectWeightPercent", level),
+    instructions: form.querySelector("#builder-instructions").value.trim(),
+    sourceClassificationLabel: SOURCE_CLASSIFICATION_LABELS[classification] ?? classification,
+    sourceText: allowedMaterials.has("text") ? form.querySelector("#builder-source-text").value.trim() : "",
+    sharedResources,
+    questions: questions.map((question) => ({
+      label: question.label,
+      prompt: question.prompt,
+      marks: question.marks,
+      type: question.type,
+      options: typeof question.options === "string"
+        ? question.options.split("\n").map((value) => value.trim()).filter(Boolean)
+        : [],
+      wordCountMin: question.wordCountMin,
+      wordCountMax: question.wordCountMax,
+      inkPages: question.inkPages,
+      inkBackground: question.inkBackground,
+      media: question.mediaFiles.map((file) => {
+        const resource = previewFile(file);
+        return resource.kind === "audio" ? { ...resource, maxPlays } : resource;
+      }),
+    })),
+  };
 }
 
 export function packageData(form, questions) {
@@ -460,6 +558,7 @@ export function packageData(form, questions) {
   const readingTimeMinutes = Number(form.querySelector("#builder-reading-time").value);
   const instructions = form.querySelector("#builder-instructions").value.trim();
   const presetMatches = examSelection.assessmentSession !== "custom"
+    && examSelection.level !== "SL/HL"
     && paperLabel === examSelection.paper.label
     && durationMinutes === valueForLevel(examSelection.paper, "duration", examSelection.level)
     && readingTimeMinutes === examSelection.paper.readingTime
@@ -470,6 +569,7 @@ export function packageData(form, questions) {
     assessmentSession: presetMatches ? examSelection.assessmentSession : examSelection.assessmentSession === "custom" ? "custom" : `custom-from-${examSelection.assessmentSession}`,
     ...(presetMatches ? { examProfileId: `${examSelection.assessmentSession}:${examSelection.course.value}:${examSelection.level}:${examSelection.paper.value}` } : {}),
     sourceClassification: form.querySelector("#builder-source-classification").value,
+    exportAuthorized: form.querySelector("#builder-export-authorized").checked,
     title: form.querySelector("#builder-title").value.trim(),
     subject: examSelection.course.value,
     subjectLabel: examSelection.course.label,
@@ -564,47 +664,60 @@ export function mountPaperBuilder(container, onSubmit) {
         <p id="builder-exam-facts" class="builder-exam-facts"></p>
         <p id="builder-exam-guidance" class="builder-exam-guidance"></p>
 
-        <fieldset class="builder-step">
-          <legend><span>2</span> Details and student materials</legend>
-          <label for="builder-title">Practice paper title</label><input id="builder-title" required maxlength="160">
-          <label for="builder-paper-label">Paper name</label><input id="builder-paper-label" required maxlength="80">
-          <div class="inline-fields">
-            <label for="builder-reading-time">Reading time in minutes<input id="builder-reading-time" type="number" min="0" max="60" required></label>
-            <label for="builder-duration">Writing time in minutes<input id="builder-duration" type="number" min="5" max="360" required></label>
-          </div>
-          <p class="form-help">Reading time runs first and does not use a student's extra writing time. Enter 0 when the paper has no separate reading period.</p>
-          <label for="builder-instructions">Student instructions</label><textarea id="builder-instructions" rows="3" required maxlength="20000"></textarea>
-          <label for="builder-source-classification">Question/source rights status</label>
-          <select id="builder-source-classification" required>
-            <option value="teacher-authored">Teacher-authored</option>
-            <option value="school-authorized">School-authorized or licensed</option>
-            <option value="official-public-reference">Official public specimen — reference only</option>
-            <option value="unknown-local-only">Unknown rights — local-only</option>
-          </select>
-          <p class="form-help">This records provenance; it does not grant reuse rights. Keep restricted or uncertain materials on the private school server.</p>
-          <div class="builder-material" data-material="pdf">
-            <label for="builder-pdf"><span id="builder-pdf-label">Paper-wide PDFs</span> <small id="builder-pdf-status">optional</small></label><input id="builder-pdf" type="file" accept="application/pdf,.pdf" multiple>
-            <small>Attach the question paper, source booklet, and any clean data or formula booklet students need throughout the paper.</small>
-          </div>
-          <div class="builder-material" data-material="text">
-            <label for="builder-source-text">Source text <small>optional</small></label><textarea id="builder-source-text" rows="4" maxlength="100000"></textarea>
-          </div>
-          <div class="builder-material" data-material="audio">
-            <label for="builder-audio">Listening audio</label><input id="builder-audio" type="file" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" multiple>
-            <small>Select one or more recordings. You can instead attach a recording to a specific question below.</small>
-            <label for="builder-audio-plays">Maximum plays per recording</label><select id="builder-audio-plays"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
-          </div>
-        </fieldset>
+        <div class="builder-workspace">
+          <div class="builder-editor">
+            <fieldset class="builder-step">
+              <legend><span>2</span> Details and student materials</legend>
+              <label for="builder-title">Practice paper title</label><input id="builder-title" required maxlength="160">
+              <label for="builder-paper-label">Paper name</label><input id="builder-paper-label" required maxlength="80">
+              <div class="inline-fields">
+                <label for="builder-reading-time">Reading time in minutes<input id="builder-reading-time" type="number" min="0" max="60" required></label>
+                <label for="builder-duration">Writing time in minutes<input id="builder-duration" type="number" min="5" max="360" required></label>
+              </div>
+              <p class="form-help">Reading time runs first and does not use a student's extra writing time. Enter 0 when the paper has no separate reading period.</p>
+              <label for="builder-instructions">Student instructions</label><textarea id="builder-instructions" rows="3" required maxlength="20000"></textarea>
+              <label for="builder-source-classification">Question/source rights status</label>
+              <select id="builder-source-classification" required>
+                <option value="unknown-local-only">Unknown or restricted — local-only</option>
+                <option value="teacher-authored">Teacher-authored</option>
+                <option value="school-authorized">School-authorized or licensed</option>
+                <option value="official-public-reference">Official public specimen — reference only</option>
+              </select>
+              <p class="form-help">This records provenance; it does not grant reuse rights. Keep restricted or uncertain materials on the private school server.</p>
+              <label id="builder-export-attestation" class="builder-attestation" hidden><input id="builder-export-authorized" type="checkbox"><span>I confirm that this paper and every attachment may be copied into a portable DigitalDP export.</span></label>
+              <div class="builder-material" data-material="pdf">
+                <label for="builder-pdf"><span id="builder-pdf-label">Paper-wide PDFs</span> <small id="builder-pdf-status">optional</small></label><input id="builder-pdf" type="file" accept="application/pdf,.pdf" multiple>
+                <small>Attach the question paper, source booklet, and any clean data or formula booklet students need throughout the paper.</small>
+              </div>
+              <div class="builder-material" data-material="text">
+                <label for="builder-source-text">Source text <small>optional</small></label><textarea id="builder-source-text" rows="4" maxlength="100000"></textarea>
+              </div>
+              <div class="builder-material" data-material="audio">
+                <label for="builder-audio">Listening audio</label><input id="builder-audio" type="file" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" multiple>
+                <small>Select one or more recordings. You can instead attach a recording to a specific question below.</small>
+                <label for="builder-audio-plays">Maximum plays per recording</label><select id="builder-audio-plays"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+              </div>
+            </fieldset>
 
-        <fieldset class="builder-step">
-          <legend><span>3</span> Questions and student entry areas</legend>
-          <p class="form-help">Enter the wording that should print beside the student's response, then choose the entry area. Images print inline; PDFs and audio are listed as companion materials.</p>
-          <div id="builder-questions" class="builder-questions"></div>
-          <button id="builder-add-question" type="button">Add question and entry area</button>
-        </fieldset>
+            <fieldset class="builder-step">
+              <legend><span>3</span> Questions and student entry areas</legend>
+              <p class="form-help">Enter the wording that should print beside the student's response, then choose the entry area. Images print inline; PDFs and audio are listed as companion materials.</p>
+              <div id="builder-questions" class="builder-questions"></div>
+              <button id="builder-add-question" type="button">Add question and entry area</button>
+            </fieldset>
 
-        <p id="builder-error" class="status-message" role="alert" tabindex="-1" hidden></p>
-        <button class="primary-action builder-submit" type="submit">Add paper to library</button>
+            <p id="builder-error" class="status-message" role="alert" tabindex="-1" hidden></p>
+            <button class="primary-action builder-submit" type="submit">Save paper to library</button>
+          </div>
+
+          <aside class="builder-preview-panel" aria-labelledby="builder-preview-title">
+            <header class="builder-preview-heading">
+              <div><p class="eyebrow">Paper preview</p><h4 id="builder-preview-title">Student paper</h4></div>
+              <span>Updates as you type</span>
+            </header>
+            <div id="builder-preview-scroll" class="builder-preview-scroll" role="region" aria-label="Scrollable live paper preview" tabindex="0"></div>
+          </aside>
+        </div>
       </div>
     </form>
   `;
@@ -615,6 +728,23 @@ export function mountPaperBuilder(container, onSubmit) {
   const level = form.querySelector("#builder-level");
   const paper = form.querySelector("#builder-paper");
   const setup = form.querySelector("#builder-exam-setup");
+  const preview = createPaperPreview(form.querySelector("#builder-preview-scroll"));
+  const rights = form.querySelector("#builder-source-classification");
+  const exportAttestation = form.querySelector("#builder-export-attestation");
+  const exportAuthorized = form.querySelector("#builder-export-authorized");
+  let previewFrame;
+
+  function updateExportAttestation() {
+    const eligible = ["teacher-authored", "school-authorized"].includes(rights.value);
+    exportAttestation.hidden = !eligible;
+    if (!eligible) exportAuthorized.checked = false;
+  }
+
+  function updatePreview() {
+    cancelAnimationFrame(previewFrame);
+    previewFrame = requestAnimationFrame(() => preview.render(paperPreviewData(form, questions)));
+  }
+
   function resetSelect(select, placeholder) {
     select.replaceChildren(option("", placeholder));
     select.value = "";
@@ -634,6 +764,8 @@ export function mountPaperBuilder(container, onSubmit) {
 
   function hideSetup() {
     setup.hidden = true;
+    cancelAnimationFrame(previewFrame);
+    preview.clear();
     questions.splice(0, questions.length);
     form.querySelector("#builder-questions").replaceChildren();
     form.querySelector("#builder-pdf").value = "";
@@ -647,10 +779,9 @@ export function mountPaperBuilder(container, onSubmit) {
     const course = selectedCourse(form);
     resetSelect(level, "Choose level");
     if (!course) return;
-    const levels = [...new Set(course.papers
-      .filter((item) => item.sessions.includes(assessmentSession.value))
-      .flatMap((item) => item.levels))];
-    for (const item of levels) level.append(option(item, item));
+    for (const item of levelsForCourse(course, assessmentSession.value)) {
+      level.append(option(item, item === "SL/HL" ? "SL/HL — combined" : item));
+    }
     level.disabled = false;
   }
 
@@ -659,9 +790,7 @@ export function mountPaperBuilder(container, onSubmit) {
     resetSelect(paper, "Choose paper");
     const course = selectedCourse(form);
     if (!course || !level.value) return;
-    for (const item of course.papers.filter((candidate) => (
-      candidate.levels.includes(level.value) && candidate.sessions.includes(assessmentSession.value)
-    ))) {
+    for (const item of papersForLevel(course, assessmentSession.value, level.value)) {
       paper.append(option(item.value, item.label));
     }
     paper.disabled = false;
@@ -776,6 +905,7 @@ export function mountPaperBuilder(container, onSubmit) {
         list.querySelector(`[data-question-key="${focusTarget.key}"] ${focusTarget.selector}`)?.focus();
       });
     }
+    updatePreview();
   }
 
   function applyExam() {
@@ -793,13 +923,17 @@ export function mountPaperBuilder(container, onSubmit) {
     form.querySelector("#builder-instructions").value = valueForLevel(selectedPaper, "instructions", selectedLevel);
     const guidance = valueForLevel(selectedPaper, "guidance", selectedLevel);
     const guidanceElement = form.querySelector("#builder-exam-guidance");
-    guidanceElement.textContent = guidance ?? "Add each question, then choose the response area students should receive.";
+    const combinedGuidance = selectedLevel === "SL/HL"
+      ? "This is a combined-level custom paper. It uses one shared timer and response rule, so review every default before assigning it to both SL and HL students. "
+      : "";
+    guidanceElement.textContent = `${combinedGuidance}${guidance ?? "Add each question, then choose the response area students should receive."}`;
     const facts = [
       `${selectedPaper.readingTime} min reading`,
       `${duration} min writing`,
       valueForLevel(selectedPaper, "maximumMarks", selectedLevel) ? `${valueForLevel(selectedPaper, "maximumMarks", selectedLevel)} marks` : "marks: confirm current guide",
       valueForLevel(selectedPaper, "subjectWeightPercent", selectedLevel) ? `${valueForLevel(selectedPaper, "subjectWeightPercent", selectedLevel)}% of subject` : null,
     ].filter(Boolean);
+    if (selectedLevel === "SL/HL") facts.unshift("combined custom profile");
     form.querySelector("#builder-exam-facts").textContent = facts.join(" · ");
     const pdfLabel = form.querySelector("#builder-pdf-label");
     const pdfStatus = form.querySelector("#builder-pdf-status");
@@ -814,12 +948,16 @@ export function mountPaperBuilder(container, onSubmit) {
     initialQuestions.forEach((template, index) => questions.push(questionFrom(template, index + 1)));
     renderQuestions();
     setup.hidden = false;
+    updatePreview();
   }
 
   subject.addEventListener("change", populateLevels);
   assessmentSession.addEventListener("change", populateSubjects);
   level.addEventListener("change", populatePapers);
   paper.addEventListener("change", applyExam);
+  rights.addEventListener("change", updateExportAttestation);
+  form.addEventListener("input", updatePreview);
+  form.addEventListener("change", updatePreview);
   form.querySelector("#builder-add-question").addEventListener("click", () => {
     const selection = selectedExam(form);
     const suggested = selection
@@ -838,6 +976,7 @@ export function mountPaperBuilder(container, onSubmit) {
     try {
       await onSubmit(packageData(form, questions));
       form.reset();
+      updateExportAttestation();
       populateSubjects();
       subject.focus();
     } catch (caught) {
@@ -850,4 +989,5 @@ export function mountPaperBuilder(container, onSubmit) {
   });
 
   populateSubjects();
+  updateExportAttestation();
 }

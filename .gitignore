@@ -15,3 +15,8 @@ resources/**/*.wav
 resources/**/*.ogg
 resources/**/*.mp4
 resources/**/*.flac
+*.digitaldp-paper
+!examples/portable/business-quantitative.digitaldp-paper
+!examples/portable/hl-language-b-listening.digitaldp-paper
+!examples/portable/sl-hl-mixed-data.digitaldp-paper
+!examples/portable/sl-prose-choose-one.digitaldp-paper

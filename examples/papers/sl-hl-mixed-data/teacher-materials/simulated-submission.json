@@ -1,0 +1,11 @@
+{
+  "candidate": "Sample Candidate D1",
+  "selectedQuestionId": "q3",
+  "answers": {
+    "q1": "Black felt",
+    "q2": "The distance from the lamp and the exposure time were controlled. Keeping the distance at 30 cm means that a difference in heating is more likely to come from the surface and not from one tray receiving stronger radiation.",
+    "q3": "{\"version\":1,\"pages\":[{\"strokes\":[]},{\"strokes\":[]}],\"typed\":\"Temperature increases: black felt = 38 - 20 = 18 degrees Celsius; white card = 27 - 20 = 7 degrees Celsius; damp soil = 24 - 20 = 4 degrees Celsius. Mean increase = (18 + 7 + 4) / 3 = 9.67 degrees Celsius. Damp soil has the lowest measured increase, so I recommend a damp-soil planted surface where reducing daytime heat gain is the priority. One repeat is weak evidence, so the test should be repeated on several days.\"}"
+  },
+  "flags": ["q3"],
+  "notepad": "Need graph: rises 18, 7, 4."
+}

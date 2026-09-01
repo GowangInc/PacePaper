@@ -1,0 +1,14 @@
+{
+  "candidate": "Sample Candidate L1",
+  "selectedQuestionId": "q6",
+  "answers": {
+    "q1": "To explain a community project",
+    "q2": "Eastbrook Community Library",
+    "q3": "They saw useful objects discarded",
+    "q4": "A retired engineer and a carpenter",
+    "q5": "68 objects were brought and 40 were repaired.",
+    "q6": "They want to take a mobile tool cart into neighbourhoods away from the library. They still need transport for it in the school minibus."
+  },
+  "flags": ["q5"],
+  "notepad": "68 total; I heard forty or forty-one repaired."
+}

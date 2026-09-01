@@ -38,9 +38,9 @@ Place `paper.json` beside the source files. In DigitalDP's **Structured paper pa
 ```json
 {
   "version": 1,
-  "assessmentSession": "may-2026",
-  "examProfileId": "may-2026:english-b:SL:paper-2-reading",
+  "assessmentSession": "custom",
   "sourceClassification": "teacher-authored",
+  "exportAuthorized": false,
   "title": "Exact assessment title",
   "subject": "english-b",
   "subjectLabel": "English B",
@@ -121,6 +121,7 @@ Place `paper.json` beside the source files. In DigitalDP's **Structured paper pa
 - `maximumMarks` and `subjectWeightPercent` are optional positive integers for a verified preset. Each question may also carry optional positive integer `marks`; do not invent any of these values.
 - `assessmentSession` and `examProfileId` are included when the teacher or verified exam profile supplies them; do not guess them.
 - `sourceClassification` is exactly `teacher-authored`, `school-authorized`, `official-public-reference`, or `unknown-local-only`; classification records provenance but never grants copying or redistribution rights.
+- `exportAuthorized` is a separate boolean attestation. Set it to `true` only when the paper and every attachment may be copied into a portable DigitalDP export; otherwise use `false`.
 - There are 0–30 resources and 1–100 questions.
 - Every resource key and question ID matches `^[a-z0-9][a-z0-9_-]{0,63}$` and is unique.
 - Every `resourceKeys` item exists in `resources`.

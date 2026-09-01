@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "assessmentSession": "custom",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "LoopLunch Growth Decision",
+  "subject": "business-management",
+  "subjectLabel": "Business Management",
+  "level": "SL/HL",
+  "paper": "Custom quantitative and extended response",
+  "durationMinutes": 50,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 18,
+  "mode": "reading",
+  "instructions": "Read the original case and answer all questions. Show the formula, working, and units in quantitative responses. Use evidence from the case in the extended recommendation. This is a custom classroom practice and does not reproduce an official paper.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "case",
+      "label": "Teacher-authored case: LoopLunch Ltd",
+      "kind": "text",
+      "text": "LoopLunch Ltd provides reusable lunch containers to office workers through a monthly subscription. Customers return used containers to collection points, and LoopLunch washes and redistributes them. The business currently has 3,400 monthly subscriptions.\n\nCurrent monthly data:\nSubscription price: $32\nVariable cost per subscription: $18\nFixed operating costs: $42,000\nMaximum monthly capacity: 3,800 subscriptions\n\nManagement is considering leasing an automated washer. The lease would increase monthly fixed costs by $8,400, reduce variable cost per subscription to $14, and increase capacity to 5,000 subscriptions. The supplier promises installation within six weeks but is a young company with limited service staff.\n\nSome employees are concerned that automation will reduce the variety of their work. The operations manager believes that retraining staff for quality control could improve reliability, but the training would take time during the busiest month. A recent customer survey found that dependable collection times mattered more than adding new container designs."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1",
+      "prompt": "Using the current monthly data, calculate LoopLunch Ltd's break-even level of output and margin of safety at the present demand of 3,400 subscriptions. Show the formula and all working.",
+      "type": "ink",
+      "marks": 6,
+      "resourceKeys": ["case"],
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2",
+      "prompt": "State one qualitative factor, other than cost, that management should consider before leasing the washer, and explain why it matters.",
+      "type": "short",
+      "marks": 2,
+      "resourceKeys": ["case"]
+    },
+    {
+      "id": "q3",
+      "label": "Question 3",
+      "prompt": "Recommend whether LoopLunch Ltd should lease the automated washer. Use relevant quantitative evidence and qualitative evidence from the case, consider at least one limitation, and reach a justified conclusion.",
+      "type": "essay",
+      "marks": 10,
+      "resourceKeys": ["case"],
+      "wordCountMin": 350,
+      "wordCountMax": 700
+    }
+  ]
+}

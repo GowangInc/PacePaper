@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { parseManifest, parsePaperUpload, sanitizeRichText } from "./papers";
+import { gzipSync } from "node:zlib";
+import { encodePortablePaper, parseManifest, parsePaperUpload, sanitizeRichText } from "./papers";
 
 const manifest = {
   version: 1,
@@ -24,12 +25,23 @@ describe("paper manifests", () => {
       subjectLabel: "History",
       readingTimeMinutes: 5,
       sourceClassification: "unknown-local-only",
+      exportAuthorized: false,
     });
   });
 
   test("accepts and validates source-rights classification", () => {
     expect(parseManifest({ ...manifest, sourceClassification: "school-authorized" }).sourceClassification).toBe("school-authorized");
     expect(() => parseManifest({ ...manifest, sourceClassification: "public-domain" })).toThrow("manifest.sourceClassification");
+  });
+
+  test("defaults portable export permission to false and validates an explicit attestation", () => {
+    expect(parseManifest(manifest).exportAuthorized).toBe(false);
+    expect(parseManifest({ ...manifest, exportAuthorized: true }).exportAuthorized).toBe(true);
+    expect(() => parseManifest({ ...manifest, exportAuthorized: "yes" })).toThrow("manifest.exportAuthorized");
+  });
+
+  test("rejects unsupported level labels", () => {
+    expect(() => parseManifest({ ...manifest, level: "SL + HL" })).toThrow("manifest.level");
   });
 
   test("defaults legacy manifests to no separate reading period", () => {
@@ -101,6 +113,86 @@ describe("paper uploads", () => {
 
     expect(imported.manifest).toMatchObject({ mode: "reading", subject: "history" });
     expect(imported.assets[0]).toMatchObject({ filename: "source.pdf", mime: "application/pdf" });
+  });
+
+  test("exports and re-imports one portable file without changing the paper or assets", async () => {
+    const packaged = parseManifest({
+      ...manifest,
+      sourceClassification: "teacher-authored",
+      exportAuthorized: true,
+      resources: [{ key: "source-a", label: "Source A", kind: "document", file: "source.pdf" }],
+    });
+    const sourceBytes = new TextEncoder().encode("%PDF-1.7\nTeacher-authored source");
+    const portableBytes = await encodePortablePaper(packaged, [{ filename: "source.pdf", mime: "application/pdf", data: sourceBytes }]);
+    const form = new FormData();
+    form.set("format", "portable");
+    form.set("portablePaper", new File([portableBytes], "history.digitaldp-paper", { type: "application/vnd.digitaldp.paper+gzip" }));
+
+    const imported = await parsePaperUpload(form);
+
+    expect(imported.manifest).toEqual(packaged);
+    expect(imported.assets).toHaveLength(1);
+    expect(imported.assets[0]).toMatchObject({ assetKey: "source-a", filename: "source.pdf", mime: "application/pdf" });
+    expect(imported.assets[0]?.bytes).toEqual(sourceBytes);
+  });
+
+  test("rejects a damaged portable paper", async () => {
+    const form = new FormData();
+    form.set("format", "portable");
+    form.set("portablePaper", new File(["not a portable paper"], "broken.digitaldp-paper"));
+    await expect(parsePaperUpload(form)).rejects.toThrow("damaged or has an unsupported format");
+  });
+
+  test("rejects malformed Base64 inside an otherwise valid portable envelope", async () => {
+    const packaged = parseManifest({
+      ...manifest,
+      resources: [{ key: "source-a", label: "Source A", kind: "document", file: "source.pdf" }],
+    });
+    const envelope = gzipSync(JSON.stringify({
+      format: "digitaldp-paper",
+      version: 1,
+      manifest: packaged,
+      assets: [{ filename: "source.pdf", mime: "application/pdf", data: "not+base64!" }],
+    }));
+    const form = new FormData();
+    form.set("format", "portable");
+    form.set("portablePaper", new File([envelope], "broken.digitaldp-paper"));
+
+    await expect(parsePaperUpload(form)).rejects.toThrow("not valid base64");
+  });
+
+  test("round-trips a multi-megabyte listening file", async () => {
+    const listening = parseManifest({
+      ...manifest,
+      sourceClassification: "teacher-authored",
+      mode: "listening",
+      resources: [{ key: "audio", label: "Teacher recording", kind: "audio", file: "listening.wav", maxPlays: 2 }],
+      questions: [{ ...manifest.questions[0], resourceKeys: ["audio"] }],
+    });
+    const wav = new Uint8Array(4_000_000);
+    wav.set(new TextEncoder().encode("RIFF"), 0);
+    wav.set(new TextEncoder().encode("WAVE"), 8);
+    const portableBytes = await encodePortablePaper(listening, [{ filename: "listening.wav", mime: "audio/wav", data: wav }]);
+    const form = new FormData();
+    form.set("format", "portable");
+    form.set("portablePaper", new File([portableBytes], "listening.digitaldp-paper"));
+
+    const imported = await parsePaperUpload(form);
+
+    expect(imported.assets[0]?.bytes).toEqual(wav);
+  });
+
+  test("rejects an asset whose bytes do not match its claimed type", async () => {
+    const packaged = {
+      ...manifest,
+      resources: [{ key: "source-a", label: "Source A", kind: "document", file: "source.pdf" }],
+    };
+    const form = new FormData();
+    form.set("format", "package");
+    form.append("packageFiles", new File([JSON.stringify(packaged)], "paper.json", { type: "application/json" }));
+    form.append("packageFiles", new File(["<script>not a PDF</script>"], "source.pdf", { type: "application/pdf" }));
+
+    await expect(parsePaperUpload(form)).rejects.toThrow("does not match its declared file type");
   });
 });
 

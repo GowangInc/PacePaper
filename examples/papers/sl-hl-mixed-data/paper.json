@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "assessmentSession": "custom",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Heat and Surfaces",
+  "subject": "environmental-systems-and-societies",
+  "subjectLabel": "Environmental Systems and Societies",
+  "level": "SL/HL",
+  "paper": "Custom mixed data response",
+  "durationMinutes": 45,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 12,
+  "mode": "reading",
+  "instructions": "Read the experimental record during the separate reading period. When writing time begins, answer all three questions. Show calculations and include units where appropriate. The final response may be handwritten on the digital pages or entered using the typed alternative.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "experiment",
+      "label": "Teacher-authored experimental record",
+      "kind": "text",
+      "text": "A student compared three small rooftop surfaces. Each tray began at 20 degrees Celsius, was placed 30 centimetres below the same heat lamp, and was exposed for 10 minutes. The surface area of every tray was 400 square centimetres.\n\nSurface | Final temperature\nBlack felt | 38 degrees Celsius\nWhite card | 27 degrees Celsius\nDamp soil | 24 degrees Celsius\n\nThe student repeated the procedure once for each surface on the same afternoon."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1",
+      "prompt": "Which surface showed the greatest temperature increase?",
+      "type": "single-choice",
+      "marks": 1,
+      "resourceKeys": ["experiment"],
+      "options": ["Black felt", "White card", "Damp soil", "All increased equally"]
+    },
+    {
+      "id": "q2",
+      "label": "Question 2",
+      "prompt": "Identify two controlled variables in the procedure and explain why keeping one of them constant improves the comparison.",
+      "type": "short",
+      "marks": 3,
+      "resourceKeys": ["experiment"]
+    },
+    {
+      "id": "q3",
+      "label": "Question 3",
+      "prompt": "Calculate the mean temperature increase across the three surfaces. Then construct a labelled bar chart of the temperature increases and use the pattern to recommend one surface treatment for a roof where lower daytime heat gain is the priority. Show all working.",
+      "type": "ink",
+      "marks": 8,
+      "resourceKeys": ["experiment"],
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

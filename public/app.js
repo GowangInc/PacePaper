@@ -131,6 +131,9 @@ async function start() {
   if (path === "/admin") {
     const { renderAdmin } = await import("/admin.js");
     await renderAdmin(bootstrap);
+  } else if (path === "/clock") {
+    const { renderCountdown } = await import("/countdown.js");
+    await renderCountdown(bootstrap);
   } else if (path === "/student") {
     const { renderStudent } = await import("/student.js");
     await renderStudent(bootstrap);

@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "assessmentSession": "custom",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Two Stops Before Morning",
+  "subject": "english-a-language-literature",
+  "subjectLabel": "English A: Language and Literature",
+  "level": "SL",
+  "paper": "Custom prose analysis",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "essay",
+  "instructions": "Read the prose carefully during the separate reading period. When writing time begins, choose one question and write one analytical response. Support your interpretation with precise references to the supplied text. This is an original classroom practice paper, not an official examination.",
+  "selectionMode": "one",
+  "resources": [
+    {
+      "key": "prose",
+      "label": "Teacher-authored prose: Two Stops Before Morning",
+      "kind": "text",
+      "text": "TWO STOPS BEFORE MORNING\n\nAt 4:17, the number 6 bus waited where no bus was meant to wait. Its engine kept a low mechanical sigh, and every few seconds the destination sign blinked blank before remembering the word RIVER. Mara stood beneath it with a paper bag of bread pressed to her coat. Rain made silver ladders down the shelter glass.\n\nThe driver leaned across and opened the door. He was older than the photograph on his badge and wore his sleeves rolled neatly to the elbow. ‘Last one until six,’ he said. ‘Unless the river changes its mind.’\n\nMara climbed aboard. She expected the bus to be empty, but a boy in a school blazer slept against the window with a cello case held between his knees. Across the aisle, a woman balanced a tray of seedlings on her lap. Near the back sat Mr Iqbal from the corner shop, though his shop had been dark when Mara passed it. He nodded as if they had arranged to meet.\n\nThe bus moved. Streetlights slid across the windows, turning each passenger briefly into a portrait and then an outline. Mara placed the bread beside her. She had baked it for her sister, who was working the dawn shift at the hospital, but the loaves had collapsed in the middle. In the kitchen they had looked like failures. On the bus, warm air escaped the folded bag and filled the lower deck with the smell of toasted fennel.\n\n‘That yours?’ asked Mr Iqbal.\n\nMara nodded. ‘It went wrong.’\n\nThe driver called back without turning. ‘Still smells right.’\n\nAt Orchard Road the boy woke. He checked the cello case before checking where he was. ‘I missed my audition,’ he said to nobody. The woman with the seedlings shifted her tray and made room beside her.\n\n‘Then play for people who did not miss you,’ she said.\n\nHe stared at her, suspicious of kindness, but unlatched the case. The instrument was a darker brown than the seats. He played only scales at first, notes climbing carefully through the bus’s rattles. Then the scales bent into a tune Mara almost recognized. Mr Iqbal tapped two fingers on the rail. The seedlings trembled as if they could hear.\n\nAt the next stop, no one was waiting. The driver stopped anyway. He opened both doors and the river smell entered—mud, rain, and something green crushed underfoot. Across the road, three hospital cleaners stood under a broken awning. They looked up at the music. One raised a hand.\n\n‘We don’t go that way,’ Mara said as they began to turn toward the hospital.\n\n‘We do before six,’ the driver replied.\n\nThe route display blinked blank again. This time it stayed blank.\n\nThey reached the staff entrance at 4:52. Mara’s sister came out in blue scrubs, followed by the three cleaners and a security guard carrying six paper cups. The boy played the tune a second time. The woman distributed seedlings—mint, basil, one stubborn tomato—to anyone with a free hand. Mr Iqbal found a jar of apricot jam in his coat.\n\nMara tore open the bag. The loaves had sunk, but their crusts cracked cleanly. She broke them into uneven pieces. Nobody asked what shape they were supposed to have.\n\nWhen the bus finally returned to its route, dawn had begun to colour the river. The destination sign remained empty, and for the first time that morning, no one seemed to need it."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1",
+      "prompt": "How does the writer use the bus journey and its changing route to develop Mara's understanding of failure?",
+      "type": "essay",
+      "marks": 20,
+      "resourceKeys": ["prose"],
+      "wordCountMin": 450,
+      "wordCountMax": 900
+    },
+    {
+      "id": "q2",
+      "label": "Question 2",
+      "prompt": "How do contrasts between routine and improvisation shape the passage's presentation of community?",
+      "type": "essay",
+      "marks": 20,
+      "resourceKeys": ["prose"],
+      "wordCountMin": 450,
+      "wordCountMax": 900
+    }
+  ]
+}

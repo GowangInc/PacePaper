@@ -68,6 +68,8 @@ export interface PaperSummary {
   durationMinutes: number;
   readingTimeMinutes: number;
   mode: string;
+  sourceClassification: PaperManifest["sourceClassification"];
+  exportAuthorized: boolean;
   createdAt: number;
 }
 
@@ -77,12 +79,21 @@ export interface AssetRow {
   data: Uint8Array;
 }
 
+export interface PaperAssetRow extends AssetRow {
+  assetKey: string;
+}
+
 export interface ExamSessionRow {
   id: string;
   classId: string;
   className: string;
   paperId: string;
   paperTitle: string;
+  subjectLabel: string;
+  level: string;
+  paper: string;
+  durationMinutes: number;
+  readingTimeMinutes: number;
   status: ExamStatus;
   startedAt: number | null;
   endedAt: number | null;
@@ -249,6 +260,27 @@ export function createAdmin(username: string, passwordHash: string): AdminRow {
   return { id, username, passwordHash };
 }
 
+export function configureDemoAdmin(username: string, passwordHash: string): AdminRow {
+  const existing = db.query<AdminRow, []>(`
+    SELECT id, username, password_hash AS passwordHash
+      FROM admins
+     ORDER BY created_at, id
+     LIMIT 1
+  `).get();
+  if (!existing) {
+    db.query("DELETE FROM auth_sessions WHERE role = 'admin'").run();
+    return createAdmin(username, passwordHash);
+  }
+
+  db.transaction(() => {
+    db.query("DELETE FROM auth_sessions WHERE role = 'admin'").run();
+    db.query("DELETE FROM admins WHERE id <> $id").run({ id: existing.id });
+    db.query("UPDATE admins SET username = $username, password_hash = $passwordHash WHERE id = $id")
+      .run({ id: existing.id, username, passwordHash });
+  })();
+  return { id: existing.id, username, passwordHash };
+}
+
 export function findAdmin(username: string): AdminRow | null {
   return db.query<AdminRow, { username: string }>(
     "SELECT id, username, password_hash AS passwordHash FROM admins WHERE username = $username COLLATE NOCASE",
@@ -407,12 +439,14 @@ export function createPaper(imported: ImportedPaper): PaperSummary {
     durationMinutes: imported.manifest.durationMinutes,
     readingTimeMinutes: imported.manifest.readingTimeMinutes,
     mode: imported.manifest.mode,
+    sourceClassification: imported.manifest.sourceClassification,
+    exportAuthorized: imported.manifest.exportAuthorized,
     createdAt: now,
   };
 }
 
 export function listPapers(): PaperSummary[] {
-  return db.query<PaperSummary, []>(`
+  const rows = db.query<PaperSummary, []>(`
     SELECT id,
            title,
            subject,
@@ -422,10 +456,13 @@ export function listPapers(): PaperSummary[] {
            duration_minutes AS durationMinutes,
            COALESCE(json_extract(manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
            mode,
+           COALESCE(json_extract(manifest_json, '$.sourceClassification'), 'unknown-local-only') AS sourceClassification,
+           COALESCE(json_extract(manifest_json, '$.exportAuthorized'), 0) AS exportAuthorized,
            created_at AS createdAt
       FROM papers
      ORDER BY created_at DESC
   `).all();
+  return rows.map((row) => ({ ...row, exportAuthorized: Boolean(row.exportAuthorized) }));
 }
 
 export function getPaper(paperId: string): { row: PaperRow; manifest: PaperManifest } | null {
@@ -449,6 +486,15 @@ export function getAsset(paperId: string, assetKey: string): AssetRow | null {
   return db.query<AssetRow, { paperId: string; assetKey: string }>(`
     SELECT filename, mime, data FROM paper_assets WHERE paper_id = $paperId AND asset_key = $assetKey
   `).get({ paperId, assetKey }) ?? null;
+}
+
+export function listPaperAssets(paperId: string): PaperAssetRow[] {
+  return db.query<PaperAssetRow, { paperId: string }>(`
+    SELECT asset_key AS assetKey, filename, mime, data
+      FROM paper_assets
+     WHERE paper_id = $paperId
+     ORDER BY asset_key
+  `).all({ paperId });
 }
 
 export function createExamSession(classId: string, paperId: string): string {
@@ -507,6 +553,11 @@ export function listExamSessions(): ExamSessionRow[] {
            classes.name AS className,
            sessions.paper_id AS paperId,
            papers.title AS paperTitle,
+           papers.subject_label AS subjectLabel,
+           papers.level,
+           papers.paper,
+           papers.duration_minutes AS durationMinutes,
+           COALESCE(json_extract(papers.manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
            sessions.status,
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,

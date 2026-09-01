@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "assessmentSession": "custom",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Repair Café on the Move",
+  "subject": "english-b",
+  "subjectLabel": "English B",
+  "level": "HL",
+  "paper": "Custom listening practice",
+  "durationMinutes": 25,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 10,
+  "mode": "listening",
+  "instructions": "Listen to the original community-radio interview and answer every question. The recording may be played no more than twice. There is no separate general reading period for this custom practice; review the questions before starting the audio. Spelling is not assessed unless it prevents meaning.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "interview",
+      "label": "Community-radio interview",
+      "kind": "audio",
+      "file": "repair-cafe-interview.mp3",
+      "maxPlays": 2
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1",
+      "prompt": "What is the main purpose of the interview?",
+      "type": "single-choice",
+      "marks": 1,
+      "resourceKeys": ["interview"],
+      "options": ["To advertise a new shop", "To explain a community project", "To teach bicycle repair", "To report a competition"]
+    },
+    {
+      "id": "q2",
+      "label": "Question 2",
+      "prompt": "Where are the repair sessions currently held?",
+      "type": "short",
+      "marks": 1,
+      "resourceKeys": ["interview"]
+    },
+    {
+      "id": "q3",
+      "label": "Question 3",
+      "prompt": "What first motivated the students to start the project?",
+      "type": "single-choice",
+      "marks": 1,
+      "resourceKeys": ["interview"],
+      "options": ["A grant became available", "A teacher assigned a project", "They saw useful objects discarded", "The library requested volunteers"]
+    },
+    {
+      "id": "q4",
+      "label": "Question 4",
+      "prompt": "Name two volunteer backgrounds mentioned by Mira.",
+      "type": "short",
+      "marks": 2,
+      "resourceKeys": ["interview"]
+    },
+    {
+      "id": "q5",
+      "label": "Question 5",
+      "prompt": "How many objects were brought to the first four sessions, and how many were repaired?",
+      "type": "short",
+      "marks": 2,
+      "resourceKeys": ["interview"]
+    },
+    {
+      "id": "q6",
+      "label": "Question 6",
+      "prompt": "Describe the project's next plan and identify the practical support it still needs.",
+      "type": "short",
+      "marks": 3,
+      "resourceKeys": ["interview"]
+    }
+  ]
+}
