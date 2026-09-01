@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "types": ["bun-types"],
+    "noEmit": true
+  },
+  "include": ["server.ts", "src/**/*.ts", "test/**/*.ts"]
+}
