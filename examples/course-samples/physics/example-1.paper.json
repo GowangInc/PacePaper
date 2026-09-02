@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Physics · Paper 1 — original combined 1A and 1B sample",
+  "subject": "physics",
+  "subjectLabel": "Physics",
+  "level": "SL",
+  "paper": "Paper 1 — original combined 1A and 1B sample",
+  "durationMinutes": 35,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 13,
+  "mode": "reading",
+  "instructions": "Complete the selected-response and data/working questions under one timer. An approved calculator is required. Use the original reference data supplied within this sample; no external data booklet is needed. Enter each answer beside its question; no separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "physics-reference",
+      "label": "Reference data for this sample",
+      "kind": "text",
+      "text": "g = 9.81 m s⁻²\nSpeed of light c = 3.00 × 10⁸ m s⁻¹\nElementary charge e = 1.60 × 10⁻¹⁹ C"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Paper 1A · Question 1",
+      "prompt": "A car travels 60 m east and then 20 m west. What is its displacement?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "80 m east",
+        "40 m east",
+        "40 m west",
+        "80 m west"
+      ]
+    },
+    {
+      "id": "q2",
+      "label": "Paper 1A · Question 2",
+      "prompt": "Two identical resistors are connected in parallel. Their combined resistance is",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "twice one resistor",
+        "equal to one resistor",
+        "half one resistor",
+        "zero"
+      ]
+    },
+    {
+      "id": "q3",
+      "label": "Paper 1A · Question 3",
+      "prompt": "Which property remains constant when a wave crosses a boundary into a new medium?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Speed",
+        "Wavelength",
+        "Frequency",
+        "Amplitude"
+      ]
+    },
+    {
+      "id": "q4",
+      "label": "Paper 1A · Question 4",
+      "prompt": "Which quantity is measured in joules per coulomb?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Current",
+        "Potential difference",
+        "Resistance",
+        "Power"
+      ]
+    },
+    {
+      "id": "q5",
+      "label": "Paper 1B · Question 5",
+      "prompt": "A 0.40 kg ball is projected vertically upward at 12.0 m s⁻¹. Neglect air resistance. Calculate its maximum height above the launch point and the time taken to return.",
+      "type": "ink",
+      "resourceKeys": [
+        "physics-reference"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Paper 1B · Question 6",
+      "prompt": "A 6.0 Ω resistor and a 3.0 Ω resistor are connected in parallel to a 12 V supply. Draw the circuit and calculate the total current.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "blank",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

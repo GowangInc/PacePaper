@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { CURRENT_SAMPLE_COURSE_IDS } from "../examples/sample-source/index.ts";
 import {
   BUILDER_LEVELS,
   COURSES,
@@ -18,11 +19,11 @@ function builderForm(values = {}) {
     "#builder-pdf": { files: [] },
     "#builder-audio": { files: [] },
     "#builder-source-text": { value: "Shared formula note" },
-    "#builder-audio-plays": { value: "2" },
     "#builder-title": { value: "Media scoping test" },
     "#builder-paper-label": { value: "Paper 1" },
     "#builder-duration": { value: "90" },
     "#builder-reading-time": { value: "5" },
+    "#builder-maximum-marks": { value: "80" },
     "#builder-instructions": { value: "Answer every question." },
     "#builder-source-classification": { value: "unknown-local-only" },
     "#builder-export-authorized": { checked: false },
@@ -48,6 +49,7 @@ describe("Paper Builder exam presets", () => {
       "#builder-level": { value: "SL/HL" },
       "#builder-title": { value: "Combined mathematics sampler" },
       "#builder-duration": { value: "120" },
+      "#builder-maximum-marks": { value: "" },
       "#builder-instructions": { value: "Complete the shared practice questions." },
     });
     const preview = paperPreviewData(form, [{
@@ -74,6 +76,7 @@ describe("Paper Builder exam presets", () => {
     const form = builderForm({
       "#builder-level": { value: "SL/HL" },
       "#builder-duration": { value: "120" },
+      "#builder-maximum-marks": { value: "" },
       "#builder-pdf": { files: [new File(["formulae"], "formula-booklet.pdf", { type: "application/pdf" })] },
     });
     const data = packageData(form, [{
@@ -90,6 +93,24 @@ describe("Paper Builder exam presets", () => {
     expect(manifest.examProfileId).toBeUndefined();
     expect(manifest.maximumMarks).toBeUndefined();
     expect(manifest.subjectWeightPercent).toBeUndefined();
+  });
+
+  test("serializes the teacher's default canvas background for an ink question", async () => {
+    const data = packageData(builderForm(), [{
+      label: "Question 1",
+      prompt: "Show your working.",
+      type: "ink",
+      inkPages: 2,
+      inkBackground: "lined",
+      mediaFiles: [],
+    }]);
+    const manifest = JSON.parse(await data.getAll("packageFiles")[0].text());
+
+    expect(manifest.questions[0].ink).toEqual({
+      pages: 2,
+      background: "lined",
+      allowTypedAlternative: true,
+    });
   });
 
   test("requires a separate explicit attestation for portable export", async () => {
@@ -118,6 +139,10 @@ describe("Paper Builder exam presets", () => {
         }
       }
     }
+  });
+
+  test("the example library stays aligned with every course in the builder", () => {
+    expect([...CURRENT_SAMPLE_COURSE_IDS].sort()).toEqual(COURSES.map((course) => course.value).sort());
   });
 
   test("current mathematics choices apply the 2026 timing matrix", () => {
@@ -218,6 +243,7 @@ describe("Paper Builder exam presets", () => {
       "#builder-paper-label": { value: "Paper 3 — first assessment 2027" },
       "#builder-duration": { value: "105" },
       "#builder-reading-time": { value: "5" },
+      "#builder-maximum-marks": { value: "30" },
       "#builder-instructions": { value: "Use the supplied resource booklet and answer all four source-based questions." },
       "#builder-source-text": { value: "Resource booklet extract" },
     });
@@ -266,6 +292,19 @@ describe("Paper Builder exam presets", () => {
     const missingRequiredBooklet = JSON.parse(await packageData(builderForm(withoutRequiredBooklet), [question]).getAll("packageFiles")[0].text());
     expect(missingRequiredBooklet.examProfileId).toBeUndefined();
     expect(missingRequiredBooklet.assessmentSession).toBe("custom-from-may-2026");
+  });
+
+  test("uses a teacher-edited positive maximum in the preview and saved manifest", async () => {
+    const form = builderForm({ "#builder-maximum-marks": { value: "72" } });
+    const question = [{ label: "Question 1", prompt: "Show your reasoning.", type: "short", mediaFiles: [] }];
+    expect(paperPreviewData(form, question).maximumMarks).toBe(72);
+
+    const manifest = JSON.parse(await packageData(form, question).getAll("packageFiles")[0].text());
+    expect(manifest.maximumMarks).toBe(72);
+    expect(manifest.examProfileId).toBeUndefined();
+    expect(manifest.assessmentSession).toBe("custom-from-may-2026");
+    expect(() => packageData(builderForm({ "#builder-maximum-marks": { value: "0" } }), question)).toThrow("Maximum marks");
+    expect(() => packageData(builderForm({ "#builder-maximum-marks": { value: "4.5" } }), question)).toThrow("Maximum marks");
   });
 
   test("combined science Paper 1 requires both component starter cards", () => {
@@ -327,7 +366,6 @@ describe("Paper Builder exam presets", () => {
       "#builder-subject": { value: "english-b" },
       "#builder-paper": { value: "paper-2-listening" },
       "#builder-audio": { files: [] },
-      "#builder-audio-plays": { value: "3" },
       "#builder-source-text": { value: "" },
     });
     const questions = [
@@ -346,9 +384,27 @@ describe("Paper Builder exam presets", () => {
       label: "Text 1 media 1",
       kind: "audio",
       file: "text-1.mp3",
-      maxPlays: 3,
+      maxPlays: 2,
     }]);
     expect(manifest.questions[0].resourceKeys).toEqual(["q1-media-1"]);
     expect(manifest.questions[1].resourceKeys).toEqual([]);
+  });
+
+  test("packages shared recordings with the fixed two-play policy", async () => {
+    const recording = new File(["audio"], "paper-audio.mp3", { type: "audio/mpeg" });
+    const form = builderForm({
+      "#builder-subject": { value: "english-b" },
+      "#builder-paper": { value: "paper-2-listening" },
+      "#builder-audio": { files: [recording] },
+      "#builder-source-text": { value: "" },
+    });
+    const questions = [{ label: "Text 1", prompt: "Listen and answer.", type: "short", mediaFiles: [] }];
+
+    const preview = paperPreviewData(form, questions);
+    expect(preview.sharedResources[0]).toMatchObject({ name: "paper-audio.mp3", kind: "audio", maxPlays: 2 });
+
+    const manifest = JSON.parse(await packageData(form, questions).getAll("packageFiles")[0].text());
+    expect(manifest.resources[0]).toMatchObject({ file: "paper-audio.mp3", kind: "audio", maxPlays: 2 });
+    expect(manifest.questions[0].resourceKeys).toEqual(["audio-1"]);
   });
 });

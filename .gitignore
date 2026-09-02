@@ -20,3 +20,6 @@ resources/**/*.flac
 !examples/portable/hl-language-b-listening.digitaldp-paper
 !examples/portable/sl-hl-mixed-data.digitaldp-paper
 !examples/portable/sl-prose-choose-one.digitaldp-paper
+release/*.zip
+release/*.tar.gz
+release/SHA256SUMS.txt

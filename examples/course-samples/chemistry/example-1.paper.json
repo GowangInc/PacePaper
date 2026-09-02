@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Chemistry · Paper 1 — original combined 1A and 1B sample",
+  "subject": "chemistry",
+  "subjectLabel": "Chemistry",
+  "level": "SL",
+  "paper": "Paper 1 — original combined 1A and 1B sample",
+  "durationMinutes": 35,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 12,
+  "mode": "reading",
+  "instructions": "Complete the selected-response and data/working questions under one timer. An approved calculator is required. Use the original reference data supplied within this sample; no external data booklet is needed. Enter each answer beside its question; no separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "chem-reference",
+      "label": "Reference data for this sample",
+      "kind": "text",
+      "text": "Relative atomic masses: H 1.01, C 12.01, O 16.00, Na 22.99, Mg 24.31, Cl 35.45\nSpecific heat capacity of water: 4.18 J g⁻¹ K⁻¹"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Paper 1A · Question 1",
+      "prompt": "What is the amount of substance in 4.00 g of sodium hydroxide, NaOH?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "chem-reference"
+      ],
+      "marks": 1,
+      "options": [
+        "0.0500 mol",
+        "0.100 mol",
+        "0.200 mol",
+        "1.00 mol"
+      ]
+    },
+    {
+      "id": "q2",
+      "label": "Paper 1A · Question 2",
+      "prompt": "Which species has a trigonal planar electron-domain geometry?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "CH₄",
+        "NH₃",
+        "BF₃",
+        "H₂O"
+      ]
+    },
+    {
+      "id": "q3",
+      "label": "Paper 1A · Question 3",
+      "prompt": "Which change always increases the rate constant for an elementary reaction?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Higher concentration",
+        "Higher temperature",
+        "Larger volume",
+        "Lower pressure"
+      ]
+    },
+    {
+      "id": "q4",
+      "label": "Paper 1A · Question 4",
+      "prompt": "Which statement describes oxidation?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Gain of electrons",
+        "Decrease in oxidation state",
+        "Loss of electrons",
+        "Gain of neutrons"
+      ]
+    },
+    {
+      "id": "q5",
+      "label": "Paper 1B · Question 5",
+      "prompt": "Magnesium reacts with excess hydrochloric acid. Calculate the maximum volume of hydrogen at 100 kPa and 298 K produced from 0.486 g Mg. Use R = 8.31 J mol⁻¹ K⁻¹.",
+      "type": "ink",
+      "resourceKeys": [
+        "chem-reference"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Paper 1B · Question 6",
+      "prompt": "Explain, using collision theory, why powdered magnesium reacts faster than a ribbon of the same mass under identical conditions.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 3
+    }
+  ]
+}

@@ -121,10 +121,16 @@ body.countdown-page {
 }
 
 .clock-controls input,
-.clock-controls select {
+.clock-controls select,
+.clock-controls textarea {
   border-color: #64748b;
   background: #07111f;
   color: #f8fafc;
+}
+
+.clock-controls textarea {
+  min-height: 7rem;
+  resize: vertical;
 }
 
 .clock-controls fieldset > button {
@@ -238,6 +244,102 @@ body.countdown-page {
   color: #cbd5e1;
   font-size: clamp(1rem, 2vw, 2rem);
   overflow-wrap: anywhere;
+}
+
+.clock-student-connect {
+  width: min(100%, 65rem);
+  margin: clamp(1rem, 2vh, 1.75rem) auto 0;
+  border: 1px solid #475569;
+  border-radius: 0.75rem;
+  background: rgb(15 29 48 / 76%);
+  padding: clamp(0.85rem, 1.5vw, 1.25rem);
+}
+
+.clock-student-connect h3 {
+  margin: 0 0 0.55rem;
+  color: #94a3b8;
+  font-size: clamp(0.75rem, 1vw, 0.95rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.clock-student-connect__body {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.clock-student-url {
+  min-width: 0;
+  max-width: 100%;
+  color: #dbeafe;
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 2vw, 1.75rem);
+  font-weight: 750;
+  overflow-wrap: anywhere;
+  text-underline-offset: 0.2em;
+}
+
+.clock-student-connect button {
+  flex: 0 0 auto;
+  border-color: #64748b;
+  background: #111f33;
+  color: #f8fafc;
+}
+
+.clock-student-connect button:hover:not(:disabled) {
+  border-color: #93c5fd;
+  background: #172c49;
+}
+
+.clock-student-connect__status {
+  margin: 0.65rem 0 0;
+  color: #86efac;
+  font-size: 0.875rem;
+}
+
+.clock-student-connect__status[data-tone="error"] {
+  color: #fda4af;
+}
+
+.clock-student-list {
+  width: min(100%, 65rem);
+  margin: clamp(1rem, 2vh, 1.75rem) auto 0;
+}
+
+.clock-student-list h3 {
+  margin: 0 0 0.65rem;
+  color: #94a3b8;
+  font-size: clamp(0.75rem, 1vw, 0.95rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.clock-student-names {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clock-student-names li {
+  border: 1px solid #475569;
+  border-radius: 999px;
+  background: rgb(15 29 48 / 76%);
+  padding: 0.4rem 0.75rem;
+  color: #f8fafc;
+  font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+}
+
+.clock-student-names .clock-student-names__placeholder {
+  border-style: dashed;
+  color: #94a3b8;
 }
 
 .clock-display__timer {

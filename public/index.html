@@ -5,13 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="color-scheme" content="light">
     <title>DigitalDP Familiarisation</title>
-    <link rel="stylesheet" href="/tokens.css">
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="stylesheet" href="/countdown.css">
-    <script type="module" src="/app.js"></script>
+    <link rel="stylesheet" href="../tokens.css">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./countdown.css">
+    <script type="module" src="./app.js"></script>
   </head>
   <body>
-    <main id="app" tabindex="-1"></main>
+    <main id="app" tabindex="-1">
+      <section class="fatal-state" aria-labelledby="startup-title">
+        <div>
+          <h1 id="startup-title">Starting DigitalDP…</h1>
+          <p>If this message remains, DigitalDP needs its local app server and cannot run directly from this file.</p>
+          <p><a href="http://127.0.0.1:9148/">Open DigitalDP on this computer</a></p>
+          <p><small>If the link does not open, start the project with <code>bun run start</code>, then try again.</small></p>
+        </div>
+      </section>
+    </main>
     <noscript>This application requires JavaScript.</noscript>
   </body>
 </html>

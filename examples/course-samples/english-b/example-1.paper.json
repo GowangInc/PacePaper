@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "English B · Paper 1 — original productive-skills sample",
+  "subject": "english-b",
+  "subjectLabel": "English B",
+  "level": "SL",
+  "paper": "Paper 1 — original productive-skills sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 30,
+  "mode": "essay",
+  "instructions": "Choose one task. Use an appropriate text type and write 250–400 words. Enter the response in DigitalDP; no separate answer sheet is used.",
+  "selectionMode": "one",
+  "resources": [],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Task 1",
+      "prompt": "Your town plans to replace a small public park with a car park. Write a letter to the local council explaining your position and proposing a practical alternative.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30,
+      "wordCountMin": 250,
+      "wordCountMax": 400
+    },
+    {
+      "id": "q2",
+      "label": "Task 2",
+      "prompt": "You recently completed one week without using food-delivery apps. Write a blog post for other students describing the experience and evaluating whether you will continue.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30,
+      "wordCountMin": 250,
+      "wordCountMax": 400
+    },
+    {
+      "id": "q3",
+      "label": "Task 3",
+      "prompt": "Your school wants students to welcome new classmates more effectively. Write a set of guidelines for student mentors, explaining what they should do during a new student’s first month.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30,
+      "wordCountMin": 250,
+      "wordCountMax": 400
+    }
+  ]
+}

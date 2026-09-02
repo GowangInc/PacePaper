@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Biology · Paper 2 — original short and extended-response sample",
+  "subject": "biology",
+  "subjectLabel": "Biology",
+  "level": "HL",
+  "paper": "Paper 2 — original short and extended-response sample",
+  "durationMinutes": 60,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 30,
+  "mode": "reading",
+  "instructions": "Answer every question using the response area attached to it. An approved calculator is required; all data needed for this original sample is supplied within DigitalDP. Show calculations, units, diagrams and reasoning where required. No separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "pond-study",
+      "label": "Original pond study",
+      "kind": "text",
+      "text": "Researchers added equal masses of leaf litter to eight pond tanks. Four tanks received extra nitrate. After 21 days, mean algal dry mass was 3.8 g without nitrate and 9.6 g with nitrate. Mean dissolved oxygen at dawn was 7.2 mg L⁻¹ without nitrate and 3.9 mg L⁻¹ with nitrate."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — data interpretation",
+      "prompt": "Calculate the percentage increase in mean algal dry mass caused by nitrate. Show the calculation and state the answer to three significant figures.",
+      "type": "short",
+      "resourceKeys": [
+        "pond-study"
+      ],
+      "marks": 5
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — causal model",
+      "prompt": "Construct an annotated causal diagram linking added nitrate to the change in dissolved oxygen at dawn.",
+      "type": "ink",
+      "resourceKeys": [
+        "pond-study"
+      ],
+      "marks": 6,
+      "ink": {
+        "pages": 1,
+        "background": "blank",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — experimental design",
+      "prompt": "Design a follow-up investigation to test whether light intensity changes the effect of nitrate on algal growth. Include variables, controls, replication and the data to be collected.",
+      "type": "essay",
+      "resourceKeys": [
+        "pond-study"
+      ],
+      "marks": 8
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — extended response",
+      "prompt": "Explain how membrane transport and cell respiration together maintain cellular conditions, using named examples.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 11
+    }
+  ]
+}

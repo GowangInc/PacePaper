@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Spanish A: Literature · Paper 1 — original textual-analysis sample",
+  "subject": "spanish-a-literature",
+  "subjectLabel": "Spanish A: Literature",
+  "level": "SL",
+  "paper": "Paper 1 — original textual-analysis sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "essay",
+  "instructions": "Elige uno de los dos textos literarios originales y analiza cómo sus rasgos literarios construyen significado. Escribe en el espacio correspondiente; no se utiliza una hoja aparte.",
+  "selectionMode": "one",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "Texto 1 — fragmento de El último autobús",
+      "kind": "text",
+      "text": "Aunque el último autobús ya había salido, la pantalla de la parada insistía: llegada en tres minutos. Inés conocía el error, pero observó cómo bajaban los números. Dos. Uno. Próximo. Al otro lado de la calle, el dependiente apagó la luz del quiosco y su madre llamó por tercera vez. Inés no contestó. Cuando la pantalla volvió a marcar tres minutos, sintió alivio. Mientras la espera no terminara, quizá tampoco quedaba confirmado que había llegado demasiado tarde."
+    },
+    {
+      "key": "text-2",
+      "label": "Texto 2 — poema, Mapa de bolsillo",
+      "kind": "text",
+      "text": "Doblo la ciudad en cuatro\npara guardarla junto a las llaves.\nLa avenida pierde su ruido,\nel río cabe bajo mi nombre.\n\nPero al abrirla de nuevo\nlas esquinas ya no coinciden:\nhay una calle que no recuerdo\ny una casa que me recuerda a mí."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Texto 1 — fragmento de El último autobús — respuesta",
+      "prompt": "Analiza cómo el tiempo y la repetición revelan el conflicto interior de Inés.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 20
+    },
+    {
+      "id": "q2",
+      "label": "Texto 2 — poema, Mapa de bolsillo — respuesta",
+      "prompt": "Analiza cómo las imágenes del mapa y los cambios de escala desarrollan la relación entre memoria e identidad.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 20
+    }
+  ]
+}

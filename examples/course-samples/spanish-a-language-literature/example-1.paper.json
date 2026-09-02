@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Spanish A: Language and Literature · Paper 1 — original textual-analysis sample",
+  "subject": "spanish-a-language-literature",
+  "subjectLabel": "Spanish A: Language and Literature",
+  "level": "SL",
+  "paper": "Paper 1 — original textual-analysis sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "essay",
+  "instructions": "Elige uno de los dos textos originales y analiza cómo el lenguaje, la estructura y el tono construyen significado para su público. Escribe en el espacio de la pregunta; no se utiliza una hoja de respuestas aparte.",
+  "selectionMode": "one",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "Texto 1 — campaña de biblioteca nocturna",
+      "kind": "text",
+      "text": "TE PRESTAMOS LA NOCHE. La Biblioteca del Puente abrirá hasta las diez todos los jueves. No hace falta venir con una lista de libros. Puedes traer una tarea a medio terminar, una novela abandonada o una hora sin planes. A las siete habrá una visita rápida para quienes nunca han entrado. A las ocho bajaremos las luces de la sala infantil para leer en familia. ¿No tienes carnet? Lo preparamos mientras se calienta el agua. Una ciudad también necesita lugares donde quedarse sin comprar nada."
+    },
+    {
+      "key": "text-2",
+      "label": "Texto 2 — columna estudiantil",
+      "kind": "text",
+      "text": "El nuevo patio tiene más cámaras que bancos. La dirección afirma que las cámaras nos protegen y que los bancos dificultan la circulación. Tal vez ambas cosas sean ciertas, pero el resultado también comunica una prioridad: aquí es más importante vigilar el movimiento que permitir una pausa. Recuperemos al menos los dos bancos retirados junto al gimnasio. Un lugar seguro no es solamente aquel donde se registra todo; también es aquel donde alguien puede sentarse y ser visto por un amigo."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Texto 1 — campaña de biblioteca nocturna — respuesta",
+      "prompt": "Analiza cómo la campaña emplea el lenguaje y la organización del texto para presentar la biblioteca como algo más que un servicio de préstamo.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 20
+    },
+    {
+      "id": "q2",
+      "label": "Texto 2 — columna estudiantil — respuesta",
+      "prompt": "Analiza cómo la autora utiliza el contraste y la reformulación de la idea de seguridad para defender su propuesta.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 20
+    }
+  ]
+}

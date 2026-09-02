@@ -2,6 +2,8 @@
 
 These four packages are entirely original DigitalDP demonstration material. They are not IB papers, do not reproduce IB questions, and do not claim to match a live examination.
 
+An additional 34-paper course library lives under `course-samples/`, with two original examples for each current Paper Builder course. Run `bun run samples:build` to regenerate its editable manifests and ignored portable bundles, and `bun run samples:seed` to add missing examples to the active teacher library.
+
 ## Sample set
 
 | Folder | Level | Mode | Main behaviours exercised |

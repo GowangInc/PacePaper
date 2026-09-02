@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Business Management · Paper 2 — original quantitative case sample",
+  "subject": "business-management",
+  "subjectLabel": "Business Management",
+  "level": "SL",
+  "paper": "Paper 2 — original quantitative case sample",
+  "durationMinutes": 90,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 40,
+  "mode": "reading",
+  "instructions": "Answer both Section A questions and one of the two alternatives inside Section B. Show all working and units in the linked response areas. No separate answer booklet or answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "loop-loom-case",
+      "label": "Original case material — Loop & Loom",
+      "kind": "text",
+      "text": "Loop & Loom (L&L) repairs used clothing and turns damaged textiles into bags. The business sells each bag for $48. Variable material and labour cost is $27 per bag. Monthly fixed costs are $8,400. Current monthly output and sales are 520 bags. L&L is considering a laser cutter costing $36,000 with an expected residual value of $6,000 after four years. The cutter is forecast to increase annual net cash inflow by $11,500.\n\nA supermarket chain has offered a one-year contract for 300 additional bags per month at $39 each. Fulfilling the order would add monthly fixed quality-control costs of $1,800 and variable cost would fall to $25 per bag because materials could be purchased in bulk. Employees are concerned that accepting the contract may weaken L&L’s repair service and social mission."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Section A · Question 1",
+      "prompt": "Using the current figures, calculate L&L’s monthly break-even output, margin of safety and monthly profit. Show every step and include units.",
+      "type": "ink",
+      "resourceKeys": [
+        "loop-loom-case"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Section A · Question 2",
+      "prompt": "Calculate the average rate of return for the proposed laser cutter. State one limitation of using this result alone to make the investment decision.",
+      "type": "ink",
+      "resourceKeys": [
+        "loop-loom-case"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Section B · choose A or B",
+      "prompt": "Choose one alternative and state its letter at the start.\nA. Using quantitative and qualitative evidence, recommend whether L&L should accept the supermarket contract.\nB. Recommend whether L&L should purchase the laser cutter, considering finance, operations and its social mission.",
+      "type": "essay",
+      "resourceKeys": [
+        "loop-loom-case"
+      ],
+      "marks": 20
+    }
+  ]
+}

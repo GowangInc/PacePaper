@@ -1,5 +1,8 @@
 import type { Server } from "bun";
 import {
+  archiveClass,
+  archiveExamSession,
+  archiveStudent,
   configureDemoAdmin,
   createAdmin,
   createClass,
@@ -9,8 +12,9 @@ import {
   deleteExpiredAuthSessions,
   endExamSession,
   findAdmin,
-  findStudentLogin,
+  findStudentLoginById,
   getAsset,
+  getAudioPlayCount,
   getPaper,
   getSessionResults,
   getStudent,
@@ -20,15 +24,22 @@ import {
   listExamSessions,
   listPaperAssets,
   listPapers,
+  listStudentExamSessions,
+  listStudentRoster,
   listStudents,
+  restoreClass,
+  restoreExamSession,
+  restoreStudent,
   saveAndSubmitResponse,
   saveResponse,
   setupRequired,
   startExamSession,
   submitResponse,
   touchStudent,
+  updateStudent,
   type ResponsePayload,
   type Role,
+  type StudentExamRow,
 } from "./src/db.ts";
 import {
   allowLoginAttempt,
@@ -40,14 +51,35 @@ import {
   revokeSession,
 } from "./src/auth.ts";
 import {
+  AUDIO_PLAY_LIMIT,
   encodePortablePaper,
   parsePaperUpload,
   sanitizeRichText,
   type PaperManifest,
 } from "./src/papers.ts";
 import { normalizeInkAnswer } from "./src/ink.ts";
-import { isExpectedLoopbackAuthority } from "./src/loopback.ts";
+import { parseByteRange, type ByteRangeResult } from "./src/http-range.ts";
+import {
+  demoNetworkConfig,
+  isExpectedRequestAuthority,
+  isLanStudentApiRequest,
+  isLoopbackAddress,
+  studentOriginFor,
+} from "./src/network.ts";
+import {
+  ClassroomNetworkState,
+  listLocalPrivateIpv4Interfaces,
+  loadSelectedClassroomAddress,
+  persistSelectedClassroomAddress,
+} from "./src/classroom-network.ts";
+import { isStudentStaticPath, staticFilePath } from "./src/static-files.ts";
+import { staticAssetPath } from "./src/static-assets.ts";
 import { examTiming } from "./src/timing.ts";
+import {
+  AudioPlaybackError,
+  AudioPlaybackTickets,
+  type AudioPlaybackIdentity,
+} from "./src/audio-playback.ts";
 
 interface SocketData {
   role: Role;
@@ -74,40 +106,39 @@ class HttpError extends Error {
 
 const port = Number(process.env.PORT ?? 9148);
 if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error("PORT must be a valid TCP port");
-const hostname = process.env.HOST ?? "127.0.0.1";
-if (!hostname.trim() || hostname.length > 255) throw new Error("HOST must be a valid hostname or address");
-if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(hostname.toLowerCase())) {
-  throw new Error("The admin/admin demo build may only bind to localhost. Use HOST=127.0.0.1.");
+const managedClassroomNetwork = process.env.DIGITALDP_MANAGED_NETWORK === "1";
+const managedDatabasePath = managedClassroomNetwork ? process.env.DIGITALDP_DB : undefined;
+if (managedClassroomNetwork && !managedDatabasePath) {
+  throw new Error("DIGITALDP_MANAGED_NETWORK requires DIGITALDP_DB");
 }
+const classroomNetwork = new ClassroomNetworkState({
+  managed: managedClassroomNetwork,
+  port,
+  selectedAddress: managedDatabasePath ? loadSelectedClassroomAddress(managedDatabasePath) : null,
+});
+let network = demoNetworkConfig({
+  port,
+  bindHostname: managedClassroomNetwork ? "0.0.0.0" : process.env.HOST,
+  lanOrigin: managedClassroomNetwork ? undefined : process.env.DIGITALDP_LAN_ORIGIN,
+  allowInactiveLanBinding: managedClassroomNetwork,
+});
+const hostname = network.bindHostname;
 const RESPONSE_BODY_BYTES = 12_000_000;
 const DEADLINE_GRACE_MS = 5_000;
+const audioPlayback = new AudioPlaybackTickets();
 
-const STATIC_FILES: Record<string, string> = {
-  "/": "public/index.html",
-  "/presentation": "public/presentation.html",
-  "/presentation.css": "public/presentation.css",
-  "/teacher-dashboard.png": "public/teacher-dashboard.png",
-  "/student-workspace.png": "public/student-workspace.png",
-  "/paper-authoring/SKILL.md": "paper-authoring/SKILL.md",
-  "/admin": "public/index.html",
-  "/clock": "public/index.html",
-  "/student": "public/index.html",
-  "/app.js": "public/app.js",
-  "/admin.js": "public/admin.js",
-  "/countdown.js": "public/countdown.js",
-  "/countdown-model.js": "public/countdown-model.js",
-  "/countdown.css": "public/countdown.css",
-  "/paper-builder.js": "public/paper-builder.js",
-  "/paper-preview.js": "public/paper-preview.js",
-  "/student.js": "public/student.js",
-  "/exam.js": "public/exam.js",
-  "/ink-canvas.js": "public/ink-canvas.js",
-  "/styles.css": "public/styles.css",
-  "/tokens.css": "tokens.css",
-};
+function parseTestReadingSeconds(raw: string | undefined): number | null {
+  if (raw === undefined) return null;
+  const seconds = Number(raw);
+  if (!/^\d+$/.test(raw) || !Number.isInteger(seconds) || seconds < 0 || seconds > 3_600) {
+    throw new Error("DIGITALDP_TEST_READING_SECONDS must be an integer between 0 and 3600");
+  }
+  return seconds;
+}
+const TEST_READING_SECONDS = parseTestReadingSeconds(process.env.DIGITALDP_TEST_READING_SECONDS);
 
 const SECURITY_HEADERS: Record<string, string> = {
-  "Content-Security-Policy": "default-src 'self'; base-uri 'none'; connect-src 'self' ws: wss:; font-src 'self'; form-action 'self'; frame-ancestors 'self'; frame-src 'self'; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; script-src 'self'; style-src 'self'",
+  "Content-Security-Policy": "default-src 'self'; base-uri 'none'; connect-src 'self' ws: wss:; font-src 'self'; form-action 'self'; frame-ancestors 'self'; frame-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self'; style-src 'self'",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
   "Referrer-Policy": "no-referrer",
@@ -126,6 +157,50 @@ function json(data: unknown, status = 200, headers?: HeadersInit): Response {
   return responseWithSecurity(response);
 }
 
+function assetResponse(
+  request: Request,
+  asset: { data: Uint8Array; filename: string; mime: string },
+  cacheControl: string,
+  range: ByteRangeResult,
+): Response {
+  const bytes = Uint8Array.from(asset.data);
+  const headers = new Headers({
+    "Accept-Ranges": "bytes",
+    "Cache-Control": cacheControl,
+    "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(asset.filename)}`,
+    "Content-Type": asset.mime,
+  });
+  if (range.kind === "unsatisfiable") {
+    headers.set("Content-Range", `bytes */${bytes.byteLength}`);
+    return responseWithSecurity(new Response(null, { status: 416, headers }));
+  }
+
+  if (range.kind === "partial") {
+    headers.set("Content-Length", String(range.length));
+    headers.set("Content-Range", `bytes ${range.start}-${range.end}/${bytes.byteLength}`);
+    const body = request.method === "HEAD" ? null : bytes.slice(range.start, range.end + 1);
+    return responseWithSecurity(new Response(body, { status: 206, headers }));
+  }
+
+  headers.set("Content-Length", String(bytes.byteLength));
+  const body = request.method === "HEAD" ? null : bytes;
+  return responseWithSecurity(new Response(body, { status: 200, headers }));
+}
+
+function completeAudioAssetResponse(asset: { data: Uint8Array; filename: string; mime: string }): Response {
+  const bytes = Uint8Array.from(asset.data);
+  return responseWithSecurity(new Response(bytes, {
+    status: 200,
+    headers: {
+      "Accept-Ranges": "none",
+      "Cache-Control": "private, no-store",
+      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(asset.filename)}`,
+      "Content-Length": String(bytes.byteLength),
+      "Content-Type": asset.mime,
+    },
+  }));
+}
+
 function asRecord(value: unknown, label = "Request body"): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new HttpError(`${label} must be an object`, 400);
   return value as Record<string, unknown>;
@@ -138,12 +213,26 @@ function requiredText(value: unknown, label: string, max: number): string {
   return clean;
 }
 
+function optionalText(value: unknown, label: string, max: number): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "string") throw new HttpError(`${label} is invalid`, 400);
+  const clean = value.trim();
+  if (!clean) return undefined;
+  if (clean.length > max) throw new HttpError(`${label} is invalid`, 400);
+  return clean;
+}
+
 function optionalInteger(value: unknown, label: string, min: number, max: number): number {
   const number = value === undefined ? min : Number(value);
   if (!Number.isInteger(number) || number < min || number > max) {
     throw new HttpError(`${label} must be between ${min} and ${max}`, 400);
   }
   return number;
+}
+
+function requiredInteger(value: unknown, label: string, min: number, max: number): number {
+  if (value === undefined || value === null || value === "") throw new HttpError(`${label} is required`, 400);
+  return optionalInteger(value, label, min, max);
 }
 
 async function jsonBody(request: Request, maxBytes = 1_000_000): Promise<Record<string, unknown>> {
@@ -167,23 +256,117 @@ function timingFor(exam: { startedAt: number; durationMinutes: number; extraMinu
   const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
   return examTiming({
     startedAt: exam.startedAt,
-    readingTimeMinutes: manifest.readingTimeMinutes ?? 0,
+    readingTimeMinutes: effectiveReadingTimeMinutes(manifest.readingTimeMinutes ?? 0),
     durationMinutes: exam.durationMinutes,
     extraMinutes: exam.extraMinutes,
   });
 }
 
+function studentAudioContext(studentId: string, sessionId: string, resourceKey: string): {
+  exam: StudentExamRow;
+  identity: AudioPlaybackIdentity;
+} {
+  const exam = getStudentExam(studentId, sessionId);
+  if (!exam) throw new HttpError("No live examination", 404);
+  const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
+  if (!manifest.resources.some((resource) => resource.key === resourceKey && resource.kind === "audio")) {
+    throw new HttpError("Audio resource not found", 404);
+  }
+  return {
+    exam,
+    identity: {
+      studentId,
+      sessionId,
+      paperId: exam.paperId,
+      resourceKey,
+      responseId: exam.responseId,
+    },
+  };
+}
+
+function availableAudioTiming(exam: StudentExamRow) {
+  if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
+  const timing = timingFor(exam);
+  const now = Date.now();
+  if (exam.submittedAt !== null || now < timing.readingEndsAt || now >= timing.deadline) {
+    throw new HttpError("Response is not available", 409);
+  }
+  return timing;
+}
+
+function effectiveReadingTimeMinutes(storedMinutes: number): number {
+  return TEST_READING_SECONDS === null ? storedMinutes : TEST_READING_SECONDS / 60;
+}
+
+function listAdminExamSessions(archived = false) {
+  return listExamSessions(archived).map((session) => ({
+    ...session,
+    readingTimeMinutes: effectiveReadingTimeMinutes(session.readingTimeMinutes),
+  }));
+}
+
+function classroomNetworkApiState() {
+  const snapshot = classroomNetwork.snapshot();
+  const liveExam = listAdminExamSessions().some((session) => session.status === "live");
+  return {
+    managed: snapshot.managed,
+    addresses: snapshot.managed
+      ? listLocalPrivateIpv4Interfaces().map(({ interfaceName, address }) => ({ name: interfaceName, address }))
+      : [],
+    // An address is exposed as active only while sharing is actually enabled.
+    // The saved preference remains private in the runtime state until selected.
+    address: snapshot.lanOrigin === null ? null : snapshot.selectedAddress,
+    selectedAddress: snapshot.selectedAddress,
+    studentUrl: `${network.lanOrigin ?? `http://127.0.0.1:${port}`}/student`,
+    liveExam,
+  };
+}
+
+function updateManagedClassroomNetwork(address: string | null) {
+  if (!managedClassroomNetwork || !managedDatabasePath) {
+    throw new HttpError("Classroom sharing is available only in a packaged release", 403);
+  }
+
+  if (listAdminExamSessions().some((session) => session.status === "live")) {
+    throw new HttpError("End the live exam before changing classroom sharing", 409);
+  }
+
+  const snapshot = address === null
+    ? classroomNetwork.disable()
+    : (() => {
+      const available = listLocalPrivateIpv4Interfaces();
+      persistSelectedClassroomAddress(managedDatabasePath, address, available);
+      return classroomNetwork.enable(address, available);
+    })();
+
+  network = demoNetworkConfig({
+    port,
+    bindHostname: hostname,
+    lanOrigin: snapshot.lanOrigin ?? undefined,
+    allowInactiveLanBinding: true,
+  });
+  return classroomNetworkApiState();
+}
+
+const lifecycleCommands = {
+  students: { archive: archiveStudent, restore: restoreStudent, event: "roster-changed" },
+  classes: { archive: archiveClass, restore: restoreClass, event: "roster-changed" },
+  sessions: { archive: archiveExamSession, restore: restoreExamSession, event: "exam-list-changed" },
+} as const;
+
 function publish(server: Server<SocketData>, topic: string, type: string): void {
   server.publish(topic, JSON.stringify({ type, at: Date.now() }));
 }
 
-function publicManifest(manifest: PaperManifest, paperId: string): Record<string, unknown> {
+function publicManifest(manifest: PaperManifest, paperId: string, sessionId: string): Record<string, unknown> {
   return {
     ...manifest,
     resources: manifest.resources.map((resource) => ({
       ...resource,
       file: undefined,
-      url: resource.file ? `/api/assets/${paperId}/${resource.key}` : undefined,
+      url: resource.file && resource.kind !== "audio"
+        ? `/api/assets/${paperId}/${resource.key}?session=${encodeURIComponent(sessionId)}`
+        : undefined,
     })),
   };
 }
@@ -231,22 +414,38 @@ async function validatedResponse(body: Record<string, unknown>, manifest: PaperM
 }
 
 function databaseError(error: Error): HttpError {
+  if (error instanceof AudioPlaybackError) return new HttpError(error.message, error.status);
   if (error.message.includes("UNIQUE constraint failed")) return new HttpError("That code or active session already exists", 409);
   if (error.message.includes("FOREIGN KEY constraint failed")) return new HttpError("The selected class or paper no longer exists", 400);
   if (error.message === "Authentication required") return new HttpError(error.message, 401);
   if (error.message === "Cross-origin request rejected") return new HttpError(error.message, 403);
   if (error.message.includes("not found")) return new HttpError(error.message, 404);
-  if (error.message.includes("already submitted") || error.message.includes("No audio plays")) return new HttpError(error.message, 409);
+  if (
+    error.message.includes("already submitted")
+    || error.message.includes("No audio plays")
+    || error.message.includes("live exam")
+    || error.message.includes("Restore the class")
+  ) return new HttpError(error.message, 409);
   return new HttpError(error.message, 400);
 }
 
-async function handleApi(request: Request, server: Server<SocketData>, path: string): Promise<Response> {
+async function handleApi(
+  request: Request,
+  server: Server<SocketData>,
+  path: string,
+  localRequest: boolean,
+): Promise<Response> {
   const method = request.method.toUpperCase();
   if (method !== "GET" && method !== "HEAD") assertSameOrigin(request);
 
   if (path === "/api/bootstrap" && method === "GET") {
     const actor = authFromRequest(request);
-    return json({ setupRequired: setupRequired(), role: actor?.role ?? null });
+    const role = !localRequest && actor?.role === "admin" ? null : actor?.role ?? null;
+    return json({
+      setupRequired: localRequest && setupRequired(),
+      role,
+      studentOrigin: studentOriginFor(new URL(request.url), network.lanOrigin),
+    });
   }
 
   if (path === "/api/setup" && method === "POST") {
@@ -275,16 +474,21 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     return json({ role: "admin" }, 200, { "Set-Cookie": cookie });
   }
 
+  if (path === "/api/student/roster" && method === "POST") {
+    const body = await jsonBody(request);
+    const classCode = requiredText(body.classCode, "Class code", 24);
+    return json({ students: listStudentRoster(classCode).map(({ id, name }) => ({ id, name })) });
+  }
+
   if (path === "/api/login/student" && method === "POST") {
     const body = await jsonBody(request);
     const classCode = requiredText(body.classCode, "Class code", 24);
-    const candidateCode = requiredText(body.candidateCode, "Candidate code", 32);
-    const pin = requiredText(body.pin, "PIN", 32);
-    const limiterKey = `student:${clientAddress(request, server)}:${classCode.toLowerCase()}:${candidateCode.toLowerCase()}`;
+    const studentId = requiredText(body.studentId, "Student", 64);
+    const limiterKey = `student:${clientAddress(request, server)}:${classCode.toLowerCase()}:id:${studentId}`;
     if (!allowLoginAttempt(limiterKey)) throw new HttpError("Too many login attempts. Try again later", 429);
-    const student = findStudentLogin(classCode, candidateCode);
-    if (!student || !(await Bun.password.verify(pin, student.pinHash))) {
-      throw new HttpError("Class code, candidate code or PIN is incorrect", 401);
+    const student = findStudentLoginById(classCode, studentId);
+    if (!student) {
+      throw new HttpError("Class code or student is incorrect", 401);
     }
     clearLoginAttempts(limiterKey);
     touchStudent(student.id);
@@ -293,6 +497,8 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
   }
 
   if (path === "/api/logout" && method === "POST") {
+    const actor = authFromRequest(request);
+    if (!localRequest && actor?.role === "admin") throw new HttpError("Teacher access is only available on this computer", 403);
     const cookie = revokeSession(request, new URL(request.url).protocol === "https:");
     return json({ ok: true }, 200, { "Set-Cookie": cookie });
   }
@@ -303,9 +509,46 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
       classes: listClasses(),
       students: listStudents(),
       papers: listPapers(),
-      sessions: listExamSessions(),
+      sessions: listAdminExamSessions(),
+      network: classroomNetworkApiState(),
+      archived: {
+        classes: listClasses(true),
+        students: listStudents(true),
+        sessions: listAdminExamSessions(true),
+      },
       serverTime: Date.now(),
     });
+  }
+
+  if (path === "/api/admin/network" && method === "GET") {
+    requireRole(request, "admin");
+    if (!localRequest) throw new HttpError("Teacher access is only available on this computer", 403);
+    return json(classroomNetworkApiState());
+  }
+
+  if (path === "/api/admin/network" && method === "POST") {
+    requireRole(request, "admin");
+    if (!localRequest) throw new HttpError("Teacher access is only available on this computer", 403);
+    const body = await jsonBody(request);
+    if (body.address !== null && typeof body.address !== "string") {
+      throw new HttpError("Choose a classroom network address or turn sharing off", 400);
+    }
+    const state = updateManagedClassroomNetwork(body.address);
+    publish(server, "admin", "admin-state");
+    return json(state);
+  }
+
+  const lifecycleMatch = path.match(/^\/api\/admin\/(students|classes|sessions)\/([a-f0-9-]+)\/(archive|restore)$/);
+  if (lifecycleMatch && method === "POST") {
+    requireRole(request, "admin");
+    const collection = lifecycleMatch[1] as keyof typeof lifecycleCommands;
+    const id = lifecycleMatch[2] as string;
+    const action = lifecycleMatch[3] as "archive" | "restore";
+    const command = lifecycleCommands[collection];
+    const result = command[action](id);
+    publish(server, `class:${result.classId}`, command.event);
+    publish(server, "admin", "admin-state");
+    return json({ id: result.id, archived: action === "archive", archivedAt: result.archivedAt });
   }
 
   if (path === "/api/admin/classes" && method === "POST") {
@@ -325,11 +568,9 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     const classId = requiredText(body.classId, "Class", 64);
     const name = requiredText(body.name, "Student name", 100);
     const candidateCode = requiredText(body.candidateCode, "Candidate code", 32).toUpperCase();
-    const pin = requiredText(body.pin, "PIN", 32);
     const extraMinutes = optionalInteger(body.extraMinutes, "Extra time", 0, 180);
     if (!/^[A-Z0-9-]{2,32}$/.test(candidateCode)) throw new HttpError("Candidate code needs letters, numbers or hyphens", 400);
-    if (!/^\d{4,12}$/.test(pin)) throw new HttpError("PIN needs 4–12 digits", 400);
-    const created = createStudent({ classId, name, candidateCode, pinHash: await Bun.password.hash(pin), extraMinutes });
+    const created = createStudent({ classId, name, candidateCode, extraMinutes });
     publish(server, "admin", "admin-state");
     return json({
       id: created.id,
@@ -339,6 +580,27 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
       extraMinutes: created.extraMinutes,
       createdAt: created.createdAt,
     }, 201);
+  }
+
+  const studentUpdateMatch = path.match(/^\/api\/admin\/students\/([a-f0-9-]+)$/);
+  if (studentUpdateMatch && method === "PUT") {
+    requireRole(request, "admin");
+    const body = await jsonBody(request);
+    const classId = requiredText(body.classId, "Class", 64);
+    const name = requiredText(body.name, "Student name", 100);
+    const candidateCode = requiredText(body.candidateCode, "Candidate code", 32).toUpperCase();
+    const extraMinutes = requiredInteger(body.extraMinutes, "Extra time", 0, 180);
+    if (!/^[A-Z0-9-]{2,32}$/.test(candidateCode)) throw new HttpError("Candidate code needs letters, numbers or hyphens", 400);
+    const updated = updateStudent({
+      id: studentUpdateMatch[1] as string,
+      classId,
+      name,
+      candidateCode,
+      extraMinutes,
+    });
+    if (!updated) throw new HttpError("Student not found in selected class", 404);
+    publish(server, "admin", "admin-state");
+    return json(updated);
   }
 
   if (path === "/api/admin/papers" && method === "POST") {
@@ -374,10 +636,10 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
   if (path === "/api/admin/sessions" && method === "POST") {
     requireRole(request, "admin");
     const body = await jsonBody(request);
-    const id = createExamSession(
-      requiredText(body.classId, "Class", 64),
-      requiredText(body.paperId, "Paper", 64),
-    );
+    const classId = requiredText(body.classId, "Class", 64);
+    const paperId = requiredText(body.paperId, "Paper", 64);
+    const id = createExamSession(classId, paperId);
+    publish(server, `class:${classId}`, "exam-list-changed");
     publish(server, "admin", "admin-state");
     return json({ id, status: "draft" }, 201);
   }
@@ -401,7 +663,7 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
         level: manifest.level,
         paper: manifest.paper,
         durationMinutes: manifest.durationMinutes,
-        readingTimeMinutes: manifest.readingTimeMinutes,
+        readingTimeMinutes: effectiveReadingTimeMinutes(manifest.readingTimeMinutes ?? 0),
         maximumMarks: manifest.maximumMarks,
         subjectWeightPercent: manifest.subjectWeightPercent,
         mode: manifest.mode,
@@ -428,6 +690,7 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
         candidateCode: response.candidateCode,
         answers: JSON.parse(response.answersJson) as Record<string, string>,
         selectedQuestionId: response.selectedQuestionId,
+        notepad: response.notepad,
         updatedAt: response.updatedAt,
         submittedAt: response.submittedAt,
       })),
@@ -461,11 +724,36 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
     const student = getStudent(actor.actorId);
     if (!student) throw new HttpError("Student account not found", 404);
     touchStudent(student.id);
-    const exam = getStudentExam(student.id);
-    if (!exam) return json({ status: "waiting", student: { name: student.name }, serverTime: Date.now() });
+    const sessions = listStudentExamSessions(student.id);
+    const selectedSessionId = optionalText(new URL(request.url).searchParams.get("session"), "Session", 64);
+    if (!selectedSessionId) {
+      return json({ status: "selecting", student: { name: student.name }, sessions, serverTime: Date.now() });
+    }
+
+    const selectedSession = sessions.find((session) => session.id === selectedSessionId);
+    if (!selectedSession) {
+      return json({
+        status: "selecting",
+        student: { name: student.name },
+        sessions,
+        serverTime: Date.now(),
+        selectionReset: true,
+      });
+    }
+    if (selectedSession.status === "draft") {
+      return json({
+        status: "waiting",
+        student: { name: student.name },
+        session: selectedSession,
+        serverTime: Date.now(),
+      });
+    }
+
+    const exam = getStudentExam(student.id, selectedSession.id);
+    if (!exam) throw new HttpError("Student response is not available for this examination", 409);
 
     const timing = timingFor(exam);
-    if (exam.submittedAt === null && Date.now() >= timing.deadline + DEADLINE_GRACE_MS) {
+    if (exam.sessionStatus === "live" && exam.submittedAt === null && Date.now() >= timing.deadline + DEADLINE_GRACE_MS) {
       submitResponse(exam.responseId);
       exam.submittedAt = Date.now();
       publish(server, "admin", "admin-state");
@@ -481,8 +769,9 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
         deadline: timing.deadline,
         phase: Date.now() < timing.readingEndsAt ? "reading" : "writing",
       },
-      paper: publicManifest(manifest, exam.paperId),
+      paper: publicManifest(manifest, exam.paperId, exam.sessionId),
       response: {
+        id: exam.responseId,
         selectedQuestionId: exam.selectedQuestionId,
         answers: JSON.parse(exam.answersJson) as Record<string, string>,
         flags: JSON.parse(exam.flagsJson) as string[],
@@ -497,15 +786,16 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
 
   if (path === "/api/student/response" && method === "PUT") {
     const actor = requireRole(request, "student");
-    const exam = getStudentExam(actor.actorId);
+    const body = await jsonBody(request, RESPONSE_BODY_BYTES);
+    const sessionId = requiredText(body.sessionId, "Session", 64);
+    const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam) throw new HttpError("No live examination", 404);
     if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
     const timing = timingFor(exam);
     const now = Date.now();
     if (now < timing.readingEndsAt) throw new HttpError("Answering is locked during reading time", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const validated = await validatedResponse(await jsonBody(request, RESPONSE_BODY_BYTES), manifest);
-    if (validated.sessionId !== exam.sessionId) throw new HttpError("Examination session changed", 409);
+    const validated = await validatedResponse(body, manifest);
     const payload: ResponsePayload = {
       answersJson: JSON.stringify(validated.answers),
       selectedQuestionId: validated.selectedQuestionId,
@@ -529,15 +819,16 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
 
   if (path === "/api/student/submit" && method === "POST") {
     const actor = requireRole(request, "student");
-    const exam = getStudentExam(actor.actorId);
+    const body = await jsonBody(request, RESPONSE_BODY_BYTES);
+    const sessionId = requiredText(body.sessionId, "Session", 64);
+    const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam) throw new HttpError("No live examination", 404);
     if (exam.sessionStatus !== "live" || exam.submittedAt !== null) throw new HttpError("Response is not available", 409);
     const timing = timingFor(exam);
     const now = Date.now();
     if (now < timing.readingEndsAt) throw new HttpError("Answering is locked during reading time", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const validated = await validatedResponse(await jsonBody(request, RESPONSE_BODY_BYTES), manifest);
-    if (validated.sessionId !== exam.sessionId) throw new HttpError("Examination session changed", 409);
+    const validated = await validatedResponse(body, manifest);
     if (now > timing.deadline + DEADLINE_GRACE_MS) {
       submitResponse(exam.responseId);
       throw new HttpError("Time has expired and the last saved response was submitted", 409);
@@ -554,49 +845,99 @@ async function handleApi(request: Request, server: Server<SocketData>, path: str
 
   if (path === "/api/student/audio-play" && method === "POST") {
     const actor = requireRole(request, "student");
-    const exam = getStudentExam(actor.actorId);
-    if (!exam) throw new HttpError("No live examination", 404);
-    if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
-    const timing = timingFor(exam);
-    const now = Date.now();
-    if (exam.submittedAt !== null || now < timing.readingEndsAt || now >= timing.deadline) throw new HttpError("Response is not available", 409);
     const body = await jsonBody(request);
-    if (requiredText(body.sessionId, "Session", 64) !== exam.sessionId) throw new HttpError("Examination session changed", 409);
+    const sessionId = requiredText(body.sessionId, "Session", 64);
     const resourceKey = requiredText(body.resourceKey, "Audio resource", 64);
-    const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const resource = manifest.resources.find((item) => item.key === resourceKey && item.kind === "audio");
-    if (!resource) throw new HttpError("Audio resource not found", 404);
-    const plays = incrementAudioPlay(exam.responseId, resourceKey, resource.maxPlays ?? 2);
+    const { exam, identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
+    const timing = availableAudioTiming(exam);
+    const usedPlays = getAudioPlayCount(exam.responseId, resourceKey);
+    if (usedPlays >= AUDIO_PLAY_LIMIT) throw new HttpError("Both audio listens have been used", 409);
+    const { playToken } = audioPlayback.issue(identity, timing.deadline);
+    return json({
+      plays: usedPlays,
+      maxPlays: AUDIO_PLAY_LIMIT,
+      playToken,
+      url: `/api/assets/${exam.paperId}/${resourceKey}?session=${encodeURIComponent(sessionId)}&play=${encodeURIComponent(playToken)}`,
+    });
+  }
+
+  if (path === "/api/student/audio-play/start" && method === "POST") {
+    const actor = requireRole(request, "student");
+    const body = await jsonBody(request);
+    const sessionId = requiredText(body.sessionId, "Session", 64);
+    const resourceKey = requiredText(body.resourceKey, "Audio resource", 64);
+    const playToken = requiredText(body.playToken, "Audio authorization", 64);
+    if (typeof body.durationSeconds !== "number") throw new HttpError("Audio duration is required", 400);
+    const { exam, identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
+    availableAudioTiming(exam);
+    const started = audioPlayback.start(
+      playToken,
+      identity,
+      body.durationSeconds,
+      () => incrementAudioPlay(exam.responseId, resourceKey),
+    );
     publish(server, "admin", "admin-state");
-    return json({ plays, maxPlays: resource.maxPlays ?? 2 });
+    return json(started);
+  }
+
+  if (path === "/api/student/audio-play/complete" && method === "POST") {
+    const actor = requireRole(request, "student");
+    const body = await jsonBody(request);
+    const sessionId = requiredText(body.sessionId, "Session", 64);
+    const resourceKey = requiredText(body.resourceKey, "Audio resource", 64);
+    const playToken = requiredText(body.playToken, "Audio authorization", 64);
+    const { identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
+    return json(audioPlayback.complete(playToken, identity));
   }
 
   const assetMatch = path.match(/^\/api\/assets\/([a-f0-9-]+)\/([a-z0-9_-]+)$/);
-  if (assetMatch && method === "GET") {
+  if (assetMatch && (method === "GET" || method === "HEAD")) {
     const actor = authFromRequest(request);
     if (!actor) throw new HttpError("Authentication required", 401);
+    if (!localRequest && actor.role !== "student") throw new HttpError("Teacher access is only available on this computer", 403);
     const paperId = assetMatch[1] as string;
     const assetKey = assetMatch[2] as string;
     if (actor.role === "student") {
-      const exam = getStudentExam(actor.actorId);
-      if (!exam || exam.paperId !== paperId) throw new HttpError("Asset is not available", 403);
+      const sessionId = requiredText(new URL(request.url).searchParams.get("session"), "Session", 64);
+      const exam = getStudentExam(actor.actorId, sessionId);
+      if (!exam || exam.sessionStatus !== "live" || exam.submittedAt !== null || exam.paperId !== paperId) {
+        throw new HttpError("Asset is not available", 403);
+      }
+      const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
+      const resource = manifest.resources.find((item) => item.key === assetKey);
+      if (!resource) throw new HttpError("Asset is not available", 403);
+      if (resource.kind === "audio") {
+        availableAudioTiming(exam);
+        const playToken = requiredText(new URL(request.url).searchParams.get("play"), "Audio authorization", 64);
+        const asset = getAsset(paperId, assetKey);
+        if (!asset) throw new HttpError("Asset not found", 404);
+        audioPlayback.claimDownload(playToken, {
+          studentId: actor.actorId,
+          sessionId,
+          paperId,
+          resourceKey: assetKey,
+          responseId: exam.responseId,
+        }, {
+          method,
+          rangeHeader: request.headers.get("range"),
+        });
+        return completeAudioAssetResponse(asset);
+      }
     }
     const asset = getAsset(paperId, assetKey);
     if (!asset) throw new HttpError("Asset not found", 404);
-    return responseWithSecurity(new Response(asset.data as Uint8Array<ArrayBuffer>, {
-      headers: {
-        "Cache-Control": "private, max-age=300",
-        "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(asset.filename)}`,
-        "Content-Type": asset.mime,
-      },
-    }));
+    const range = parseByteRange(request.headers.get("range"), asset.data.byteLength);
+    return assetResponse(request, asset, "private, max-age=300", range);
   }
 
   throw new HttpError("Endpoint not found", 404);
 }
 
 configureDemoAdmin("admin", await Bun.password.hash("admin"));
-console.warn("DigitalDP demo login is admin / admin. Existing teacher credentials and teacher sessions are replaced at startup.");
+console.warn("DigitalDP demo login is admin / admin on this computer only. Existing teacher credentials and teacher sessions are replaced at startup.");
+if (TEST_READING_SECONDS !== null) {
+  console.warn(`DIGITALDP_TEST_READING_SECONDS=${TEST_READING_SECONDS} is active; exam reading time is temporarily overridden without changing saved papers.`);
+}
 
 const server = Bun.serve<SocketData>({
   hostname,
@@ -605,20 +946,36 @@ const server = Bun.serve<SocketData>({
   async fetch(request, activeServer) {
     const url = new URL(request.url);
     try {
-      if (!isExpectedLoopbackAuthority(url, port)) throw new HttpError("Misdirected request", 421);
+      const remoteAddress = activeServer.requestIP(request)?.address;
+      const localRequest = isLoopbackAddress(remoteAddress);
+      if (!isExpectedRequestAuthority(url, port, remoteAddress, network.lanOrigin)) {
+        throw new HttpError("Misdirected request", 421);
+      }
       if (url.pathname === "/ws") {
         assertSameOrigin(request);
         const actor = authFromRequest(request);
         if (!actor) return json({ error: "Authentication required" }, 401);
+        if (!localRequest && actor.role !== "student") {
+          throw new HttpError("Teacher access is only available on this computer", 403);
+        }
         const student = actor.role === "student" ? getStudent(actor.actorId) : null;
         const upgraded = activeServer.upgrade(request, {
           data: { role: actor.role, actorId: actor.actorId, classId: student?.classId ?? null },
         });
         return upgraded ? undefined : json({ error: "WebSocket upgrade failed" }, 400);
       }
-      if (url.pathname.startsWith("/api/")) return await handleApi(request, activeServer, url.pathname);
-      const filePath = STATIC_FILES[url.pathname];
-      if (!filePath || request.method !== "GET") throw new HttpError("Page not found", 404);
+      if (url.pathname.startsWith("/api/")) {
+        if (!localRequest && !isLanStudentApiRequest(url.pathname, request.method)) {
+          throw new HttpError("Teacher access is only available on this computer", 403);
+        }
+        return await handleApi(request, activeServer, url.pathname, localRequest);
+      }
+      if (!localRequest && !isStudentStaticPath(url.pathname)) {
+        throw new HttpError("Teacher access is only available on this computer", 403);
+      }
+      const sourcePath = staticFilePath(url.pathname);
+      if (!sourcePath || request.method !== "GET") throw new HttpError("Page not found", 404);
+      const filePath = staticAssetPath(sourcePath) ?? sourcePath;
       const file = Bun.file(filePath);
       if (!(await file.exists())) throw new HttpError("Page not found", 404);
       const response = new Response(file);
@@ -626,6 +983,9 @@ const server = Bun.serve<SocketData>({
       return responseWithSecurity(response);
     } catch (error) {
       const normalized = error instanceof HttpError ? error : databaseError(error instanceof Error ? error : new Error("Unexpected error"));
+      if (normalized.status >= 400) {
+        console.warn(`${request.method.toUpperCase()} ${url.pathname} -> ${normalized.status}`);
+      }
       return json({ error: normalized.message }, normalized.status);
     }
   },
@@ -648,3 +1008,5 @@ const server = Bun.serve<SocketData>({
 deleteExpiredAuthSessions();
 setInterval(deleteExpiredAuthSessions, 60 * 60 * 1000).unref();
 console.log(`DigitalDP is listening on http://${hostname}:${server.port}`);
+console.log(`Teacher dashboard: http://localhost:${server.port}/admin`);
+console.log(`Student sign-in: ${network.lanOrigin ?? `http://localhost:${server.port}`}/student`);

@@ -1,10 +1,26 @@
 import { ApiError, announce, api, connectSocket, humanSubject, setView } from "/app.js";
+import {
+  collectionActionPath,
+  emptyState,
+  formatPaperTime,
+  paperOptions,
+  populateArchiveDialog,
+  readCollectionTarget,
+  renderClasses,
+  renderSessions,
+  syncOptions,
+  updatePresence,
+} from "/admin-collections.js";
 import { renderInkSubmission } from "/ink-canvas.js";
+import { mountAdminNetwork } from "/admin-network.js";
 import { mountPaperBuilder } from "/paper-builder.js";
+import { mountStudentConnection } from "/student-connection.js";
 
 let stopSocket;
-let refreshTimer;
+let presenceTimer;
 let currentState;
+let studentConnectionOrigin;
+let classroomNetworkControls;
 
 function authFrame(title, description, fields, actionLabel) {
   setView(`
@@ -76,65 +92,18 @@ function renderLogin() {
   bindAuth("/api/login/admin", renderDashboard);
 }
 
-function option(select, value, label) {
-  const item = document.createElement("option");
-  item.value = value;
-  item.textContent = label;
-  select.append(item);
-}
-
-function emptyState(container, message) {
-  const paragraph = document.createElement("p");
-  paragraph.className = "empty-state";
-  paragraph.textContent = message;
-  container.append(paragraph);
-}
-
-function renderClasses(state) {
-  const classList = document.querySelector("#class-list");
-  classList.replaceChildren();
-  const studentClass = document.querySelector("#student-class");
-  const sessionClass = document.querySelector("#session-class");
-  studentClass.replaceChildren();
-  sessionClass.replaceChildren();
-  option(studentClass, "", "Choose class");
-  option(sessionClass, "", "Choose class");
-
-  if (state.classes.length === 0) emptyState(classList, "Create a class before adding students.");
-  for (const schoolClass of state.classes) {
-    option(studentClass, schoolClass.id, `${schoolClass.name} · ${schoolClass.code}`);
-    option(sessionClass, schoolClass.id, `${schoolClass.name} · ${schoolClass.code}`);
-    const students = state.students.filter((student) => student.classId === schoolClass.id);
-    const section = document.createElement("section");
-    section.className = "roster-group";
-    const heading = document.createElement("div");
-    heading.className = "roster-heading";
-    const name = document.createElement("strong");
-    name.textContent = schoolClass.name;
-    const code = document.createElement("code");
-    code.textContent = schoolClass.code;
-    heading.append(name, code);
-    section.append(heading);
-
-    if (students.length === 0) {
-      emptyState(section, "No students yet.");
-    } else {
-      const list = document.createElement("ul");
-      list.className = "roster-list";
-      for (const student of students) {
-        const item = document.createElement("li");
-        const identity = document.createElement("span");
-        identity.textContent = `${student.name} · ${student.candidateCode}`;
-        const metadata = document.createElement("small");
-        const online = student.lastSeenAt && Date.now() - student.lastSeenAt < 20_000;
-        metadata.dataset.online = String(Boolean(online));
-        metadata.textContent = `${online ? "online" : "offline"}${student.extraMinutes ? ` · +${student.extraMinutes} min` : ""}`;
-        item.append(identity, metadata);
-        list.append(item);
-      }
-      section.append(list);
+async function refreshPresence() {
+  try {
+    const latest = await api("/api/admin/state");
+    if (!currentState) return;
+    currentState = { ...currentState, students: latest.students };
+    updatePresence(currentState);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      stopSocket?.();
+      clearInterval(presenceTimer);
+      renderLogin();
     }
-    classList.append(section);
   }
 }
 
@@ -142,11 +111,13 @@ function renderPapers(state) {
   const list = document.querySelector("#paper-list");
   const sessionPaper = document.querySelector("#session-paper");
   list.replaceChildren();
-  sessionPaper.replaceChildren();
-  option(sessionPaper, "", "Choose paper");
+  syncOptions(
+    sessionPaper,
+    "Choose paper",
+    paperOptions(state.papers),
+  );
   if (state.papers.length === 0) emptyState(list, "Choose an exam in the Paper Builder to add your first practice paper.");
   for (const paper of state.papers) {
-    option(sessionPaper, paper.id, `${paper.title} · ${paper.level}`);
     const row = document.createElement("li");
     const main = document.createElement("span");
     const title = document.createElement("strong");
@@ -192,58 +163,6 @@ function renderPapers(state) {
   }
 }
 
-function renderSessions(state) {
-  const list = document.querySelector("#session-list");
-  list.replaceChildren();
-  if (state.sessions.length === 0) emptyState(list, "Set up an exam to make a paper available to a class.");
-  for (const session of state.sessions) {
-    const row = document.createElement("li");
-    row.className = "session-row";
-    const detail = document.createElement("div");
-    const title = document.createElement("strong");
-    title.textContent = session.paperTitle;
-    const metadata = document.createElement("span");
-    const status = session.status === "draft" ? "ready" : session.status;
-    metadata.textContent = `${session.className} · ${status} · ${formatPaperTime(session)}`;
-    detail.append(title, metadata);
-
-    const counts = document.createElement("span");
-    counts.className = "session-counts";
-    counts.textContent = session.status === "draft"
-      ? "Ready to start"
-      : `${session.submittedCount}/${session.candidateCount} submitted · ${session.activeCount} online`;
-
-    const actions = document.createElement("div");
-    actions.className = "session-actions";
-    if (session.status !== "ended") {
-      const countdown = document.createElement("a");
-      countdown.href = `/clock?session=${encodeURIComponent(session.id)}`;
-      countdown.target = "_blank";
-      countdown.rel = "noopener";
-      countdown.className = "clock-launch compact";
-      countdown.textContent = "Open clock ↗";
-      countdown.setAttribute("aria-label", `Open countdown for ${session.paperTitle} in a new tab`);
-      const lifecycle = document.createElement("button");
-      lifecycle.type = "button";
-      lifecycle.dataset.sessionId = session.id;
-      lifecycle.dataset.action = session.status === "draft" ? "start" : "end";
-      lifecycle.className = session.status === "draft" ? "primary-action compact" : "danger-action compact";
-      lifecycle.textContent = session.status === "draft" ? "Start exam" : "End exam";
-      actions.append(countdown, lifecycle);
-    }
-    if (session.status !== "draft") {
-      const responses = document.createElement("button");
-      responses.type = "button";
-      responses.dataset.responses = session.id;
-      responses.className = "compact";
-      responses.textContent = "View submissions";
-      actions.append(responses);
-    }
-    row.append(detail, counts, actions);
-    list.append(row);
-  }
-}
-
 function copy(tag, className, value) {
   const element = document.createElement(tag);
   if (className) element.className = className;
@@ -256,14 +175,6 @@ function formatAssessmentSession(value) {
   const match = /^(may|november)-(\d{4})$/i.exec(value);
   if (match) return `${match[1][0].toUpperCase()}${match[1].slice(1)} ${match[2]}`;
   return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function formatPaperTime(session) {
-  if (!session.durationMinutes) return "Teacher-defined timing";
-  const writing = `${session.durationMinutes} minute${session.durationMinutes === 1 ? "" : "s"} writing`;
-  return session.readingTimeMinutes
-    ? `${session.readingTimeMinutes} minute${session.readingTimeMinutes === 1 ? "" : "s"} reading · ${writing}`
-    : writing;
 }
 
 function appendMetadata(list, label, value, className = "") {
@@ -296,7 +207,7 @@ function appendQuestionResources(container, question, resourcesByKey, renderedRe
       item.append(copy("blockquote", "submission-resource-text", resource.text ?? ""));
     } else {
       const description = resource.kind === "audio"
-        ? `Listening audio · available in the digital examination · maximum ${resource.maxPlays ?? 2} play${(resource.maxPlays ?? 2) === 1 ? "" : "s"}`
+        ? "Listening audio · two complete plays · no pause or restart"
         : "PDF document · supplied with the digital examination";
       item.append(copy("p", "submission-resource-reference", description));
     }
@@ -323,6 +234,14 @@ function renderSubmissionAnswer(question, answer) {
   return content;
 }
 
+function appendCandidateNotepad(paper, notepad) {
+  if (typeof notepad !== "string" || !notepad.trim()) return;
+  const section = document.createElement("section");
+  section.className = "candidate-paper-notepad";
+  section.append(copy("h3", "", "Candidate notepad"), copy("p", "", notepad));
+  paper.append(section);
+}
+
 function renderCandidatePaper(data, response) {
   const paper = document.createElement("section");
   paper.className = "candidate-paper";
@@ -343,12 +262,6 @@ function renderCandidatePaper(data, response) {
   appendMetadata(metadata, "Candidate code", response.candidateCode, "candidate-paper-code");
   appendMetadata(metadata, "Class", data.session.className);
   appendMetadata(metadata, "Assessment session", formatAssessmentSession(data.session.assessmentSession));
-  appendMetadata(metadata, "Source status", ({
-    "teacher-authored": "Teacher-authored",
-    "school-authorized": "School-authorized or licensed",
-    "official-public-reference": "Official public specimen — reference only",
-    "unknown-local-only": "Unknown rights — local-only",
-  })[data.session.sourceClassification] ?? "Not recorded");
   appendMetadata(metadata, "Paper", data.session.paper ?? "Practice paper");
   if (data.session.maximumMarks) appendMetadata(metadata, "Maximum marks", String(data.session.maximumMarks));
   if (data.session.subjectWeightPercent) appendMetadata(metadata, "Subject weighting", `${data.session.subjectWeightPercent}%`);
@@ -436,6 +349,7 @@ function renderCandidatePaper(data, response) {
     answers.append(item);
   }
   paper.append(answers);
+  appendCandidateNotepad(paper, response.notepad);
 
   const footer = document.createElement("footer");
   footer.className = "candidate-paper-footer";
@@ -483,7 +397,7 @@ async function openSubmissions(sessionId) {
   renderSubmissions(await api(`/api/admin/sessions/${sessionId}/responses`));
 }
 
-async function printSubmissions(responseId = null) {
+function printSubmissions(responseId = null) {
   const list = document.querySelector("#submission-list");
   const records = [...list.querySelectorAll(".submission-record")];
   const printable = responseId
@@ -499,22 +413,28 @@ async function printSubmissions(responseId = null) {
   });
   printable.forEach((record) => { record.open = true; });
 
-  const images = printable.flatMap((record) => [...record.querySelectorAll("img")]);
-  await Promise.all(images.map((image) => image.complete || typeof image.decode !== "function"
-    ? undefined
-    : image.decode().catch(() => undefined)));
-  window.addEventListener("afterprint", () => {
+  const restoreScreenView = () => {
     delete list.dataset.printMode;
     records.forEach((record) => {
       record.removeAttribute("data-print-target");
       record.removeAttribute("data-print-first");
     });
-  }, { once: true });
-  window.print();
+  };
+  window.addEventListener("afterprint", restoreScreenView, { once: true });
+  try {
+    announce("Opening the browser print dialog. Choose Save as PDF to create a file.");
+    // Keep this inside the click call stack. Waiting for image decoding can cause
+    // WebViews and some browsers to ignore a delayed native-print request.
+    window.print();
+  } catch {
+    restoreScreenView();
+    announce("The browser could not open its print dialog. Try Chrome or Safari to save this paper as a PDF.", "error");
+  }
 }
 
 function renderState(state) {
   currentState = state;
+  updateStudentConnection(state.network);
   renderClasses(state);
   renderPapers(state);
   renderSessions(state);
@@ -525,6 +445,24 @@ function renderState(state) {
   document.querySelector("#overview-live").textContent = String(live);
 }
 
+function updateStudentConnection(network) {
+  if (!network || typeof network.studentUrl !== "string") return;
+  try {
+    studentConnectionOrigin = new URL(network.studentUrl).origin;
+  } catch {
+    return;
+  }
+  if (document.querySelector("[data-student-connection-link]")) {
+    mountStudentConnection(document, { origin: studentConnectionOrigin });
+  }
+}
+
+async function requestClassroomNetwork(path, options) {
+  const state = await api(path, options);
+  updateStudentConnection(state);
+  return state;
+}
+
 async function refreshState(silent = false) {
   try {
     renderState(await api("/api/admin/state"));
@@ -532,7 +470,7 @@ async function refreshState(silent = false) {
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       stopSocket?.();
-      clearInterval(refreshTimer);
+      clearInterval(presenceTimer);
       renderLogin();
       return;
     }
@@ -577,11 +515,191 @@ async function addBuiltPaper(data) {
   announce("Paper added to the library", "success");
 }
 
+function showStudentEditError(message) {
+  const errorRegion = document.querySelector("#student-edit-error");
+  errorRegion.textContent = message;
+  errorRegion.hidden = false;
+  errorRegion.focus();
+}
+
+function openStudentEditor(studentId) {
+  const student = currentState?.students.find((candidate) => candidate.id === studentId);
+  if (!student) {
+    announce("That student is no longer in the current roster", "error");
+    return;
+  }
+
+  const dialog = document.querySelector("#student-edit-dialog");
+  const form = document.querySelector("#student-edit-form");
+  form.reset();
+  form.dataset.studentId = student.id;
+  form.elements.namedItem("name").value = student.name;
+  form.elements.namedItem("candidateCode").value = student.candidateCode;
+  form.elements.namedItem("extraMinutes").value = String(student.extraMinutes ?? 0);
+  document.querySelector("#student-edit-title").textContent = `Edit ${student.name}`;
+  document.querySelector("#student-edit-context").textContent = "Update the candidate details below.";
+  const errorRegion = document.querySelector("#student-edit-error");
+  errorRegion.textContent = "";
+  errorRegion.hidden = true;
+  dialog.showModal();
+  form.elements.namedItem("name").focus();
+}
+
+async function saveStudentEdits(form) {
+  const student = currentState?.students.find((candidate) => candidate.id === form.dataset.studentId);
+  if (!student) {
+    showStudentEditError("That student is no longer in the current roster. Close this window and try again.");
+    return;
+  }
+
+  const submit = form.querySelector("button[type=submit]");
+  const values = Object.fromEntries(new FormData(form));
+  const updatedName = String(values.name).trim();
+  submit.disabled = true;
+  try {
+    await api(`/api/admin/students/${encodeURIComponent(student.id)}`, {
+      method: "PUT",
+      body: {
+        classId: student.classId,
+        name: updatedName,
+        candidateCode: String(values.candidateCode).trim(),
+        extraMinutes: Number(values.extraMinutes),
+      },
+    });
+    document.querySelector("#student-edit-dialog").close();
+    await refreshState(true);
+    announce(`${updatedName} updated`, "success");
+  } catch (error) {
+    showStudentEditError(error instanceof Error ? error.message : "Could not update student");
+  } finally {
+    submit.disabled = false;
+  }
+}
+
+function lifecycleFocusTarget(target) {
+  if (target.action === "archive") {
+    return document.querySelector(target.collection === "sessions" ? "#archived-sessions-summary" : "#archived-roster-summary");
+  }
+  return document.querySelector(
+    `button[data-collection-action="archive"][data-collection="${target.collection}"][data-collection-id="${CSS.escape(target.id)}"]`,
+  );
+}
+
+async function changeCollectionLifecycle(target) {
+  announce("");
+  await api(collectionActionPath(target.collection, target.id, target.action), { method: "POST" });
+  await refreshState(true);
+  announce(
+    target.action === "archive"
+      ? `${target.label} removed. Previous responses remain saved.`
+      : `${target.label} restored.`,
+    "success",
+  );
+  return lifecycleFocusTarget(target);
+}
+
+function bindCollectionController() {
+  const root = document.querySelector(".admin-main");
+  const dialog = document.querySelector("#archive-dialog");
+  const form = document.querySelector("#archive-form");
+  const confirm = document.querySelector("#confirm-archive");
+  const errorRegion = document.querySelector("#archive-error");
+  let pendingArchive = null;
+  let archiveTrigger = null;
+
+  root.addEventListener("click", async (event) => {
+    const button = event.target.closest(
+      "button[data-edit-student], button[data-session-action], button[data-responses], button[data-collection-action]",
+    );
+    if (!button || button.disabled) return;
+
+    if (button.dataset.editStudent) {
+      openStudentEditor(button.dataset.editStudent);
+      return;
+    }
+    if (button.dataset.responses) {
+      button.disabled = true;
+      try {
+        announce("");
+        await openSubmissions(button.dataset.responses);
+      } catch (error) {
+        announce(error instanceof Error ? error.message : "Could not load submissions", "error");
+      } finally {
+        button.disabled = false;
+      }
+      return;
+    }
+    if (button.dataset.sessionAction) {
+      button.disabled = true;
+      try {
+        await api(`/api/admin/sessions/${button.dataset.sessionId}/${button.dataset.sessionAction}`, { method: "POST" });
+        await refreshState(true);
+        announce(button.dataset.sessionAction === "start" ? "Exam started" : "Exam ended and responses submitted", "success");
+      } catch (error) {
+        announce(error instanceof Error ? error.message : "Session action failed", "error");
+      } finally {
+        button.disabled = false;
+      }
+      return;
+    }
+
+    const target = readCollectionTarget(button);
+    if (!target) return;
+    if (target.action === "archive") {
+      pendingArchive = target;
+      archiveTrigger = button;
+      dialog.returnValue = "";
+      populateArchiveDialog(dialog, target);
+      dialog.showModal();
+      return;
+    }
+
+    button.disabled = true;
+    try {
+      const focusTarget = await changeCollectionLifecycle(target);
+      focusTarget?.focus();
+    } catch (error) {
+      announce(error instanceof Error ? error.message : "Could not restore this item", "error");
+      button.disabled = false;
+    }
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!pendingArchive) return;
+    confirm.disabled = true;
+    errorRegion.textContent = "";
+    errorRegion.hidden = true;
+    try {
+      const focusTarget = await changeCollectionLifecycle(pendingArchive);
+      dialog.close("confirmed");
+      focusTarget?.focus();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not remove this item";
+      errorRegion.textContent = message;
+      errorRegion.hidden = false;
+      errorRegion.focus();
+      announce(message, "error");
+    } finally {
+      confirm.disabled = false;
+    }
+  });
+
+  document.querySelector("[data-cancel-archive]").addEventListener("click", () => dialog.close("cancel"));
+  dialog.addEventListener("close", () => {
+    if (dialog.returnValue !== "confirmed" && archiveTrigger?.isConnected) archiveTrigger.focus();
+    pendingArchive = null;
+    archiveTrigger = null;
+    errorRegion.textContent = "";
+    errorRegion.hidden = true;
+  });
+}
+
 function bindDashboard() {
   document.querySelector("#logout").addEventListener("click", async () => {
     await api("/api/logout", { method: "POST" });
     stopSocket?.();
-    clearInterval(refreshTimer);
+    clearInterval(presenceTimer);
     renderLogin();
   });
 
@@ -593,6 +711,18 @@ function bindDashboard() {
   document.querySelector("#student-form").addEventListener("submit", (event) => {
     event.preventDefault();
     mutate(event.currentTarget, "/api/admin/students", (values) => ({ ...values, extraMinutes: Number(values.extraMinutes || 0) }));
+  });
+
+  const studentEditDialog = document.querySelector("#student-edit-dialog");
+  const studentEditForm = document.querySelector("#student-edit-form");
+  studentEditForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveStudentEdits(event.currentTarget);
+  });
+  document.querySelector("[data-close-student-edit]").addEventListener("click", () => studentEditDialog.close());
+  studentEditDialog.addEventListener("close", () => {
+    studentEditForm.reset();
+    delete studentEditForm.dataset.studentId;
   });
 
   document.querySelectorAll("[data-paper-form]").forEach((form) => {
@@ -607,24 +737,7 @@ function bindDashboard() {
     mutate(event.currentTarget, "/api/admin/sessions");
   });
 
-  document.querySelector("#session-list").addEventListener("click", async (event) => {
-    const button = event.target.closest("button[data-action], button[data-responses]");
-    if (!button) return;
-    button.disabled = true;
-    try {
-      if (button.dataset.responses) {
-        await openSubmissions(button.dataset.responses);
-      } else {
-        await api(`/api/admin/sessions/${button.dataset.sessionId}/${button.dataset.action}`, { method: "POST" });
-        await refreshState(true);
-        announce(button.dataset.action === "start" ? "Exam started" : "Exam ended and responses submitted", "success");
-      }
-    } catch (error) {
-      announce(error instanceof Error ? error.message : "Session action failed", "error");
-    } finally {
-      button.disabled = false;
-    }
-  });
+  bindCollectionController();
 
   document.querySelector("#print-submissions").addEventListener("click", () => printSubmissions());
   document.querySelector("#submission-list").addEventListener("click", (event) => {
@@ -638,6 +751,7 @@ function bindDashboard() {
 }
 
 async function renderDashboard() {
+  classroomNetworkControls?.destroy();
   setView(`
     <div class="admin-shell">
       <aside class="admin-rail">
@@ -659,6 +773,18 @@ async function renderDashboard() {
 
         <section id="overview" class="admin-section">
           <div class="section-heading"><div><h2>Overview</h2><p>Classes, papers and examinations ready on this school server.</p></div></div>
+          <section class="session-row" aria-labelledby="student-connection-title">
+            <div>
+              <strong id="student-connection-title">Student sign-in</strong>
+              <a data-student-connection-link href="/student" target="_blank" rel="noopener">/student</a>
+              <small>Share this address with students using this DigitalDP server.</small>
+            </div>
+            <div class="session-actions">
+              <button data-copy-student-connection type="button" aria-describedby="student-connection-copy-status">Copy URL</button>
+              <span id="student-connection-copy-status" data-copy-student-connection-status role="status" aria-live="polite" aria-atomic="true" hidden></span>
+            </div>
+          </section>
+          <div id="classroom-network"></div>
           <dl class="metric-strip">
             <div><dt>Classes</dt><dd id="overview-classes">0</dd></div>
             <div><dt>Students</dt><dd id="overview-students">0</dd></div>
@@ -669,8 +795,13 @@ async function renderDashboard() {
 
         <section id="classes" class="admin-section two-column-section">
           <div>
-            <div class="section-heading"><div><h2>Classes and candidates</h2><p>Login details mimic a class code, candidate code and PIN.</p></div></div>
+            <div class="section-heading"><div><h2>Classes and candidates</h2><p>Prepare rosters in advance, then update them whenever circumstances change.</p></div></div>
             <div id="class-list" class="roster-groups"></div>
+            <details id="archived-roster" class="archived-collection">
+              <summary id="archived-roster-summary">Removed classes and students (<span id="archived-roster-count">0</span>)</summary>
+              <p>Removed roster entries are unavailable at student sign-in. Restore them here when needed.</p>
+              <div id="archived-roster-list" class="archived-collection-list"></div>
+            </details>
           </div>
           <div class="form-stack">
             <form id="class-form" class="utility-form" method="post">
@@ -685,7 +816,6 @@ async function renderDashboard() {
                 <label for="student-class">Class</label><select id="student-class" name="classId" required></select>
                 <label for="student-name">Student name</label><input id="student-name" name="name" required maxlength="100" autocomplete="off">
                 <label for="candidate-code">Candidate code</label><input id="candidate-code" name="candidateCode" required maxlength="32" autocomplete="off">
-                <label for="student-pin">PIN</label><input id="student-pin" name="pin" inputmode="numeric" pattern="[0-9]{4,12}" minlength="4" maxlength="12" required autocomplete="new-password">
                 <label for="extra-minutes">Extra time in minutes</label><input id="extra-minutes" name="extraMinutes" type="number" min="0" max="180" value="0">
                 <button type="submit">Add student</button>
               </fieldset>
@@ -739,11 +869,17 @@ async function renderDashboard() {
 
         <section id="sessions" class="admin-section two-column-section">
           <div>
-            <div class="section-heading"><div><h2>Exams</h2><p>Choose a class and paper, then start when students are ready.</p></div><a class="clock-launch" href="/clock" target="_blank" rel="noopener">Open countdown display ↗</a></div>
+            <div class="section-heading"><div><h2>Exams</h2><p>Each exam sitting is a class-specific use of a reusable Paper Library definition.</p></div><a class="clock-launch" href="/clock" target="_blank" rel="noopener">Open countdown display ↗</a></div>
             <ul id="session-list" class="session-list"></ul>
+            <details id="archived-sessions" class="archived-collection">
+              <summary id="archived-sessions-summary">Removed exam sittings (<span id="archived-session-count">0</span>)</summary>
+              <p>Previous responses stay saved. Restore a sitting to make it available to students again.</p>
+              <ul id="archived-session-list" class="session-list"></ul>
+            </details>
           </div>
           <form id="session-form" class="utility-form" method="post">
             <fieldset><legend>Set up an exam</legend>
+              <small>This creates a new draft sitting from the library paper. The original stays unchanged and can be reused for other classes or dates.</small>
               <label for="session-class">Class</label><select id="session-class" name="classId" required></select>
               <label for="session-paper">Paper</label><select id="session-paper" name="paperId" required></select>
               <button type="submit">Set up exam</button>
@@ -752,14 +888,38 @@ async function renderDashboard() {
         </section>
       </div>
     </div>
+    <dialog id="student-edit-dialog" class="exam-dialog compact-dialog" aria-labelledby="student-edit-title" aria-describedby="student-edit-context">
+      <form id="student-edit-form" method="post">
+        <header><p class="eyebrow">Candidate details</p><h2 id="student-edit-title">Edit student</h2><p id="student-edit-context">Update the candidate details below.</p></header>
+        <fieldset class="preference-grid">
+          <legend class="visually-hidden">Student details</legend>
+          <label for="edit-student-name">Display name<input id="edit-student-name" name="name" required maxlength="100" autocomplete="off"></label>
+          <label for="edit-candidate-code">Candidate code<input id="edit-candidate-code" name="candidateCode" required minlength="2" maxlength="32" pattern="[A-Za-z0-9-]{2,32}" autocomplete="off"></label>
+          <label for="edit-extra-minutes">Extra time in minutes<input id="edit-extra-minutes" name="extraMinutes" type="number" min="0" max="180" value="0" required></label>
+        </fieldset>
+        <p id="student-edit-error" class="status-message" data-tone="error" role="alert" tabindex="-1" hidden></p>
+        <footer><button type="button" data-close-student-edit>Cancel</button><button class="primary-action" type="submit">Save changes</button></footer>
+      </form>
+    </dialog>
+    <dialog id="archive-dialog" class="exam-dialog compact-dialog danger-dialog" aria-labelledby="archive-title" aria-describedby="archive-context">
+      <form id="archive-form" method="dialog">
+        <header><p class="eyebrow">Reversible removal</p><h2 id="archive-title">Remove this item?</h2><p id="archive-context">Access stops, but previous responses stay saved and the item can be restored later.</p></header>
+        <p id="archive-error" class="status-message" data-tone="error" role="alert" tabindex="-1" hidden></p>
+        <footer><button type="button" data-cancel-archive>Cancel</button><button id="confirm-archive" class="danger-action" type="submit" value="confirm">Remove</button></footer>
+      </form>
+    </dialog>
     <dialog id="submissions-dialog" class="exam-dialog submissions-dialog">
       <form method="dialog">
-        <header><p class="eyebrow">Completed papers</p><h2 id="submissions-title">Candidate responses</h2><p id="submissions-context"></p><p>Open a candidate to review their complete paper. Print one candidate or create a single PDF for the class.</p></header>
+        <header><p class="eyebrow">Completed papers</p><h2 id="submissions-title">Candidate responses</h2><p id="submissions-context"></p><p>Open a candidate to review their complete paper. Use your browser's print dialog to print one candidate or save a single class PDF.</p></header>
         <div id="submission-list" class="submission-list"></div>
         <footer><button id="print-submissions" type="button">Print or save PDF</button><button value="close">Close</button></footer>
       </form>
     </dialog>
   `);
+  mountStudentConnection(document, { origin: studentConnectionOrigin });
+  classroomNetworkControls = mountAdminNetwork(document.querySelector("#classroom-network"), {
+    request: requestClassroomNetwork,
+  });
   mountPaperBuilder(document.querySelector("#paper-builder"), addBuiltPaper);
   bindDashboard();
   await refreshState(true);
@@ -777,11 +937,12 @@ async function renderDashboard() {
       refreshState(true);
     }
   });
-  clearInterval(refreshTimer);
-  refreshTimer = setInterval(() => refreshState(true), 5_000);
+  clearInterval(presenceTimer);
+  presenceTimer = setInterval(refreshPresence, 10_000);
 }
 
 export async function renderAdmin(bootstrap) {
+  studentConnectionOrigin = bootstrap.studentOrigin ?? location.origin;
   if (bootstrap.setupRequired) {
     renderSetup();
   } else if (bootstrap.role === "admin") {

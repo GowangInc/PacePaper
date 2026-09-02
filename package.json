@@ -1,10 +1,14 @@
 {
   "name": "digitaldp",
+  "version": "0.1.0-demo.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "bun --hot server.ts",
     "start": "bun server.ts",
+    "samples:build": "bun examples/write-course-samples.ts",
+    "samples:seed": "bun examples/seed-course-samples.ts",
+    "release:build": "bun scripts/build-release.ts",
     "check": "tsc --noEmit",
     "test": "bun test"
   },

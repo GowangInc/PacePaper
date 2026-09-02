@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Mathematics: Analysis and Approaches · Paper 1 — original integrated-working sample",
+  "subject": "mathematics-analysis-approaches",
+  "subjectLabel": "Mathematics: Analysis and Approaches",
+  "level": "SL",
+  "paper": "Paper 1 — original integrated-working sample",
+  "durationMinutes": 45,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 22,
+  "mode": "reading",
+  "instructions": "Do not use a calculator. Answer every question in its digital working area, show all reasoning, and give exact values where requested. No separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — algebra",
+      "prompt": "Factorize 2x² − 7x + 3, and hence solve 2x² − 7x + 3 = 0.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — sequences",
+      "prompt": "An arithmetic sequence has fifth term 18 and twelfth term 46. Find the first term and common difference, then determine the sum of the first 20 terms.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 6,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — calculus",
+      "prompt": "For f(x) = x³ − 3x² − 9x + 5, find the coordinates of both stationary points and classify each one.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 7,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — trigonometry",
+      "prompt": "Given that sin θ = 3/5 and π/2 < θ < π, find the exact values of cos θ and sin(2θ).",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

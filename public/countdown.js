@@ -4,8 +4,10 @@ import {
   configFromSession,
   countdownPhase,
   formatCountdown,
+  parseStudentNames,
   resolveStartAt,
 } from "/countdown-model.js";
+import { mountStudentConnection } from "/student-connection.js";
 
 let adminState;
 let displayConfig;
@@ -18,6 +20,7 @@ let displayCustomised = false;
 let formDirty = false;
 let syncInFlight = false;
 let syncPending = false;
+let studentConnectionOrigin;
 
 const phaseDescriptions = {
   ready: "The saved examination is ready but has not been started.",
@@ -114,6 +117,38 @@ function fillForm(config) {
   document.querySelector("#clock-writing-input").value = String(config.durationMinutes);
 }
 
+function studentNamesForSession(session) {
+  if (!session) return [];
+  return adminState.students
+    .filter((student) => student.classId === session.classId)
+    .map((student) => student.name)
+    .sort((left, right) => left.localeCompare(right, undefined, { sensitivity: "base" }));
+}
+
+function renderStudentNames(value) {
+  const list = document.querySelector("#clock-student-names");
+  const names = parseStudentNames(value);
+  list.replaceChildren();
+  if (names.length === 0) {
+    const placeholder = document.createElement("li");
+    placeholder.className = "clock-student-names__placeholder";
+    placeholder.textContent = "Names can be entered in the teacher controls";
+    list.append(placeholder);
+    return;
+  }
+  for (const name of names) {
+    const item = document.createElement("li");
+    item.textContent = name;
+    list.append(item);
+  }
+}
+
+function fillStudentNames(session) {
+  const value = studentNamesForSession(session).join("\n");
+  document.querySelector("#clock-student-names-input").value = value;
+  renderStudentNames(value);
+}
+
 function configFromForm() {
   const form = document.querySelector("#clock-form");
   if (!form.reportValidity()) return null;
@@ -182,6 +217,7 @@ function loadSelectedDefaults() {
   const session = adminState.sessions.find((item) => item.id === selectedId) ?? null;
   const config = configFromSession(session, authoritativeNow());
   fillForm(config);
+  fillStudentNames(session);
   applyDisplay(config, false);
   const url = new URL(location.href);
   if (session) url.searchParams.set("session", session.id);
@@ -223,6 +259,7 @@ async function fetchState() {
   const state = await api("/api/admin/state");
   const responseReceived = performance.now();
   adminState = state;
+  updateStudentConnection(state.network);
   timeAnchor = {
     serverAt: state.serverTime + (responseReceived - requestStarted) / 2,
     monotonicAt: responseReceived,
@@ -231,6 +268,18 @@ async function fetchState() {
   const reauth = document.querySelector("#clock-reauth");
   if (reauth) reauth.hidden = true;
   return state;
+}
+
+function updateStudentConnection(network) {
+  if (!network || typeof network.studentUrl !== "string") return;
+  try {
+    studentConnectionOrigin = new URL(network.studentUrl).origin;
+  } catch {
+    return;
+  }
+  if (document.querySelector("[data-student-connection-link]")) {
+    mountStudentConnection(document, { origin: studentConnectionOrigin });
+  }
 }
 
 async function refreshSelectedDefaults() {
@@ -301,8 +350,12 @@ async function synchronizeLifecycle() {
 
 function bindControls() {
   const form = document.querySelector("#clock-form");
+  const studentNamesInput = document.querySelector("#clock-student-names-input");
   document.querySelector("#clock-session").addEventListener("change", loadSelectedDefaults);
-  form.addEventListener("input", () => { formDirty = true; });
+  form.addEventListener("input", (event) => {
+    if (event.target !== studentNamesInput) formDirty = true;
+  });
+  studentNamesInput.addEventListener("input", () => renderStudentNames(studentNamesInput.value));
   document.querySelector("#clock-title-input").addEventListener("input", (event) => event.currentTarget.setCustomValidity(""));
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -371,10 +424,13 @@ function renderClockShell() {
               <input id="clock-title-input" maxlength="160" required>
               <label for="clock-subtitle-input">Display details</label>
               <input id="clock-subtitle-input" maxlength="240">
+              <label for="clock-student-names-input">Student names</label>
+              <textarea id="clock-student-names-input" rows="4" maxlength="4000" aria-describedby="clock-student-names-help"></textarea>
+              <small id="clock-student-names-help">One name per line. This display list remains editable and does not affect student accounts.</small>
               <label for="clock-start-input">Start date and time</label>
               <input id="clock-start-input" type="datetime-local" step="1" required>
               <div class="clock-duration-fields">
-                <div><label for="clock-reading-input">Reading minutes</label><input id="clock-reading-input" type="number" min="0" max="60" step="1" required></div>
+              <div><label for="clock-reading-input">Reading minutes</label><input id="clock-reading-input" type="number" min="0" max="60" step="any" required></div>
                 <div><label for="clock-writing-input">Writing minutes</label><input id="clock-writing-input" type="number" min="1" max="360" step="1" required></div>
               </div>
               <button class="primary-action" type="submit">Apply to display</button>
@@ -390,6 +446,18 @@ function renderClockShell() {
             <p id="clock-source-status" class="clock-source-status">Using saved exam timings</p>
             <h2 id="clock-display-title">Examination</h2>
             <p id="clock-display-subtitle" class="clock-display__subtitle"></p>
+            <section class="clock-student-connect" aria-labelledby="clock-student-connect-title">
+              <h3 id="clock-student-connect-title">Students connect at</h3>
+              <div class="clock-student-connect__body">
+                <a class="clock-student-url" data-student-connection-link href="/student" target="_blank" rel="noopener">/student</a>
+                <button data-copy-student-connection type="button" aria-describedby="clock-student-connect-status">Copy URL</button>
+              </div>
+              <p id="clock-student-connect-status" class="clock-student-connect__status" data-copy-student-connection-status role="status" aria-live="polite" aria-atomic="true" hidden></p>
+            </section>
+            <section class="clock-student-list" aria-labelledby="clock-student-list-title">
+              <h3 id="clock-student-list-title">Students</h3>
+              <ul id="clock-student-names" class="clock-student-names"></ul>
+            </section>
           </div>
           <div class="clock-display__timer">
             <p id="clock-phase" class="clock-phase">Starts in</p>
@@ -415,6 +483,8 @@ export async function renderCountdown(bootstrap) {
     return;
   }
   renderClockShell();
+  mountStudentConnection(document, { origin: bootstrap.studentOrigin ?? location.origin });
+  studentConnectionOrigin = bootstrap.studentOrigin ?? location.origin;
   try {
     await fetchState();
     const requestedId = new URL(location.href).searchParams.get("session") ?? "";
@@ -426,6 +496,7 @@ export async function renderCountdown(bootstrap) {
     populateSessionOptions(selected?.id ?? "custom");
     const config = configFromSession(selected, authoritativeNow());
     fillForm(config);
+    fillStudentNames(selected);
     applyDisplay(config, false);
     bindControls();
     clearInterval(tickTimer);

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Spanish B · Paper 1 — original productive-skills sample",
+  "subject": "spanish-b",
+  "subjectLabel": "Spanish B",
+  "level": "SL",
+  "paper": "Paper 1 — original productive-skills sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 30,
+  "mode": "essay",
+  "instructions": "Elige una tarea. Utiliza un tipo de texto adecuado y escribe entre 250 y 400 palabras. Responde en DigitalDP; no se utiliza una hoja aparte.",
+  "selectionMode": "one",
+  "resources": [],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Tarea 1",
+      "prompt": "Tu ciudad quiere sustituir un pequeño parque público por un aparcamiento. Escribe una carta al ayuntamiento explicando tu postura y proponiendo una alternativa práctica.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30,
+      "wordCountMin": 250,
+      "wordCountMax": 400
+    },
+    {
+      "id": "q2",
+      "label": "Tarea 2",
+      "prompt": "Has pasado una semana sin utilizar aplicaciones de entrega de comida. Escribe una entrada de blog para otros estudiantes describiendo la experiencia y evaluando si continuarás.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30,
+      "wordCountMin": 250,
+      "wordCountMax": 400
+    },
+    {
+      "id": "q3",
+      "label": "Tarea 3",
+      "prompt": "Tu colegio quiere recibir mejor al alumnado nuevo. Escribe unas pautas para mentores estudiantiles y explica qué deben hacer durante el primer mes.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30,
+      "wordCountMin": 250,
+      "wordCountMax": 400
+    }
+  ]
+}

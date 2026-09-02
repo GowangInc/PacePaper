@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Spanish A: Literature · Paper 2 — original comparative-essay sample",
+  "subject": "spanish-a-literature",
+  "subjectLabel": "Spanish A: Literature",
+  "level": "HL",
+  "paper": "Paper 2 — original comparative-essay sample",
+  "durationMinutes": 105,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 30,
+  "mode": "essay",
+  "instructions": "Elige una pregunta y compara dos obras literarias estudiadas en clase. No se utiliza una hoja de respuestas aparte.",
+  "selectionMode": "one",
+  "resources": [],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Pregunta 1",
+      "prompt": "Compara cómo la memoria se convierte en fuente de consuelo y de conflicto en dos obras estudiadas.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q2",
+      "label": "Pregunta 2",
+      "prompt": "Compara cómo la perspectiva narrativa o dramática orienta la empatía en dos obras estudiadas.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q3",
+      "label": "Pregunta 3",
+      "prompt": "Compara cómo se complica la imagen del hogar en dos obras estudiadas.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q4",
+      "label": "Pregunta 4",
+      "prompt": "Compara cómo un momento de reconocimiento transforma la comprensión de un personaje en dos obras estudiadas.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    }
+  ]
+}

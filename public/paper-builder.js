@@ -1,5 +1,7 @@
 import { createPaperPreview } from "./paper-preview.js";
 
+const AUDIO_PLAY_LIMIT = 2;
+
 const RESPONSE_PATTERNS = {
   analysis: {
     mode: "essay",
@@ -394,9 +396,7 @@ function courseSupportsSession(course, assessmentSession) {
   return course.papers.some((paper) => paper.sessions.includes(assessmentSession));
 }
 
-function integerOrUndefined(value) {
-  return value === "" ? undefined : Number(value);
-}
+function integerOrUndefined(value) { return value === "" ? undefined : Number(value); }
 
 function uniqueFiles(files) {
   const names = new Set();
@@ -413,7 +413,7 @@ function previewFile(file) {
     : file.type.startsWith("audio/") || /\.(?:m4a|mp3|ogg|wav)$/u.test(name)
       ? "audio"
       : "image";
-  return { name: file.name, kind, file };
+  return { name: file.name, kind, file, ...(kind === "audio" ? { maxPlays: AUDIO_PLAY_LIMIT } : {}) };
 }
 
 const SOURCE_CLASSIFICATION_LABELS = {
@@ -428,12 +428,9 @@ export function paperPreviewData(form, questions) {
   if (!selection) return null;
   const { course, level, paper } = selection;
   const allowedMaterials = new Set(paper.materials);
-  const maxPlays = Number(form.querySelector("#builder-audio-plays").value);
   const sharedResources = [
     ...(allowedMaterials.has("pdf") ? [...form.querySelector("#builder-pdf").files].map(previewFile) : []),
-    ...(allowedMaterials.has("audio")
-      ? [...form.querySelector("#builder-audio").files].map((file) => ({ ...previewFile(file), maxPlays }))
-      : []),
+    ...(allowedMaterials.has("audio") ? [...form.querySelector("#builder-audio").files].map(previewFile) : []),
   ];
   const classification = form.querySelector("#builder-source-classification").value;
   return {
@@ -444,7 +441,7 @@ export function paperPreviewData(form, questions) {
     sessionLabel: form.querySelector("#builder-session").selectedOptions?.[0]?.textContent ?? selection.assessmentSession,
     readingTimeMinutes: Number(form.querySelector("#builder-reading-time").value),
     durationMinutes: Number(form.querySelector("#builder-duration").value),
-    maximumMarks: valueForLevel(paper, "maximumMarks", level),
+    maximumMarks: integerOrUndefined(form.querySelector("#builder-maximum-marks").value),
     subjectWeightPercent: valueForLevel(paper, "subjectWeightPercent", level),
     instructions: form.querySelector("#builder-instructions").value.trim(),
     sourceClassificationLabel: SOURCE_CLASSIFICATION_LABELS[classification] ?? classification,
@@ -462,10 +459,7 @@ export function paperPreviewData(form, questions) {
       wordCountMax: question.wordCountMax,
       inkPages: question.inkPages,
       inkBackground: question.inkBackground,
-      media: question.mediaFiles.map((file) => {
-        const resource = previewFile(file);
-        return resource.kind === "audio" ? { ...resource, maxPlays } : resource;
-      }),
+      media: question.mediaFiles.map(previewFile),
     })),
   };
 }
@@ -488,7 +482,6 @@ export function packageData(form, questions) {
   if (examSelection.paper.mode === "listening" && !files.some(isAudioFile)) {
     throw new Error("Attach at least one audio file for a listening paper.");
   }
-  const maxPlays = Number(form.querySelector("#builder-audio-plays").value);
 
   const resources = [];
   pdfFiles.forEach((pdf, index) => {
@@ -506,7 +499,7 @@ export function packageData(form, questions) {
       label: audioFiles.length === 1 ? "Listening audio" : `Listening audio ${index + 1}`,
       kind: "audio",
       file: audio.name,
-      maxPlays,
+      maxPlays: AUDIO_PLAY_LIMIT,
     });
   });
   const sharedResourceKeys = resources.map((resource) => resource.key);
@@ -521,7 +514,7 @@ export function packageData(form, questions) {
         label: `${question.label.trim() || `Question ${index + 1}`} media ${mediaIndex + 1}`,
         kind: isPdf ? "document" : isAudio ? "audio" : "image",
         file: file.name,
-        ...(isAudio ? { maxPlays } : {}),
+        ...(isAudio ? { maxPlays: AUDIO_PLAY_LIMIT } : {}),
       });
       resourceKeys.push(key);
     });
@@ -556,12 +549,17 @@ export function packageData(form, questions) {
   const paperLabel = form.querySelector("#builder-paper-label").value.trim();
   const durationMinutes = Number(form.querySelector("#builder-duration").value);
   const readingTimeMinutes = Number(form.querySelector("#builder-reading-time").value);
+  const maximumMarks = integerOrUndefined(form.querySelector("#builder-maximum-marks").value);
+  if (maximumMarks !== undefined && (!Number.isInteger(maximumMarks) || maximumMarks < 1 || maximumMarks > 10_000)) {
+    throw new Error("Maximum marks must be a whole number from 1 to 10,000.");
+  }
   const instructions = form.querySelector("#builder-instructions").value.trim();
   const presetMatches = examSelection.assessmentSession !== "custom"
     && examSelection.level !== "SL/HL"
     && paperLabel === examSelection.paper.label
     && durationMinutes === valueForLevel(examSelection.paper, "duration", examSelection.level)
     && readingTimeMinutes === examSelection.paper.readingTime
+    && maximumMarks === valueForLevel(examSelection.paper, "maximumMarks", examSelection.level)
     && instructions === valueForLevel(examSelection.paper, "instructions", examSelection.level)
     && (!examSelection.paper.requiredDocumentLabel || pdfFiles.length > 0);
   const manifest = {
@@ -577,7 +575,7 @@ export function packageData(form, questions) {
     paper: paperLabel,
     durationMinutes,
     readingTimeMinutes,
-    maximumMarks: valueForLevel(examSelection.paper, "maximumMarks", examSelection.level),
+    maximumMarks,
     subjectWeightPercent: valueForLevel(examSelection.paper, "subjectWeightPercent", examSelection.level),
     mode: examSelection.paper.mode,
     instructions,
@@ -618,16 +616,16 @@ function responseFields(question, prefix) {
     const pages = field("select", { id: `${prefix}-pages` });
     [1, 2, 3, 4].forEach((value) => pages.append(option(String(value), String(value))));
     pages.value = String(question.inkPages);
-    const backgroundLabel = field("label", { for: `${prefix}-background` }, "Canvas background");
+    const backgroundLabel = field("label", { for: `${prefix}-background` }, "Default canvas background");
     const background = field("select", { id: `${prefix}-background` });
-    background.append(option("blank", "Blank"), option("lined", "Lined"), option("square-grid", "Square grid"));
+    background.append(option("blank", "Blank"), option("lined", "Ruled"), option("square-grid", "Square grid"));
     background.value = question.inkBackground;
     pages.addEventListener("change", () => { question.inkPages = Number(pages.value); });
     background.addEventListener("change", () => { question.inkBackground = background.value; });
     pagesLabel.append(pages);
     backgroundLabel.append(background);
     pair.append(pagesLabel, backgroundLabel);
-    const help = field("small", {}, "Students can write or draw with a digital pen, touch, or mouse. A typed alternative remains available for accessibility.");
+    const help = field("small", {}, "Students start with this background and can change it only after confirming the change; their writing remains intact. A typed alternative remains available for accessibility.");
     container.append(pair, help);
   }
   return container;
@@ -673,6 +671,7 @@ export function mountPaperBuilder(container, onSubmit) {
               <div class="inline-fields">
                 <label for="builder-reading-time">Reading time in minutes<input id="builder-reading-time" type="number" min="0" max="60" required></label>
                 <label for="builder-duration">Writing time in minutes<input id="builder-duration" type="number" min="5" max="360" required></label>
+                <label for="builder-maximum-marks">Maximum marks <small>optional</small><input id="builder-maximum-marks" type="number" min="1" max="10000" step="1" inputmode="numeric"></label>
               </div>
               <p class="form-help">Reading time runs first and does not use a student's extra writing time. Enter 0 when the paper has no separate reading period.</p>
               <label for="builder-instructions">Student instructions</label><textarea id="builder-instructions" rows="3" required maxlength="20000"></textarea>
@@ -695,7 +694,7 @@ export function mountPaperBuilder(container, onSubmit) {
               <div class="builder-material" data-material="audio">
                 <label for="builder-audio">Listening audio</label><input id="builder-audio" type="file" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" multiple>
                 <small>Select one or more recordings. You can instead attach a recording to a specific question below.</small>
-                <label for="builder-audio-plays">Maximum plays per recording</label><select id="builder-audio-plays"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+                <p class="form-help"><strong>Student playback:</strong> Each recording can be listened to completely twice. Once a play begins, it runs to the end and cannot be paused or restarted.</p>
               </div>
             </fieldset>
 
@@ -920,6 +919,8 @@ export function mountPaperBuilder(container, onSubmit) {
     form.querySelector("#builder-reading-time").value = String(selectedPaper.readingTime);
     const duration = valueForLevel(selectedPaper, "duration", selectedLevel);
     form.querySelector("#builder-duration").value = String(duration);
+    const maximumMarks = valueForLevel(selectedPaper, "maximumMarks", selectedLevel);
+    form.querySelector("#builder-maximum-marks").value = maximumMarks ?? "";
     form.querySelector("#builder-instructions").value = valueForLevel(selectedPaper, "instructions", selectedLevel);
     const guidance = valueForLevel(selectedPaper, "guidance", selectedLevel);
     const guidanceElement = form.querySelector("#builder-exam-guidance");
@@ -930,7 +931,7 @@ export function mountPaperBuilder(container, onSubmit) {
     const facts = [
       `${selectedPaper.readingTime} min reading`,
       `${duration} min writing`,
-      valueForLevel(selectedPaper, "maximumMarks", selectedLevel) ? `${valueForLevel(selectedPaper, "maximumMarks", selectedLevel)} marks` : "marks: confirm current guide",
+      maximumMarks ? `${maximumMarks} marks` : "marks: enter a maximum",
       valueForLevel(selectedPaper, "subjectWeightPercent", selectedLevel) ? `${valueForLevel(selectedPaper, "subjectWeightPercent", selectedLevel)}% of subject` : null,
     ].filter(Boolean);
     if (selectedLevel === "SL/HL") facts.unshift("combined custom profile");

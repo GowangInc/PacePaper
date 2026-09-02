@@ -21,7 +21,7 @@ function metadata(label, value) {
 function fileLabel(resource) {
   const kind = resource.kind === "document" ? "PDF" : resource.kind === "audio" ? "Audio" : "Image";
   const playLimit = resource.kind === "audio" && resource.maxPlays
-    ? ` · maximum ${resource.maxPlays} play${resource.maxPlays === 1 ? "" : "s"}`
+    ? ` · ${resource.maxPlays} complete plays · no pause or restart`
     : "";
   return `${kind} · ${resource.name}${playLimit}`;
 }

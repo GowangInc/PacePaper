@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Korean A: Literature · Paper 1 — original textual-analysis sample",
+  "subject": "korean-a-literature",
+  "subjectLabel": "Korean A: Literature",
+  "level": "SL",
+  "paper": "Paper 1 — original textual-analysis sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "essay",
+  "instructions": "두 개의 창작 문학 텍스트 중 하나를 선택하여 문학적 특징이 의미를 형성하는 방식을 분석하십시오. 별도의 답안지는 필요하지 않습니다.",
+  "selectionMode": "one",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "텍스트 1 — 단편소설 발췌, 막차",
+      "kind": "text",
+      "text": "막차가 떠난 뒤에도 정류장의 전광판은 삼 분 후 도착이라고 빛났다. 수진은 오류라는 것을 알면서도 숫자가 줄어드는 모습을 지켜보았다. 이 분, 일 분, 곧 도착. 길 건너 편의점 직원이 의자를 접고 있었고, 어머니에게서 세 번째 전화가 왔다. 수진은 받지 않았다. 화면이 다시 삼 분으로 돌아갔을 때, 그녀는 이상하게 안심했다. 기다림이 끝나지 않는다면 늦었다는 사실도 아직 확정되지 않은 것 같았다."
+    },
+    {
+      "key": "text-2",
+      "label": "텍스트 2 — 시, 창문 연습",
+      "kind": "text",
+      "text": "아침마다 창문은\n바깥을 한 장씩 넘긴다\n어제의 비는 여백에 남고\n버스는 밑줄처럼 지나간다\n\n나는 유리에 손을 대어\n차가운 문장을 읽는다\n열지 못한 채로도\n세상은 계속 다음 장이다"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "텍스트 1 — 단편소설 발췌, 막차 — 답안",
+      "prompt": "시간과 반복의 표현이 수진의 심리와 선택을 어떻게 드러내는지 분석하십시오.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 20
+    },
+    {
+      "id": "q2",
+      "label": "텍스트 2 — 시, 창문 연습 — 답안",
+      "prompt": "비유와 행 구성이 화자의 거리감과 변화에 대한 태도를 어떻게 형성하는지 분석하십시오.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 20
+    }
+  ]
+}

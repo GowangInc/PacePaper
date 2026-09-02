@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "English A: Language and Literature · Paper 1 — original textual-analysis sample",
+  "subject": "english-a-language-literature",
+  "subjectLabel": "English A: Language and Literature",
+  "level": "SL",
+  "paper": "Paper 1 — original textual-analysis sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "essay",
+  "instructions": "Choose one original text and analyse how its language, structure and design choices shape meaning for its intended audience. Enter the response beside the chosen text; no separate answer sheet is used.",
+  "selectionMode": "one",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "Text 1 — community-library campaign",
+      "kind": "text",
+      "text": "BORROW THE EVENING. The East Gate Library is staying open until 10 p.m. every Thursday. Not because everyone needs another meeting room, but because a city needs quiet places that do not ask you to buy anything. Bring unfinished homework, a half-read novel, or simply an hour you have not planned. At 7 p.m. our volunteers will run a ten-minute ‘shelf tour’ for first-time visitors. At 8 p.m. the lights in the children’s room will soften for family reading. No membership card? We will make one while the kettle boils. Late opening begins this month. The doors are already yours."
+    },
+    {
+      "key": "text-2",
+      "label": "Text 2 — student editorial",
+      "kind": "text",
+      "text": "Our school has installed six new clocks, each accurate to the second. Yet the corridor between lessons feels less punctual than ever. We do not need another reminder that time is moving; we need somewhere to stop without being treated as an obstacle. A bench near the science block disappeared during renovation and was replaced by a sign saying KEEP MOVING. That instruction may improve traffic, but it also tells us what kind of school we are becoming. Put the bench back. Let a corridor be a route, but also let it be a place where a friend can notice that another friend is not all right."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Text 1 — community-library campaign — response",
+      "prompt": "Analyse how the campaign combines language and structural choices to present the library as more than a place for borrowing books.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 20
+    },
+    {
+      "id": "q2",
+      "label": "Text 2 — student editorial — response",
+      "prompt": "Analyse how the writer uses voice and contrast to argue for a change in the school environment.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 20
+    }
+  ]
+}

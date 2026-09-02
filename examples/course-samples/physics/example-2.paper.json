@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Physics · Paper 2 — original short and extended-response sample",
+  "subject": "physics",
+  "subjectLabel": "Physics",
+  "level": "HL",
+  "paper": "Paper 2 — original short and extended-response sample",
+  "durationMinutes": 60,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 30,
+  "mode": "reading",
+  "instructions": "Answer every question using the response area attached to it. An approved calculator is required. Use the original reference data supplied within this sample; no external data booklet is needed. Show calculations, units, diagrams and reasoning where required. No separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "induction-data",
+      "label": "Original induction investigation",
+      "kind": "text",
+      "text": "A coil of 250 turns and area 3.2 × 10⁻³ m² is perpendicular to a uniform magnetic field. The field falls linearly from 0.80 T to 0.20 T in 0.15 s. The coil resistance is 4.0 Ω."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — electromagnetic induction",
+      "prompt": "Calculate the magnitude of the average induced emf and current. State the direction principle used to determine the induced current.",
+      "type": "ink",
+      "resourceKeys": [
+        "induction-data"
+      ],
+      "marks": 7,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — fields",
+      "prompt": "A satellite moves in a circular orbit of radius 7.2 × 10⁶ m around a planet of mass 6.0 × 10²⁴ kg. Calculate its orbital speed and period. Use G = 6.67 × 10⁻¹¹ N m² kg⁻².",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — quantum physics",
+      "prompt": "Explain why the photoelectric effect supports a particulate model of electromagnetic radiation. Refer to threshold frequency and intensity.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 6
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — thermal physics",
+      "prompt": "A student claims that temperature measures the total energy stored in an object. Evaluate the claim using microscopic models and two contrasting examples.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 9
+    }
+  ]
+}

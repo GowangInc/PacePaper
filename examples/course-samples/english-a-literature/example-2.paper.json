@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "English A: Literature · Paper 2 — original comparative-essay sample",
+  "subject": "english-a-literature",
+  "subjectLabel": "English A: Literature",
+  "level": "HL",
+  "paper": "Paper 2 — original comparative-essay sample",
+  "durationMinutes": 105,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 30,
+  "mode": "essay",
+  "instructions": "Choose one prompt and compare two literary works studied in class. Enter the complete essay in DigitalDP; no separate answer sheet is used.",
+  "selectionMode": "one",
+  "resources": [],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Prompt 1",
+      "prompt": "Compare how two studied works turn memory into a source of both comfort and conflict.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q2",
+      "label": "Prompt 2",
+      "prompt": "Compare the effects of narrative or dramatic perspective in shaping sympathy in two studied works.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q3",
+      "label": "Prompt 3",
+      "prompt": "Compare how images of home are complicated in two studied works.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q4",
+      "label": "Prompt 4",
+      "prompt": "Compare how two studied works use moments of recognition to alter the audience’s understanding of a character.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    }
+  ]
+}

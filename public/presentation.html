@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="light">
   <title>DigitalDP — Product walkthrough</title>
   <link rel="stylesheet" href="/presentation.css">
+  <script type="module" src="/context-menu-lock.js"></script>
 </head>
 <body>
   <header class="top">
@@ -31,7 +32,7 @@
       <div class="chapter-no">01 — Teacher</div>
       <div><p class="eyebrow">Prepare an examination</p><h2>From paper to ready session in three decisions.</h2>
         <div class="steps">
-          <article class="step"><span class="step-number">1</span><h3>Create a class</h3><p>Enter a class name and short code, then add each candidate with an exam code and PIN.</p></article>
+          <article class="step"><span class="step-number">1</span><h3>Create a class</h3><p>Enter a class name and short code, then add each candidate and their exam code.</p></article>
           <article class="step"><span class="step-number">2</span><h3>Add a paper</h3><p>For a single written answer, add a PDF and prompt. For reading, listening or several questions, select <code>paper.json</code> and its assets together.</p></article>
           <article class="step"><span class="step-number">3</span><h3>Start when ready</h3><p>Choose the class and paper, set up the exam, then start it only when candidates are seated.</p></article>
         </div>
@@ -41,7 +42,7 @@
       <div class="chapter-no">02 — Student</div>
       <div><p class="eyebrow">Take the examination</p><h2>One calm workspace for the whole assessment.</h2>
         <div class="journey">
-          <div class="journey-row"><strong>Sign in</strong><span>Class code, candidate code and PIN identify the correct paper.</span><b class="tag">Supervised</b></div>
+          <div class="journey-row"><strong>Sign in</strong><span>A class code loads the roster; each candidate chooses their name.</span><b class="tag">Supervised</b></div>
           <div class="journey-row"><strong>Read + write</strong><span>Paper resources and answers share one focused screen with independent controls.</span><b class="tag">Focused</b></div>
           <div class="journey-row"><strong>Save safely</strong><span>Responses autosave to the server, with local recovery only while work is unsaved.</span><b class="tag">Resilient</b></div>
           <div class="journey-row"><strong>Submit</strong><span>Students submit when finished; the deadline also closes work automatically.</span><b class="tag">Timed</b></div>

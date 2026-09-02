@@ -20,8 +20,11 @@ export interface InkPage {
 export interface InkAnswer {
   version: 1;
   pages: InkPage[];
+  background: InkBackground;
   typed: string;
 }
+
+export const MAX_INK_PAGES = 12;
 
 const MAX_ANSWER_BYTES = 900_000;
 const MAX_STROKES_PER_PAGE = 500;
@@ -40,19 +43,24 @@ function integer(value: unknown, label: string, min: number, max: number): numbe
   return Number(value);
 }
 
+function inkBackground(value: unknown, label: string): InkBackground {
+  if (typeof value !== "string" || !INK_BACKGROUNDS.includes(value as InkBackground)) {
+    throw new Error(`${label} must be one of ${INK_BACKGROUNDS.join(", ")}`);
+  }
+  return value as InkBackground;
+}
+
 export function parseInkSettings(value: unknown, label = "ink"): InkSettings {
   const source = record(value, label);
-  const background = source.background;
-  if (typeof background !== "string" || !INK_BACKGROUNDS.includes(background as InkBackground)) {
-    throw new Error(`${label}.background must be one of ${INK_BACKGROUNDS.join(", ")}`);
-  }
   if (source.allowTypedAlternative !== undefined && typeof source.allowTypedAlternative !== "boolean") {
     throw new Error(`${label}.allowTypedAlternative must be true or false`);
   }
   return {
     pages: integer(source.pages, `${label}.pages`, 1, 4),
-    background: background as InkBackground,
-    allowTypedAlternative: source.allowTypedAlternative ?? true,
+    background: inkBackground(source.background, `${label}.background`),
+    // Typing is the keyboard-accessible fallback for a pointer-driven canvas.
+    // Preserve the legacy manifest field, but never disable the fallback.
+    allowTypedAlternative: true,
   };
 }
 
@@ -77,16 +85,16 @@ export function normalizeInkAnswer(raw: string, settings: InkSettings): string {
   }
   const source = record(parsed, "Handwritten response");
   if (source.version !== 1) throw new Error("Handwritten response version is not supported");
-  if (!Array.isArray(source.pages) || source.pages.length !== settings.pages) {
-    throw new Error(`Handwritten response must contain ${settings.pages} page${settings.pages === 1 ? "" : "s"}`);
+  if (
+    !Array.isArray(source.pages) ||
+    source.pages.length < settings.pages ||
+    source.pages.length > MAX_INK_PAGES
+  ) {
+    throw new Error(`Handwritten response must contain ${settings.pages} to ${MAX_INK_PAGES} pages`);
   }
   if (typeof source.typed !== "string" || source.typed.length > 20_000) {
     throw new Error("Typed working is too long");
   }
-  if (!settings.allowTypedAlternative && source.typed.trim()) {
-    throw new Error("Typed working is not enabled for this question");
-  }
-
   let totalPoints = 0;
   const pages = source.pages.map((pageValue, pageIndex): InkPage => {
     const page = record(pageValue, `pages[${pageIndex}]`);
@@ -109,6 +117,13 @@ export function normalizeInkAnswer(raw: string, settings: InkSettings): string {
     return { strokes };
   });
 
-  const answer: InkAnswer = { version: 1, pages, typed: source.typed };
+  const answer: InkAnswer = {
+    version: 1,
+    pages,
+    background: source.background === undefined
+      ? settings.background
+      : inkBackground(source.background, "Handwritten response.background"),
+    typed: source.typed,
+  };
   return JSON.stringify(answer);
 }

@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Biology · Paper 1 — original combined 1A and 1B sample",
+  "subject": "biology",
+  "subjectLabel": "Biology",
+  "level": "SL",
+  "paper": "Paper 1 — original combined 1A and 1B sample",
+  "durationMinutes": 35,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 12,
+  "mode": "reading",
+  "instructions": "Complete the selected-response and data/working questions under one timer. An approved calculator is required; all data needed for this original sample is supplied within DigitalDP. Enter each answer beside its question; no separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "enzyme-data",
+      "label": "Original enzyme data",
+      "kind": "text",
+      "text": "Temperature (°C): 10, 20, 30, 40, 50\nMean product formed in 5 min (mg): 1.2, 2.7, 5.4, 7.1, 2.3"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Paper 1A · Question 1",
+      "prompt": "Which structure is present in both prokaryotic and eukaryotic cells?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Nucleus",
+        "Mitochondrion",
+        "Ribosome",
+        "Golgi apparatus"
+      ]
+    },
+    {
+      "id": "q2",
+      "label": "Paper 1A · Question 2",
+      "prompt": "Which process directly increases genetic variation during meiosis?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Binary fission",
+        "Crossing over",
+        "DNA translation",
+        "Cytokinesis"
+      ]
+    },
+    {
+      "id": "q3",
+      "label": "Paper 1A · Question 3",
+      "prompt": "Which relationship describes energy transfer between trophic levels?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Energy is recycled completely",
+        "Energy increases at each level",
+        "Some energy is lost as heat",
+        "Only producers respire"
+      ]
+    },
+    {
+      "id": "q4",
+      "label": "Paper 1A · Question 4",
+      "prompt": "A competitive inhibitor most directly affects which feature of an enzyme?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Its amino-acid sequence",
+        "Its active-site availability",
+        "Its gene location",
+        "Its product mass"
+      ]
+    },
+    {
+      "id": "q5",
+      "label": "Paper 1B · Question 5",
+      "prompt": "Plot the enzyme data on suitable axes, describe the pattern, and identify the optimum temperature in this investigation.",
+      "type": "ink",
+      "resourceKeys": [
+        "enzyme-data"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Paper 1B · Question 6",
+      "prompt": "Explain why product formation falls between 40°C and 50°C, referring to molecular structure.",
+      "type": "short",
+      "resourceKeys": [
+        "enzyme-data"
+      ],
+      "marks": 4
+    }
+  ]
+}

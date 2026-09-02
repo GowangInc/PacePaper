@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Mathematics: Applications and Interpretation · Paper 1 — original integrated-working sample",
+  "subject": "mathematics-applications-interpretation",
+  "subjectLabel": "Mathematics: Applications and Interpretation",
+  "level": "SL",
+  "paper": "Paper 1 — original integrated-working sample",
+  "durationMinutes": 45,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 24,
+  "mode": "reading",
+  "instructions": "An approved graphing calculator is required. Answer every question in its digital working area, preserving intermediate steps, units and graphs. No separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "commute-data",
+      "label": "Original data set — commute and study time",
+      "kind": "text",
+      "text": "Six students recorded daily commute time x (minutes) and evening study time y (minutes):\nA: 12, 94\nB: 18, 86\nC: 25, 82\nD: 33, 69\nE: 41, 63\nF: 55, 48"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — finance",
+      "prompt": "A student deposits 6000 yuan in an account paying 3.2% annual interest compounded monthly. Find the balance after 4 years and the first month in which the balance exceeds 7000 yuan.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 6,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — statistics",
+      "prompt": "Use the commute data to find Pearson’s correlation coefficient and the least-squares regression line of y on x. Interpret the slope in context.",
+      "type": "ink",
+      "resourceKeys": [
+        "commute-data"
+      ],
+      "marks": 7,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — modelling",
+      "prompt": "A water tank initially contains 1200 L and drains at a rate modelled by V(t) = 1200(0.93)^t, where t is measured in minutes. Find the volume after 15 minutes and the time at which 75% of the original water has drained.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 6,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — geometry",
+      "prompt": "A wheelchair ramp rises 0.84 m over a horizontal distance of 10.5 m. Calculate its angle of elevation and its length. A guideline limits the angle to 5°. Decide whether the ramp satisfies the guideline.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

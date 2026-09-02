@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Spanish B · Paper 2 — original reading sample",
+  "subject": "spanish-b",
+  "subjectLabel": "Spanish B",
+  "level": "HL",
+  "paper": "Paper 2 — original reading sample",
+  "durationMinutes": 60,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "reading",
+  "instructions": "Lee los tres textos originales y responde todas las preguntas en sus espacios vinculados. No se utiliza una hoja de respuestas aparte.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "Texto A — biblioteca de herramientas",
+      "kind": "text",
+      "text": "En la Biblioteca de Herramientas del Mercado Oeste, los socios toman prestados taladros, máquinas de coser y hornillos en vez de comprar objetos que quizá usarían una sola vez. La cuota anual es pequeña, pero cada socio aporta también una hora de trabajo. Algunas personas reparan herramientas; otras fotografían el material o traducen las tarjetas de seguridad. Según la coordinadora, la colaboración importa más que el dinero: quien llega buscando un objeto suele encontrar también a alguien que sabe utilizarlo."
+    },
+    {
+      "key": "text-2",
+      "label": "Texto B — vagón tranquilo",
+      "kind": "text",
+      "text": "Una empresa ferroviaria ha creado un vagón tranquilo en los servicios nocturnos. Se desaconsejan las llamadas y se reducen los anuncios, aunque conversar no está prohibido. Durante el primer mes bajaron las quejas generales, pero surgieron otras sobre pasajeros que corregían de forma agresiva a los demás. La empresa cambió el cartel SILENCIO por el mensaje COMPARTAMOS LA CALMA y formará al personal para resolver desacuerdos sin convertir el vagón en un espacio de vigilancia."
+    },
+    {
+      "key": "text-3",
+      "label": "Texto C — huerto en la azotea",
+      "kind": "text",
+      "text": "Cuando Ada plantó tomates en la azotea de su edificio, esperaba verduras, no reuniones. Pronto aparecieron notas junto al depósito de agua: ¿podemos cultivar hierbas?, ¿pueden subir los niños? Un año después, doce familias compartían el trabajo. La cosecha sigue siendo pequeña y nadie ahorra mucho dinero. El cambio más importante ocurre abajo: vecinos que antes guardaban silencio en el ascensor ahora comparan el tiempo e intercambian recetas. ‘El huerto no nos hizo autosuficientes’, dice Ada. ‘Nos hizo visibles’."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Texto A · Pregunta 1",
+      "prompt": "¿Qué aporta cada socio además de la cuota?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 2,
+      "options": [
+        "Una hora de trabajo",
+        "Una máquina",
+        "Un certificado",
+        "Un taller completo"
+      ]
+    },
+    {
+      "id": "q2",
+      "label": "Texto A · Pregunta 2",
+      "prompt": "Indica dos maneras en que los socios colaboran con la biblioteca.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 3
+    },
+    {
+      "id": "q3",
+      "label": "Texto B · Pregunta 3",
+      "prompt": "¿Por qué se cambió el cartel original?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 2,
+      "options": [
+        "Era demasiado caro",
+        "Favorecía una vigilancia rígida",
+        "No se podía traducir",
+        "Reducía la venta de billetes"
+      ]
+    },
+    {
+      "id": "q4",
+      "label": "Texto B · Pregunta 4",
+      "prompt": "Explica una tensión creada por el vagón tranquilo.",
+      "type": "short",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 3
+    },
+    {
+      "id": "q5",
+      "label": "Texto C · Pregunta 5",
+      "prompt": "¿Qué resultado sorprendió más a Ada?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 2,
+      "options": [
+        "El tamaño de los tomates",
+        "El ahorro económico",
+        "Las nuevas relaciones vecinales",
+        "El número de azoteas"
+      ]
+    },
+    {
+      "id": "q6",
+      "label": "Texto C · Pregunta 6",
+      "prompt": "Explica qué significa que el huerto hizo ‘visibles’ a los vecinos.",
+      "type": "short",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 3
+    },
+    {
+      "id": "q7",
+      "label": "Todos los textos · Pregunta 7",
+      "prompt": "Identifica una idea común en los textos A y C y apóyala con un detalle de cada uno.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1",
+        "text-3"
+      ],
+      "marks": 3
+    },
+    {
+      "id": "q8",
+      "label": "Todos los textos · Pregunta 8",
+      "prompt": "¿Qué iniciativa puede producir un cambio comunitario más duradero? Justifica tu opinión con un texto.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1",
+        "text-2",
+        "text-3"
+      ],
+      "marks": 2
+    }
+  ]
+}

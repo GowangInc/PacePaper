@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Japanese A: Language and Literature · Paper 1 — original textual-analysis sample",
+  "subject": "japanese-a-language-literature",
+  "subjectLabel": "Japanese A: Language and Literature",
+  "level": "SL",
+  "paper": "Paper 1 — original textual-analysis sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "essay",
+  "instructions": "二つの創作テクストから一つを選び、言葉、構成、語り口が読み手に与える効果を分析しなさい。解答は各設問の入力欄に記入し、別紙は使用しません。",
+  "selectionMode": "one",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "テクスト1 — 移動図書館の案内",
+      "kind": "text",
+      "text": "本棚が、あなたの町まで走ります。青葉市の移動図書館『ページ号』は、今月から駅前だけでなく、海辺の団地と北山公園にも停車します。本を返すだけでも、車内で十分休むだけでもかまいません。初めての方には職員が三分で利用方法を案内します。図書館は遠い建物ではありません。水曜日の午後、青いバスが角を曲がってきたら、そこが今日の図書館です。"
+    },
+    {
+      "key": "text-2",
+      "label": "テクスト2 — 生徒新聞の投書",
+      "kind": "text",
+      "text": "新しい食堂には百二十席ある。しかし、一人で座りやすい席は一つもない。学校は『交流のため』に長いテーブルを選んだという。けれども、交流は同じ形の椅子を並べれば生まれるものだろうか。窓際に小さな机を置き、静かに食べたい人にも場所をつくってほしい。みんなで食べる自由には、一人で食べる自由も含まれるはずだ。"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "テクスト1 — 移動図書館の案内 — 解答",
+      "prompt": "この案内が図書館への距離感を変えるために用いる表現と構成を分析しなさい。",
+      "type": "essay",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 20
+    },
+    {
+      "id": "q2",
+      "label": "テクスト2 — 生徒新聞の投書 — 解答",
+      "prompt": "筆者が学校の空間設計を批判するために、対比と問いかけをどのように使っているか分析しなさい。",
+      "type": "essay",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 20
+    }
+  ]
+}

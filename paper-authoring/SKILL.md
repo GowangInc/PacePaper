@@ -30,7 +30,7 @@ Place `paper.json` beside the source files. In DigitalDP's **Structured paper pa
 5. Add one question object for each response required from the candidate. Put only the resource keys used by that question in `resourceKeys`; this is how images, PDFs, text, or audio are scoped to the applicable question.
 6. Use `essay` for a rich-text extended response, `short` for a typed short response, `single-choice` only when the supplied assessment has explicit choices, and `ink` when candidates must draw, graph, annotate, or show handwritten working. A single-choice question needs at least two `options` in the exact teacher order. An ink question needs an `ink` configuration with 1–4 pages, a `blank`, `lined`, or `square-grid` background, and an explicit typed-alternative setting.
 7. Use `selectionMode: "all"` unless the entire assessment requires the candidate to choose exactly one essay question. For that simple choice paper use `selectionMode: "one"`. The current schema does not express mixed compulsory-and-choice sections: create the compulsory questions normally, then use one required question card whose prompt contains that section's alternatives. Do not mark the entire mixed paper as `"one"`.
-8. For listening, set `mode: "listening"`, include at least one audio resource, and add `maxPlays` to every audio resource. Use the supplied play limit; otherwise use `2`.
+8. For listening, set `mode: "listening"` and include at least one audio resource. Set `maxPlays: 2` on every audio resource. This is a fixed DigitalDP rule: each recording has two complete plays, and a play cannot be paused or restarted once it begins.
 9. Before returning, validate the checklist below. Output no prose around the JSON.
 
 ## Manifest shape
@@ -108,7 +108,7 @@ Place `paper.json` beside the source files. In DigitalDP's **Structured paper pa
 | `text` | `text` | Direct source text; no `file`. |
 | `document` | `file` | PDF only. |
 | `image` | `file` | PNG, JPEG, or WebP. |
-| `audio` | `file`, optional `maxPlays` | MP3, M4A, OGG, or WAV; `maxPlays` is 1–4 and defaults to 2. |
+| `audio` | `file`, optional `maxPlays` | MP3, M4A, OGG, or WAV; omitted `maxPlays` defaults to `2`, and any explicit value must be exactly `2`. Each play runs to the end without pause or restart. |
 
 ## Validation checklist
 
@@ -129,7 +129,7 @@ Place `paper.json` beside the source files. In DigitalDP's **Structured paper pa
 - Every `file` value exactly matches one supplied filename, including its extension and case.
 - Every supplied asset is referenced exactly once; no extra files are uploaded.
 - A `single-choice` question has 2–12 explicit options.
-- Every listening paper has at least one audio resource, and each audio resource has the intended 1–4 play limit.
+- Every listening paper has at least one audio resource, and every audio resource either omits `maxPlays` or sets it to exactly `2`.
 - An `ink` question has 1–4 pages and a `blank`, `lined`, or `square-grid` background. Keep `allowTypedAlternative: true` unless an approved accommodation policy says otherwise.
 - Word limits are positive integers no greater than 10,000, with minimum no greater than maximum.
 - All teacher-provided wording is preserved. No answer key, markscheme, examiner notes, or hidden instructions appear in `paper.json`.

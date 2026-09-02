@@ -5,6 +5,7 @@ export const LEVELS = ["SL", "HL", "SL/HL"] as const;
 export const PAPER_MODES = ["essay", "reading", "listening"] as const;
 export const QUESTION_TYPES = ["essay", "short", "single-choice", "ink"] as const;
 export const RESOURCE_KINDS = ["text", "document", "image", "audio"] as const;
+export const AUDIO_PLAY_LIMIT = 2;
 export const SOURCE_CLASSIFICATIONS = [
   "teacher-authored",
   "school-authorized",
@@ -171,7 +172,10 @@ function parseResource(value: unknown, index: number): PaperResource {
   }
 
   if (kind === "audio") {
-    resource.maxPlays = optionalInteger(source.maxPlays, `resources[${index}].maxPlays`, 1, 4) ?? 2;
+    if (source.maxPlays !== undefined && source.maxPlays !== AUDIO_PLAY_LIMIT) {
+      throw new Error(`resources[${index}].maxPlays must be exactly ${AUDIO_PLAY_LIMIT}`);
+    }
+    resource.maxPlays = AUDIO_PLAY_LIMIT;
   }
   return resource;
 }
@@ -232,6 +236,11 @@ export function parseManifest(value: unknown): PaperManifest {
     }
   }
 
+  const mode = oneOf(source.mode, PAPER_MODES, "manifest.mode");
+  if (mode === "listening" && !resources.some((resource) => resource.kind === "audio")) {
+    throw new Error("Listening papers must contain at least one audio resource");
+  }
+
   const subject = text(source.subject, "manifest.subject", 64).toLowerCase();
   if (!KEY.test(subject)) throw new Error("manifest.subject must be a lowercase slug");
   return {
@@ -253,7 +262,7 @@ export function parseManifest(value: unknown): PaperManifest {
     readingTimeMinutes: optionalInteger(source.readingTimeMinutes, "manifest.readingTimeMinutes", 0, 60) ?? 0,
     maximumMarks: optionalInteger(source.maximumMarks, "manifest.maximumMarks", 1, 1_000),
     subjectWeightPercent: optionalInteger(source.subjectWeightPercent, "manifest.subjectWeightPercent", 1, 100),
-    mode: oneOf(source.mode, PAPER_MODES, "manifest.mode"),
+    mode,
     instructions: text(source.instructions, "manifest.instructions", 20_000),
     selectionMode: oneOf(source.selectionMode ?? "all", ["one", "all"] as const, "manifest.selectionMode"),
     resources,

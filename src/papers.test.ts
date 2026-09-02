@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { gzipSync } from "node:zlib";
-import { encodePortablePaper, parseManifest, parsePaperUpload, sanitizeRichText } from "./papers";
+import { AUDIO_PLAY_LIMIT, encodePortablePaper, parseManifest, parsePaperUpload, sanitizeRichText } from "./papers";
 
 const manifest = {
   version: 1,
@@ -58,6 +58,33 @@ describe("paper manifests", () => {
       ...manifest,
       questions: [{ ...manifest.questions[0], resourceKeys: ["missing"] }],
     })).toThrow("references unknown resource missing");
+  });
+
+  test("defaults every audio resource to exactly two complete plays", () => {
+    const parsed = parseManifest({
+      ...manifest,
+      mode: "listening",
+      resources: [{ key: "audio", label: "Teacher recording", kind: "audio", file: "listening.mp3" }],
+      questions: [{ ...manifest.questions[0], resourceKeys: ["audio"] }],
+    });
+
+    expect(AUDIO_PLAY_LIMIT).toBe(2);
+    expect(parsed.resources[0]?.maxPlays).toBe(AUDIO_PLAY_LIMIT);
+  });
+
+  test("rejects an audio play limit other than two", () => {
+    for (const maxPlays of [1, 3, 4, "2"]) {
+      expect(() => parseManifest({
+        ...manifest,
+        resources: [{ key: "audio", label: "Teacher recording", kind: "audio", file: "listening.mp3", maxPlays }],
+      })).toThrow("maxPlays must be exactly 2");
+    }
+  });
+
+  test("requires at least one audio resource in every listening paper", () => {
+    expect(() => parseManifest({ ...manifest, mode: "listening" })).toThrow(
+      "Listening papers must contain at least one audio resource",
+    );
   });
 
   test("accepts a configured handwritten-working response", () => {

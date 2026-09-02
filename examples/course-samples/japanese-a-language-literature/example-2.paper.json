@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Japanese A: Language and Literature · Paper 2 — original comparative-essay sample",
+  "subject": "japanese-a-language-literature",
+  "subjectLabel": "Japanese A: Language and Literature",
+  "level": "HL",
+  "paper": "Paper 2 — original comparative-essay sample",
+  "durationMinutes": 105,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 30,
+  "mode": "essay",
+  "instructions": "一つの設問を選び、授業で学んだ二作品を比較する論考を書きなさい。別紙は使用しません。",
+  "selectionMode": "one",
+  "resources": [],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "設問 1",
+      "prompt": "二作品において、個人の願いと社会の期待が衝突する様子を比較しなさい。",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q2",
+      "label": "設問 2",
+      "prompt": "二作品において、沈黙が意味を生み出す方法を比較しなさい。",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q3",
+      "label": "設問 3",
+      "prompt": "二作品において、空間が権力関係を表す方法を比較しなさい。",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    },
+    {
+      "id": "q4",
+      "label": "設問 4",
+      "prompt": "二作品が日常的な習慣を問い直させる方法を比較しなさい。",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 30
+    }
+  ]
+}

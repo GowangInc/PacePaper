@@ -1,5 +1,7 @@
 import { ApiError, announce, api, formatTime, setView } from "/app.js";
+import { createExamAudioController } from "/exam-audio.js";
 import { createInkResponse, hasInkResponse } from "/ink-canvas.js";
+import { createTextHighlighter } from "/text-highlights.js";
 
 const RICH_TAGS = new Set([
   "div", "p", "br", "b", "strong", "i", "em", "u", "sup", "sub", "ol", "ul", "li",
@@ -8,7 +10,6 @@ const RICH_TAGS = new Set([
 const BLOCKED_TAGS = new Set(["script", "style", "iframe", "object", "embed", "svg", "math", "link", "meta"]);
 const FONT_NAMES = new Set(["Arial", "Georgia", "Times New Roman", "Verdana", "Courier New"]);
 const ALIGNMENTS = new Set(["left", "center", "right", "justify"]);
-const HIGHLIGHT_COLORS = new Set(["blue", "green", "purple", "yellow"]);
 const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("en", { granularity: "word" }) : null;
 
 function safeRichHtml(value) {
@@ -35,21 +36,6 @@ function safeRichHtml(value) {
   return template.innerHTML;
 }
 
-function safeHighlightHtml(value) {
-  const template = document.createElement("template");
-  template.innerHTML = typeof value === "string" ? value : "";
-  for (const element of [...template.content.querySelectorAll("*")]) {
-    if (element.localName !== "mark" || !HIGHLIGHT_COLORS.has(element.dataset.color)) {
-      element.replaceWith(...element.childNodes);
-      continue;
-    }
-    const color = element.dataset.color;
-    for (const attribute of [...element.attributes]) element.removeAttribute(attribute.name);
-    element.dataset.color = color;
-  }
-  return template.innerHTML;
-}
-
 function wordCount(html) {
   const holder = document.createElement("div");
   holder.innerHTML = safeRichHtml(html);
@@ -64,10 +50,20 @@ function wordCount(html) {
 }
 
 function readJson(key, fallback) {
+  if (!key) return fallback;
   try {
     return JSON.parse(localStorage.getItem(key) ?? "null") ?? fallback;
   } catch {
     return fallback;
+  }
+}
+
+function removeLocalItem(key) {
+  if (!key) return;
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Server persistence remains authoritative when local recovery storage is unavailable.
   }
 }
 
@@ -91,10 +87,13 @@ export function mountExam(state, { onSubmitted }) {
   const paper = state.paper;
   const sessionId = state.session.id;
   const response = state.response;
+  const responseId = typeof response.id === "string" && response.id ? response.id : null;
   const questionIds = new Set(paper.questions.map((question) => question.id));
   const resourceKeys = new Set(paper.resources.map((resource) => resource.key));
-  const draftKey = `digitaldp:draft:${sessionId}`;
-  const highlightKey = `digitaldp:highlights:${sessionId}`;
+  const draftKey = responseId ? `digitaldp:draft:${responseId}` : null;
+  const highlightKey = responseId ? `digitaldp:highlights:${responseId}` : null;
+  const obsoleteDraftKey = `digitaldp:draft:${sessionId}`;
+  const obsoleteHighlightKey = `digitaldp:highlights:${sessionId}`;
   const preferenceKey = "digitaldp:exam-preferences";
   const instructionKey = `digitaldp:instructions:${sessionId}`;
   const timerKey = `digitaldp:timer:${sessionId}`;
@@ -111,7 +110,7 @@ export function mountExam(state, { onSubmitted }) {
   let submitting = false;
   let expiredHandled = false;
   let readingActive = Number(state.session.readingEndsAt) > Date.now() + serverOffset;
-  let activeAudio = null;
+  let pendingResourceSync = false;
   let activePane = "question";
   let activeQuestionId = response.selectedQuestionId ?? paper.questions[0]?.id ?? null;
   const hasScopedResources = paper.questions.some((question) => question.resourceKeys.length > 0);
@@ -120,8 +119,6 @@ export function mountExam(state, { onSubmitted }) {
     ?? (!hasScopedResources ? paper.resources[0]?.key : null)
     ?? null;
   let timerMode = localStorage.getItem(timerKey) ?? "countdown";
-  let highlights = readJson(highlightKey, {});
-  const audioElements = new Set();
   const savedRanges = new Map();
   const preferences = {
     textSize: "1",
@@ -143,6 +140,7 @@ export function mountExam(state, { onSubmitted }) {
     updatedAt: Number(response.updatedAt) || 0,
   };
 
+  if (obsoleteDraftKey !== draftKey) removeLocalItem(obsoleteDraftKey);
   const localDraft = readJson(draftKey, null);
   if (localDraft?.unsaved === true && localDraft.sessionId === sessionId && Number(localDraft.updatedAt) > draft.updatedAt) {
     draft.selectedQuestionId = questionIds.has(localDraft.selectedQuestionId) ? localDraft.selectedQuestionId : draft.selectedQuestionId;
@@ -155,7 +153,22 @@ export function mountExam(state, { onSubmitted }) {
     activeQuestionId = draft.selectedQuestionId ?? activeQuestionId;
     dirty = true;
   }
-  else if (localDraft) localStorage.removeItem(draftKey);
+  else if (localDraft) removeLocalItem(draftKey);
+
+  const highlighter = createTextHighlighter({
+    storageKey: highlightKey,
+    obsoleteStorageKey: obsoleteHighlightKey,
+    signal,
+    isLocked: () => readingActive,
+    announce,
+  });
+
+  function questionHeading(tag, className, question) {
+    const heading = textBlock(tag, className, "");
+    heading.append(highlighter.decorate(textBlock("span", "", ""), `question:${question.id}:label`, question.label));
+    if (question.marks) heading.append(highlighter.decorate(textBlock("span", "question-marks", ""), `question:${question.id}:marks`, ` [${question.marks}]`));
+    return heading;
+  }
 
   setView(`
     <div class="exam-shell">
@@ -165,16 +178,18 @@ export function mountExam(state, { onSubmitted }) {
           <div><p id="exam-subject" class="eyebrow"></p><h1 id="exam-title"></h1></div>
         </div>
         <nav class="exam-tools" aria-label="Examination tools">
+          <button data-submit-exam class="submit-tool" type="button">Submit</button>
           <button id="flag-tool" type="button" aria-pressed="false">Flag</button>
           <button id="notepad-tool" type="button">Notepad</button>
           <details class="highlight-menu">
             <summary>Highlight</summary>
-            <div aria-label="Highlight colours">
-              <button type="button" data-highlight="blue" aria-label="Blue highlight"></button>
-              <button type="button" data-highlight="green" aria-label="Green highlight"></button>
-              <button type="button" data-highlight="purple" aria-label="Purple highlight"></button>
-              <button type="button" data-highlight="yellow" aria-label="Yellow highlight"></button>
-              <button type="button" data-clear-highlights>Clear</button>
+            <div class="highlight-palette" role="group" aria-label="Highlight colours">
+              <p class="highlight-help">Select exam text, then choose a colour.</p>
+              <button type="button" data-highlight="yellow"><span class="highlight-swatch" aria-hidden="true"></span><span>Yellow</span></button>
+              <button type="button" data-highlight="blue"><span class="highlight-swatch" aria-hidden="true"></span><span>Blue</span></button>
+              <button type="button" data-highlight="green"><span class="highlight-swatch" aria-hidden="true"></span><span>Green</span></button>
+              <button type="button" data-highlight="purple"><span class="highlight-swatch" aria-hidden="true"></span><span>Purple</span></button>
+              <button class="highlight-clear" type="button" data-clear-highlights>Clear all highlights</button>
             </div>
           </details>
           <button id="timer-tool" class="timer-tool" type="button"></button>
@@ -205,7 +220,10 @@ export function mountExam(state, { onSubmitted }) {
         <button id="instructions-tool" type="button">Instructions</button>
         <span id="paper-label" class="paper-label"></span>
         <span id="save-status" class="save-status" role="status" aria-live="polite">Saved</span>
-        <button id="summary-tool" class="summary-action" type="button">View summary</button>
+        <div class="exam-footer-actions">
+          <button id="summary-tool" class="summary-action" type="button">View summary</button>
+          <button data-submit-exam class="submit-action" type="button">Submit examination</button>
+        </div>
       </footer>
       <p id="global-status" class="status-message exam-status" role="status" aria-live="polite" hidden></p>
 
@@ -213,7 +231,7 @@ export function mountExam(state, { onSubmitted }) {
         <form method="dialog"><header><p class="eyebrow">Before you begin</p><h2>Instructions</h2></header><div id="instructions-copy" class="dialog-copy"></div><footer><button class="primary-action" value="continue">Continue to examination</button></footer></form>
       </dialog>
       <dialog id="notepad-dialog" class="exam-dialog compact-dialog">
-        <form method="dialog"><header><p class="eyebrow">Private working area</p><h2>Notepad</h2><p>Notes are saved during this practice session but are not submitted as answers.</p></header><label for="notepad" class="visually-hidden">Notes</label><textarea id="notepad" rows="12" spellcheck="false" autocorrect="off" autocapitalize="off" translate="no"></textarea><footer><button value="close">Close</button></footer></form>
+        <form method="dialog"><header><p class="eyebrow">Candidate working area</p><h2>Notepad</h2><p>Notes are saved separately from answers and included in the teacher's PDF record.</p></header><label for="notepad" class="visually-hidden">Notes</label><textarea id="notepad" rows="12" spellcheck="false" autocorrect="off" autocapitalize="off" translate="no"></textarea><footer><button value="close">Close</button></footer></form>
       </dialog>
       <dialog id="accessibility-dialog" class="exam-dialog compact-dialog">
         <form method="dialog"><header><p class="eyebrow">Display</p><h2>Accessibility settings</h2></header><div class="preference-grid">
@@ -243,9 +261,35 @@ export function mountExam(state, { onSubmitted }) {
   document.querySelector("#exam-subject").textContent = `${paper.subjectLabel} · ${paper.level}`;
   document.querySelector("#exam-title").textContent = paper.title;
   document.querySelector("#paper-label").textContent = paper.paper;
-  document.querySelector("#instructions-copy").textContent = paper.instructions;
+  highlighter.decorate(document.querySelector("#instructions-copy"), "paper:instructions", paper.instructions);
   const notepad = document.querySelector("#notepad");
   notepad.value = draft.notepad;
+  const audioController = createExamAudioController({
+    sessionId,
+    draftAudioPlays: draft.audioPlays,
+    shell,
+    signal,
+    api,
+    announce,
+    formatTime,
+    isLocked: () => readingActive,
+    onBusyChange(busy) {
+      setResourceTabsLocked(busy);
+      syncSubmitAvailability();
+      if (!busy && pendingResourceSync) {
+        pendingResourceSync = false;
+        syncResourcesToQuestion(activeQuestionId);
+      }
+    },
+  });
+
+  function setResourceTabsLocked(locked) {
+    document.querySelectorAll("#resource-tabs button").forEach((item) => { item.disabled = locked; });
+  }
+
+  function syncSubmitAvailability() {
+    document.querySelectorAll("[data-submit-exam]").forEach((control) => { control.disabled = readingActive || submitting || audioController.isBusy(); });
+  }
 
   function applyPreferences() {
     shell.dataset.textSize = ["1", "2", "3", "4"].includes(preferences.textSize) ? preferences.textSize : "1";
@@ -271,6 +315,7 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function persistLocal(timestamp = Date.now() + serverOffset) {
+    if (!draftKey) return false;
     draft.updatedAt = timestamp;
     try {
       localStorage.setItem(draftKey, JSON.stringify({
@@ -311,14 +356,26 @@ export function mountExam(state, { onSubmitted }) {
     saving = api("/api/student/response", { method: "PUT", body: payload() })
       .then(({ savedAt, expired }) => {
         draft.updatedAt = savedAt;
-        if (!dirty) localStorage.removeItem(draftKey);
+        if (!dirty) removeLocalItem(draftKey);
         setSaveStatus(`Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`, "saved");
         if (expired) onSubmitted();
       })
       .catch((error) => {
+        if (error instanceof ApiError && error.status === 409) {
+          dirty = false;
+          onSubmitted();
+          return;
+        }
+        if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+          dirty = false;
+          persistLocal();
+          const message = `Not saved: ${error.message}`;
+          setSaveStatus(message, "error");
+          announce(message, "error");
+          return;
+        }
         dirty = true;
         setSaveStatus("Offline — saved on this device", "error");
-        if (error instanceof ApiError && error.status === 409) onSubmitted();
       })
       .finally(() => {
         saving = null;
@@ -351,6 +408,10 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function syncResourcesToQuestion(questionId) {
+    if (audioController.isBusy()) {
+      pendingResourceSync = true;
+      return;
+    }
     const available = resourcesForQuestion(questionId);
     if (!available.some((resource) => resource.key === activeResourceKey)) {
       activeResourceKey = available[0]?.key ?? null;
@@ -484,8 +545,7 @@ export function mountExam(state, { onSubmitted }) {
     card.dataset.questionId = question.id;
     card.tabIndex = -1;
     const header = document.createElement("header");
-    const label = textBlock("h3", "question-label", question.label);
-    if (question.marks) label.append(textBlock("span", "question-marks", ` [${question.marks}]`));
+    const label = questionHeading("h3", "question-label", question);
     const flag = button(draft.flags.has(question.id) ? "Flagged" : "Flag", "inline-flag", { "aria-pressed": String(draft.flags.has(question.id)) });
     flag.disabled = readingActive;
     flag.addEventListener("click", () => {
@@ -498,7 +558,10 @@ export function mountExam(state, { onSubmitted }) {
     }, { signal: questionSignal });
     header.append(label, flag);
     card.append(header);
-    if (includePrompt) card.append(textBlock("p", "question-prompt", question.prompt));
+    if (includePrompt) {
+      const prompt = textBlock("p", "question-prompt", "");
+      card.append(highlighter.decorate(prompt, `question:${question.id}:prompt`, question.prompt));
+    }
     if (readingActive) {
       card.append(textBlock("p", "reading-lock", "The student entry area opens when reading time ends."));
       if (question.id === activeQuestionId) card.dataset.active = "";
@@ -539,7 +602,7 @@ export function mountExam(state, { onSubmitted }) {
       const choices = document.createElement("fieldset");
       choices.className = "answer-choices";
       choices.append(textBlock("legend", "visually-hidden", `Answer ${question.label}`));
-      for (const choice of question.options ?? []) {
+      for (const [choiceIndex, choice] of (question.options ?? []).entries()) {
         const label = document.createElement("label");
         const input = document.createElement("input");
         input.type = "radio";
@@ -551,12 +614,17 @@ export function mountExam(state, { onSubmitted }) {
           draft.answers[question.id] = choice;
           markDirty();
         }, { signal: questionSignal });
-        label.append(input, document.createTextNode(choice));
+        const choiceText = document.createElement("span");
+        highlighter.decorate(choiceText, `question:${question.id}:option:${choiceIndex}`, choice);
+        label.append(input, choiceText);
         choices.append(label);
       }
       card.append(choices);
     }
-    card.addEventListener("pointerdown", () => setActiveQuestion(question.id), { signal: questionSignal });
+    card.addEventListener("pointerdown", (event) => {
+      if (event.target instanceof Element && event.target.closest(".ink-response")) return;
+      setActiveQuestion(question.id);
+    }, { signal: questionSignal });
     if (question.id === activeQuestionId) card.dataset.active = "";
     return card;
   }
@@ -564,7 +632,8 @@ export function mountExam(state, { onSubmitted }) {
   function renderEssayChoice() {
     const viewer = document.querySelector("#question-viewer");
     viewer.replaceChildren();
-    const intro = textBlock("p", "exam-direction", paper.instructions.split(/\n/u)[0] || "Choose one question.");
+    const direction = paper.instructions.split(/\n/u)[0] || "Choose one question.";
+    const intro = highlighter.decorate(textBlock("p", "exam-direction", ""), "paper:direction", direction);
     const choices = document.createElement("fieldset");
     choices.className = "essay-question-choices";
     choices.append(textBlock("legend", "visually-hidden", "Choose one question"));
@@ -576,9 +645,10 @@ export function mountExam(state, { onSubmitted }) {
       input.value = question.id;
       input.checked = draft.selectedQuestionId === question.id;
       input.disabled = readingActive;
-      const number = textBlock("strong", "", question.label);
-      if (question.marks) number.append(document.createTextNode(` [${question.marks}]`));
-      const prompt = document.createTextNode(question.prompt);
+      const number = questionHeading("strong", "", question);
+      const prompt = document.createElement("span");
+      prompt.className = "essay-choice-prompt";
+      highlighter.decorate(prompt, `question:${question.id}:prompt`, question.prompt);
       label.append(input, number, prompt);
       input.addEventListener("change", () => {
         draft.selectedQuestionId = question.id;
@@ -612,89 +682,25 @@ export function mountExam(state, { onSubmitted }) {
     updateFlagTool();
   }
 
-  function renderAudio(resource) {
-    const wrapper = document.createElement("section");
-    wrapper.className = "audio-player";
-    const audio = document.createElement("audio");
-    audio.preload = "auto";
-    audio.src = resource.url;
-    audioElements.add(audio);
-    const play = button("Play", "audio-play");
-    const progress = document.createElement("progress");
-    progress.max = 1;
-    progress.value = 0;
-    const elapsed = textBlock("output", "audio-time", "00:00 / --:--");
-    const volumeLabel = document.createElement("label");
-    volumeLabel.className = "volume-control";
-    volumeLabel.append(document.createTextNode("Volume "));
-    const volume = document.createElement("input");
-    volume.type = "range";
-    volume.min = "0";
-    volume.max = "1";
-    volume.step = "0.05";
-    volume.value = "1";
-    volume.setAttribute("aria-label", "Audio volume");
-    volumeLabel.append(volume);
-    const playCount = textBlock("strong", "play-count", "");
-    const maxPlays = resource.maxPlays ?? 2;
-
-    function updateCount() {
-      const used = Number(draft.audioPlays[resource.key] ?? 0);
-      playCount.textContent = `${used} of ${maxPlays} plays`;
-      play.disabled = readingActive || used >= maxPlays || Boolean(activeAudio);
-    }
-    updateCount();
-    volume.addEventListener("input", () => { audio.volume = Number(volume.value); }, { signal });
-    audio.addEventListener("loadedmetadata", () => {
-      elapsed.textContent = `00:00 / ${formatTime(audio.duration * 1000)}`;
-    }, { signal });
-    audio.addEventListener("timeupdate", () => {
-      progress.value = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.currentTime / audio.duration : 0;
-      elapsed.textContent = `${formatTime(audio.currentTime * 1000)} / ${Number.isFinite(audio.duration) ? formatTime(audio.duration * 1000) : "--:--"}`;
-    }, { signal });
-    audio.addEventListener("ended", () => {
-      activeAudio = null;
-      shell.dataset.audioPlaying = "false";
-      updateCount();
-      document.querySelectorAll(".resource-tabs button").forEach((item) => { item.disabled = false; });
-    }, { signal });
-    play.addEventListener("click", async () => {
-      if (activeAudio || Number(draft.audioPlays[resource.key] ?? 0) >= maxPlays) return;
-      play.disabled = true;
-      try {
-        const result = await api("/api/student/audio-play", { method: "POST", body: { sessionId, resourceKey: resource.key } });
-        draft.audioPlays[resource.key] = result.plays;
-        activeAudio = audio;
-        shell.dataset.audioPlaying = "true";
-        document.querySelectorAll(".resource-tabs button").forEach((item) => { item.disabled = true; });
-        updateCount();
-        await audio.play();
-      } catch (error) {
-        activeAudio = null;
-        shell.dataset.audioPlaying = "false";
-        updateCount();
-        announce(error instanceof Error ? error.message : "Audio could not start", "error");
-      }
-    }, { signal });
-    wrapper.append(progress, play, elapsed, volumeLabel, playCount, audio);
-    return wrapper;
-  }
-
   function renderResource() {
     const viewer = document.querySelector("#resource-viewer");
-    for (const audio of audioElements) {
-      if (audio !== activeAudio) audio.pause();
-    }
-    viewer.replaceChildren();
     const resource = paper.resources.find((item) => item.key === activeResourceKey);
     document.querySelector("#resource-title").textContent = resource?.label ?? "Resources";
-    if (!resource) return;
+    if (!resource) {
+      viewer.replaceChildren();
+      return;
+    }
+    if (resource.kind === "audio") {
+      const player = audioController.render(resource);
+      if (viewer.childNodes.length !== 1 || viewer.firstChild !== player) viewer.replaceChildren(player);
+    } else {
+      viewer.replaceChildren();
+    }
     if (resource.kind === "text") {
       const copy = document.createElement("article");
       copy.className = "resource-copy";
       copy.tabIndex = 0;
-      if (typeof highlights[resource.key] === "string") copy.innerHTML = safeHighlightHtml(highlights[resource.key]);
-      else copy.textContent = resource.text;
+      highlighter.decorate(copy, `resource:${resource.key}`, resource.text);
       viewer.append(copy);
     } else if (resource.kind === "image") {
       const image = document.createElement("img");
@@ -706,8 +712,6 @@ export function mountExam(state, { onSubmitted }) {
       frame.src = resource.url;
       frame.title = resource.label;
       viewer.append(frame);
-    } else if (resource.kind === "audio") {
-      viewer.append(renderAudio(resource));
     }
     document.querySelectorAll("#resource-tabs button").forEach((item) => {
       item.setAttribute("aria-current", item.dataset.resourceKey === activeResourceKey ? "page" : "false");
@@ -715,7 +719,7 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function selectResource(key) {
-    if (!resourcesForQuestion(activeQuestionId).some((resource) => resource.key === key) || activeAudio) return;
+    if (!resourcesForQuestion(activeQuestionId).some((resource) => resource.key === key) || audioController.isBusy()) return;
     activeResourceKey = key;
     renderResource();
   }
@@ -734,6 +738,7 @@ export function mountExam(state, { onSubmitted }) {
     for (const resource of available) {
       const tab = button(resource.label, "resource-tab", { "aria-current": resource.key === activeResourceKey ? "page" : "false" });
       tab.dataset.resourceKey = resource.key;
+      tab.disabled = audioController.isBusy();
       tab.addEventListener("click", () => selectResource(resource.key), { signal });
       tabs.append(tab);
     }
@@ -767,25 +772,41 @@ export function mountExam(state, { onSubmitted }) {
     document.querySelector("#summary-intro").textContent = `${answered} of ${paper.questions.length} questions answered.`;
   }
 
+  function openSubmitDialog() {
+    if (audioController.isBusy()) {
+      announce("Wait for the current recording to finish before submitting.", "error");
+      return;
+    }
+    const unanswered = paper.questions.filter((question) => questionStatus(question) !== "Answered").length;
+    document.querySelector("#submit-warning").textContent = unanswered > 0
+      ? `${unanswered} question${unanswered === 1 ? " is" : "s are"} not complete. You cannot change your response after submission.`
+      : "You cannot change your response after submission.";
+    document.querySelector("#submit-dialog").showModal();
+  }
+
   async function submit(auto = false) {
-    if (submitting) return;
+    if (submitting || (!auto && audioController.isBusy())) return;
+    if (auto && audioController.isBusy()) audioController.stopForDeadline();
     submitting = true;
     shell.dataset.submitting = "true";
+    syncSubmitAvailability();
     clearTimeout(saveTimer);
     setSaveStatus(auto ? "Time expired — submitting…" : "Submitting…");
     try {
       if (saving) await saving;
       const { submittedAt } = await api("/api/student/submit", { method: "POST", body: payload() });
-      localStorage.removeItem(draftKey);
+      removeLocalItem(draftKey);
+      highlighter.discard();
       setSaveStatus(`Submitted ${new Date(submittedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`, "saved");
       onSubmitted();
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
-        onSubmitted();
-        return;
+        await onSubmitted();
+        if (!shell.isConnected) return;
       }
       submitting = false;
       shell.dataset.submitting = "false";
+      syncSubmitAvailability();
       setSaveStatus("Submission failed — response retained", "error");
       announce(error instanceof Error ? error.message : "Submission failed", "error");
     }
@@ -815,6 +836,7 @@ export function mountExam(state, { onSubmitted }) {
       readingBanner.hidden = true;
       document.querySelector("#notepad-tool").disabled = false;
       document.querySelector("#summary-tool").disabled = false;
+      syncSubmitAvailability();
       document.querySelectorAll("[data-highlight], [data-clear-highlights]").forEach((control) => { control.disabled = false; });
       renderResource();
       renderQuestionPanel();
@@ -832,46 +854,6 @@ export function mountExam(state, { onSubmitted }) {
       expiredHandled = true;
       submit(true);
     }
-  }
-
-  function applyHighlight(color) {
-    if (readingActive) {
-      announce("Highlighting opens when writing time starts", "error");
-      return;
-    }
-    const selection = getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-      announce("Select text in a reading passage before choosing a highlight colour", "error");
-      return;
-    }
-    const range = selection.getRangeAt(0);
-    const copy = document.querySelector(".resource-copy");
-    if (!copy || !copy.contains(range.commonAncestorContainer)) {
-      announce("Highlights can be added to text resources", "error");
-      return;
-    }
-    const mark = document.createElement("mark");
-    mark.dataset.color = color;
-    mark.append(range.extractContents());
-    range.insertNode(mark);
-    selection.removeAllRanges();
-    highlights[activeResourceKey] = copy.innerHTML;
-    localStorage.setItem(highlightKey, JSON.stringify(highlights));
-    document.querySelector(".highlight-menu").open = false;
-  }
-
-  function clearHighlights() {
-    if (readingActive) {
-      announce("Highlights cannot be changed during reading time", "error");
-      return;
-    }
-    const copy = document.querySelector(".resource-copy");
-    if (!copy) return;
-    for (const mark of [...copy.querySelectorAll("mark")]) mark.replaceWith(...mark.childNodes);
-    copy.normalize();
-    delete highlights[activeResourceKey];
-    localStorage.setItem(highlightKey, JSON.stringify(highlights));
-    document.querySelector(".highlight-menu").open = false;
   }
 
   function changeZoom(target, direction) {
@@ -923,7 +905,13 @@ export function mountExam(state, { onSubmitted }) {
     const card = editor?.closest(".question-card");
     if (editor && card?.dataset.questionId) savedRanges.set(card.dataset.questionId, selection.getRangeAt(0).cloneRange());
   }, { signal });
-  window.addEventListener("beforeunload", () => { if (dirty) persistLocal(); }, { signal });
+  window.addEventListener("beforeunload", (event) => {
+    if (dirty) persistLocal();
+    if (audioController.isBusy()) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  }, { signal });
   shell.addEventListener("focusin", (event) => {
     if (event.target.closest("#resource-pane")) activePane = "resource";
     else if (event.target.closest("#question-pane")) activePane = "question";
@@ -944,15 +932,24 @@ export function mountExam(state, { onSubmitted }) {
   document.querySelector("#open-submit").addEventListener("click", (event) => {
     event.preventDefault();
     document.querySelector("#summary-dialog").close();
-    const unanswered = paper.questions.filter((question) => questionStatus(question) !== "Answered").length;
-    document.querySelector("#submit-warning").textContent = unanswered > 0
-      ? `${unanswered} question${unanswered === 1 ? " is" : "s are"} not complete. You cannot change your response after submission.`
-      : "You cannot change your response after submission.";
-    document.querySelector("#submit-dialog").showModal();
+    openSubmitDialog();
   }, { signal });
+  document.querySelectorAll("[data-submit-exam]").forEach((control) => control.addEventListener("click", openSubmitDialog, { signal }));
   document.querySelector("#confirm-submit").addEventListener("click", (event) => { event.preventDefault(); document.querySelector("#submit-dialog").close(); submit(false); }, { signal });
-  document.querySelectorAll("[data-highlight]").forEach((control) => control.addEventListener("click", () => applyHighlight(control.dataset.highlight), { signal }));
-  document.querySelector("[data-clear-highlights]").addEventListener("click", clearHighlights, { signal });
+  const highlightMenu = document.querySelector(".highlight-menu");
+  const highlightSummary = highlightMenu.querySelector("summary");
+  document.querySelectorAll("[data-highlight]").forEach((control) => control.addEventListener("click", () => {
+    if (highlighter.apply(control.dataset.highlight)) {
+      highlightMenu.open = false;
+      highlightSummary.focus();
+    }
+  }, { signal }));
+  document.querySelector("[data-clear-highlights]").addEventListener("click", () => {
+    if (highlighter.clearAll()) {
+      highlightMenu.open = false;
+      highlightSummary.focus();
+    }
+  }, { signal });
   document.querySelectorAll("[data-zoom]").forEach((control) => control.addEventListener("click", () => changeZoom(control.dataset.zoom ?? activePane, control.dataset.direction), { signal }));
   document.querySelectorAll("#accessibility-dialog select").forEach((select) => select.addEventListener("change", () => {
     preferences.textSize = document.querySelector("#text-size").value;
@@ -966,6 +963,7 @@ export function mountExam(state, { onSubmitted }) {
   applyPreferences();
   document.querySelector("#notepad-tool").disabled = readingActive;
   document.querySelector("#summary-tool").disabled = readingActive;
+  syncSubmitAvailability();
   document.querySelectorAll("[data-highlight], [data-clear-highlights]").forEach((control) => { control.disabled = readingActive; });
   renderResourceTabs();
   renderResource();
@@ -988,7 +986,7 @@ export function mountExam(state, { onSubmitted }) {
     clearTimeout(saveTimer);
     clearInterval(tickTimer);
     clearInterval(autosaveTimer);
-    for (const audio of audioElements) audio.pause();
+    audioController.dispose();
     controller.abort();
   };
 }

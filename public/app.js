@@ -1,3 +1,5 @@
+import "/context-menu-lock.js";
+
 export class ApiError extends Error {
   constructor(message, status) {
     super(message);
@@ -106,7 +108,7 @@ function landing() {
         <a class="entry-option" href="/student">
           <span class="entry-option__index">01</span>
           <strong>Student examination</strong>
-          <span>Enter a class code, candidate code and PIN.</span>
+          <span>Enter a class code, then choose your name.</span>
         </a>
         <a class="entry-option" href="/admin">
           <span class="entry-option__index">02</span>

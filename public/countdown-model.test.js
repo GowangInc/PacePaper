@@ -5,6 +5,7 @@ import {
   countdownPhase,
   formatCountdown,
   nextFiveMinuteStart,
+  parseStudentNames,
   resolveStartAt,
 } from "./countdown-model.js";
 
@@ -25,6 +26,15 @@ describe("second-screen countdown", () => {
     });
   });
 
+  test("supports a ten-second reading phase for test sessions", () => {
+    const testing = { ...config, readingTimeMinutes: 10 / 60 };
+    expect(countdownPhase(testing, testing.startAt)).toMatchObject({
+      phase: "reading",
+      remainingMs: 10_000,
+    });
+    expect(countdownPhase(testing, testing.startAt + 10_000)).toMatchObject({ phase: "writing" });
+  });
+
   test("rounds display seconds up so a phase never reads zero early", () => {
     expect(formatCountdown(1)).toBe("00:00:01");
     expect(formatCountdown(3_600_001)).toBe("01:00:01");
@@ -35,6 +45,16 @@ describe("second-screen countdown", () => {
     expect(resolveStartAt("2026-09-02T09:30:12", "2026-09-02T09:30:12", "1788312612345")).toBe(1_788_312_612_345);
     expect(resolveStartAt("2026-09-02T09:31:00", "2026-09-02T09:30:12", "1788312612345"))
       .not.toBe(1_788_312_612_345);
+  });
+
+  test("normalizes an editable one-name-per-line clock roster", () => {
+    expect(parseStudentNames("  Mina Kim  \n\nAlex Chen\r\n Mina Kim ")).toEqual([
+      "Mina Kim",
+      "Alex Chen",
+      "Mina Kim",
+    ]);
+    expect(parseStudentNames("A\nB\nC", 2)).toEqual(["A", "B"]);
+    expect(() => parseStudentNames("A", 0)).toThrow(RangeError);
   });
 
   test("honours an explicitly requested exam, otherwise preferring a live exam", () => {

@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Mathematics: Applications and Interpretation · Paper 2 — original calculator-and-working sample",
+  "subject": "mathematics-applications-interpretation",
+  "subjectLabel": "Mathematics: Applications and Interpretation",
+  "level": "HL",
+  "paper": "Paper 2 — original calculator-and-working sample",
+  "durationMinutes": 60,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 34,
+  "mode": "reading",
+  "instructions": "An approved graphing calculator is required. Answer every question in its linked digital working area, preserving intermediate steps, units and graphs. No separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "energy-data",
+      "label": "Original data set — energy demand",
+      "kind": "text",
+      "text": "A campus recorded mean outdoor temperature T (°C) and daily electricity demand E (MWh):\nT: 4, 7, 10, 13, 16, 19, 22, 25\nE: 31.2, 28.1, 25.4, 23.0, 21.9, 22.5, 25.1, 29.8"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — nonlinear regression",
+      "prompt": "Use the energy-demand data to compare a linear model with a quadratic model. State suitable equations, compare their fit, and use the better model to estimate demand at 28°C. Comment on the reliability of the estimate.",
+      "type": "ink",
+      "resourceKeys": [
+        "energy-data"
+      ],
+      "marks": 9,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — transition matrices",
+      "prompt": "A bike-share survey classifies users as occasional (O) or regular (R). Each month, 35% of O users become R and 15% of R users become O. Starting with 800 O users and 200 R users, construct a transition matrix, find the distribution after six months, and determine the long-term distribution.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — hypothesis testing",
+      "prompt": "A school claims that the median queue time in its cafeteria is 6 minutes. A random sample of 14 queue times is 4.1, 5.0, 5.2, 5.6, 5.8, 6.1, 6.3, 6.7, 7.0, 7.2, 7.8, 8.1, 9.0, 10.4. Perform a suitable test at the 5% level and state your conclusion in context.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — differential modelling",
+      "prompt": "The rate of change of an algae population P is modelled by dP/dt = 0.18P(1 − P/5000). Given P(0) = 400, use technology to estimate P(20), find when P first exceeds 4000, and explain the meaning of 5000 in the model.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

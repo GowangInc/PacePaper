@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "English B · Paper 2 — original reading sample",
+  "subject": "english-b",
+  "subjectLabel": "English B",
+  "level": "HL",
+  "paper": "Paper 2 — original reading sample",
+  "durationMinutes": 60,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "reading",
+  "instructions": "Read all three original texts and answer every question in its linked response area. No separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "Text A — tool library",
+      "kind": "text",
+      "text": "At the West Market Tool Library, members borrow drills, sewing machines and camping stoves instead of buying equipment they may use once. The annual fee is modest, but every new member also gives one hour of time. Some repair donated tools; others photograph equipment or translate safety cards. Coordinator Mina Cole says the time exchange matters more than the money: ‘People arrive to borrow an object and discover that somebody nearby knows how to use it.’ The library now runs Saturday workshops led by members, and broken household items are welcome—even when their owners are not sure what is wrong."
+    },
+    {
+      "key": "text-2",
+      "label": "Text B — quiet railway carriage trial",
+      "kind": "text",
+      "text": "A regional railway has introduced a quiet carriage on evening services after passengers requested a place to read or rest. Phone calls are discouraged and announcements are reduced, but conversation is not forbidden. During the first month, complaints fell overall, yet staff received new complaints about passengers aggressively correcting one another. The company has replaced its original SILENCE signs with a softer message: SHARE THE QUIET. It will continue the trial while training staff to handle disagreements without turning the carriage into a place of suspicion."
+    },
+    {
+      "key": "text-3",
+      "label": "Text C — interview with a rooftop gardener",
+      "kind": "text",
+      "text": "When Ada first planted tomatoes on the roof of her apartment building, she expected vegetables, not meetings. Neighbours began leaving notes under the water tank: Could they grow herbs? Could children visit? Within a year, twelve households shared the work. The harvest is small, Ada admits, and nobody saves much money. The greater change is downstairs. People who once passed silently in the lift now compare weather forecasts and exchange recipes. ‘The garden did not make us self-sufficient,’ Ada says. ‘It made us visible to one another.’"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Text A · Question 1",
+      "prompt": "What is required from every new member in addition to the fee?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 2,
+      "options": [
+        "One hour of time",
+        "A donated machine",
+        "A safety qualification",
+        "A Saturday workshop"
+      ]
+    },
+    {
+      "id": "q2",
+      "label": "Text A · Question 2",
+      "prompt": "Give two ways members contribute to the tool library.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 3
+    },
+    {
+      "id": "q3",
+      "label": "Text B · Question 3",
+      "prompt": "Why were the original signs changed?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 2,
+      "options": [
+        "They were too expensive",
+        "They encouraged rigid policing",
+        "They could not be translated",
+        "They reduced ticket sales"
+      ]
+    },
+    {
+      "id": "q4",
+      "label": "Text B · Question 4",
+      "prompt": "Explain one tension created by the quiet-carriage trial.",
+      "type": "short",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 3
+    },
+    {
+      "id": "q5",
+      "label": "Text C · Question 5",
+      "prompt": "Which result surprised Ada most?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 2,
+      "options": [
+        "The size of the tomatoes",
+        "The financial saving",
+        "The new neighbour relationships",
+        "The number of empty roofs"
+      ]
+    },
+    {
+      "id": "q6",
+      "label": "Text C · Question 6",
+      "prompt": "What does Ada mean when she says the garden made neighbours ‘visible’ to one another?",
+      "type": "short",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 3
+    },
+    {
+      "id": "q7",
+      "label": "Across texts · Question 7",
+      "prompt": "Identify one shared idea in Texts A and C and support it with one detail from each text.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1",
+        "text-3"
+      ],
+      "marks": 3
+    },
+    {
+      "id": "q8",
+      "label": "Across texts · Question 8",
+      "prompt": "Which initiative seems most likely to create lasting community change? Justify your answer using one text.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1",
+        "text-2",
+        "text-3"
+      ],
+      "marks": 2
+    }
+  ]
+}

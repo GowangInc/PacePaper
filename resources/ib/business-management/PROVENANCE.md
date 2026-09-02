@@ -57,3 +57,5 @@ Scope: official, publicly accessible International Baccalaureate sources only. P
 ## Private reference boundary
 
 The three November 2025 files under `resources/private/past-papers/2025-november/business-management/` were inspected only to observe page layout, response-space patterns, and media demands. They were not moved, copied, hashed into this catalogue, quoted, or used as curriculum authority. Their existence does not establish redistribution rights.
+
+A separate user-authorized mirror acquisition completed on 2026-09-02 is catalogued in `PAST_PAPERS_2022_2026_PROVENANCE.md` and `PAST_PAPERS_2022_2026_INVENTORY.csv`. That private collection does not change the official-public-source scope or authority of this document, and its binaries remain excluded from Git.

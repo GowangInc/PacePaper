@@ -15,4 +15,16 @@ describe("exam timing", () => {
     expect(access.readingEndsAt).toBe(standard.readingEndsAt);
     expect(access.deadline - standard.deadline).toBe(25 * 60_000);
   });
+
+  test("supports a ten-second test reading period as one sixth of a minute", () => {
+    expect(examTiming({
+      startedAt: 1_000,
+      readingTimeMinutes: 10 / 60,
+      durationMinutes: 90,
+      extraMinutes: 0,
+    })).toEqual({
+      readingEndsAt: 11_000,
+      deadline: 5_411_000,
+    });
+  });
 });

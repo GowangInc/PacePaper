@@ -107,6 +107,15 @@ export function resolveStartAt(value, loadedValue, exactTimestamp) {
   return new Date(value).getTime();
 }
 
+export function parseStudentNames(value, limit = 60) {
+  if (!Number.isInteger(limit) || limit < 1) throw new RangeError("Student-name limit must be a positive integer");
+  return String(value ?? "")
+    .split(/\r?\n/u)
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
 export function chooseCountdownSession(sessions, requestedId = "") {
   const requested = sessions.find((session) => session.id === requestedId);
   if (requested) return requested;

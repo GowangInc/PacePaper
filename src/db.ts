@@ -1,7 +1,8 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { Database } from "bun:sqlite";
-import type { ImportedPaper, PaperManifest } from "./papers.ts";
+import { initializeDatabaseSchema } from "./db-schema.ts";
+import { AUDIO_PLAY_LIMIT, type ImportedPaper, type PaperManifest } from "./papers.ts";
 
 export type Role = "admin" | "student";
 export type ExamStatus = "draft" | "live" | "ended";
@@ -22,6 +23,11 @@ export interface StudentLoginRow {
   extraMinutes: number;
 }
 
+export interface StudentRosterRow {
+  id: string;
+  name: string;
+}
+
 export interface AuthRow {
   role: Role;
   actorId: string;
@@ -33,6 +39,7 @@ export interface ClassRow {
   name: string;
   code: string;
   createdAt: number;
+  archivedAt: number | null;
 }
 
 export interface StudentRow {
@@ -43,6 +50,7 @@ export interface StudentRow {
   extraMinutes: number;
   lastSeenAt: number | null;
   createdAt: number;
+  archivedAt: number | null;
 }
 
 export interface PaperRow {
@@ -98,6 +106,7 @@ export interface ExamSessionRow {
   startedAt: number | null;
   endedAt: number | null;
   createdAt: number;
+  archivedAt: number | null;
   candidateCount: number;
   submittedCount: number;
   activeCount: number;
@@ -124,6 +133,22 @@ export interface StudentExamRow {
   extraMinutes: number;
 }
 
+export interface StudentExamSessionRow {
+  id: string;
+  paperId: string;
+  paperTitle: string;
+  subjectLabel: string;
+  level: string;
+  paper: string;
+  durationMinutes: number;
+  readingTimeMinutes: number;
+  status: ExamStatus;
+  startedAt: number | null;
+  endedAt: number | null;
+  createdAt: number;
+  submittedAt: number | null;
+}
+
 export interface ResponsePayload {
   answersJson: string;
   flagsJson: string;
@@ -137,6 +162,7 @@ export interface SessionResponseRow {
   candidateCode: string;
   answersJson: string;
   selectedQuestionId: string | null;
+  notepad: string;
   updatedAt: number;
   submittedAt: number | null;
 }
@@ -151,102 +177,21 @@ export interface SessionResults {
   responses: SessionResponseRow[];
 }
 
+export interface LifecycleResult {
+  id: string;
+  classId: string;
+  archivedAt: number | null;
+}
+
 const databasePath = process.env.DIGITALDP_DB ?? "data/digitaldp.sqlite";
 mkdirSync(dirname(databasePath), { recursive: true });
 export const db = new Database(databasePath, { create: true, strict: true });
-db.run("PRAGMA journal_mode = WAL;");
-db.run("PRAGMA foreign_keys = ON;");
-db.run("PRAGMA busy_timeout = 5000;");
+initializeDatabaseSchema(db);
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS admins (
-    id TEXT PRIMARY KEY,
-    username TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    password_hash TEXT NOT NULL,
-    created_at INTEGER NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS classes (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    code TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    created_at INTEGER NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS students (
-    id TEXT PRIMARY KEY,
-    class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    candidate_code TEXT NOT NULL COLLATE NOCASE,
-    pin_hash TEXT NOT NULL,
-    extra_minutes INTEGER NOT NULL DEFAULT 0,
-    last_seen_at INTEGER,
-    created_at INTEGER NOT NULL,
-    UNIQUE(class_id, candidate_code)
-  );
-
-  CREATE TABLE IF NOT EXISTS papers (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    subject_label TEXT NOT NULL,
-    level TEXT NOT NULL,
-    paper TEXT NOT NULL,
-    duration_minutes INTEGER NOT NULL,
-    mode TEXT NOT NULL,
-    manifest_json TEXT NOT NULL,
-    created_at INTEGER NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS paper_assets (
-    id TEXT PRIMARY KEY,
-    paper_id TEXT NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
-    asset_key TEXT NOT NULL,
-    filename TEXT NOT NULL,
-    mime TEXT NOT NULL,
-    data BLOB NOT NULL,
-    UNIQUE(paper_id, asset_key)
-  );
-
-  CREATE TABLE IF NOT EXISTS exam_sessions (
-    id TEXT PRIMARY KEY,
-    class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE RESTRICT,
-    paper_id TEXT NOT NULL REFERENCES papers(id) ON DELETE RESTRICT,
-    status TEXT NOT NULL CHECK(status IN ('draft', 'live', 'ended')),
-    started_at INTEGER,
-    ended_at INTEGER,
-    created_at INTEGER NOT NULL
-  );
-
-  CREATE UNIQUE INDEX IF NOT EXISTS one_live_session_per_class
-    ON exam_sessions(class_id) WHERE status = 'live';
-
-  CREATE TABLE IF NOT EXISTS responses (
-    id TEXT PRIMARY KEY,
-    session_id TEXT NOT NULL REFERENCES exam_sessions(id) ON DELETE CASCADE,
-    student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    answers_json TEXT NOT NULL DEFAULT '{}',
-    selected_question_id TEXT,
-    flags_json TEXT NOT NULL DEFAULT '[]',
-    audio_plays_json TEXT NOT NULL DEFAULT '{}',
-    notepad TEXT NOT NULL DEFAULT '',
-    updated_at INTEGER NOT NULL,
-    submitted_at INTEGER,
-    UNIQUE(session_id, student_id)
-  );
-
-  CREATE TABLE IF NOT EXISTS auth_sessions (
-    token_hash TEXT PRIMARY KEY,
-    role TEXT NOT NULL CHECK(role IN ('admin', 'student')),
-    actor_id TEXT NOT NULL,
-    expires_at INTEGER NOT NULL,
-    created_at INTEGER NOT NULL
-  );
-
-  CREATE INDEX IF NOT EXISTS auth_sessions_expiry ON auth_sessions(expires_at);
-  CREATE INDEX IF NOT EXISTS students_class ON students(class_id);
-  CREATE INDEX IF NOT EXISTS responses_session ON responses(session_id);
-`);
+// Keep the existing non-null column intact during the demo migration. It holds
+// no credential for new roster entries, while preserving old data should PIN
+// authentication be deliberately reintroduced later.
+const DORMANT_PIN_HASH = "pin-not-required";
 
 export function setupRequired(): boolean {
   const row = db.query<{ count: number }, []>("SELECT COUNT(*) AS count FROM admins").get();
@@ -300,7 +245,39 @@ export function findStudentLogin(classCode: string, candidateCode: string): Stud
       JOIN classes ON classes.id = students.class_id
      WHERE classes.code = $classCode COLLATE NOCASE
        AND students.candidate_code = $candidateCode COLLATE NOCASE
+       AND classes.archived_at IS NULL
+       AND students.archived_at IS NULL
   `).get({ classCode, candidateCode }) ?? null;
+}
+
+export function findStudentLoginById(classCode: string, studentId: string): StudentLoginRow | null {
+  return db.query<StudentLoginRow, { classCode: string; studentId: string }>(`
+    SELECT students.id,
+           students.class_id AS classId,
+           classes.name AS className,
+           students.name,
+           students.candidate_code AS candidateCode,
+           students.pin_hash AS pinHash,
+           students.extra_minutes AS extraMinutes
+      FROM students
+      JOIN classes ON classes.id = students.class_id
+     WHERE classes.code = $classCode COLLATE NOCASE
+       AND students.id = $studentId
+       AND classes.archived_at IS NULL
+       AND students.archived_at IS NULL
+  `).get({ classCode, studentId }) ?? null;
+}
+
+export function listStudentRoster(classCode: string): StudentRosterRow[] {
+  return db.query<StudentRosterRow, { classCode: string }>(`
+    SELECT students.id, students.name
+      FROM students
+      JOIN classes ON classes.id = students.class_id
+     WHERE classes.code = $classCode COLLATE NOCASE
+       AND classes.archived_at IS NULL
+       AND students.archived_at IS NULL
+     ORDER BY students.name COLLATE NOCASE, students.name, students.id
+  `).all({ classCode });
 }
 
 export function createAuthSession(tokenHash: string, role: Role, actorId: string, expiresAt: number): void {
@@ -328,22 +305,26 @@ export function deleteExpiredAuthSessions(): void {
 }
 
 export function createClass(name: string, code: string): ClassRow {
-  const row = { id: crypto.randomUUID(), name, code: code.toUpperCase(), createdAt: Date.now() };
+  const row = { id: crypto.randomUUID(), name, code: code.toUpperCase(), createdAt: Date.now(), archivedAt: null };
   db.query("INSERT INTO classes (id, name, code, created_at) VALUES ($id, $name, $code, $createdAt)").run(row);
   return row;
 }
 
-export function listClasses(): ClassRow[] {
-  return db.query<ClassRow, []>(`
-    SELECT id, name, code, created_at AS createdAt FROM classes ORDER BY name COLLATE NOCASE
-  `).all();
+export function listClasses(archived = false): ClassRow[] {
+  return db.query<ClassRow, { archived: number }>(`
+    SELECT id, name, code, created_at AS createdAt, archived_at AS archivedAt
+      FROM classes
+     WHERE ($archived = 0 AND archived_at IS NULL)
+        OR ($archived = 1 AND archived_at IS NOT NULL)
+     ORDER BY name COLLATE NOCASE
+  `).all({ archived: Number(archived) });
 }
 
 export function createStudent(input: {
   classId: string;
   name: string;
   candidateCode: string;
-  pinHash: string;
+  pinHash?: string;
   extraMinutes: number;
 }): StudentRow {
   const row = {
@@ -351,47 +332,119 @@ export function createStudent(input: {
     classId: input.classId,
     name: input.name,
     candidateCode: input.candidateCode.toUpperCase(),
-    pinHash: input.pinHash,
     extraMinutes: input.extraMinutes,
     lastSeenAt: null,
     createdAt: Date.now(),
+    archivedAt: null,
   };
-  db.query(`
+  const created = db.query(`
     INSERT INTO students (id, class_id, name, candidate_code, pin_hash, extra_minutes, created_at)
-    VALUES ($id, $classId, $name, $candidateCode, $pinHash, $extraMinutes, $createdAt)
-  `).run(row);
+    SELECT $id, $classId, $name, $candidateCode, $pinHash, $extraMinutes, $createdAt
+      FROM classes
+     WHERE id = $classId AND archived_at IS NULL
+  `).run({ ...row, pinHash: input.pinHash ?? DORMANT_PIN_HASH });
+  if (created.changes !== 1) throw new Error("Active class not found");
   return row;
 }
 
-export function listStudents(): StudentRow[] {
-  return db.query<StudentRow, []>(`
-    SELECT id,
-           class_id AS classId,
-           name,
-           candidate_code AS candidateCode,
-           extra_minutes AS extraMinutes,
-           last_seen_at AS lastSeenAt,
-           created_at AS createdAt
+export function listStudents(archived = false): StudentRow[] {
+  return db.query<StudentRow, { archived: number }>(`
+    SELECT students.id,
+           students.class_id AS classId,
+           students.name,
+           students.candidate_code AS candidateCode,
+           students.extra_minutes AS extraMinutes,
+           students.last_seen_at AS lastSeenAt,
+           students.created_at AS createdAt,
+           students.archived_at AS archivedAt
       FROM students
-     ORDER BY name COLLATE NOCASE
-  `).all();
+      JOIN classes ON classes.id = students.class_id
+     WHERE classes.archived_at IS NULL
+       AND (($archived = 0 AND students.archived_at IS NULL)
+         OR ($archived = 1 AND students.archived_at IS NOT NULL))
+     ORDER BY students.name COLLATE NOCASE
+  `).all({ archived: Number(archived) });
 }
 
 export function getStudent(studentId: string): StudentRow | null {
   return db.query<StudentRow, { studentId: string }>(`
-    SELECT id,
-           class_id AS classId,
-           name,
-           candidate_code AS candidateCode,
-           extra_minutes AS extraMinutes,
-           last_seen_at AS lastSeenAt,
-           created_at AS createdAt
-      FROM students WHERE id = $studentId
+    SELECT students.id,
+           students.class_id AS classId,
+           students.name,
+           students.candidate_code AS candidateCode,
+           students.extra_minutes AS extraMinutes,
+           students.last_seen_at AS lastSeenAt,
+           students.created_at AS createdAt,
+           students.archived_at AS archivedAt
+      FROM students
+      JOIN classes ON classes.id = students.class_id
+     WHERE students.id = $studentId
+       AND students.archived_at IS NULL
+       AND classes.archived_at IS NULL
   `).get({ studentId }) ?? null;
 }
 
+export function updateStudent(input: {
+  id: string;
+  classId: string;
+  name: string;
+  candidateCode: string;
+  extraMinutes: number;
+  pinHash?: string;
+}): StudentRow | null {
+  const result = db.query(`
+    UPDATE students
+       SET name = $name,
+           candidate_code = $candidateCode,
+           extra_minutes = $extraMinutes,
+           pin_hash = COALESCE($pinHash, pin_hash)
+     WHERE id = $id
+       AND class_id = $classId
+       AND archived_at IS NULL
+       AND EXISTS (
+         SELECT 1 FROM classes
+          WHERE classes.id = students.class_id
+            AND classes.archived_at IS NULL
+       )
+  `).run({
+    id: input.id,
+    classId: input.classId,
+    name: input.name,
+    candidateCode: input.candidateCode.toUpperCase(),
+    extraMinutes: input.extraMinutes,
+    pinHash: input.pinHash ?? null,
+  });
+  if (result.changes !== 1) return null;
+  return getStudent(input.id);
+}
+
 export function touchStudent(studentId: string): void {
-  db.query("UPDATE students SET last_seen_at = $now WHERE id = $studentId").run({ now: Date.now(), studentId });
+  db.query(`
+    UPDATE students SET last_seen_at = $now
+     WHERE id = $studentId
+       AND archived_at IS NULL
+       AND EXISTS (
+         SELECT 1 FROM classes
+          WHERE classes.id = students.class_id
+            AND classes.archived_at IS NULL
+       )
+  `).run({ now: Date.now(), studentId });
+}
+
+function insertPaperAssets(paperId: string, assets: ImportedPaper["assets"]): void {
+  for (const asset of assets) {
+    db.query(`
+      INSERT INTO paper_assets (id, paper_id, asset_key, filename, mime, data)
+      VALUES ($id, $paperId, $assetKey, $filename, $mime, $data)
+    `).run({
+      id: crypto.randomUUID(),
+      paperId,
+      assetKey: asset.assetKey,
+      filename: asset.filename,
+      mime: asset.mime,
+      data: asset.bytes,
+    });
+  }
 }
 
 export function createPaper(imported: ImportedPaper): PaperSummary {
@@ -414,19 +467,7 @@ export function createPaper(imported: ImportedPaper): PaperSummary {
       manifestJson,
       createdAt: now,
     });
-    for (const asset of imported.assets) {
-      db.query(`
-        INSERT INTO paper_assets (id, paper_id, asset_key, filename, mime, data)
-        VALUES ($id, $paperId, $assetKey, $filename, $mime, $data)
-      `).run({
-        id: crypto.randomUUID(),
-        paperId: id,
-        assetKey: asset.assetKey,
-        filename: asset.filename,
-        mime: asset.mime,
-        data: asset.bytes,
-      });
-    }
+    insertPaperAssets(id, imported.assets);
   });
   insert();
   return {
@@ -443,6 +484,41 @@ export function createPaper(imported: ImportedPaper): PaperSummary {
     exportAuthorized: imported.manifest.exportAuthorized,
     createdAt: now,
   };
+}
+
+export function replaceUnusedPaper(paperId: string, imported: ImportedPaper): boolean {
+  const manifestJson = JSON.stringify(imported.manifest);
+  const replace = db.transaction(() => {
+    const result = db.query(`
+      UPDATE papers
+         SET title = $title,
+             subject = $subject,
+             subject_label = $subjectLabel,
+             level = $level,
+             paper = $paper,
+             duration_minutes = $durationMinutes,
+             mode = $mode,
+             manifest_json = $manifestJson
+       WHERE id = $paperId
+         AND NOT EXISTS (SELECT 1 FROM exam_sessions WHERE paper_id = $paperId)
+    `).run({
+      paperId,
+      title: imported.manifest.title,
+      subject: imported.manifest.subject,
+      subjectLabel: imported.manifest.subjectLabel,
+      level: imported.manifest.level,
+      paper: imported.manifest.paper,
+      durationMinutes: imported.manifest.durationMinutes,
+      mode: imported.manifest.mode,
+      manifestJson,
+    });
+    if (result.changes !== 1) return false;
+
+    db.query("DELETE FROM paper_assets WHERE paper_id = $paperId").run({ paperId });
+    insertPaperAssets(paperId, imported.assets);
+    return true;
+  });
+  return replace();
 }
 
 export function listPapers(): PaperSummary[] {
@@ -499,25 +575,33 @@ export function listPaperAssets(paperId: string): PaperAssetRow[] {
 
 export function createExamSession(classId: string, paperId: string): string {
   const id = crypto.randomUUID();
-  db.query(`
+  const created = db.query(`
     INSERT INTO exam_sessions (id, class_id, paper_id, status, created_at)
-    VALUES ($id, $classId, $paperId, 'draft', $now)
+    SELECT $id, $classId, $paperId, 'draft', $now
+      FROM classes
+     WHERE id = $classId AND archived_at IS NULL
   `).run({ id, classId, paperId, now: Date.now() });
+  if (created.changes !== 1) throw new Error("Active class not found");
   return id;
 }
 
 export function startExamSession(sessionId: string): void {
   const start = db.transaction(() => {
     const session = db.query<{ classId: string; status: ExamStatus }, { sessionId: string }>(`
-      SELECT class_id AS classId, status FROM exam_sessions WHERE id = $sessionId
+      SELECT sessions.class_id AS classId, sessions.status
+        FROM exam_sessions AS sessions
+        JOIN classes ON classes.id = sessions.class_id
+       WHERE sessions.id = $sessionId
+         AND sessions.archived_at IS NULL
+         AND classes.archived_at IS NULL
     `).get({ sessionId });
-    if (!session) throw new Error("Exam session not found");
+    if (!session) throw new Error("Active exam session not found");
     if (session.status !== "draft") throw new Error("Only a draft session can be started");
     const now = Date.now();
     db.query("UPDATE exam_sessions SET status = 'live', started_at = $now WHERE id = $sessionId")
       .run({ now, sessionId });
     const students = db.query<{ id: string }, { classId: string }>(
-      "SELECT id FROM students WHERE class_id = $classId",
+      "SELECT id FROM students WHERE class_id = $classId AND archived_at IS NULL",
     ).all({ classId: session.classId });
     for (const student of students) {
       db.query(`
@@ -545,9 +629,9 @@ export function endExamSession(sessionId: string): void {
   end();
 }
 
-export function listExamSessions(): ExamSessionRow[] {
+export function listExamSessions(archived = false): ExamSessionRow[] {
   const onlineCutoff = Date.now() - 20_000;
-  return db.query<ExamSessionRow, { onlineCutoff: number }>(`
+  return db.query<ExamSessionRow, { onlineCutoff: number; archived: number }>(`
     SELECT sessions.id,
            sessions.class_id AS classId,
            classes.name AS className,
@@ -562,19 +646,109 @@ export function listExamSessions(): ExamSessionRow[] {
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,
            sessions.created_at AS createdAt,
+           sessions.archived_at AS archivedAt,
            COUNT(responses.id) AS candidateCount,
            COALESCE(SUM(CASE WHEN responses.submitted_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS submittedCount,
-           COALESCE(SUM(CASE WHEN students.last_seen_at >= $onlineCutoff THEN 1 ELSE 0 END), 0) AS activeCount
+           COALESCE(SUM(CASE WHEN students.archived_at IS NULL AND students.last_seen_at >= $onlineCutoff
+                             THEN 1 ELSE 0 END), 0) AS activeCount
       FROM exam_sessions AS sessions
       JOIN classes ON classes.id = sessions.class_id
       JOIN papers ON papers.id = sessions.paper_id
       LEFT JOIN responses ON responses.session_id = sessions.id
       LEFT JOIN students ON students.id = responses.student_id
+     WHERE classes.archived_at IS NULL
+       AND (($archived = 0 AND sessions.archived_at IS NULL)
+         OR ($archived = 1 AND sessions.archived_at IS NOT NULL))
      GROUP BY sessions.id
      ORDER BY sessions.created_at DESC
      LIMIT 30
-  `).all({ onlineCutoff });
+  `).all({ onlineCutoff, archived: Number(archived) });
 }
+
+type LifecycleTable = "classes" | "students" | "exam_sessions";
+const lifecycleSelect: Record<LifecycleTable, string> = {
+  classes: "SELECT id, id AS classId, archived_at AS archivedAt FROM classes WHERE id = $id",
+  students: "SELECT id, class_id AS classId, archived_at AS archivedAt FROM students WHERE id = $id",
+  exam_sessions: "SELECT id, class_id AS classId, archived_at AS archivedAt FROM exam_sessions WHERE id = $id",
+};
+
+function lifecycleRow(table: LifecycleTable, id: string, label: string): LifecycleResult {
+  const row = db.query<LifecycleResult, { id: string }>(lifecycleSelect[table]!).get({ id });
+  if (!row) throw new Error(`${label} not found`);
+  return row;
+}
+
+function setArchivedAt(table: LifecycleTable, id: string, archivedAt: number | null): void {
+  db.query(`UPDATE ${table} SET archived_at = $archivedAt WHERE id = $id`).run({ id, archivedAt });
+}
+
+function requireActiveClass(classId: string, child: "student" | "exam session"): void {
+  const active = db.query("SELECT 1 FROM classes WHERE id = $classId AND archived_at IS NULL").get({ classId });
+  if (!active) throw new Error(`Restore the class first before restoring this ${child}`);
+}
+
+export const archiveStudent = db.transaction((studentId: string): LifecycleResult => {
+  const row = lifecycleRow("students", studentId, "Student");
+  if (row.archivedAt === null) {
+    const conflict = db.query(`
+      SELECT 1 FROM responses
+      JOIN exam_sessions ON exam_sessions.id = responses.session_id
+      JOIN classes ON classes.id = exam_sessions.class_id
+      WHERE responses.student_id = $studentId AND responses.submitted_at IS NULL
+        AND exam_sessions.status = 'live' AND exam_sessions.archived_at IS NULL AND classes.archived_at IS NULL
+    `).get({ studentId });
+    if (conflict) throw new Error("Cannot remove this student while they have unfinished work in a live exam");
+    row.archivedAt = Date.now();
+    setArchivedAt("students", studentId, row.archivedAt);
+  }
+  db.query("DELETE FROM auth_sessions WHERE role = 'student' AND actor_id = $studentId").run({ studentId });
+  return row;
+});
+
+export const restoreStudent = db.transaction((studentId: string): LifecycleResult => {
+  const row = lifecycleRow("students", studentId, "Student");
+  requireActiveClass(row.classId, "student");
+  if (row.archivedAt !== null) setArchivedAt("students", studentId, null);
+  return { ...row, archivedAt: null };
+});
+
+export const archiveClass = db.transaction((classId: string): LifecycleResult => {
+  const row = lifecycleRow("classes", classId, "Class");
+  if (row.archivedAt === null) {
+    const live = db.query("SELECT 1 FROM exam_sessions WHERE class_id = $classId AND status = 'live' AND archived_at IS NULL")
+      .get({ classId });
+    if (live) throw new Error("Cannot remove this class while it has a live exam. End the exam first");
+    row.archivedAt = Date.now();
+    setArchivedAt("classes", classId, row.archivedAt);
+  }
+  db.query(`DELETE FROM auth_sessions WHERE role = 'student' AND actor_id IN
+    (SELECT id FROM students WHERE class_id = $classId)`).run({ classId });
+  return row;
+});
+
+export const restoreClass = db.transaction((classId: string): LifecycleResult => {
+  const row = lifecycleRow("classes", classId, "Class");
+  if (row.archivedAt !== null) setArchivedAt("classes", classId, null);
+  return { ...row, archivedAt: null };
+});
+
+export const archiveExamSession = db.transaction((sessionId: string): LifecycleResult => {
+  const row = lifecycleRow("exam_sessions", sessionId, "Exam session");
+  if (row.archivedAt === null) {
+    const live = db.query("SELECT 1 FROM exam_sessions WHERE id = $sessionId AND status = 'live'").get({ sessionId });
+    if (live) throw new Error("Cannot remove a live exam. End it first");
+    row.archivedAt = Date.now();
+    setArchivedAt("exam_sessions", sessionId, row.archivedAt);
+  }
+  return row;
+});
+
+export const restoreExamSession = db.transaction((sessionId: string): LifecycleResult => {
+  const row = lifecycleRow("exam_sessions", sessionId, "Exam session");
+  requireActiveClass(row.classId, "exam session");
+  if (row.archivedAt !== null) setArchivedAt("exam_sessions", sessionId, null);
+  return { ...row, archivedAt: null };
+});
 
 export function getSessionResults(sessionId: string): SessionResults | null {
   const session = db.query<Omit<SessionResults, "responses">, { sessionId: string }>(`
@@ -596,6 +770,7 @@ export function getSessionResults(sessionId: string): SessionResults | null {
            students.candidate_code AS candidateCode,
            responses.answers_json AS answersJson,
            responses.selected_question_id AS selectedQuestionId,
+           responses.notepad AS notepad,
            responses.updated_at AS updatedAt,
            responses.submitted_at AS submittedAt
       FROM responses
@@ -606,8 +781,42 @@ export function getSessionResults(sessionId: string): SessionResults | null {
   return { ...session, responses };
 }
 
-export function getStudentExam(studentId: string): StudentExamRow | null {
-  return db.query<StudentExamRow, { studentId: string; endedCutoff: number }>(`
+export function listStudentExamSessions(studentId: string): StudentExamSessionRow[] {
+  return db.query<StudentExamSessionRow, { studentId: string }>(`
+    SELECT sessions.id,
+           papers.id AS paperId,
+           papers.title AS paperTitle,
+           papers.subject_label AS subjectLabel,
+           papers.level,
+           papers.paper,
+           papers.duration_minutes AS durationMinutes,
+           COALESCE(json_extract(papers.manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
+           sessions.status,
+           sessions.started_at AS startedAt,
+           sessions.ended_at AS endedAt,
+           sessions.created_at AS createdAt,
+           responses.submitted_at AS submittedAt
+      FROM students
+      JOIN exam_sessions AS sessions ON sessions.class_id = students.class_id
+      JOIN classes ON classes.id = students.class_id
+      JOIN papers ON papers.id = sessions.paper_id
+      LEFT JOIN responses
+        ON responses.session_id = sessions.id
+       AND responses.student_id = students.id
+     WHERE students.id = $studentId
+       AND students.archived_at IS NULL
+       AND classes.archived_at IS NULL
+       AND sessions.archived_at IS NULL
+       AND (sessions.status = 'draft' OR responses.id IS NOT NULL)
+     ORDER BY CASE sessions.status WHEN 'live' THEN 0 WHEN 'draft' THEN 1 ELSE 2 END,
+              sessions.created_at DESC,
+              sessions.id
+     LIMIT 30
+  `).all({ studentId });
+}
+
+export function getStudentExam(studentId: string, sessionId: string): StudentExamRow | null {
+  return db.query<StudentExamRow, { studentId: string; sessionId: string }>(`
     SELECT sessions.id AS sessionId,
            sessions.status AS sessionStatus,
            sessions.class_id AS classId,
@@ -630,11 +839,13 @@ export function getStudentExam(studentId: string): StudentExamRow | null {
       JOIN exam_sessions AS sessions ON sessions.id = responses.session_id
       JOIN papers ON papers.id = sessions.paper_id
       JOIN students ON students.id = responses.student_id
+      JOIN classes ON classes.id = students.class_id
      WHERE responses.student_id = $studentId
-       AND (sessions.status = 'live' OR (sessions.status = 'ended' AND sessions.ended_at >= $endedCutoff))
-     ORDER BY CASE sessions.status WHEN 'live' THEN 0 ELSE 1 END, sessions.started_at DESC
-     LIMIT 1
-  `).get({ studentId, endedCutoff: Date.now() - 12 * 60 * 60 * 1000 }) ?? null;
+       AND sessions.id = $sessionId
+       AND students.archived_at IS NULL
+       AND classes.archived_at IS NULL
+       AND sessions.archived_at IS NULL
+  `).get({ studentId, sessionId }) ?? null;
 }
 
 export function saveResponse(responseId: string, payload: ResponsePayload): void {
@@ -675,7 +886,7 @@ export function submitResponse(responseId: string): void {
   if (changed.changes !== 1) throw new Error("Response is already submitted");
 }
 
-export function incrementAudioPlay(responseId: string, resourceKey: string, maxPlays: number): number {
+export function incrementAudioPlay(responseId: string, resourceKey: string): number {
   const increment = db.transaction(() => {
     const row = db.query<{ audioPlaysJson: string; submittedAt: number | null }, { responseId: string }>(`
       SELECT audio_plays_json AS audioPlaysJson, submitted_at AS submittedAt
@@ -684,11 +895,21 @@ export function incrementAudioPlay(responseId: string, resourceKey: string, maxP
     if (!row || row.submittedAt !== null) throw new Error("Response is not available");
     const plays = JSON.parse(row.audioPlaysJson) as Record<string, number>;
     const next = (plays[resourceKey] ?? 0) + 1;
-    if (next > maxPlays) throw new Error("No audio plays remain");
+    if (next > AUDIO_PLAY_LIMIT) throw new Error("No audio plays remain");
     plays[resourceKey] = next;
     db.query("UPDATE responses SET audio_plays_json = $audioPlaysJson, updated_at = $now WHERE id = $responseId")
       .run({ audioPlaysJson: JSON.stringify(plays), now: Date.now(), responseId });
     return next;
   });
   return increment();
+}
+
+export function getAudioPlayCount(responseId: string, resourceKey: string): number {
+  const row = db.query<{ audioPlaysJson: string; submittedAt: number | null }, { responseId: string }>(`
+    SELECT audio_plays_json AS audioPlaysJson, submitted_at AS submittedAt
+      FROM responses WHERE id = $responseId
+  `).get({ responseId });
+  if (!row || row.submittedAt !== null) throw new Error("Response is not available");
+  const value = (JSON.parse(row.audioPlaysJson) as Record<string, unknown>)[resourceKey];
+  return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : 0;
 }

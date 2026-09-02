@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "English A: Literature · Paper 1 — original textual-analysis sample",
+  "subject": "english-a-literature",
+  "subjectLabel": "English A: Literature",
+  "level": "SL",
+  "paper": "Paper 1 — original textual-analysis sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "essay",
+  "instructions": "Choose one original literary text and write a close analysis of the ways in which its literary features create meaning. Enter the response beside the chosen text; no separate answer sheet is used.",
+  "selectionMode": "one",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "Text 1 — prose extract, The Tide Clock",
+      "kind": "text",
+      "text": "Mara wound the clock every morning although it had not kept time since the winter storm. Its hands remained at eleven minutes past four, the hour the sea climbed the harbour steps and entered the shop without knocking. Customers assumed the clock was an heirloom. Mara let them. She polished its cracked glass while they described the weather as unusual, historic, impossible. Behind the counter, a pale line crossed the wall above her shoulder. She never pointed to it. On the first warm day of spring, a boy asked why the clock was broken. ‘It isn’t,’ she said, and for the first time heard how strange that answer sounded."
+    },
+    {
+      "key": "text-2",
+      "label": "Text 2 — poem, Borrowed Light",
+      "kind": "text",
+      "text": "At dawn the windows lend us gold,\nnot asking what we did with night.\nThe cups stand patient in a row,\nsmall moons with handles, holding light.\n\nBy noon the gift has crossed the floor;\nour shadows occupy the chairs.\nWe speak as if the day were ours,\nthen leave our fingerprints on air.\n\nAt dusk the windows take it back.\nThe room grows honest, blue and slight.\nWe wash the cups. We close the blinds.\nTomorrow owes us borrowed light."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Text 1 — prose extract, The Tide Clock — response",
+      "prompt": "Analyse how the passage uses the clock and the shop setting to reveal Mara’s relationship with the past.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 20
+    },
+    {
+      "id": "q2",
+      "label": "Text 2 — poem, Borrowed Light — response",
+      "prompt": "Analyse how imagery and shifts across the day develop the poem’s treatment of time and possession.",
+      "type": "essay",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 20
+    }
+  ]
+}

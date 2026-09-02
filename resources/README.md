@@ -30,3 +30,5 @@ Do not automatically acquire paywalled, portal-only, or questionably mirrored ex
 PDF, image, and audio reference binaries under `resources/` are excluded from Git. The tracked repository contains catalogues, provenance, and derived structural requirements; local source files remain subject to their original rights and licensing terms.
 
 `resources/private/` is excluded from Git. It is the local holding area for school-authorized or user-supplied copyrighted material, including past papers. Files there may inform local research but must not be pushed to GitHub. Keep a local checksum inventory so duplicates and provenance gaps remain visible.
+
+The current 2022–2026 private archive is summarized in [`ib/PAST_PAPERS_2022_2026_INDEX.md`](ib/PAST_PAPERS_2022_2026_INDEX.md). It records exact coverage, checksums, source limitations, and the tracked inventory files without exposing the copyrighted binaries.

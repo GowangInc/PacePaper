@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Business Management · Paper 3 — original social-enterprise sample",
+  "subject": "business-management",
+  "subjectLabel": "Business Management",
+  "level": "HL",
+  "paper": "Paper 3 — original social-enterprise sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 25,
+  "mode": "reading",
+  "instructions": "Use all relevant numbered resources and answer all three questions in their linked DigitalDP response areas. No separate answer booklet or answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "harbour-light-resources",
+      "label": "Original resource pack — Harbour Light Cooperative",
+      "kind": "text",
+      "text": "Resource 1 — Overview\nHarbour Light Cooperative (HLC) trains unemployed coastal residents to repair discarded fishing nets and manufacture durable outdoor furniture. Its stated human need is secure local employment in communities affected by declining fish stocks.\n\nResource 2 — Operations message\nThe production manager reports that orders have doubled, but repaired-net supply varies by season. Reject rates rose from 4% to 11% after eight trainees joined. Experienced workers want production slowed for mentoring; the sales manager fears late deliveries.\n\nResource 3 — Customer post\n‘The bench is excellent, but HLC’s website does not explain how much ocean waste is actually diverted. I want evidence, not just a green label.’\n\nResource 4 — Finance extract\nHLC has $42,000 available. Option X is an automated cutting table costing $38,000. Option Y is a two-year training partnership costing $24,000, plus $6,000 for an impact-measurement system.\n\nResource 5 — Community email\nA local college offers workshop space and trainers if HLC guarantees 20 placements each year. Some members worry the partnership will shift decision-making away from the cooperative."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1",
+      "prompt": "Describe the human need that Harbour Light Cooperative addresses.",
+      "type": "short",
+      "resourceKeys": [
+        "harbour-light-resources"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q2",
+      "label": "Question 2",
+      "prompt": "Explain two challenges HLC faces as it attempts to scale its operations.",
+      "type": "short",
+      "resourceKeys": [
+        "harbour-light-resources"
+      ],
+      "marks": 6
+    },
+    {
+      "id": "q3",
+      "label": "Question 3",
+      "prompt": "Using the resource pack and relevant business-management tools and theories, recommend a sequenced plan for HLC’s next two years. Evaluate the trade-offs and explain how the plan would protect both financial sustainability and social impact.",
+      "type": "essay",
+      "resourceKeys": [
+        "harbour-light-resources"
+      ],
+      "marks": 17
+    }
+  ]
+}

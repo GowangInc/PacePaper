@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v1",
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Japanese A: Literature · Paper 1 — original textual-analysis sample",
+  "subject": "japanese-a-literature",
+  "subjectLabel": "Japanese A: Literature",
+  "level": "SL",
+  "paper": "Paper 1 — original textual-analysis sample",
+  "durationMinutes": 75,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 20,
+  "mode": "essay",
+  "instructions": "二つの創作文学テクストから一つを選び、文学的特徴が意味を形づくる方法を分析しなさい。別紙は使用しません。",
+  "selectionMode": "one",
+  "resources": [
+    {
+      "key": "text-1",
+      "label": "テクスト1 — 短編小説『乾燥機』より",
+      "kind": "text",
+      "text": "乾燥機は残り七分を表示したまま、同じ低い音を繰り返していた。美紀は丸い窓の向こうで父のシャツが現れては消えるのを見ていた。ポケットを確かめたはずなのに、小さな紙片が布の間を舞っている。取り出すには止めなければならない。止めれば、何が書かれているのか確かめたくなる。店の時計が午前一時を打った。美紀は椅子に座り直し、七分が永遠であることを願った。"
+    },
+    {
+      "key": "text-2",
+      "label": "テクスト2 — 詩『雨の余白』",
+      "kind": "text",
+      "text": "雨は町の文字を薄くする\n看板も約束もにじませて\n傘の下だけが小さな本文\n\n信号が青に変わるたび\n私たちは一行ずつ進む\n読み終えないままの午後を\n靴の裏に折りたたんで"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "テクスト1 — 短編小説『乾燥機』より — 解答",
+      "prompt": "反復と限定された空間が、美紀の葛藤をどのように表しているか分析しなさい。",
+      "type": "essay",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 20
+    },
+    {
+      "id": "q2",
+      "label": "テクスト2 — 詩『雨の余白』 — 解答",
+      "prompt": "文字と読書のイメージが、都市での移動と不確かさをどのように表すか分析しなさい。",
+      "type": "essay",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 20
+    }
+  ]
+}
