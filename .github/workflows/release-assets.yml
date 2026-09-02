@@ -96,16 +96,21 @@ jobs:
             "release/DigitalDP-${VERSION}-macos-universal.zip"
             "release/DigitalDP-${VERSION}-windows-x64.zip"
             "release/DigitalDP-${VERSION}-linux-x64.tar.gz"
+            "release/DigitalDP-${VERSION}-User-Guide.txt"
             "release/SHA256SUMS.txt"
           )
           for file in "${files[@]}"; do
             test -s "$file"
           done
-          test "$(wc -l < release/SHA256SUMS.txt | tr -d ' ')" = "3"
+          test "$(wc -l < release/SHA256SUMS.txt | tr -d ' ')" = "4"
           (cd release && shasum -a 256 -c SHA256SUMS.txt)
           unzip -tq "release/DigitalDP-${VERSION}-macos-universal.zip"
           unzip -tq "release/DigitalDP-${VERSION}-windows-x64.zip"
           tar -tzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" >/dev/null
+          cmp USER_GUIDE.md "release/DigitalDP-${VERSION}-User-Guide.txt"
+          unzip -p "release/DigitalDP-${VERSION}-macos-universal.zip" "DigitalDP-${VERSION}-macos-universal/USER-GUIDE.txt" | cmp USER_GUIDE.md -
+          unzip -p "release/DigitalDP-${VERSION}-windows-x64.zip" "DigitalDP-${VERSION}-windows-x64/USER-GUIDE.txt" | cmp USER_GUIDE.md -
+          tar -xOzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" "DigitalDP-${VERSION}-linux-x64/USER-GUIDE.txt" | cmp USER_GUIDE.md -
 
       - name: Preserve assets as workflow artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -118,6 +123,7 @@ jobs:
             release/DigitalDP-${{ steps.meta.outputs.version }}-macos-universal.zip
             release/DigitalDP-${{ steps.meta.outputs.version }}-windows-x64.zip
             release/DigitalDP-${{ steps.meta.outputs.version }}-linux-x64.tar.gz
+            release/DigitalDP-${{ steps.meta.outputs.version }}-User-Guide.txt
             release/SHA256SUMS.txt
 
       - name: Upload bundles to the existing draft
@@ -130,6 +136,7 @@ jobs:
             "release/DigitalDP-${VERSION}-macos-universal.zip" \
             "release/DigitalDP-${VERSION}-windows-x64.zip" \
             "release/DigitalDP-${VERSION}-linux-x64.tar.gz" \
+            "release/DigitalDP-${VERSION}-User-Guide.txt" \
             --repo "$GITHUB_REPOSITORY" \
             --clobber
 
@@ -160,6 +167,7 @@ jobs:
             `DigitalDP-${version}-macos-universal.zip`,
             `DigitalDP-${version}-windows-x64.zip`,
             `DigitalDP-${version}-linux-x64.tar.gz`,
+            `DigitalDP-${version}-User-Guide.txt`,
             "SHA256SUMS.txt",
           ];
 

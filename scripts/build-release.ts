@@ -37,6 +37,8 @@ const root = resolve(import.meta.dir, "..");
 const releaseDirectory = join(root, "release");
 const packageMetadata = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as PackageMetadata;
 const version = packageMetadata.version;
+const userGuideSource = join(root, "USER_GUIDE.md");
+const userGuideAssetName = `DigitalDP-${version}-User-Guide.txt`;
 
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) {
   throw new Error("package.json requires a valid release version");
@@ -86,8 +88,9 @@ function macInfoPlist(): string {
 `;
 }
 
-function copyReleaseGuide(destination: string): void {
+function copyReleaseDocumentation(destination: string): void {
   copyFileSync(join(releaseDirectory, "README.md"), join(destination, "README.txt"));
+  copyFileSync(userGuideSource, join(destination, "USER-GUIDE.txt"));
 }
 
 function archiveDirectory(directory: string, archivePath: string, extension: ReleaseTarget["archiveExtension"]): void {
@@ -163,7 +166,7 @@ async function buildMacUniversal(stagingRoot: string): Promise<Archive> {
   run(["xcrun", "lipo", binaryPath, "-verify_arch", ...macUniversalArchitectures.map(({ lipoArchitecture }) => lipoArchitecture)], root);
   chmodSync(binaryPath, 0o755);
 
-  copyReleaseGuide(packageDirectory);
+  copyReleaseDocumentation(packageDirectory);
   return archivePackage(packageDirectory, macUniversalTarget.archiveExtension, stagingRoot);
 }
 
@@ -175,7 +178,7 @@ async function buildTarget(target: ReleaseTarget, stagingRoot: string): Promise<
   const binaryPath = join(packageDirectory, target.binaryName);
   await compileExecutable(target.target, binaryPath, target.id);
 
-  copyReleaseGuide(packageDirectory);
+  copyReleaseDocumentation(packageDirectory);
   return archivePackage(packageDirectory, target.archiveExtension, stagingRoot);
 }
 
@@ -192,8 +195,10 @@ try {
 
   for (const archiveName of retiredArchiveNames) rmSync(join(releaseDirectory, archiveName), { force: true });
   for (const archive of archives) copyFileSync(archive.archivePath, join(releaseDirectory, archive.archiveName));
-  const checksums = archives
-    .map((archive) => `${sha256(join(releaseDirectory, archive.archiveName))}  ${archive.archiveName}`)
+  copyFileSync(userGuideSource, join(releaseDirectory, userGuideAssetName));
+  const releaseAssetNames = [...archives.map(({ archiveName }) => archiveName), userGuideAssetName];
+  const checksums = releaseAssetNames
+    .map((assetName) => `${sha256(join(releaseDirectory, assetName))}  ${assetName}`)
     .join("\n");
   writeFileSync(join(releaseDirectory, "SHA256SUMS.txt"), `${checksums}\n`);
   console.log(`Created ${archives.length} standalone bundles in ${releaseDirectory}`);

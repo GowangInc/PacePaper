@@ -4,11 +4,14 @@ This folder receives the shareable DigitalDP bundles made by `bun run release:bu
 
 Each bundle is self-contained: it includes the DigitalDP executable and all browser interface files. Teachers and students do **not** need Bun, Node.js, source code, or an Internet connection to use the app on the host computer. It deliberately excludes every existing database, paper, submission, and reference resource.
 
+Start with `USER-GUIDE.txt`, included beside the app or executable in each bundle. It covers the complete teacher and student workflow, including paper creation, classroom sharing, timed sittings, submission, printing, backups, and troubleshooting. The same guide is also provided as a separate release download.
+
 ## Choose the correct download
 
 - `DigitalDP-*-macos-universal.zip` — **recommended for all supported Macs**; includes both Apple-silicon and Intel code
 - `DigitalDP-*-windows-x64.zip` — most Windows PCs
 - `DigitalDP-*-linux-x64.tar.gz` — 64-bit Linux PCs using glibc
+- `DigitalDP-*-User-Guide.txt` — the same full guide included inside each platform archive
 
 Extract the entire archive before starting it. Do not run an executable from inside the archive.
 

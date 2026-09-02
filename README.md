@@ -45,7 +45,7 @@ The release builder produces shareable, self-contained macOS, Windows, and Linux
 bun run release:build
 ```
 
-The generated archives and checksums are placed in `release/`. On macOS, use the `macos-universal` archive (recommended for both Apple-silicon and Intel Macs); extract the correct platform archive and start its DigitalDP app or executable. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See [`release/README.md`](release/README.md) for exact install, storage, signing, and classroom-sharing instructions.
+The generated archives, standalone user guide, and checksums are placed in `release/`. On macOS, use the `macos-universal` archive (recommended for both Apple-silicon and Intel Macs); extract the correct platform archive and start its DigitalDP app or executable. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the teacher-facing [`USER_GUIDE.md`](USER_GUIDE.md) for the complete classroom workflow and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
 
 The release keeps data outside the replaceable executable, in the per-user application-data location for the platform. It does not package a live database, paper library, student response, or protected reference material. For this requested demo release, the teacher login remains `admin` / `admin` and is reset on every launch; it is not suitable for real student data.
 
@@ -88,6 +88,7 @@ src/              Validation, authentication, paper model, and SQLite access
 examples/         Original sample manifests, portable bundles, and seed/build tools
 paper-authoring/  Structured paper-package authoring guidance
 release/          Standalone release guide and generated shareable bundles
+USER_GUIDE.md     Teacher and student operating guide
 resources/ib/     Retained official/public IB reference material and provenance
 resources/private/ Local copyrighted references excluded from Git
 research/         Assessment findings and product-design decisions

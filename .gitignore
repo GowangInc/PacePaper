@@ -22,4 +22,5 @@ resources/**/*.flac
 !examples/portable/sl-prose-choose-one.digitaldp-paper
 release/*.zip
 release/*.tar.gz
+release/DigitalDP-*-User-Guide.txt
 release/SHA256SUMS.txt
