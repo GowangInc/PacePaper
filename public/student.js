@@ -59,7 +59,7 @@ function authFrame() {
     <section class="auth-shell student-auth">
       <a class="back-link" href="/">← Workspaces</a>
       <div class="auth-panel">
-        <span class="product-mark" aria-hidden="true">DP</span>
+        <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
         <p class="eyebrow">Candidate sign in</p>
         <h1>Find your examination</h1>
         <p>Enter the class code provided by your teacher, then choose your name.</p>
@@ -217,7 +217,7 @@ function renderExamSelection(state) {
   const sessions = parseStudentSessionList(state);
   setView(`
     <section class="waiting-shell exam-selection-shell" data-session-signature="${sessionListSignature(sessions)}">
-      <header class="waiting-header"><span class="product-mark" aria-hidden="true">DP</span><span>DigitalDP familiarisation</span></header>
+      <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>DigitalDP familiarisation</span></header>
       <div class="waiting-content">
         <p class="eyebrow">Signed in</p>
         <h1 id="student-name"></h1>
@@ -292,7 +292,7 @@ function renderWaiting(state) {
   cleanupExam = undefined;
   setView(`
     <section class="waiting-shell" data-session-id="${state.session.id}">
-      <header class="waiting-header"><span class="product-mark" aria-hidden="true">DP</span><span>DigitalDP familiarisation</span></header>
+      <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>DigitalDP familiarisation</span></header>
       <div class="waiting-content">
         <p class="eyebrow">Signed in</p>
         <h1 id="student-name"></h1>
@@ -334,7 +334,7 @@ function renderSubmitted(state) {
   }
   setView(`
     <section class="submitted-shell" data-session-id="${state.session.id}">
-      <span class="product-mark" aria-hidden="true">DP</span>
+      <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
       <p class="eyebrow">Response received</p>
       <h1>Your examination is submitted</h1>
       <p id="submitted-paper"></p>

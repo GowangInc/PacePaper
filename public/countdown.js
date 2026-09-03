@@ -70,7 +70,7 @@ function renderUnavailable(title, message, actionLabel = "Return to teacher dash
     <section class="auth-shell">
       <a class="back-link" href="/admin">← Teacher dashboard</a>
       <div class="auth-panel">
-        <span class="product-mark" aria-hidden="true">DP</span>
+        <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
         <p class="eyebrow">Second-screen countdown</p>
         <h1 id="clock-error-title"></h1>
         <p id="clock-auth-message"></p>

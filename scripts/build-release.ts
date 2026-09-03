@@ -39,6 +39,9 @@ const packageMetadata = JSON.parse(readFileSync(join(root, "package.json"), "utf
 const version = packageMetadata.version;
 const userGuideSource = join(root, "USER_GUIDE.md");
 const userGuideAssetName = `DigitalDP-${version}-User-Guide.txt`;
+const appIconPng = join(root, "assets", "app-icon-master.png");
+const appIconIcns = join(root, "assets", "app-icon.icns");
+const appIconIco = join(root, "assets", "app-icon.ico");
 
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) {
   throw new Error("package.json requires a valid release version");
@@ -80,6 +83,7 @@ function macInfoPlist(): string {
   <key>CFBundleExecutable</key><string>DigitalDP</string>
   <key>CFBundleIdentifier</key><string>org.digitaldp.demo</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundleName</key><string>DigitalDP</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>${version}</string>
@@ -123,7 +127,18 @@ function sha256(path: string): string {
 async function compileExecutable(target: Bun.Build.CompileTarget, outputPath: string, label: string): Promise<void> {
   const result = await Bun.build({
     entrypoints: [join(root, "release-app.ts")],
-    compile: { target, outfile: outputPath },
+    compile: target.startsWith("bun-windows-")
+      ? {
+          target,
+          outfile: outputPath,
+          windows: {
+            icon: appIconIco,
+            title: "DigitalDP",
+            publisher: "DigitalDP",
+            description: "Local digital examination familiarisation",
+          },
+        }
+      : { target, outfile: outputPath },
   });
   if (!result.success) throw new Error(`Could not compile ${label}: ${result.logs.map((log) => log.message).join("; ")}`);
 }
@@ -143,8 +158,11 @@ function macAppBinaryPath(packageDirectory: string): string {
   const appDirectory = join(packageDirectory, "DigitalDP.app");
   const contentsDirectory = join(appDirectory, "Contents");
   const macOsDirectory = join(contentsDirectory, "MacOS");
+  const resourcesDirectory = join(contentsDirectory, "Resources");
   mkdirSync(macOsDirectory, { recursive: true });
+  mkdirSync(resourcesDirectory, { recursive: true });
   writeFileSync(join(contentsDirectory, "Info.plist"), macInfoPlist());
+  copyFileSync(appIconIcns, join(resourcesDirectory, "AppIcon.icns"));
   return join(macOsDirectory, macUniversalTarget.binaryName);
 }
 
@@ -177,6 +195,7 @@ async function buildTarget(target: ReleaseTarget, stagingRoot: string): Promise<
 
   const binaryPath = join(packageDirectory, target.binaryName);
   await compileExecutable(target.target, binaryPath, target.id);
+  if (target.id.startsWith("linux-")) copyFileSync(appIconPng, join(packageDirectory, "DigitalDP.png"));
 
   copyReleaseDocumentation(packageDirectory);
   return archivePackage(packageDirectory, target.archiveExtension, stagingRoot);

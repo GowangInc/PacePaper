@@ -4,7 +4,11 @@
 import adminCollections from "../public/admin-collections.js" with { type: "file" };
 import adminNetwork from "../public/admin-network.js" with { type: "file" };
 import admin from "../public/admin.js" with { type: "file" };
+import appIcon64 from "../public/app-icon-64.png" with { type: "file" };
+import appIcon192 from "../public/app-icon-192.png" with { type: "file" };
+import appIcon512 from "../public/app-icon-512.png" with { type: "file" };
 import app from "../public/app.js" with { type: "file" };
+import appleTouchIcon from "../public/apple-touch-icon.png" with { type: "file" };
 import classRosters from "../public/class-rosters.js" with { type: "file" };
 import contextMenuLock from "../public/context-menu-lock.js" with { type: "file" };
 import countdownModel from "../public/countdown-model.js" with { type: "file" };
@@ -18,6 +22,7 @@ import paperBuilder from "../public/paper-builder.js" with { type: "file" };
 import paperPreview from "../public/paper-preview.js" with { type: "file" };
 import presentationCss from "../public/presentation.css" with { type: "file" };
 import presentation from "../public/presentation.html" with { type: "file" };
+import siteWebmanifest from "../public/site.webmanifest" with { type: "file" };
 import studentConnection from "../public/student-connection.js" with { type: "file" };
 import studentWorkspace from "../public/student-workspace.png" with { type: "file" };
 import student from "../public/student.js" with { type: "file" };
@@ -31,7 +36,11 @@ export default {
   "public/admin-collections.js": adminCollections,
   "public/admin-network.js": adminNetwork,
   "public/admin.js": admin,
+  "public/app-icon-64.png": appIcon64,
+  "public/app-icon-192.png": appIcon192,
+  "public/app-icon-512.png": appIcon512,
   "public/app.js": app,
+  "public/apple-touch-icon.png": appleTouchIcon,
   "public/class-rosters.js": classRosters,
   "public/context-menu-lock.js": contextMenuLock,
   "public/countdown-model.js": countdownModel,
@@ -45,6 +54,7 @@ export default {
   "public/paper-preview.js": paperPreview,
   "public/presentation.css": presentationCss,
   "public/presentation.html": presentation,
+  "public/site.webmanifest": siteWebmanifest,
   "public/student-connection.js": studentConnection,
   "public/student-workspace.png": studentWorkspace,
   "public/student.js": student,

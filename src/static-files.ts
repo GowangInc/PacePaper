@@ -7,7 +7,7 @@ const PAGE_FILES: Readonly<Record<string, string>> = {
 };
 
 const PUBLIC_ASSET = /^\/[a-z0-9][a-z0-9._-]{0,127}$/u;
-const PUBLIC_EXTENSIONS = new Set(["css", "jpeg", "jpg", "js", "png", "webp"]);
+const PUBLIC_EXTENSIONS = new Set(["css", "jpeg", "jpg", "js", "png", "webmanifest", "webp"]);
 
 export function publicAssetPath(pathname: string): string | null {
   if (!PUBLIC_ASSET.test(pathname) || pathname.includes("..") || pathname.includes(".test.")) return null;

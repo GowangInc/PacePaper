@@ -9,6 +9,8 @@ describe("static application files", () => {
     expect(staticFilePath("/student")).toBe("public/index.html");
     expect(staticFilePath("/exam-audio.js")).toBe("public/exam-audio.js");
     expect(staticFilePath("/styles.css")).toBe("public/styles.css");
+    expect(staticFilePath("/app-icon-192.png")).toBe("public/app-icon-192.png");
+    expect(staticFilePath("/site.webmanifest")).toBe("public/site.webmanifest");
     expect(staticFilePath("/exam-audio.test.js")).toBeNull();
     expect(staticFilePath("/../server.ts")).toBeNull();
     expect(staticFilePath("/unknown.json")).toBeNull();

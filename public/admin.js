@@ -28,7 +28,7 @@ function authFrame(title, description, fields, actionLabel) {
     <section class="auth-shell">
       <a class="back-link" href="/">← Workspaces</a>
       <div class="auth-panel">
-        <span class="product-mark" aria-hidden="true">DP</span>
+        <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
         <p class="eyebrow">Teacher administration</p>
         <h1>${title}</h1>
         <p>${description}</p>
@@ -741,7 +741,7 @@ async function renderDashboard() {
   setView(`
     <div class="admin-shell">
       <aside class="admin-rail">
-        <a class="admin-brand" href="/"><span class="product-mark" aria-hidden="true">DP</span><span>DigitalDP</span></a>
+        <a class="admin-brand" href="/"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>DigitalDP</span></a>
         <nav aria-label="Dashboard sections">
           <button type="button" data-jump="#overview">Overview</button>
           <button type="button" data-jump="#classes">Classes</button>

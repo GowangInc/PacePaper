@@ -23,6 +23,7 @@ DigitalDP is an independent internal practice tool. It is not the IB Digital Exa
 - Page context menus suppressed on DigitalDP interface controls while normal clicks, keyboard controls, and text selection remain available
 - Event-driven teacher status updates that preserve active form controls, plus printable/PDF candidate submission review
 - Two original, exportable DigitalDP example papers for each of the 17 current Paper Builder courses, seeded automatically by the standalone app
+- Branded native application icons for macOS and Windows, plus Linux and browser icon assets
 
 ## Run locally
 
@@ -45,7 +46,7 @@ The release builder produces shareable, self-contained macOS, Windows, and Linux
 bun run release:build
 ```
 
-The generated archives, standalone user guide, and checksums are placed in `release/`. On macOS, use the `macos-universal` archive (recommended for both Apple-silicon and Intel Macs); extract the correct platform archive and start its DigitalDP app or executable. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the teacher-facing [`USER_GUIDE.md`](USER_GUIDE.md) for the complete classroom workflow and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
+The generated archives, standalone user guide, and checksums are placed in `release/`. On macOS, use the `macos-universal` archive (recommended for both Apple-silicon and Intel Macs); extract the correct platform archive and start its DigitalDP app or executable. The macOS bundle and Windows executable carry the DigitalDP icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the teacher-facing [`USER_GUIDE.md`](USER_GUIDE.md) for the complete classroom workflow and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
 
 The release keeps data outside the replaceable executable, in the per-user application-data location for the platform. It does not package a live database, teacher paper, student response, or protected reference material. It does include the 34 original DigitalDP example definitions and safely seeds them into the local paper library. For this requested demo release, the teacher login remains `admin` / `admin` and is reset on every launch; it is not suitable for real student data.
 
@@ -84,6 +85,7 @@ The wider course library contains 34 additional original examples under `example
 
 ```text
 public/           Browser interface
+assets/           Master and native application icons
 src/              Validation, authentication, paper model, and SQLite access
 examples/         Original sample manifests, portable bundles, and seed/build tools
 paper-authoring/  Structured paper-package authoring guidance

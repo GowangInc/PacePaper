@@ -98,7 +98,7 @@ function landing() {
   setView(`
     <section class="entry-shell">
       <header class="entry-brand">
-        <span class="product-mark" aria-hidden="true">DP</span>
+        <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
         <div>
           <p class="eyebrow">Digital examination familiarisation</p>
           <h1>Choose your workspace</h1>

@@ -174,7 +174,7 @@ export function mountExam(state, { onSubmitted }) {
     <div class="exam-shell">
       <header class="exam-topbar">
         <div class="exam-identity">
-          <span class="product-mark exam-mark" aria-hidden="true">DP</span>
+          <img class="product-mark exam-mark" src="/app-icon-192.png" alt="" width="192" height="192">
           <div><p id="exam-subject" class="eyebrow"></p><h1 id="exam-title"></h1></div>
         </div>
         <nav class="exam-tools" aria-label="Examination tools">

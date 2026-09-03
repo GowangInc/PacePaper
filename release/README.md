@@ -13,6 +13,8 @@ Start with `USER-GUIDE.txt`, included beside the app or executable in each bundl
 - `DigitalDP-*-linux-x64.tar.gz` — 64-bit Linux PCs using glibc
 - `DigitalDP-*-User-Guide.txt` — the same full guide included inside each platform archive
 
+The macOS application and Windows executable use the DigitalDP application icon. The Linux archive includes `DigitalDP.png` for launchers or desktop shortcuts.
+
 Extract the entire archive before starting it. Do not run an executable from inside the archive.
 
 On macOS, double-click `DigitalDP.app`. On Windows, double-click `DigitalDP.exe`. On Linux, make `DigitalDP` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting DigitalDP.

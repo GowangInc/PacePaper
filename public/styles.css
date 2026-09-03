@@ -132,17 +132,13 @@ legend {
 }
 
 .product-mark {
-  display: inline-grid;
+  display: inline-block;
   width: 2.75rem;
   height: 2.75rem;
   flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--color-accent);
-  color: var(--color-inverse);
-  font-size: var(--text-sm);
-  font-weight: 800;
-  letter-spacing: -0.04em;
+  border-radius: 22%;
+  object-fit: contain;
+  filter: drop-shadow(0 0.15rem 0.35rem rgb(7 29 73 / 18%));
 }
 
 .eyebrow {
