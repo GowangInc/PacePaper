@@ -120,7 +120,21 @@ export function chooseCountdownSession(sessions, requestedId = "") {
   const requested = sessions.find((session) => session.id === requestedId);
   if (requested) return requested;
   if (requestedId) return null;
-  return sessions.find((session) => session.status === "live") ?? null;
+  return sessions.find((session) => session.status === "live")
+    ?? sessions.find((session) => session.status === "draft")
+    ?? null;
+}
+
+export function synchronizeLinkedCountdown(config, session) {
+  if (!session || config.sessionId !== session.id) return config;
+  const startingNow = config.sessionStatus !== "live" && session.status === "live";
+  const hasStartedAt = typeof session.startedAt === "number" && Number.isFinite(session.startedAt);
+  return {
+    ...config,
+    sessionStatus: session.status,
+    endedAt: session.endedAt ?? null,
+    ...(startingNow && hasStartedAt ? { startAt: session.startedAt } : {}),
+  };
 }
 
 export function nextFiveMinuteStart(now) {

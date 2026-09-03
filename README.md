@@ -7,7 +7,7 @@ DigitalDP is an independent internal practice tool. It is not the IB Digital Exa
 ## Current capabilities
 
 - Temporary prototype teacher sign-in (`admin` / `admin`, reset on every startup)
-- Classes, class-code/name sign-in, candidate codes, individual extra time, and reversible roster archiving
+- Classes, class-code/name sign-in, candidate codes, individual extra time, CSV class-list import/export, and reversible roster archiving
 - Exam-first Paper Builder with researched 2026 presets plus a separate first-assessment-2027 Psychology preview
 - Live, independently scrollable paper preview while a teacher edits
 - One-file DigitalDP paper export and re-import, including explicitly authorized attachments
@@ -22,7 +22,7 @@ DigitalDP is an independent internal practice tool. It is not the IB Digital Exa
 - Rich-text, short-answer, single-choice, and expandable digital-ink responses with blank, ruled, or square-grid pages, Draw/Eraser tools, and Undo/Redo
 - Page context menus suppressed on DigitalDP interface controls while normal clicks, keyboard controls, and text selection remain available
 - Event-driven teacher status updates that preserve active form controls, plus printable/PDF candidate submission review
-- Two original, exportable DigitalDP example papers for each of the 17 current Paper Builder courses
+- Two original, exportable DigitalDP example papers for each of the 17 current Paper Builder courses, seeded automatically by the standalone app
 
 ## Run locally
 
@@ -47,7 +47,7 @@ bun run release:build
 
 The generated archives, standalone user guide, and checksums are placed in `release/`. On macOS, use the `macos-universal` archive (recommended for both Apple-silicon and Intel Macs); extract the correct platform archive and start its DigitalDP app or executable. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the teacher-facing [`USER_GUIDE.md`](USER_GUIDE.md) for the complete classroom workflow and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
 
-The release keeps data outside the replaceable executable, in the per-user application-data location for the platform. It does not package a live database, paper library, student response, or protected reference material. For this requested demo release, the teacher login remains `admin` / `admin` and is reset on every launch; it is not suitable for real student data.
+The release keeps data outside the replaceable executable, in the per-user application-data location for the platform. It does not package a live database, teacher paper, student response, or protected reference material. It does include the 34 original DigitalDP example definitions and safely seeds them into the local paper library. For this requested demo release, the teacher login remains `admin` / `admin` and is reset on every launch; it is not suitable for real student data.
 
 For a supervised LAN demo in a packaged release, sign in as the teacher, open **Classroom sharing** on the dashboard, select a detected private IPv4 address, and choose **Apply classroom sharing**. The displayed student sign-in address updates on both the dashboard and examination clock. Choose **This computer only** to stop sharing. The saved interface choice is retained beside the local database, but sharing starts disabled after each launch; it must be deliberately enabled for that session. Sharing cannot be changed while an examination is live.
 
@@ -70,7 +70,7 @@ For packaged releases, `PORT` may be set by an advanced launcher; otherwise Digi
 
 The `data/` directory is intentionally excluded from Git. Back up the live database separately before any real classroom pilot.
 
-Saved papers live in the current installation's SQLite library. A new paper defaults to local-only. To download one `.digitaldp-paper` file, the teacher must both classify it as teacher-authored or school-authorized and separately attest that the paper and every attachment may be copied. The visible import form restores that file into another installation with a new local paper ID. Classification alone never grants export permission.
+Saved papers live in the current installation's SQLite library. Papers made in the internal teacher builder can be downloaded as one `.digitaldp-paper` file and restored through the visible import form on another installation with a new local paper ID. Imported legacy or reference-only packages retain their existing export restrictions.
 
 The Exams section creates a draft session from the selected class and Paper Library record; the same paper can be reused for any number of separate sittings. Students sign in, choose the exact session, and wait until the teacher starts it. The room clock opens in a new tab for a projector or second screen. It follows the live session's authoritative start, reading period, and standard writing period; display-only timing or student-name corrections never change candidate timers or accounts. Candidate-specific extra time remains separate.
 
@@ -78,7 +78,7 @@ Teacher-facing **Remove** actions archive records instead of permanently deletin
 
 Four original demonstrations are ready to import from `examples/portable/`, with editable manifests, simulated candidate work, and teacher assessments under `examples/papers/`. These four audited bundles are the only `.digitaldp-paper` files allowlisted for Git; all other portable bundles are ignored. See `examples/README.md` for the exact coverage and rebuild commands.
 
-The wider course library contains 34 additional original examples under `examples/course-samples/`: two for every course currently shown by the Paper Builder. Run `bun run samples:build` to regenerate their editable manifests and ignored portable files, then `bun run samples:seed` to add any missing examples to the active local teacher library. These are custom familiarisation papers with integrated response areas, not official IB session papers.
+The wider course library contains 34 additional original examples under `examples/course-samples/`: two for every course currently shown by the Paper Builder. Run `bun run samples:build` to regenerate their editable manifests and ignored portable files, then `bun run samples:seed` to add any missing examples to a source-development library. The standalone app seeds these examples automatically. These are custom familiarisation papers with integrated response areas, not official IB session papers.
 
 ## Project structure
 

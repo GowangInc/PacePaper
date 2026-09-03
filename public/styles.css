@@ -564,29 +564,25 @@ legend {
   margin-top: var(--space-4);
 }
 
+.class-roster-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.class-roster-links a {
+  color: var(--color-accent-strong);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
 .paper-builder {
   padding: 0;
 }
 
 .paper-builder [hidden] {
   display: none !important;
-}
-
-.paper-builder .builder-attestation {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-3);
-  border-left: 3px solid var(--color-warning);
-  background: var(--color-warning-soft);
-  padding: var(--space-3);
-  line-height: 1.45;
-}
-
-.paper-builder .builder-attestation input {
-  width: 1.15rem;
-  min-height: 1.15rem;
-  margin: 0.15rem 0 0;
 }
 
 #builder-exam-setup {
@@ -846,12 +842,6 @@ legend {
   overflow-wrap: anywhere;
   font-size: var(--text-sm);
   font-weight: 700;
-}
-
-.paper-preview-rights {
-  margin: var(--space-2) 0 0;
-  color: #64748b;
-  font-size: var(--text-xs);
 }
 
 .paper-preview-instructions,

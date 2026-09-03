@@ -142,6 +142,72 @@ describe("student roster and account lookup", () => {
   });
 });
 
+describe("class-list imports", () => {
+  test("creates and idempotently updates classes and students", () => {
+    const schoolClass = database.createClass("Import Original", "IMPORT-ONE");
+    database.createStudent({
+      classId: schoolClass.id,
+      name: "Before Import",
+      candidateCode: "I-001",
+      extraMinutes: 0,
+    });
+
+    expect(database.importClassRosters([
+      {
+        name: "Import Renamed",
+        code: "IMPORT-ONE",
+        students: [
+          { name: "After Import", candidateCode: "I-001", extraMinutes: 15 },
+          { name: "New Student", candidateCode: "I-002", extraMinutes: 0 },
+        ],
+      },
+      { name: "Empty Imported Class", code: "IMPORT-TWO", students: [] },
+    ])).toEqual({
+      classesCreated: 1,
+      classesUpdated: 1,
+      classesUnchanged: 0,
+      studentsCreated: 1,
+      studentsUpdated: 1,
+      studentsUnchanged: 0,
+    });
+
+    expect(database.listClasses().find(({ code }) => code === "IMPORT-ONE")?.name).toBe("Import Renamed");
+    expect(database.listStudents().filter(({ classId }) => classId === schoolClass.id)).toEqual([
+      expect.objectContaining({ name: "After Import", candidateCode: "I-001", extraMinutes: 15 }),
+      expect.objectContaining({ name: "New Student", candidateCode: "I-002", extraMinutes: 0 }),
+    ]);
+    expect(database.importClassRosters([{
+      name: "Import Renamed",
+      code: "IMPORT-ONE",
+      students: [
+        { name: "After Import", candidateCode: "I-001", extraMinutes: 15 },
+        { name: "New Student", candidateCode: "I-002", extraMinutes: 0 },
+      ],
+    }])).toMatchObject({ classesUnchanged: 1, studentsUnchanged: 2 });
+  });
+
+  test("rejects removed identities and rolls back the entire file", () => {
+    const schoolClass = database.createClass("Archived Import", "IMPORT-ARCHIVE");
+    const removedStudent = database.createStudent({
+      classId: schoolClass.id,
+      name: "Removed Student",
+      candidateCode: "R-001",
+      extraMinutes: 0,
+    });
+    database.archiveStudent(removedStudent.id);
+
+    expect(() => database.importClassRosters([
+      { name: "Must Roll Back", code: "IMPORT-ROLLBACK", students: [] },
+      {
+        name: "Archived Import",
+        code: "IMPORT-ARCHIVE",
+        students: [{ name: "Removed Student", candidateCode: "R-001", extraMinutes: 0 }],
+      },
+    ])).toThrow("Restore that student before importing");
+    expect(database.listClasses().some(({ code }) => code === "IMPORT-ROLLBACK")).toBeFalse();
+  });
+});
+
 describe("paper replacement safety", () => {
   const paperManifest = (title: string) => parseManifest({
     version: 1,

@@ -7,6 +7,7 @@ import {
   nextFiveMinuteStart,
   parseStudentNames,
   resolveStartAt,
+  synchronizeLinkedCountdown,
 } from "./countdown-model.js";
 
 describe("second-screen countdown", () => {
@@ -66,7 +67,7 @@ describe("second-screen countdown", () => {
     expect(chooseCountdownSession(sessions, "ended")?.id).toBe("ended");
     expect(chooseCountdownSession(sessions)?.id).toBe("live");
     expect(chooseCountdownSession(sessions, "missing")).toBeNull();
-    expect(chooseCountdownSession([{ id: "draft", status: "draft" }])).toBeNull();
+    expect(chooseCountdownSession([{ id: "draft", status: "draft" }])?.id).toBe("draft");
   });
 
   test("does not invent a running clock for an unstarted or manually ended session", () => {
@@ -86,6 +87,32 @@ describe("second-screen countdown", () => {
       phase: "standard-ended",
       label: "Standard time is up",
     });
+  });
+
+  test("starts a customised linked display only when the teacher starts its exam", () => {
+    const adjustedDraft = {
+      sessionId: "session-1",
+      sessionStatus: "draft",
+      title: "Adjusted room title",
+      startAt: 2_000,
+      readingTimeMinutes: 10,
+      durationMinutes: 80,
+    };
+    expect(countdownPhase(adjustedDraft, 10_000)).toMatchObject({ phase: "ready" });
+    const started = synchronizeLinkedCountdown(adjustedDraft, {
+      id: "session-1",
+      status: "live",
+      startedAt: 12_345,
+      endedAt: null,
+    });
+    expect(started).toMatchObject({
+      sessionStatus: "live",
+      title: "Adjusted room title",
+      startAt: 12_345,
+      readingTimeMinutes: 10,
+      durationMinutes: 80,
+    });
+    expect(countdownPhase(started, 12_345)).toMatchObject({ phase: "reading", remainingMs: 600_000 });
   });
 
   test("names writing as the next phase before a zero-reading exam", () => {

@@ -20,6 +20,7 @@ import {
   getStudent,
   getStudentExam,
   incrementAudioPlay,
+  importClassRosters,
   listClasses,
   listExamSessions,
   listPaperAssets,
@@ -41,6 +42,7 @@ import {
   type Role,
   type StudentExamRow,
 } from "./src/db.ts";
+import { blankClassRosterCsv, encodeClassRosterCsv, parseClassRosterCsv } from "./src/class-rosters.ts";
 import {
   allowLoginAttempt,
   assertSameOrigin,
@@ -125,6 +127,7 @@ let network = demoNetworkConfig({
 const hostname = network.bindHostname;
 const RESPONSE_BODY_BYTES = 12_000_000;
 const DEADLINE_GRACE_MS = 5_000;
+const CLASS_ROSTER_BYTES = 1_000_000;
 const audioPlayback = new AudioPlaybackTickets();
 
 function parseTestReadingSeconds(raw: string | undefined): number | null {
@@ -246,6 +249,36 @@ async function jsonBody(request: Request, maxBytes = 1_000_000): Promise<Record<
     if (error instanceof HttpError) throw error;
     throw new HttpError("Request body must be valid JSON", 400);
   }
+}
+
+async function classRosterUpload(request: Request): Promise<string> {
+  const length = Number(request.headers.get("content-length") ?? 0);
+  if (length > CLASS_ROSTER_BYTES + 100_000) throw new HttpError("Class-list CSV is too large", 413);
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    throw new HttpError("Class-list upload is invalid", 400);
+  }
+  const file = form.get("classRoster");
+  if (!(file instanceof File) || file.size === 0) throw new HttpError("Choose a class-list CSV file", 400);
+  if (file.size > CLASS_ROSTER_BYTES) throw new HttpError("Class-list CSV is too large", 413);
+  if (!file.name.toLowerCase().endsWith(".csv")) throw new HttpError("Choose a CSV file", 400);
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
+  } catch {
+    throw new HttpError("Class-list CSV must use UTF-8 text", 400);
+  }
+}
+
+function csvDownload(filename: string, contents: string): Response {
+  return responseWithSecurity(new Response(contents, {
+    headers: {
+      "Cache-Control": "no-store",
+      "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      "Content-Type": "text/csv; charset=utf-8",
+    },
+  }));
 }
 
 function clientAddress(request: Request, server: Server<SocketData>): string {
@@ -518,6 +551,23 @@ async function handleApi(
       },
       serverTime: Date.now(),
     });
+  }
+
+  if (path === "/api/admin/class-rosters/template" && method === "GET") {
+    requireRole(request, "admin");
+    return csvDownload("DigitalDP-class-list-template.csv", blankClassRosterCsv());
+  }
+
+  if (path === "/api/admin/class-rosters/export" && method === "GET") {
+    requireRole(request, "admin");
+    return csvDownload("DigitalDP-class-lists.csv", encodeClassRosterCsv(listClasses(), listStudents()));
+  }
+
+  if (path === "/api/admin/class-rosters/import" && method === "POST") {
+    requireRole(request, "admin");
+    const result = importClassRosters(parseClassRosterCsv(await classRosterUpload(request)));
+    publish(server, "admin", "admin-state");
+    return json(result, 201);
   }
 
   if (path === "/api/admin/network" && method === "GET") {

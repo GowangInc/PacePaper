@@ -22,6 +22,7 @@ mock.module("/admin-collections.js", () => ({
 }));
 mock.module("/ink-canvas.js", () => ({ renderInkSubmission() {} }));
 mock.module("/admin-network.js", () => ({ mountAdminNetwork() {} }));
+mock.module("/class-rosters.js", () => ({ mountClassRosterTransfer() {} }));
 mock.module("/paper-builder.js", () => ({ mountPaperBuilder() {} }));
 mock.module("/student-connection.js", () => ({ mountStudentConnection() {} }));
 
@@ -35,8 +36,9 @@ describe("teacher dashboard presentation", () => {
     expect(source).toContain("setInterval(refreshPresence, 10_000)");
   });
 
-  test("keeps provenance in the teacher library but omits it from candidate papers", () => {
-    expect(source).toContain("paper.sourceClassification");
+  test("omits source-rights status from the teacher library and candidate papers", () => {
+    expect(source).not.toContain("rightsLabel");
+    expect(source).not.toContain("rights not recorded");
     expect(source).not.toContain('appendMetadata(metadata, "Source status"');
   });
 

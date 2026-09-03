@@ -5,6 +5,7 @@ import adminCollections from "../public/admin-collections.js" with { type: "file
 import adminNetwork from "../public/admin-network.js" with { type: "file" };
 import admin from "../public/admin.js" with { type: "file" };
 import app from "../public/app.js" with { type: "file" };
+import classRosters from "../public/class-rosters.js" with { type: "file" };
 import contextMenuLock from "../public/context-menu-lock.js" with { type: "file" };
 import countdownModel from "../public/countdown-model.js" with { type: "file" };
 import countdownCss from "../public/countdown.css" with { type: "file" };
@@ -31,6 +32,7 @@ export default {
   "public/admin-network.js": adminNetwork,
   "public/admin.js": admin,
   "public/app.js": app,
+  "public/class-rosters.js": classRosters,
   "public/context-menu-lock.js": contextMenuLock,
   "public/countdown-model.js": countdownModel,
   "public/countdown.css": countdownCss,

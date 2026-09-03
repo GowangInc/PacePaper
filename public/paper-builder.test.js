@@ -25,8 +25,6 @@ function builderForm(values = {}) {
     "#builder-reading-time": { value: "5" },
     "#builder-maximum-marks": { value: "80" },
     "#builder-instructions": { value: "Answer every question." },
-    "#builder-source-classification": { value: "unknown-local-only" },
-    "#builder-export-authorized": { checked: false },
     ...values,
   };
   return { querySelector: (selector) => controls[selector] };
@@ -113,15 +111,10 @@ describe("Paper Builder exam presets", () => {
     });
   });
 
-  test("requires a separate explicit attestation for portable export", async () => {
+  test("treats papers built in the internal teacher workflow as portable school papers", async () => {
     const question = [{ label: "Question 1", prompt: "Explain your reasoning.", type: "short", mediaFiles: [] }];
-    const local = JSON.parse(await packageData(builderForm(), question).getAll("packageFiles")[0].text());
-    const authorized = JSON.parse(await packageData(builderForm({
-      "#builder-source-classification": { value: "teacher-authored" },
-      "#builder-export-authorized": { checked: true },
-    }), question).getAll("packageFiles")[0].text());
-    expect(local).toMatchObject({ sourceClassification: "unknown-local-only", exportAuthorized: false });
-    expect(authorized).toMatchObject({ sourceClassification: "teacher-authored", exportAuthorized: true });
+    const manifest = JSON.parse(await packageData(builderForm(), question).getAll("packageFiles")[0].text());
+    expect(manifest).toMatchObject({ sourceClassification: "school-authorized", exportAuthorized: true });
   });
 
   test("every course exposes valid level-specific paper choices", () => {

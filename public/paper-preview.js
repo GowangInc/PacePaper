@@ -118,7 +118,7 @@ export function createPaperPreview(container) {
       metadata("Session", model.sessionLabel),
     );
     if (model.subjectWeightPercent) meta.append(metadata("Subject weight", `${model.subjectWeightPercent}%`));
-    header.append(meta, node("p", "paper-preview-rights", model.sourceClassificationLabel));
+    header.append(meta);
     paper.append(header);
 
     const instructions = node("section", "paper-preview-instructions");

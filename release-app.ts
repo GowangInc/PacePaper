@@ -9,6 +9,8 @@ import {
 // source development uses `server.ts`, so the packaged data/network behavior
 // does not leak into `bun run start` or `bun run dev`.
 configureReleaseDatabase();
+const { courseSampleSeedSummary, seedCourseSamplePapers } = await import("./src/course-sample-seed.ts");
+console.log(courseSampleSeedSummary(seedCourseSamplePapers()));
 // Keep a release listening surface ready for a teacher-selected classroom
 // address; server-side authority checks keep it loopback-only until then.
 process.env.DIGITALDP_MANAGED_NETWORK = "1";

@@ -6,6 +6,7 @@ import {
   formatCountdown,
   parseStudentNames,
   resolveStartAt,
+  synchronizeLinkedCountdown,
 } from "/countdown-model.js";
 import { mountStudentConnection } from "/student-connection.js";
 
@@ -165,9 +166,12 @@ function configFromForm() {
     setStatus("Choose a valid start date and time.", "error");
     return null;
   }
+  const sessionId = document.querySelector("#clock-session").value;
+  const linkedSession = adminState.sessions.find((session) => session.id === sessionId);
   return {
-    sessionId: document.querySelector("#clock-session").value,
-    sessionStatus: "custom",
+    sessionId,
+    sessionStatus: linkedSession?.status ?? "custom",
+    endedAt: linkedSession?.endedAt ?? null,
     title,
     subtitle: document.querySelector("#clock-subtitle-input").value.trim(),
     startAt,
@@ -239,7 +243,7 @@ function renderTick() {
     value.textContent = "--:--:--";
     value.dateTime = "";
     value.setAttribute("aria-label", "Ready to start");
-    document.querySelector("#clock-next").textContent = "Start the exam in the teacher dashboard, or set a display start time here.";
+    document.querySelector("#clock-next").textContent = "Start the exam in the teacher dashboard.";
   } else {
     value.textContent = formatCountdown(state.remainingMs);
     value.dateTime = `PT${Math.ceil(state.remainingMs / 1_000)}S`;
@@ -327,9 +331,23 @@ async function synchronizeLifecycle() {
           "success",
         );
       }
-    } else if (previous && previous.status !== current.status) {
+    } else if (displayConfig.sessionStatus !== current.status) {
+      const previousStartAt = displayConfig.startAt;
+      const synchronized = synchronizeLinkedCountdown(displayConfig, current);
+      applyDisplay(synchronized, true);
+      if (current.status === "live" && synchronized.startAt !== previousStartAt) {
+        const startInput = document.querySelector("#clock-start-input");
+        startInput.value = toDateTimeLocal(synchronized.startAt);
+        startInput.dataset.loadedValue = startInput.value;
+        startInput.dataset.exactTimestamp = String(synchronized.startAt);
+      }
       document.querySelector("#clock-source-status").textContent = `Display adjusted by teacher · saved exam ${statusLabel(current.status).toLowerCase()}`;
-      setStatus("The saved exam status changed. Your adjusted display was preserved.", "info");
+      setStatus(
+        current.status === "live"
+          ? "The teacher started the exam. Reading or writing time has now begun; your other display adjustments were preserved."
+          : "The saved exam status changed. Your display adjustments were preserved.",
+        "info",
+      );
     }
   } catch (error) {
     document.querySelector("#clock-display")?.setAttribute("data-disconnected", "true");
@@ -414,7 +432,7 @@ function renderClockShell() {
         <aside id="clock-controls" class="clock-controls" aria-labelledby="clock-controls-title">
           <p class="eyebrow">Teacher controls</p>
           <h1 id="clock-controls-title">Examination clock</h1>
-          <p>Choose an exam to load its saved schedule, then correct this display if needed.</p>
+          <p>Choose an exam to load its saved schedule, then correct this display if needed. A saved exam stays ready until the teacher selects Start exam.</p>
           <form id="clock-form" class="utility-form" method="post">
             <fieldset>
               <legend>Display settings</legend>

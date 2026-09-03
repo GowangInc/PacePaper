@@ -2,7 +2,7 @@
 
 This folder receives the shareable DigitalDP bundles made by `bun run release:build`.
 
-Each bundle is self-contained: it includes the DigitalDP executable and all browser interface files. Teachers and students do **not** need Bun, Node.js, source code, or an Internet connection to use the app on the host computer. It deliberately excludes every existing database, paper, submission, and reference resource.
+Each bundle is self-contained: it includes the DigitalDP executable and all browser interface files. Teachers and students do **not** need Bun, Node.js, source code, or an Internet connection to use the app on the host computer. It excludes every existing database, teacher paper, submission, and reference resource, while safely adding the 34 original DigitalDP example papers to the local library.
 
 Start with `USER-GUIDE.txt`, included beside the app or executable in each bundle. It covers the complete teacher and student workflow, including paper creation, classroom sharing, timed sittings, submission, printing, backups, and troubleshooting. The same guide is also provided as a separate release download.
 
@@ -17,7 +17,7 @@ Extract the entire archive before starting it. Do not run an executable from ins
 
 On macOS, double-click `DigitalDP.app`. On Windows, double-click `DigitalDP.exe`. On Linux, make `DigitalDP` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting DigitalDP.
 
-The first demo release is intentionally unsigned. macOS may require Control-click → **Open**; Windows may show a SmartScreen warning. Sign/notarize the final distribution before use beyond an internal demo.
+The demo release is intentionally unsigned. macOS may require Control-click → **Open**; Windows may show a SmartScreen warning. Sign/notarize the final distribution before use beyond an internal demo.
 
 ## Demo boundaries
 

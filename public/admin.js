@@ -13,6 +13,7 @@ import {
 } from "/admin-collections.js";
 import { renderInkSubmission } from "/ink-canvas.js";
 import { mountAdminNetwork } from "/admin-network.js";
+import { mountClassRosterTransfer } from "/class-rosters.js";
 import { mountPaperBuilder } from "/paper-builder.js";
 import { mountStudentConnection } from "/student-connection.js";
 
@@ -123,13 +124,7 @@ function renderPapers(state) {
     const title = document.createElement("strong");
     title.textContent = paper.title;
     const metadata = document.createElement("small");
-    const rightsLabel = ({
-      "teacher-authored": "teacher-authored",
-      "school-authorized": "school-authorized",
-      "official-public-reference": "official reference",
-      "unknown-local-only": "local-only",
-    })[paper.sourceClassification] ?? "rights not recorded";
-    metadata.textContent = `${paper.subjectLabel ?? humanSubject(paper.subject)} · ${paper.level} · ${paper.paper} · ${rightsLabel}`;
+    metadata.textContent = `${paper.subjectLabel ?? humanSubject(paper.subject)} · ${paper.level} · ${paper.paper}`;
     main.append(title, metadata);
     const actions = document.createElement("div");
     actions.className = "paper-list-actions";
@@ -139,6 +134,7 @@ function renderPapers(state) {
       : `${paper.durationMinutes} min`;
     const canExport = ["teacher-authored", "school-authorized"].includes(paper.sourceClassification)
       && paper.exportAuthorized;
+    actions.append(duration);
     if (canExport) {
       const exportLink = document.createElement("a");
       exportLink.className = "quiet-action compact";
@@ -146,17 +142,7 @@ function renderPapers(state) {
       exportLink.download = "";
       exportLink.textContent = "Export";
       exportLink.setAttribute("aria-label", `Export ${paper.title}`);
-      actions.append(duration, exportLink);
-    } else {
-      const localOnly = document.createElement("small");
-      localOnly.className = "paper-local-only";
-      localOnly.textContent = ["teacher-authored", "school-authorized"].includes(paper.sourceClassification)
-        ? "Export not authorized"
-        : "Export blocked";
-      localOnly.title = paper.exportAuthorized
-        ? "Reference-only and local-only sources stay on this installation"
-        : "Portable export requires a separate teacher attestation";
-      actions.append(duration, localOnly);
+      actions.append(exportLink);
     }
     row.append(main, actions);
     list.append(row);
@@ -820,6 +806,7 @@ async function renderDashboard() {
                 <button type="submit">Add student</button>
               </fieldset>
             </form>
+            <div id="class-roster-transfer"></div>
           </div>
         </section>
 
@@ -919,6 +906,11 @@ async function renderDashboard() {
   mountStudentConnection(document, { origin: studentConnectionOrigin });
   classroomNetworkControls = mountAdminNetwork(document.querySelector("#classroom-network"), {
     request: requestClassroomNetwork,
+  });
+  mountClassRosterTransfer(document.querySelector("#class-roster-transfer"), {
+    request: api,
+    onImported: () => refreshState(true),
+    notify: announce,
   });
   mountPaperBuilder(document.querySelector("#paper-builder"), addBuiltPaper);
   bindDashboard();

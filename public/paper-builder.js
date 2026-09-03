@@ -416,13 +416,6 @@ function previewFile(file) {
   return { name: file.name, kind, file, ...(kind === "audio" ? { maxPlays: AUDIO_PLAY_LIMIT } : {}) };
 }
 
-const SOURCE_CLASSIFICATION_LABELS = {
-  "teacher-authored": "Teacher-authored material",
-  "school-authorized": "School-authorized or licensed material",
-  "official-public-reference": "Official public specimen · reference only",
-  "unknown-local-only": "Unknown rights · local-only",
-};
-
 export function paperPreviewData(form, questions) {
   const selection = selectedExam(form);
   if (!selection) return null;
@@ -432,7 +425,6 @@ export function paperPreviewData(form, questions) {
     ...(allowedMaterials.has("pdf") ? [...form.querySelector("#builder-pdf").files].map(previewFile) : []),
     ...(allowedMaterials.has("audio") ? [...form.querySelector("#builder-audio").files].map(previewFile) : []),
   ];
-  const classification = form.querySelector("#builder-source-classification").value;
   return {
     title: form.querySelector("#builder-title").value.trim(),
     subject: course.label,
@@ -444,7 +436,6 @@ export function paperPreviewData(form, questions) {
     maximumMarks: integerOrUndefined(form.querySelector("#builder-maximum-marks").value),
     subjectWeightPercent: valueForLevel(paper, "subjectWeightPercent", level),
     instructions: form.querySelector("#builder-instructions").value.trim(),
-    sourceClassificationLabel: SOURCE_CLASSIFICATION_LABELS[classification] ?? classification,
     sourceText: allowedMaterials.has("text") ? form.querySelector("#builder-source-text").value.trim() : "",
     sharedResources,
     questions: questions.map((question) => ({
@@ -566,8 +557,8 @@ export function packageData(form, questions) {
     version: 1,
     assessmentSession: presetMatches ? examSelection.assessmentSession : examSelection.assessmentSession === "custom" ? "custom" : `custom-from-${examSelection.assessmentSession}`,
     ...(presetMatches ? { examProfileId: `${examSelection.assessmentSession}:${examSelection.course.value}:${examSelection.level}:${examSelection.paper.value}` } : {}),
-    sourceClassification: form.querySelector("#builder-source-classification").value,
-    exportAuthorized: form.querySelector("#builder-export-authorized").checked,
+    sourceClassification: "school-authorized",
+    exportAuthorized: true,
     title: form.querySelector("#builder-title").value.trim(),
     subject: examSelection.course.value,
     subjectLabel: examSelection.course.label,
@@ -675,15 +666,6 @@ export function mountPaperBuilder(container, onSubmit) {
               </div>
               <p class="form-help">Reading time runs first and does not use a student's extra writing time. Enter 0 when the paper has no separate reading period.</p>
               <label for="builder-instructions">Student instructions</label><textarea id="builder-instructions" rows="3" required maxlength="20000"></textarea>
-              <label for="builder-source-classification">Question/source rights status</label>
-              <select id="builder-source-classification" required>
-                <option value="unknown-local-only">Unknown or restricted — local-only</option>
-                <option value="teacher-authored">Teacher-authored</option>
-                <option value="school-authorized">School-authorized or licensed</option>
-                <option value="official-public-reference">Official public specimen — reference only</option>
-              </select>
-              <p class="form-help">This records provenance; it does not grant reuse rights. Keep restricted or uncertain materials on the private school server.</p>
-              <label id="builder-export-attestation" class="builder-attestation" hidden><input id="builder-export-authorized" type="checkbox"><span>I confirm that this paper and every attachment may be copied into a portable DigitalDP export.</span></label>
               <div class="builder-material" data-material="pdf">
                 <label for="builder-pdf"><span id="builder-pdf-label">Paper-wide PDFs</span> <small id="builder-pdf-status">optional</small></label><input id="builder-pdf" type="file" accept="application/pdf,.pdf" multiple>
                 <small>Attach the question paper, source booklet, and any clean data or formula booklet students need throughout the paper.</small>
@@ -728,16 +710,7 @@ export function mountPaperBuilder(container, onSubmit) {
   const paper = form.querySelector("#builder-paper");
   const setup = form.querySelector("#builder-exam-setup");
   const preview = createPaperPreview(form.querySelector("#builder-preview-scroll"));
-  const rights = form.querySelector("#builder-source-classification");
-  const exportAttestation = form.querySelector("#builder-export-attestation");
-  const exportAuthorized = form.querySelector("#builder-export-authorized");
   let previewFrame;
-
-  function updateExportAttestation() {
-    const eligible = ["teacher-authored", "school-authorized"].includes(rights.value);
-    exportAttestation.hidden = !eligible;
-    if (!eligible) exportAuthorized.checked = false;
-  }
 
   function updatePreview() {
     cancelAnimationFrame(previewFrame);
@@ -956,7 +929,6 @@ export function mountPaperBuilder(container, onSubmit) {
   assessmentSession.addEventListener("change", populateSubjects);
   level.addEventListener("change", populatePapers);
   paper.addEventListener("change", applyExam);
-  rights.addEventListener("change", updateExportAttestation);
   form.addEventListener("input", updatePreview);
   form.addEventListener("change", updatePreview);
   form.querySelector("#builder-add-question").addEventListener("click", () => {
@@ -977,7 +949,6 @@ export function mountPaperBuilder(container, onSubmit) {
     try {
       await onSubmit(packageData(form, questions));
       form.reset();
-      updateExportAttestation();
       populateSubjects();
       subject.focus();
     } catch (caught) {

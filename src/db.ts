@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { Database } from "bun:sqlite";
+import type { ClassRosterInput } from "./class-rosters.ts";
 import { initializeDatabaseSchema } from "./db-schema.ts";
 import { AUDIO_PLAY_LIMIT, type ImportedPaper, type PaperManifest } from "./papers.ts";
 
@@ -51,6 +52,15 @@ export interface StudentRow {
   lastSeenAt: number | null;
   createdAt: number;
   archivedAt: number | null;
+}
+
+export interface ClassRosterImportResult {
+  classesCreated: number;
+  classesUpdated: number;
+  classesUnchanged: number;
+  studentsCreated: number;
+  studentsUpdated: number;
+  studentsUnchanged: number;
 }
 
 export interface PaperRow {
@@ -365,6 +375,77 @@ export function listStudents(archived = false): StudentRow[] {
      ORDER BY students.name COLLATE NOCASE
   `).all({ archived: Number(archived) });
 }
+
+export const importClassRosters = db.transaction((rosters: ClassRosterInput[]): ClassRosterImportResult => {
+  const result: ClassRosterImportResult = {
+    classesCreated: 0,
+    classesUpdated: 0,
+    classesUnchanged: 0,
+    studentsCreated: 0,
+    studentsUpdated: 0,
+    studentsUnchanged: 0,
+  };
+
+  for (const roster of rosters) {
+    const existingClass = db.query<ClassRow, { code: string }>(`
+      SELECT id, name, code, created_at AS createdAt, archived_at AS archivedAt
+        FROM classes
+       WHERE code = $code COLLATE NOCASE
+    `).get({ code: roster.code });
+    if (existingClass?.archivedAt !== null && existingClass?.archivedAt !== undefined) {
+      throw new Error(`Class code ${roster.code} belongs to a removed class. Restore it before importing`);
+    }
+
+    let classId: string;
+    if (!existingClass) {
+      const created = createClass(roster.name, roster.code);
+      classId = created.id;
+      result.classesCreated += 1;
+    } else {
+      classId = existingClass.id;
+      if (existingClass.name !== roster.name) {
+        db.query("UPDATE classes SET name = $name WHERE id = $id").run({ id: classId, name: roster.name });
+        result.classesUpdated += 1;
+      } else {
+        result.classesUnchanged += 1;
+      }
+    }
+
+    for (const student of roster.students) {
+      const existingStudent = db.query<{
+        id: string;
+        name: string;
+        extraMinutes: number;
+        archivedAt: number | null;
+      }, { classId: string; candidateCode: string }>(`
+        SELECT id, name, extra_minutes AS extraMinutes, archived_at AS archivedAt
+          FROM students
+         WHERE class_id = $classId AND candidate_code = $candidateCode COLLATE NOCASE
+      `).get({ classId, candidateCode: student.candidateCode });
+      if (existingStudent?.archivedAt !== null && existingStudent?.archivedAt !== undefined) {
+        throw new Error(
+          `Candidate code ${student.candidateCode} belongs to a removed student in class ${roster.code}. Restore that student before importing`,
+        );
+      }
+
+      if (!existingStudent) {
+        createStudent({ classId, ...student });
+        result.studentsCreated += 1;
+      } else if (existingStudent.name !== student.name || existingStudent.extraMinutes !== student.extraMinutes) {
+        db.query(`
+          UPDATE students
+             SET name = $name, extra_minutes = $extraMinutes
+           WHERE id = $id
+        `).run({ id: existingStudent.id, name: student.name, extraMinutes: student.extraMinutes });
+        result.studentsUpdated += 1;
+      } else {
+        result.studentsUnchanged += 1;
+      }
+    }
+  }
+
+  return result;
+});
 
 export function getStudent(studentId: string): StudentRow | null {
   return db.query<StudentRow, { studentId: string }>(`

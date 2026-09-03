@@ -10,6 +10,16 @@ import {
 } from "./release-runtime.ts";
 
 describe("desktop release runtime", () => {
+  test("seeds bundled examples after choosing the release database and before starting the server", async () => {
+    const source = await Bun.file(new URL("../release-app.ts", import.meta.url)).text();
+    const configure = source.indexOf("configureReleaseDatabase();");
+    const seed = source.indexOf("seedCourseSamplePapers()");
+    const server = source.indexOf('await import("./server.ts")');
+    expect(configure).toBeGreaterThanOrEqual(0);
+    expect(seed).toBeGreaterThan(configure);
+    expect(server).toBeGreaterThan(seed);
+  });
+
   test("uses a conventional writable per-user data directory and permits an override", () => {
     expect(releaseDataDirectory({}, "darwin", "/Users/demo")).toBe("/Users/demo/Library/Application Support/DigitalDP");
     expect(releaseDataDirectory({}, "win32", "C:/Users/demo")).toBe("C:/Users/demo/AppData/Local/DigitalDP");

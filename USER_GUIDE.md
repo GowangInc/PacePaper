@@ -1,6 +1,6 @@
 # DigitalDP quick user guide
 
-This guide is for the `0.1.0-demo.1` standalone classroom demo. DigitalDP runs on one teacher computer; students connect through the school network.
+This guide is for the `0.1.0-demo.2` standalone classroom demo. DigitalDP runs on one teacher computer; students connect through the school network.
 
 ## Run a classroom exam
 
@@ -54,6 +54,23 @@ Open **Classes and candidates**.
 
 Use **Edit** and **Save changes** to update a student's name, candidate code, or extra time.
 
+### Import a class list
+
+For a whole class, use a CSV spreadsheet instead of adding students one at a time.
+
+1. Select **Download blank template**.
+2. Open the file in Excel, Numbers, or Google Sheets.
+3. Add one row for each student. Repeat the class name and class code on every row.
+4. Enter `0` in **extra_minutes** when a student has no extra time.
+5. Save or download the sheet as a CSV file.
+6. Choose the file under **Class-list CSV**, then select **Import class list**.
+
+The same file can contain several classes. A class with no students needs one row with the three student fields left blank.
+
+Class codes and candidate codes identify existing records. Importing the same file again updates names and extra time; it adds missing students but never removes anyone. Restore a removed class or student before importing a row with the same code.
+
+Select **Export active classes** to download the current active class lists as a CSV file. Keep exported files secure because they contain student names.
+
 Add or edit all students before selecting **Start exam**. Changes made afterwards do not change the candidates or extra time in that live sitting.
 
 **Remove** hides a class, student, or sitting without deleting previous responses. Use **Restore** in the relevant removed-items section if needed.
@@ -61,6 +78,8 @@ Add or edit all students before selecting **Start exam**. Changes made afterward
 ## Create a paper
 
 Open **Paper Builder** in the **Paper library**.
+
+The standalone app includes 34 original DigitalDP example papers: two for each course currently supported by the builder. They appear automatically and do not replace papers made by a teacher.
 
 1. Under **Choose the exam**, select the **Assessment session**, **Course**, **Level**, and **Paper**.
 2. Check the **Practice paper title**, **Paper name**, **Reading time in minutes**, **Writing time in minutes**, and **Maximum marks**.
@@ -84,7 +103,7 @@ The suggested settings are starting points. Check the current course guide befor
 - For a canvas question, choose the starting pages and **Default canvas background**: **Blank**, **Ruled**, or **Square grid**.
 - Students can draw, erase, undo, redo, add pages, and change the background. DigitalDP warns them before changing the teacher's default.
 
-Use **Export** beside an eligible paper to save a `.digitaldp-paper` file. Export is available only when the rights setting and copying confirmation allow it. To load the file elsewhere, use **Import a saved paper** and select **Import paper**. It does not contain classes, students, sittings, or responses.
+Use **Export** beside a paper made in the builder to save a `.digitaldp-paper` file. To load the file elsewhere, use **Import a saved paper** and select **Import paper**. It does not contain classes, students, sittings, or responses.
 
 ## Set up and run the exam
 
@@ -99,7 +118,7 @@ The same library paper can be used for more than one sitting.
 
 Select **Open clock ↗** beside the sitting, or **Open countdown display ↗**. Move the new tab to a projector or second screen.
 
-The clock can show the start time, reading time, writing time, student names, and student URL. Its display settings do not change the timers on student devices.
+The clock can show the start time, reading time, writing time, student names, and student URL. It stays on **Ready to start** until the teacher selects **Start exam**; reading time begins from that action. Its display settings do not change the timers on student devices.
 
 ### Start and finish
 
@@ -163,7 +182,7 @@ DigitalDP currently reviews and prints responses but does not mark or grade them
 
 ## Back up classroom data
 
-Paper exports are not full backups. To back up everything:
+Class-list and paper exports are not full backups. To back up everything:
 
 1. Finish all live exams.
 2. Quit DigitalDP completely.
