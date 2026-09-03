@@ -5,9 +5,9 @@ import {
   teacherDashboardUrl,
 } from "./src/release-runtime.ts";
 
-// This entrypoint exists solely for the packaged desktop application. Normal
-// source development uses `server.ts`, so the packaged data/network behavior
-// does not leak into `bun run start` or `bun run dev`.
+// This entrypoint owns the desktop-style runtime used by both the compiled app
+// and the local source launcher. Normal development still uses `server.ts`, so
+// packaged data and network behavior do not leak into `bun run dev`.
 configureReleaseDatabase();
 const { courseSampleSeedSummary, seedCourseSamplePapers } = await import("./src/course-sample-seed.ts");
 console.log(courseSampleSeedSummary(seedCourseSamplePapers()));

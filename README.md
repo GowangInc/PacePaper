@@ -29,6 +29,16 @@ DigitalDP is an independent internal practice tool. It is not the IB Digital Exa
 
 DigitalDP requires [Bun](https://bun.sh/).
 
+For the simplest app-style source run on a Mac, double-click `Start DigitalDP.command`, or run:
+
+```sh
+bun run start:app
+```
+
+This uses the same per-user data folder and classroom-sharing controls as the packaged app, safely adds any missing DigitalDP examples, chooses an available port, and opens the teacher dashboard. Keep the Terminal window open while DigitalDP is running; press Control-C there to stop it.
+
+For development and tests:
+
 ```sh
 bun install
 bun run check
@@ -42,11 +52,23 @@ The server listens on `127.0.0.1:9148` by default. `public/index.html` is the ap
 
 The release builder produces shareable, self-contained macOS, Windows, and Linux bundles. They use the normal browser for the existing teacher dashboard and printing workflow; Bun, Node.js, the source checkout, and `public/` folder are not required on the recipient computer.
 
+The Mac bundle must be signed with a Developer ID Application certificate and notarized by Apple. The release builder deliberately refuses to create an ad-hoc-signed Mac download, because Gatekeeper can report that download as damaged without offering **Open Anyway**.
+
+Once the signing and notarization credentials described below are available, run `bun run release:build`. The generated archives, standalone user guide, and checksums are placed in `release/`. On macOS, use the notarized `macos-universal` archive for both Apple-silicon and Intel Macs; extract the correct platform archive and start its DigitalDP app or executable. The macOS bundle and Windows executable carry the DigitalDP icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the teacher-facing [`USER_GUIDE.md`](USER_GUIDE.md) for the complete classroom workflow and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
+
+### macOS release credentials
+
+Local release builds require a valid Apple Developer ID Application identity and a `notarytool` Keychain profile:
+
 ```sh
+DIGITALDP_MAC_SIGN_IDENTITY="Developer ID Application: Organisation (TEAMID)" \
+DIGITALDP_MAC_NOTARY_PROFILE="digitaldp-release" \
 bun run release:build
 ```
 
-The generated archives, standalone user guide, and checksums are placed in `release/`. On macOS, use the `macos-universal` archive (recommended for both Apple-silicon and Intel Macs); extract the correct platform archive and start its DigitalDP app or executable. The macOS bundle and Windows executable carry the DigitalDP icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the teacher-facing [`USER_GUIDE.md`](USER_GUIDE.md) for the complete classroom workflow and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
+Set `DIGITALDP_MAC_NOTARY_KEYCHAIN` as well when the notary profile is stored in a non-default Keychain. The builder enables the hardened runtime, uses the Bun runtime entitlements in `assets/macos-entitlements.plist`, submits the app to Apple, staples the accepted ticket, and verifies it with `codesign`, `stapler`, and Gatekeeper before creating the final archive.
+
+The GitHub release workflow performs the same process using these repository secrets: `APPLE_DEVELOPER_ID_P12_BASE64`, `APPLE_DEVELOPER_ID_P12_PASSWORD`, `APPLE_NOTARY_KEY_BASE64`, `APPLE_NOTARY_KEY_ID`, and `APPLE_NOTARY_ISSUER_ID`. Do not put certificate passwords or private keys in this repository.
 
 The release keeps data outside the replaceable executable, in the per-user application-data location for the platform. It does not package a live database, teacher paper, student response, or protected reference material. It does include the 34 original DigitalDP example definitions and safely seeds them into the local paper library. For this requested demo release, the teacher login remains `admin` / `admin` and is reset on every launch; it is not suitable for real student data.
 
@@ -56,7 +78,7 @@ For a supervised LAN demo in a packaged release, sign in as the teacher, open **
 
 ### Source/development network configuration
 
-`HOST` and `DIGITALDP_LAN_ORIGIN` apply only when running the source checkout with `bun run start` or `bun run dev`. Packaged releases use the in-app **Classroom sharing** control instead; they do not use those two variables.
+`HOST` and `DIGITALDP_LAN_ORIGIN` apply only when running the basic source server with `bun run start` or `bun run dev`. `bun run start:app` and packaged releases use the in-app **Classroom sharing** control instead; they do not use those two variables.
 
 - `PORT`: source-server port; defaults to `9148`
 - `HOST`: source-server listening address. It defaults to `127.0.0.1`, or `0.0.0.0` when `DIGITALDP_LAN_ORIGIN` is configured.

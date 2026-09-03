@@ -8,7 +8,7 @@ Start with `USER-GUIDE.txt`, included beside the app or executable in each bundl
 
 ## Choose the correct download
 
-- `DigitalDP-*-macos-universal.zip` — **recommended for all supported Macs**; includes both Apple-silicon and Intel code
+- `DigitalDP-*-macos-universal.zip` — notarized universal app for Apple-silicon and Intel Macs
 - `DigitalDP-*-windows-x64.zip` — most Windows PCs
 - `DigitalDP-*-linux-x64.tar.gz` — 64-bit Linux PCs using glibc
 - `DigitalDP-*-User-Guide.txt` — the same full guide included inside each platform archive
@@ -17,9 +17,13 @@ The macOS application and Windows executable use the DigitalDP application icon.
 
 Extract the entire archive before starting it. Do not run an executable from inside the archive.
 
-On macOS, double-click `DigitalDP.app`. On Windows, double-click `DigitalDP.exe`. On Linux, make `DigitalDP` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting DigitalDP.
+On macOS, double-click `DigitalDP.app`. Use only a release whose notes say the Mac app is notarized; the earlier `0.1.0-demo.3` and `0.1.0-demo.4` Mac downloads are superseded and can be rejected as damaged. On Windows, double-click `DigitalDP.exe`. On Linux, make `DigitalDP` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting DigitalDP.
 
-The Mac demo is ad-hoc signed so macOS can verify that its universal binary and bundle resources are intact, but it is not Developer ID signed or notarized. macOS may therefore require Control-click → **Open**, or **Open Anyway** in **System Settings → Privacy & Security**. Windows may show a SmartScreen warning. Developer ID sign and notarize the final distribution before use beyond an internal demo.
+The release builder will not create a Mac archive without Developer ID signing and successful Apple notarization. Windows may still show a SmartScreen warning while the demo lacks an established publisher reputation.
+
+## Run the source on Arboghast
+
+Until a notarized Mac build is published, open the project folder and double-click `Start DigitalDP.command`. Keep its Terminal window open while using DigitalDP and press Control-C there to stop it. This source launcher uses the same app data, example papers, automatic browser opening, and classroom-sharing controls as the packaged build.
 
 ## Demo boundaries
 

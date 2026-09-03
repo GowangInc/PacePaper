@@ -10,6 +10,11 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
+import {
+  macDistributionConfig,
+  notaryAuthenticationArguments,
+  type MacDistributionConfig,
+} from "./macos-distribution.ts";
 
 interface PackageMetadata {
   version: string;
@@ -47,6 +52,7 @@ const userGuideAssetName = `DigitalDP-${version}-User-Guide.txt`;
 const appIconPng = join(root, "assets", "app-icon-master.png");
 const appIconIcns = join(root, "assets", "app-icon.icns");
 const appIconIco = join(root, "assets", "app-icon.ico");
+const macEntitlements = join(root, "assets", "macos-entitlements.plist");
 
 const versionMatch = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-demo\.(\d+))?$/u);
 if (!versionMatch) {
@@ -129,6 +135,12 @@ function archiveDirectory(directory: string, archivePath: string, extension: Rel
   run(["tar", "-czf", archivePath, "-C", resolve(directory, ".."), basename(directory)], root);
 }
 
+function archiveNotarizedMacDirectory(directory: string, archivePath: string): void {
+  // Preserve macOS bundle metadata during notary submission and keep Apple's
+  // stapled ticket intact in the final download.
+  run(["ditto", "-c", "-k", "--keepParent", directory, archivePath], root);
+}
+
 function sha256(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
@@ -163,6 +175,13 @@ function archivePackage(
   return { archiveName, archivePath };
 }
 
+function archiveNotarizedMacPackage(packageDirectory: string, stagingRoot: string): Archive {
+  const archiveName = `${basename(packageDirectory)}.zip`;
+  const archivePath = join(stagingRoot, archiveName);
+  archiveNotarizedMacDirectory(packageDirectory, archivePath);
+  return { archiveName, archivePath };
+}
+
 function prepareMacApp(packageDirectory: string): MacAppPaths {
   const appDirectory = join(packageDirectory, "DigitalDP.app");
   const contentsDirectory = join(appDirectory, "Contents");
@@ -177,6 +196,7 @@ function prepareMacApp(packageDirectory: string): MacAppPaths {
 
 async function buildMacUniversal(stagingRoot: string): Promise<Archive> {
   if (process.platform !== "darwin") throw new Error("A macOS host with lipo is required to build the macos-universal archive");
+  const distribution = macDistributionConfig();
 
   const packageName = `DigitalDP-${version}-${macUniversalTarget.id}`;
   const packageDirectory = join(stagingRoot, packageName);
@@ -192,14 +212,49 @@ async function buildMacUniversal(stagingRoot: string): Promise<Archive> {
   run(["xcrun", "lipo", "-create", ...architecturePaths, "-output", binaryPath], root);
   run(["xcrun", "lipo", binaryPath, "-verify_arch", ...macUniversalArchitectures.map(({ lipoArchitecture }) => lipoArchitecture)], root);
   chmodSync(binaryPath, 0o755);
-  // `lipo` combines two linker-signed Mach-O files and invalidates their
-  // per-slice signatures. Sign the complete bundle last so macOS can verify
-  // the universal executable, Info.plist, and icon as one sealed unit.
-  run(["codesign", "--force", "--sign", "-", "--timestamp=none", appDirectory], root);
-  run(["codesign", "--verify", "--deep", "--strict", appDirectory], root);
+  signAndNotarizeMacApp(appDirectory, stagingRoot, distribution);
 
   copyReleaseDocumentation(packageDirectory);
-  return archivePackage(packageDirectory, macUniversalTarget.archiveExtension, stagingRoot);
+  return archiveNotarizedMacPackage(packageDirectory, stagingRoot);
+}
+
+function signAndNotarizeMacApp(
+  appDirectory: string,
+  stagingRoot: string,
+  distribution: MacDistributionConfig,
+): void {
+  // `lipo` invalidates the linker signatures on the two input slices. Sign the
+  // finished universal bundle once, with the hardened runtime required by
+  // Apple's notary service and the runtime permissions required by Bun.
+  run([
+    "codesign",
+    "--force",
+    "--options",
+    "runtime",
+    "--timestamp",
+    "--entitlements",
+    macEntitlements,
+    "--sign",
+    distribution.signingIdentity,
+    appDirectory,
+  ], root);
+  run(["codesign", "--verify", "--deep", "--strict", "--all-architectures", appDirectory], root);
+
+  const submissionArchive = join(stagingRoot, "DigitalDP-notarization.zip");
+  archiveNotarizedMacDirectory(appDirectory, submissionArchive);
+  run([
+    "xcrun",
+    "notarytool",
+    "submit",
+    submissionArchive,
+    ...notaryAuthenticationArguments(distribution),
+    "--wait",
+    "--timeout",
+    "30m",
+  ], root);
+  run(["xcrun", "stapler", "staple", "-v", appDirectory], root);
+  run(["xcrun", "stapler", "validate", "-v", appDirectory], root);
+  run(["spctl", "--assess", "--type", "execute", "--verbose=4", appDirectory], root);
 }
 
 async function buildTarget(target: ReleaseTarget, stagingRoot: string): Promise<Archive> {

@@ -1,6 +1,6 @@
 # DigitalDP quick user guide
 
-This guide is for the `0.1.0-demo.2` standalone classroom demo. DigitalDP runs on one teacher computer; students connect through the school network.
+This guide is for the current standalone classroom demo. DigitalDP runs on one teacher computer; students connect through the school network.
 
 ## Run a classroom exam
 
@@ -21,11 +21,13 @@ DigitalDP is a portable app, not an installer. Extract the whole download before
 
 | Computer | Download | Open |
 | --- | --- | --- |
-| Apple-silicon or Intel Mac | `macos-universal.zip` | `DigitalDP.app` |
+| Apple-silicon or Intel Mac | Notarized `macos-universal.zip` | `DigitalDP.app` |
 | Windows x64 | `windows-x64.zip` | `DigitalDP.exe` |
 | Linux x64 | `linux-x64.tar.gz` | `DigitalDP` |
 
-The Mac demo has an integrity-preserving ad-hoc signature, but it is not Developer ID signed or notarized. macOS may therefore show an unverified-developer warning: Control-click `DigitalDP.app`, choose **Open**, and confirm, or use **Open Anyway** in **System Settings → Privacy & Security** if macOS offers it. On Windows, continue only if the file came from the private DigitalDP release.
+Use only a Mac release whose notes say it is notarized. The earlier `0.1.0-demo.3` and `0.1.0-demo.4` Mac downloads are superseded and may be rejected as damaged. On Windows, continue only if the file came from the private DigitalDP release.
+
+To run the source on Arboghast for now, open the DigitalDP project folder and double-click `Start DigitalDP.command`. Keep the Terminal window open while DigitalDP is in use; press Control-C there to stop it.
 
 Run only one copy of DigitalDP at a time. Do not open `public/index.html` or a `file://` address. Sign in with username `admin` and password `admin`. The dashboard opens in a normal browser at an address like `http://127.0.0.1:9148/admin`.
 
@@ -198,6 +200,7 @@ Back up before replacing the app with a newer version.
 
 ## Quick troubleshooting
 
+- **The Mac app says it is damaged:** Do not bypass Gatekeeper. Confirm that the release is notarized; for now, use `Start DigitalDP.command` from the source folder on Arboghast.
 - **The app will not open:** Extract the full download, use the correct platform file, and close any second copy of DigitalDP.
 - **Students cannot connect:** Confirm that **Classroom sharing** is on, use the displayed private-network URL, and test it on a student device. `localhost` and `127.0.0.1` work only on the teacher computer.
 - **A name is missing:** Check the class code, select **Refresh names**, and confirm that the student was added before **Start exam**.

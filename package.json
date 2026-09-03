@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun --hot server.ts",
     "start": "bun server.ts",
+    "start:app": "bun release-app.ts",
     "samples:build": "bun examples/write-course-samples.ts",
     "samples:seed": "bun examples/seed-course-samples.ts",
     "release:build": "bun scripts/build-release.ts",
