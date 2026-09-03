@@ -33,6 +33,11 @@ interface MacUniversalArchitecture {
   target: Bun.Build.CompileTarget;
 }
 
+interface MacAppPaths {
+  appDirectory: string;
+  binaryPath: string;
+}
+
 const root = resolve(import.meta.dir, "..");
 const releaseDirectory = join(root, "release");
 const packageMetadata = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as PackageMetadata;
@@ -43,9 +48,13 @@ const appIconPng = join(root, "assets", "app-icon-master.png");
 const appIconIcns = join(root, "assets", "app-icon.icns");
 const appIconIco = join(root, "assets", "app-icon.ico");
 
-if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) {
+const versionMatch = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-demo\.(\d+))?$/u);
+if (!versionMatch) {
   throw new Error("package.json requires a valid release version");
 }
+const [, releaseMajor, releaseMinor, releasePatch, demoIteration] = versionMatch;
+const macShortVersion = `${releaseMajor}.${releaseMinor}.${releasePatch}`;
+const macBuildVersion = `${Math.max(1, Number(releaseMajor))}.${releaseMinor}.${releasePatch}${demoIteration ? `d${demoIteration}` : ""}`;
 
 const macUniversalArchitectures: readonly MacUniversalArchitecture[] = [
   { id: "arm64", lipoArchitecture: "arm64", target: "bun-darwin-arm64" },
@@ -86,8 +95,8 @@ function macInfoPlist(): string {
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundleName</key><string>DigitalDP</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>${version}</string>
-  <key>CFBundleVersion</key><string>${version}</string>
+  <key>CFBundleShortVersionString</key><string>${macShortVersion}</string>
+  <key>CFBundleVersion</key><string>${macBuildVersion}</string>
 </dict></plist>
 `;
 }
@@ -154,7 +163,7 @@ function archivePackage(
   return { archiveName, archivePath };
 }
 
-function macAppBinaryPath(packageDirectory: string): string {
+function prepareMacApp(packageDirectory: string): MacAppPaths {
   const appDirectory = join(packageDirectory, "DigitalDP.app");
   const contentsDirectory = join(appDirectory, "Contents");
   const macOsDirectory = join(contentsDirectory, "MacOS");
@@ -163,7 +172,7 @@ function macAppBinaryPath(packageDirectory: string): string {
   mkdirSync(resourcesDirectory, { recursive: true });
   writeFileSync(join(contentsDirectory, "Info.plist"), macInfoPlist());
   copyFileSync(appIconIcns, join(resourcesDirectory, "AppIcon.icns"));
-  return join(macOsDirectory, macUniversalTarget.binaryName);
+  return { appDirectory, binaryPath: join(macOsDirectory, macUniversalTarget.binaryName) };
 }
 
 async function buildMacUniversal(stagingRoot: string): Promise<Archive> {
@@ -173,7 +182,7 @@ async function buildMacUniversal(stagingRoot: string): Promise<Archive> {
   const packageDirectory = join(stagingRoot, packageName);
   mkdirSync(packageDirectory, { recursive: true });
 
-  const binaryPath = macAppBinaryPath(packageDirectory);
+  const { appDirectory, binaryPath } = prepareMacApp(packageDirectory);
   const architecturePaths: string[] = [];
   for (const architecture of macUniversalArchitectures) {
     const architecturePath = join(stagingRoot, `${packageName}-${architecture.id}`);
@@ -183,6 +192,11 @@ async function buildMacUniversal(stagingRoot: string): Promise<Archive> {
   run(["xcrun", "lipo", "-create", ...architecturePaths, "-output", binaryPath], root);
   run(["xcrun", "lipo", binaryPath, "-verify_arch", ...macUniversalArchitectures.map(({ lipoArchitecture }) => lipoArchitecture)], root);
   chmodSync(binaryPath, 0o755);
+  // `lipo` combines two linker-signed Mach-O files and invalidates their
+  // per-slice signatures. Sign the complete bundle last so macOS can verify
+  // the universal executable, Info.plist, and icon as one sealed unit.
+  run(["codesign", "--force", "--sign", "-", "--timestamp=none", appDirectory], root);
+  run(["codesign", "--verify", "--deep", "--strict", appDirectory], root);
 
   copyReleaseDocumentation(packageDirectory);
   return archivePackage(packageDirectory, macUniversalTarget.archiveExtension, stagingRoot);

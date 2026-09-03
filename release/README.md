@@ -19,7 +19,7 @@ Extract the entire archive before starting it. Do not run an executable from ins
 
 On macOS, double-click `DigitalDP.app`. On Windows, double-click `DigitalDP.exe`. On Linux, make `DigitalDP` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting DigitalDP.
 
-The demo release is intentionally unsigned. macOS may require Control-click → **Open**; Windows may show a SmartScreen warning. Sign/notarize the final distribution before use beyond an internal demo.
+The Mac demo is ad-hoc signed so macOS can verify that its universal binary and bundle resources are intact, but it is not Developer ID signed or notarized. macOS may therefore require Control-click → **Open**, or **Open Anyway** in **System Settings → Privacy & Security**. Windows may show a SmartScreen warning. Developer ID sign and notarize the final distribution before use beyond an internal demo.
 
 ## Demo boundaries
 

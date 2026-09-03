@@ -25,7 +25,7 @@ DigitalDP is a portable app, not an installer. Extract the whole download before
 | Windows x64 | `windows-x64.zip` | `DigitalDP.exe` |
 | Linux x64 | `linux-x64.tar.gz` | `DigitalDP` |
 
-The app may show a security warning because this demo is unsigned. On Mac, Control-click `DigitalDP.app`, choose **Open**, and confirm. On Windows, continue only if the file came from the private DigitalDP release.
+The Mac demo has an integrity-preserving ad-hoc signature, but it is not Developer ID signed or notarized. macOS may therefore show an unverified-developer warning: Control-click `DigitalDP.app`, choose **Open**, and confirm, or use **Open Anyway** in **System Settings → Privacy & Security** if macOS offers it. On Windows, continue only if the file came from the private DigitalDP release.
 
 Run only one copy of DigitalDP at a time. Do not open `public/index.html` or a `file://` address. Sign in with username `admin` and password `admin`. The dashboard opens in a normal browser at an address like `http://127.0.0.1:9148/admin`.
 
