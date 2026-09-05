@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "pearson-edexcel-igcse",
+    "systemLabel": "Pearson Edexcel International GCSE",
+    "qualificationLabel": "Pearson Edexcel International GCSE",
+    "deliveryMode": "Full-length original paper with integrated digital working",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "Foundation · 120 minutes · 100 marks · calculator permitted · tier-specific formula reference included · answer all 22 questions"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Pearson Edexcel International GCSE Mathematics A (Modular) · Unit 1 (4WM1F/01) — original full-length mock",
+  "subject": "pearson-igcse-mathematics-a-modular",
+  "subjectLabel": "Pearson Edexcel International GCSE Mathematics A (Modular)",
+  "level": "Foundation",
+  "paper": "Unit 1 (4WM1F/01) — original full-length mock",
+  "durationMinutes": 120,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 100,
+  "subjectWeightPercent": 50,
+  "mode": "reading",
+  "instructions": "Answer all 22 questions. The total time is 2 hours; there is no separate reading period. Write your answer and all working in each question's response area; add pages if needed. A permitted scientific calculator may be used. The Formula reference attached to every question contains the tier-specific supplied formula facts. Draw your own labelled diagrams or graphs where requested; all necessary coordinates and measurements are provided. Do not infer measurements from a sketch. Use a suitable scale and label axes. Give units where appropriate. Keep unrounded working; give non-exact final numerical answers to 3 significant figures unless otherwise stated. This is an original DigitalDP practice paper, not a Pearson paper. Digital drawing is a classroom adaptation, not a test of physical ruler-and-compass accuracy.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formulae",
+      "label": "Foundation formula reference",
+      "kind": "text",
+      "text": "Formula reference — independently typeset mathematical facts\nTrapezium: area = ½(a + b)h, where a and b are parallel side lengths and h is perpendicular height.\nPrism: volume = cross-sectional area × length.\nCylinder: volume = πr²h; curved surface area = 2πrh. Here r is radius and h is perpendicular height."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — Integer calculations",
+      "prompt": "(a) Calculate −7 + 12. [1] (b) Calculate −4 × 6. [1] (c) Calculate 36 ÷ (9 − 3). [1] (d) Put −8, 3, −1, 0 in descending order. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — Decimals",
+      "prompt": "(a) Calculate 3.75 + 2.086. [1] (b) Calculate 4.2 × 0.35. [1] (c) Write 7/8 as a decimal. [1] (d) Round 0.07846 to 2 significant figures. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — Fraction calculation",
+      "prompt": "(a) Simplify 42/63. [1] (b) Calculate 2/3 + 5/12. [2] (c) Calculate 3/7 of 84. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — Powers",
+      "prompt": "(a) Find 5². [1] (b) Find the cube root of 216. [1] (c) Simplify p³ × p⁴. [1] (d) Simplify (a²)³. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — Factors and multiples",
+      "prompt": "(a) List the distinct prime factors of 90. [1] (b) List all common factors of 12 and 18. [1] (c) State the smallest square number greater than 90. [1] (d) State the greatest multiple of 7 less than 50. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — Expressions and substitution",
+      "prompt": "(a) Simplify 7x − 2y − 3x + 5y. [1] (b) Expand 3(2a − 5). [1] (c) Factorise 10p − 15. [1] (d) Evaluate b² − 3c when b = −4 and c = 2. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — Equation model",
+      "prompt": "A number is multiplied by 4 and then 7 is added. The result is 43. (a) Write an equation and solve it. [3] (b) Solve 5y − 2 = 2y + 16. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — Coordinates",
+      "prompt": "P has coordinates (−4,3) and Q has coordinates (2,7). (a) Find the midpoint of PQ. [2] (b) State the gradient and y-intercept of y = −2x + 5. [2] (c) Does (3,−1) lie on this line? Show a substitution to justify your answer. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — Angles with reasons",
+      "prompt": "(a) In an isosceles triangle, the equal sides meet at an angle of 38°. Find each base angle and state your reason. [2] (b) The angles of a quadrilateral are 90°, 105°, 80° and x°. Find x. [2] (c) Two straight lines intersect and one angle is 67°. State the vertically opposite angle. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — Compound measures",
+      "prompt": "(a) A train covers 156 km in 2.4 hours. Find its average speed. [2] (b) A metal sample has mass 540 g and volume 200 cm³. Find its density. [2] (c) Convert 65 km/h to metres per hour. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — Composite area",
+      "prompt": "An L-shaped floor is made by removing a 3 m by 2 m corner rectangle from a 9 m by 6 m rectangle. (a) Draw a labelled sketch. [1] (b) Find the floor area. [2] (c) Tiles each cover 0.25 m². Ignoring cutting and waste, find the number needed. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12 — Sample space",
+      "prompt": "One fair coin is tossed and one fair three-sided spinner labelled 1, 2, 3 is spun. (a) List the complete sample space. [2] (b) Find P(heads and an odd number). [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13 — Probability scale",
+      "prompt": "A spinner has equally likely labels A, A, B, C, C. (a) Find P(A). [1] (b) Find P(not C). [1] (c) Estimate the number of B results in 250 spins. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14 — Two-way table",
+      "prompt": "In a group of 50 people, 28 are adults and 22 are children. Twelve adults and 16 children travelled by bus; everyone else walked. (a) Construct a two-way table with rows adult/child and columns bus/walk, including totals. [2] (b) Find P(walk) for a randomly chosen person. [1] (c) Find P(child and bus). [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15 — Measurement bounds",
+      "prompt": "A length L is 7.4 cm to the nearest 0.1 cm. A width W is 5 cm to the nearest centimetre. (a) State the lower and upper bounds for L. [2] (b) State the lower and upper bounds for W. [2] (c) Explain why W = 5.5 cm does not round to 5 cm under the usual rounding convention. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16 — Sets and notation",
+      "prompt": "The universal set is the integers from 1 to 15 inclusive. A is the set of multiples of 3 and B is the set of factors of 12. (a) List A and B. [2] (b) List A ∩ B. [1] (c) List A ∪ B. [1] (d) Find the number of elements in A′. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17 — Quadratic rectangle",
+      "prompt": "A rectangle has length (x + 4) cm, width x cm and area 60 cm². (a) Form an equation. [1] (b) Solve it, rejecting any unsuitable root. [3] (c) Find the perimeter. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18 — Quadratic graph",
+      "prompt": "For y = x² − 2x − 3: (a) Find y when x = −2, −1, 0, 1, 2, 3, 4. [2] (b) Plot a smooth graph on labelled axes. [2] (c) Use the graph to state both roots of x² − 2x − 3 = 0. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19 — Algebraic manipulation",
+      "prompt": "(a) Expand and simplify (x + 5)(x − 2). [2] (b) Factorise 3x² + 12x fully. [1] (c) Simplify 12a³b² ÷ 4ab, where a and b are nonzero. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20 — Trapezium design",
+      "prompt": "A trapezium has parallel sides 8 cm and 14 cm and perpendicular height 6 cm. (a) Find its area. [2] (b) A triangle with base 9 cm has the same area. Find its perpendicular height. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21 — Ladder",
+      "prompt": "A 5.2 m ladder rests against a vertical wall with its foot 1.5 m from the wall on level ground. (a) Find the vertical height reached. [3] (b) Find the angle between the ladder and the ground, to 1 decimal place. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22 — Survey probability",
+      "prompt": "Among 80 people, 45 own a bicycle, 30 own a scooter and 12 own both. (a) Draw a two-set Venn diagram, including people with neither. [3] (b) One person is selected at random. Find P(exactly one of these vehicles). [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

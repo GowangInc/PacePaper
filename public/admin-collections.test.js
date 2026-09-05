@@ -3,9 +3,13 @@ import {
   archiveDialogCopy,
   classHasLiveSession,
   collectionActionPath,
+  currentSessionPhase,
   formatClassLabel,
   formatPaperOptionLabel,
   paperOptions,
+  paperOptionsForSystem,
+  paperSystemLabel,
+  paperSystemOptions,
   partitionDashboardState,
   populateArchiveDialog,
   renderSessions,
@@ -143,6 +147,8 @@ describe("teacher dashboard collections", () => {
 
     expect(formatPaperOptionLabel(papers[0])).toBe("Psychology · Paper 3 — original research-methods sample · HL");
     expect(formatPaperOptionLabel(papers[1])).toBe("Business Management checkpoint · Paper 2 · SL");
+    expect(formatPaperOptionLabel({ ...papers[1], examSystemLabel: "Cambridge IGCSE" }))
+      .toBe("Cambridge IGCSE · Business Management checkpoint · Paper 2 · SL");
     expect(paperOptions(papers).map(({ value }) => value)).toEqual([
       "business-paper-2",
       "psychology-paper-1",
@@ -151,12 +157,65 @@ describe("teacher dashboard collections", () => {
     expect(papers[0].id).toBe("psychology-paper-3");
   });
 
+  test("filters exam setup papers behind an explicit exam-system choice", () => {
+    const papers = [
+      { id: "ib", subject: "biology", subjectLabel: "Biology", title: "Biology Paper 1", paper: "Paper 1", level: "SL" },
+      { id: "cambridge", subject: "cambridge-igcse-mathematics-0580", subjectLabel: "Mathematics", title: "0580 Paper 2", paper: "Paper 2", level: "Extended", examSystemLabel: "Cambridge IGCSE" },
+      { id: "custom", subject: "school-geography", subjectLabel: "Geography", title: "Geography test", paper: "Unit test", level: "Year 10" },
+    ];
+    expect(paperSystemLabel(papers[0])).toBe("IB Diploma Programme");
+    expect(paperSystemLabel(papers[2])).toBe("School/custom");
+    expect(paperSystemOptions(papers).map(({ value }) => value)).toEqual([
+      "IB Diploma Programme",
+      "Cambridge IGCSE",
+      "School/custom",
+    ]);
+    expect(paperOptionsForSystem(papers, "Cambridge IGCSE").map(({ value }) => value)).toEqual(["cambridge"]);
+    expect(paperOptionsForSystem(papers, "")).toEqual([]);
+  });
+
+  test("keeps the course and paper readable after an exam system is selected", () => {
+    const paper = {
+      id: "calculus", subject: "ap-calculus-ab", subjectLabel: "Calculus AB",
+      title: "Term practice", paper: "End-of-course exam", level: "AP",
+      examSystemLabel: "Advanced Placement (AP)",
+    };
+    const other = { ...paper, id: "other", examSystemLabel: "Other exam system" };
+    const legacy = { ...paper, id: "legacy", examSystemLabel: "Advanced Placement" };
+    expect(paperOptionsForSystem([other, paper], "Advanced Placement (AP)"))
+      .toEqual([{ value: "calculus", label: "Calculus AB · Term practice · End-of-course exam · AP" }]);
+    expect(paperOptionsForSystem([{ ...paper, title: "Calculus AB · End-of-course exam" }], "Advanced Placement (AP)")[0].label)
+      .toBe("Calculus AB · End-of-course exam · AP");
+    expect(paperOptions([paper])[0].label)
+      .toBe("Advanced Placement (AP) · Term practice · End-of-course exam · AP");
+    expect(paper.title).toBe("Term practice");
+    expect(paper.examSystemLabel).toBe("Advanced Placement (AP)");
+    expect(paperSystemOptions([other, paper, legacy]).map(({ value }) => value))
+      .toEqual(["Advanced Placement", "Advanced Placement (AP)", "Other exam system"]);
+  });
+
   test("never offers removal for a live sitting and retains ended submissions", () => {
     expect(sessionActionModel(session({ status: "live" }))).toEqual(["clock", "end", "responses"]);
     expect(sessionActionModel(session({ status: "ended" }))).toEqual(["responses", "archive"]);
     expect(sessionActionModel(session({ status: "ended" }), true)).toEqual(["restore", "responses"]);
     expect(classHasLiveSession([session({ status: "live" })], "class-1")).toBe(true);
     expect(classHasLiveSession([session({ status: "ended" })], "class-1")).toBe(false);
+  });
+
+  test("describes the current phase of a simultaneous sectioned sitting", () => {
+    const sectioned = session({
+      status: "live",
+      startedAt: 1_000,
+      durationMinutes: 25,
+      readingTimeMinutes: 0,
+      phases: [
+        { id: "one", label: "Section I", durationMinutes: 10 },
+        { id: "break", label: "Monitored break", durationMinutes: 5 },
+        { id: "two", label: "Section II", durationMinutes: 10 },
+      ],
+    });
+    expect(currentSessionPhase(sectioned, 1_000 + 12 * 60_000)?.label).toBe("Monitored break");
+    expect(currentSessionPhase(sectioned, 1_000 + 26 * 60_000)).toBeNull();
   });
 
   test("renders archived ended submissions without replacing the open disclosure", () => {

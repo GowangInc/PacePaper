@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-09-04",
+    "macrostructure": "Component Playground",
+    "theme": "Cobalt",
+    "enrichment": "none",
+    "brief": "Three utilitarian teacher front-end concepts for building, running, and monitoring DigitalDP exams"
+  },
+  {
     "date": "2026-08-27",
     "macrostructure": "Application Shell",
     "theme": "Plain",

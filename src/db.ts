@@ -85,6 +85,12 @@ export interface PaperSummary {
   paper: string;
   durationMinutes: number;
   readingTimeMinutes: number;
+  examSystemLabel?: string;
+  questionCount: number;
+  maximumMarks?: number;
+  phaseCount: number;
+  instructions: string;
+  rulesSummary?: string;
   mode: string;
   sourceClassification: PaperManifest["sourceClassification"];
   exportAuthorized: boolean;
@@ -129,6 +135,7 @@ export interface StudentExamRow {
   paperId: string;
   paperTitle: string;
   durationMinutes: number;
+  readingTimeMinutes: number;
   manifestJson: string;
   startedAt: number;
   endedAt: number | null;
@@ -183,6 +190,8 @@ export interface SessionResults {
   className: string;
   paperTitle: string;
   status: ExamStatus;
+  durationMinutes: number;
+  readingTimeMinutes: number;
   manifestJson: string;
   responses: SessionResponseRow[];
 }
@@ -560,6 +569,12 @@ export function createPaper(imported: ImportedPaper): PaperSummary {
     paper: imported.manifest.paper,
     durationMinutes: imported.manifest.durationMinutes,
     readingTimeMinutes: imported.manifest.readingTimeMinutes,
+    examSystemLabel: imported.manifest.examFormat?.systemLabel,
+    questionCount: imported.manifest.questions.length,
+    maximumMarks: imported.manifest.maximumMarks,
+    phaseCount: imported.manifest.phases?.length ?? 0,
+    instructions: imported.manifest.instructions,
+    rulesSummary: imported.manifest.examFormat?.rulesSummary,
     mode: imported.manifest.mode,
     sourceClassification: imported.manifest.sourceClassification,
     exportAuthorized: imported.manifest.exportAuthorized,
@@ -612,6 +627,12 @@ export function listPapers(): PaperSummary[] {
            paper,
            duration_minutes AS durationMinutes,
            COALESCE(json_extract(manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
+           json_extract(manifest_json, '$.examFormat.systemLabel') AS examSystemLabel,
+           json_array_length(manifest_json, '$.questions') AS questionCount,
+           json_extract(manifest_json, '$.maximumMarks') AS maximumMarks,
+           COALESCE(json_array_length(manifest_json, '$.phases'), 0) AS phaseCount,
+           json_extract(manifest_json, '$.instructions') AS instructions,
+           json_extract(manifest_json, '$.examFormat.rulesSummary') AS rulesSummary,
            mode,
            COALESCE(json_extract(manifest_json, '$.sourceClassification'), 'unknown-local-only') AS sourceClassification,
            COALESCE(json_extract(manifest_json, '$.exportAuthorized'), 0) AS exportAuthorized,
@@ -664,6 +685,34 @@ export function createExamSession(classId: string, paperId: string): string {
   `).run({ id, classId, paperId, now: Date.now() });
   if (created.changes !== 1) throw new Error("Active class not found");
   return id;
+}
+
+export function updateDraftExamSessionTiming(sessionId: string, readingTimeMinutes: number, durationMinutes: number,
+  expected?: { readingTimeMinutes: number; durationMinutes: number }): void {
+  if (!Number.isFinite(readingTimeMinutes) || readingTimeMinutes < 0 || readingTimeMinutes > 60) {
+    throw new Error("Reading time must be between 0 and 60 minutes");
+  }
+  if (!Number.isInteger(durationMinutes) || durationMinutes < 1 || durationMinutes > 360) {
+    throw new Error("Writing time must be a whole number between 1 and 360 minutes");
+  }
+  const update = db.transaction(() => {
+  if (expected) {
+    const current = listExamSessions().find(({ id }) => id === sessionId);
+    if (!current || current.readingTimeMinutes !== expected.readingTimeMinutes || current.durationMinutes !== expected.durationMinutes) {
+      throw new Error("Exam timing changed in another window. Reload exam defaults and review before saving");
+    }
+  }
+  const changed = db.query(`
+    UPDATE exam_sessions
+       SET reading_time_minutes_override = $readingTimeMinutes,
+           duration_minutes_override = $durationMinutes
+     WHERE id = $sessionId
+       AND status = 'draft'
+       AND archived_at IS NULL
+  `).run({ sessionId, readingTimeMinutes, durationMinutes });
+  if (changed.changes !== 1) throw new Error("Only a ready exam can have its timing changed");
+  });
+  update();
 }
 
 export function startExamSession(sessionId: string): void {
@@ -721,8 +770,8 @@ export function listExamSessions(archived = false): ExamSessionRow[] {
            papers.subject_label AS subjectLabel,
            papers.level,
            papers.paper,
-           papers.duration_minutes AS durationMinutes,
-           COALESCE(json_extract(papers.manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
+           COALESCE(sessions.duration_minutes_override, papers.duration_minutes) AS durationMinutes,
+           COALESCE(sessions.reading_time_minutes_override, json_extract(papers.manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
            sessions.status,
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,
@@ -838,6 +887,8 @@ export function getSessionResults(sessionId: string): SessionResults | null {
            classes.name AS className,
            papers.title AS paperTitle,
            sessions.status,
+           COALESCE(sessions.duration_minutes_override, papers.duration_minutes) AS durationMinutes,
+           COALESCE(sessions.reading_time_minutes_override, json_extract(papers.manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
            papers.manifest_json AS manifestJson
       FROM exam_sessions AS sessions
       JOIN classes ON classes.id = sessions.class_id
@@ -870,8 +921,8 @@ export function listStudentExamSessions(studentId: string): StudentExamSessionRo
            papers.subject_label AS subjectLabel,
            papers.level,
            papers.paper,
-           papers.duration_minutes AS durationMinutes,
-           COALESCE(json_extract(papers.manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
+           COALESCE(sessions.duration_minutes_override, papers.duration_minutes) AS durationMinutes,
+           COALESCE(sessions.reading_time_minutes_override, json_extract(papers.manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
            sessions.status,
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,
@@ -903,7 +954,8 @@ export function getStudentExam(studentId: string, sessionId: string): StudentExa
            sessions.class_id AS classId,
            papers.id AS paperId,
            papers.title AS paperTitle,
-           papers.duration_minutes AS durationMinutes,
+           COALESCE(sessions.duration_minutes_override, papers.duration_minutes) AS durationMinutes,
+           COALESCE(sessions.reading_time_minutes_override, json_extract(papers.manifest_json, '$.readingTimeMinutes'), 0) AS readingTimeMinutes,
            papers.manifest_json AS manifestJson,
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,

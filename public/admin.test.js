@@ -12,7 +12,9 @@ mock.module("/admin-collections.js", () => ({
   collectionActionPath() { return ""; },
   emptyState() {},
   formatPaperTime() { return ""; },
-  paperOptions() { return []; },
+  paperOptionsForSystem() { return []; },
+  paperSystemLabel() { return ""; },
+  paperSystemOptions() { return []; },
   populateArchiveDialog() {},
   readCollectionTarget() { return null; },
   renderClasses() {},
@@ -22,6 +24,7 @@ mock.module("/admin-collections.js", () => ({
 }));
 mock.module("/ink-canvas.js", () => ({ renderInkSubmission() {} }));
 mock.module("/admin-network.js", () => ({ mountAdminNetwork() {} }));
+mock.module("/admin-papers.js", () => ({ renderPaperLibrary() {}, renderSelectedPaper() {}, renderSessionPaperSelectors() {} }));
 mock.module("/class-rosters.js", () => ({ mountClassRosterTransfer() {} }));
 mock.module("/paper-builder.js", () => ({ mountPaperBuilder() {} }));
 mock.module("/student-connection.js", () => ({ mountStudentConnection() {} }));
@@ -81,5 +84,9 @@ describe("teacher dashboard presentation", () => {
     expect(source).toContain("appendCandidateNotepad(paper, response.notepad)");
     expect(styles).toContain(".candidate-paper-notepad p {\n  margin: 0;\n  line-height: 1.55;\n  overflow-wrap: anywhere;\n  white-space: pre-wrap;");
     expect(styles).toContain(".candidate-paper-notepad h3 {\n    margin-bottom: 1.5mm;\n    font-size: 10pt;\n    break-after: avoid-page;");
+  });
+
+  test("stacks paper-library rows on narrow teacher screens", () => {
+    expect(styles).toContain(".roster-list li,\n  .paper-list li,\n  .archived-list li,\n  .session-row {\n    flex-direction: column;");
   });
 });

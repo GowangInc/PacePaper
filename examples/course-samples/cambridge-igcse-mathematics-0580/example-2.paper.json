@@ -1,0 +1,396 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "cambridge-igcse",
+    "systemLabel": "Cambridge IGCSE",
+    "qualificationLabel": "Cambridge IGCSE Mathematics 0580",
+    "deliveryMode": "Paper-like digital practice",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "2025–2027 syllabus · Extended · no calculator · formula facts included · original full-length practice"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Cambridge IGCSE Mathematics (0580) · Paper 2 — original full-length mock (non-calculator)",
+  "subject": "cambridge-igcse-mathematics-0580",
+  "subjectLabel": "Cambridge IGCSE Mathematics (0580)",
+  "level": "Extended",
+  "paper": "Paper 2 — original full-length mock (non-calculator)",
+  "durationMinutes": 120,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 100,
+  "mode": "reading",
+  "instructions": "Original full-length practice: 24 questions, 100 marks. This is not an official or endorsed Cambridge examination. Answer every question and all parts. Show your reasoning and calculations in the working canvas beneath each question; add pages when needed. Calculators are not permitted. Give exact answers unless a question specifies an approximation. Formula facts are attached to every question. Draw and label your own axes where requested; one grid square may represent the scale stated in the question. Use straight ruled lines and smooth curves as appropriate. Dimensions stated in a question are exact unless described as rounded. There is no separate reading period.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formula-facts",
+      "label": "Extended formula facts",
+      "kind": "text",
+      "text": "Mathematical formula facts — independently typeset for this practice paper\nTriangle: area = bh/2 (b is the base, h the perpendicular height).\nCircle: area = πr²; circumference = 2πr (r is the radius).\nCylinder: curved surface area = 2πrh; volume = πr²h.\nCone: curved surface area = πrl; volume = πr²h/3 (l is slant height; h is perpendicular height).\nSphere: surface area = 4πr²; volume = 4πr³/3.\nPrism: volume = cross-sectional area × length.\nPyramid: volume = base area × perpendicular height / 3.\nIf ax² + bx + c = 0 and a ≠ 0: x = (−b ± √(b² − 4ac))/(2a).\nIn a triangle with sides a, b, c opposite angles A, B, C:\na/sin A = b/sin B = c/sin C;\na² = b² + c² − 2bc cos A;\narea = ab sin C / 2."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1",
+      "prompt": "Work out 7/12 + 5/18, giving your answer as a fraction in its simplest form. Show your working. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 2,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2",
+      "prompt": "Calculate (4.8 × 10⁷ × 2.5 × 10⁻³)/(6 × 10²). Give the answer in standard form. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3",
+      "prompt": "The decimal 0.272727… has 27 recurring indefinitely. Show algebraically that it is equal to 3/11. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4",
+      "prompt": "(a) Simplify 3√50 − √8. [2]\n(b) Rationalise the denominator of 1/√2. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5",
+      "prompt": "After a 15% increase, an annual membership costs $92. Find its cost before the increase. Show your method. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6",
+      "prompt": "For positive a and b, simplify (16a⁸b⁻⁴)^(1/2). Give your answer with positive indices. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7",
+      "prompt": "The universal set is the integers from 1 to 20 inclusive. A is the set of multiples of 3 and B is the set of factors of 18.\n(a) List A ∩ B. [1]\n(b) Find n(A ∪ B). [1]\n(c) Find n((A ∪ B)′). [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8",
+      "prompt": "Simplify (x² − 9)/(x² + x − 6). State all values of x excluded from the original expression. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9",
+      "prompt": "Solve 2x + 3y = 13 and 5x − 2y = 4. Show your working. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10",
+      "prompt": "Solve 2x² − 7x − 4 = 0 by factorisation. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11",
+      "prompt": "On a square grid, draw labelled axes covering −1 ≤ x ≤ 6 and −1 ≤ y ≤ 6. Show the region R satisfying x ≥ 0, y ≥ 1 and x + y ≤ 5. Shade the unwanted regions and label R. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12",
+      "prompt": "f(x)=3x−2 and g(x)=x²+1.\n(a) Find g(f(x)), simplifying your expression. [2]\n(b) Find f⁻¹(x). [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13",
+      "prompt": "The first four terms of a quadratic sequence are 2, 7, 14, 23.\n(a) Find its nth term. [3]\n(b) Find its 10th term. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14",
+      "prompt": "A is (−2,1) and B is (4,9).\n(a) Find the exact length AB. [2]\n(b) Find the equation of the perpendicular bisector of AB. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15",
+      "prompt": "A, B, C and D lie on a circle in that order. Angle ABC is 72° and angle BAC is 31°.\n(a) Find angle ADC, giving a reason. [2]\n(b) Find angle BDC, giving a reason. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16",
+      "prompt": "(a) Solve 2 sin x = √3 for 0° ≤ x ≤ 360°. [3]\n(b) A right-angled triangle has two angles of 45° and a hypotenuse of 10 cm. Find the exact length of either shorter side. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17",
+      "prompt": "A solid consists of a cylinder of radius 3 cm and height 8 cm, with a hemisphere of radius 3 cm attached to its top. Its bottom is a flat circular face.\n(a) Find the total external surface area in terms of π. [3]\n(b) Find the total volume in terms of π. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18",
+      "prompt": "Triangle ABC has vertices A(1,1), B(3,1), C(1,2).\n(a) Rotate ABC through 90° anticlockwise about the origin. Draw and label the image on a grid. [3]\n(b) In a separate transformation, enlarge the original triangle by scale factor −2 about the origin. Give the coordinates of the image of A and explain the effect of the negative sign. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19",
+      "prompt": "A bag contains 4 red, 3 blue and 2 green counters. Two are chosen at random without replacement.\n(a) Find the probability that both have the same colour. [3]\n(b) Given that the first counter is not red, find the probability that the second counter is red. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20",
+      "prompt": "Parcel masses m kg have this distribution:\n0 < m ≤ 5: frequency 10\n5 < m ≤ 15: frequency 30\n15 < m ≤ 30: frequency 15\n(a) Calculate the frequency density of each class. [2]\n(b) Draw a histogram with labelled mass and frequency-density axes. [2]\n(c) Find the proportion of parcels with mass at most 15 kg. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21",
+      "prompt": "The times t minutes taken by 40 students to complete a puzzle are:\n0 < t ≤ 10: 4 students\n10 < t ≤ 20: 8 students\n20 < t ≤ 30: 16 students\n30 < t ≤ 40: 12 students\n(a) Make a cumulative-frequency table. [1]\n(b) Draw a cumulative-frequency graph, including (0,0). [2]\n(c) Use the graph to estimate the median time. [1]\n(d) How many students took more than 30 minutes? [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22",
+      "prompt": "In triangle OAB, OA = a and OB = b. M is the midpoint of AB. N lies on OB with ON:NB = 2:1. The lines OM and AN meet at P.\n(a) Express OM and AN in terms of a and b. [2]\n(b) By comparing coefficients, find OP in terms of a and b. [3]\n(c) State OP:PM. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 6,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q23",
+      "label": "Question 23",
+      "prompt": "The curve is y = x³ − 6x² + 9x.\n(a) Find dy/dx. [2]\n(b) Find the coordinates of its two stationary points. [2]\n(c) Determine whether each is a maximum or a minimum, giving reasons. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 6,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q24",
+      "label": "Question 24",
+      "prompt": "A rectangle has length (x + 5) cm and width (x − 1) cm. Its area is 45 cm².\n(a) Form a quadratic equation in x and simplify it. [2]\n(b) Solve it, giving exact values, and explain which value is valid for the rectangle. [3]\n(c) Find the exact perimeter of the rectangle. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 6,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

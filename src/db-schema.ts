@@ -67,7 +67,9 @@ export function initializeDatabaseSchema(db: Database): void {
       started_at INTEGER,
       ended_at INTEGER,
       created_at INTEGER NOT NULL,
-      archived_at INTEGER
+      archived_at INTEGER,
+      duration_minutes_override REAL,
+      reading_time_minutes_override REAL
     );
 
     CREATE UNIQUE INDEX IF NOT EXISTS one_live_session_per_class
@@ -105,6 +107,14 @@ export function initializeDatabaseSchema(db: Database): void {
       if (!columns.some(({ name }) => name === "archived_at")) {
         db.run(`ALTER TABLE ${table} ADD COLUMN archived_at INTEGER`);
       }
+    }
+
+    const sessionColumns = db.query<{ name: string }, []>("PRAGMA table_info(exam_sessions)").all();
+    if (!sessionColumns.some(({ name }) => name === "duration_minutes_override")) {
+      db.run("ALTER TABLE exam_sessions ADD COLUMN duration_minutes_override REAL");
+    }
+    if (!sessionColumns.some(({ name }) => name === "reading_time_minutes_override")) {
+      db.run("ALTER TABLE exam_sessions ADD COLUMN reading_time_minutes_override REAL");
     }
   });
   migrate();

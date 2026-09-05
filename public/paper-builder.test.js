@@ -3,6 +3,7 @@ import { CURRENT_SAMPLE_COURSE_IDS } from "../examples/sample-source/index.ts";
 import {
   BUILDER_LEVELS,
   COURSES,
+  EXAM_SYSTEMS,
   levelsForCourse,
   packageData,
   paperPreviewData,
@@ -40,6 +41,187 @@ describe("Paper Builder exam presets", () => {
     expect(valueForLevel(paper1, "duration", "SL/HL")).toBe(120);
     expect(valueForLevel(paper1, "maximumMarks", "SL/HL")).toBeUndefined();
     expect(valueForLevel(paper1, "subjectWeightPercent", "SL/HL")).toBeUndefined();
+  });
+
+  test("offers exact exam-system profiles with system-specific terminology and formats", () => {
+    expect(EXAM_SYSTEMS.map((system) => system.value)).toEqual([
+      "ib-dp",
+      "cambridge-igcse",
+      "pearson-edexcel-igcse",
+      "ap",
+      "school-custom",
+    ]);
+
+    const cambridge = EXAM_SYSTEMS.find((system) => system.value === "cambridge-igcse");
+    const cambridgeMaths = cambridge.courses[0];
+    expect(cambridge.levelLabel).toBe("Tier");
+    expect(levelsForCourse(cambridgeMaths, "2026", cambridge)).toEqual(["Core", "Extended"]);
+    expect(papersForLevel(cambridgeMaths, "2026", "Extended").map((item) => item.value)).toEqual(["paper-2", "paper-4"]);
+    expect(cambridgeMaths.papers.find((item) => item.value === "paper-2")).toMatchObject({
+      duration: 120,
+      maximumMarks: 100,
+      responseTypes: ["short", "ink"],
+    });
+
+    const pearson = EXAM_SYSTEMS.find((system) => system.value === "pearson-edexcel-igcse");
+    expect(levelsForCourse(pearson.courses[0], "2026", pearson)).toEqual(["Foundation", "Higher"]);
+    expect(papersForLevel(pearson.courses[0], "2026", "Higher").map((item) => item.label)).toEqual(["Paper 1H", "Paper 2H"]);
+    expect(pearson.courses.map(({ value }) => value)).toEqual([
+      "pearson-igcse-mathematics-a",
+      "pearson-igcse-mathematics-a-modular",
+    ]);
+    expect(papersForLevel(pearson.courses[1], "2026", "Higher").map((item) => item.label)).toEqual([
+      "Unit 1 (4WM1H/01)",
+      "Unit 2 (4WM2H/01)",
+    ]);
+
+    const ap = EXAM_SYSTEMS.find((system) => system.value === "ap");
+    expect(ap.courses.find((course) => course.value === "ap-english-language-composition").papers[0]).toMatchObject({
+      fidelity: "adapted",
+      deliveryFormat: "Fully digital practice",
+      responseTypes: ["single-choice", "essay"],
+    });
+    expect(ap.courses.find((course) => course.value === "ap-biology").papers[0]).toMatchObject({
+      fidelity: "adapted",
+      deliveryFormat: "Hybrid digital/paper practice",
+      duration: 190,
+      durationLabel: "Session timer",
+      responseTypes: ["single-choice", "ink"],
+    });
+    expect(ap.courses.find((course) => course.value === "ap-calculus-ab").papers[0]).toMatchObject({
+      duration: 200,
+      minimumQuestions: 4,
+      phases: [
+        { id: "section-1a", durationMinutes: 62, tools: ["Calculator not permitted", "Digital multiple-choice"] },
+        { id: "section-1b", durationMinutes: 38 },
+        { id: "break", durationMinutes: 10 },
+        { id: "section-2a", durationMinutes: 30 },
+        { id: "section-2b", durationMinutes: 60 },
+      ],
+    });
+  });
+
+  test("stores AP timed sections and assigns each question to its section", async () => {
+    const form = builderForm({
+      "#builder-system": { value: "ap" },
+      "#builder-session": { value: "may-2027" },
+      "#builder-subject": { value: "ap-english-language-composition" },
+      "#builder-level": { value: "AP" },
+      "#builder-paper": { value: "end-of-course" },
+      "#builder-title": { value: "AP English Language practice" },
+      "#builder-paper-label": { value: "End-of-course exam — fully digital" },
+      "#builder-duration": { value: "205" },
+      "#builder-reading-time": { value: "0" },
+      "#builder-maximum-marks": { value: "" },
+      "#builder-instructions": { value: "Complete the multiple-choice and free-response practice sections. Follow the teacher's instruction for the monitored break." },
+      "#builder-source-text": { value: "" },
+    });
+    const questions = [
+      { label: "Section I item", prompt: "Choose.", type: "single-choice", options: "A\nB", sectionId: "section-1", mediaFiles: [] },
+      { label: "Section II response", prompt: "Write.", type: "essay", sectionId: "section-2", mediaFiles: [] },
+    ];
+    const manifest = JSON.parse(await packageData(form, questions).getAll("packageFiles")[0].text());
+    expect(manifest.phases.map(({ id, kind, durationMinutes }) => ({ id, kind, durationMinutes }))).toEqual([
+      { id: "section-1", kind: "work", durationMinutes: 60 },
+      { id: "break", kind: "break", durationMinutes: 10 },
+      { id: "section-2", kind: "work", durationMinutes: 135 },
+    ]);
+    expect(manifest.questions.map(({ sectionId }) => sectionId)).toEqual(["section-1", "section-2"]);
+    expect(manifest.examFormat.fidelity).toBe("adapted");
+    form.querySelector("#builder-instructions").value += " Show your working clearly.";
+    form.querySelector("#builder-maximum-marks").value = "50";
+    const edited = JSON.parse(await packageData(form, questions).getAll("packageFiles")[0].text());
+    expect(edited.phases).toEqual(manifest.phases);
+    expect(edited.phases).toEqual(paperPreviewData(form, questions).phases);
+    form.querySelector("#builder-duration").value = "206";
+    expect(() => packageData(form, questions)).toThrow("fixed timed sections");
+    expect(() => paperPreviewData(form, questions)).toThrow("fixed timed sections");
+  });
+
+  test("keeps all verified IGCSE components available for 2027 with the same timing and tiers", () => {
+    for (const systemId of ["cambridge-igcse", "pearson-edexcel-igcse"]) {
+      const system = EXAM_SYSTEMS.find(({ value }) => value === systemId);
+      expect(system.sessions.some(({ value }) => value === "2027")).toBeTrue();
+      for (const course of system.courses) {
+        for (const level of system.levelOrder) {
+          const components = papersForLevel(course, "2027", level);
+          expect(components).toHaveLength(2);
+          expect(components).toEqual(papersForLevel(course, "2026", level));
+          for (const component of components) {
+            expect(component.duration).toBe(systemId === "cambridge-igcse" && level === "Core" ? 90 : 120);
+            expect(component.maximumMarks).toBe(systemId === "cambridge-igcse" && level === "Core" ? 80 : 100);
+            expect(component.readingTime).toBe(0);
+          }
+        }
+      }
+    }
+  });
+
+  test("provides current calculator and reference rules before non-IB papers are built", () => {
+    const cambridge = EXAM_SYSTEMS.find(({ value }) => value === "cambridge-igcse").courses[0];
+    for (const id of ["paper-3", "paper-4"]) {
+      const paper = cambridge.papers.find(({ value }) => value === id);
+      expect(paper.instructions).toContain("algebraic or graphical calculators must not be used");
+      expect(paper.instructions).toContain("three significant figures");
+      expect(paper.instructions).toContain("one decimal place for angles in degrees");
+    }
+    const ap = EXAM_SYSTEMS.find(({ value }) => value === "ap");
+    const biology = ap.courses.find(({ value }) => value === "ap-biology").papers[0];
+    expect(biology.requiredDocumentLabel).toContain("AP Biology equations and formulas sheet");
+    expect(biology.instructions).toContain("four-function calculator with square root");
+    for (const phase of biology.phases.filter(({ kind }) => kind === "work")) {
+      expect(phase.tools.join(" ")).toContain("nongraphing");
+      expect(phase.tools).toContain("AP Biology equations and formulas sheet");
+      expect(phase.instructions).toContain("handheld calculators with storage capabilities are not allowed");
+    }
+  });
+
+  test("stores the selected Cambridge format and tuned rules in the paper manifest", async () => {
+    const form = builderForm({
+      "#builder-system": { value: "cambridge-igcse" },
+      "#builder-session": { value: "2026" },
+      "#builder-subject": { value: "cambridge-igcse-mathematics-0580" },
+      "#builder-level": { value: "Extended" },
+      "#builder-paper": { value: "paper-2" },
+      "#builder-title": { value: "Mathematics 0580 Extended Paper 2 practice" },
+      "#builder-paper-label": { value: "Paper 2 — Non-calculator (Extended)" },
+      "#builder-duration": { value: "120" },
+      "#builder-reading-time": { value: "0" },
+      "#builder-maximum-marks": { value: "100" },
+      "#builder-instructions": { value: "Answer all questions. Calculators must not be used. Show all necessary working clearly." },
+      "#builder-pdf": { files: [new File(["formula list"], "0580-formula-list.pdf", { type: "application/pdf" })] },
+      "#builder-source-text": { value: "" },
+    });
+    const question = [{
+      label: "Question 1",
+      prompt: "Show your working.",
+      type: "ink",
+      inkPages: 1,
+      inkBackground: "square-grid",
+      mediaFiles: [],
+    }];
+    const manifest = JSON.parse(await packageData(form, question).getAll("packageFiles")[0].text());
+
+    expect(manifest).toMatchObject({
+      assessmentSession: "2026",
+      examProfileId: "cambridge-igcse:2026:cambridge-igcse-mathematics-0580:Extended:paper-2",
+      level: "Extended",
+      durationMinutes: 120,
+      maximumMarks: 100,
+      examFormat: {
+        systemId: "cambridge-igcse",
+        systemLabel: "Cambridge IGCSE",
+        deliveryMode: "Paper-like digital practice",
+        fidelity: "official-format",
+      },
+    });
+    expect(manifest.examFormat.rulesSummary).toContain("No calculator");
+    expect(manifest.resources).toContainEqual({
+      key: "paper-1",
+      label: "Paper-wide PDF",
+      kind: "document",
+      file: "0580-formula-list.pdf",
+    });
   });
 
   test("builds preview data from the live combined-level fields without claiming one level's marks", () => {
@@ -135,7 +317,10 @@ describe("Paper Builder exam presets", () => {
   });
 
   test("the example library stays aligned with every course in the builder", () => {
-    expect([...CURRENT_SAMPLE_COURSE_IDS].sort()).toEqual(COURSES.map((course) => course.value).sort());
+    const profiledCourses = EXAM_SYSTEMS
+      .filter((system) => system.value !== "school-custom")
+      .flatMap((system) => system.courses.map((course) => course.value));
+    expect([...CURRENT_SAMPLE_COURSE_IDS].sort()).toEqual(profiledCourses.sort());
   });
 
   test("current mathematics choices apply the 2026 timing matrix", () => {
@@ -146,7 +331,7 @@ describe("Paper Builder exam presets", () => {
       const paper3 = course.papers.find((paper) => paper.value === "paper-3");
       expect(paper1.durationByLevel).toEqual({ SL: 90, HL: 120 });
       expect(paper2.durationByLevel).toEqual({ SL: 90, HL: 120 });
-      expect(paper3.duration).toBe(75);
+      expect(paper3.duration).toBe(60);
       expect(paper3.levels).toEqual(["HL"]);
       expect(paper1.maximumMarksByLevel).toEqual({ SL: 80, HL: 110 });
       expect(paper1.subjectWeightPercentByLevel).toEqual({ SL: 40, HL: 30 });
@@ -177,6 +362,8 @@ describe("Paper Builder exam presets", () => {
       const course = COURSES.find((item) => item.value === courseId);
       expect(course.papers.find((paper) => paper.value === "paper-2").guidanceByLevel.SL).toContain("All questions are compulsory");
     }
+    const physics = COURSES.find((item) => item.value === "physics");
+    expect(physics.papers.find((paper) => paper.value === "paper-2").maximumMarksByLevel).toEqual({ SL: 50, HL: 90 });
 
     const psychology = COURSES.find((item) => item.value === "psychology");
     const legacyPsychology = psychology.papers.filter((paper) => paper.sessions.includes("may-2026"));
@@ -242,13 +429,13 @@ describe("Paper Builder exam presets", () => {
     });
     const question = [{ label: "Question 1", prompt: "Interpret the source.", type: "short", mediaFiles: [] }];
     const manifest = JSON.parse(await packageData(form, question).getAll("packageFiles")[0].text());
-    expect(manifest.examProfileId).toBe("may-2027:psychology:HL:paper-3");
+    expect(manifest.examProfileId).toBe("ib-dp:may-2027:psychology:HL:paper-3");
     expect(manifest.durationMinutes).toBe(105);
     expect(() => packageData(builderForm({
       "#builder-session": { value: "may-2027" },
       "#builder-subject": { value: "english-b" },
       "#builder-paper": { value: "paper-1" },
-    }), question)).toThrow("Choose a course, level and examination paper first");
+    }), question)).toThrow("Choose an exam system, course, level or tier, and examination format first");
   });
 
   test("edited or custom timing cannot retain an official-looking exam profile", async () => {
@@ -272,7 +459,8 @@ describe("Paper Builder exam presets", () => {
     const official = JSON.parse(await packageData(builderForm(officialControls), [question]).getAll("packageFiles")[0].text());
     const edited = JSON.parse(await packageData(builderForm({ ...officialControls, "#builder-duration": { value: "42" } }), [question]).getAll("packageFiles")[0].text());
     const custom = JSON.parse(await packageData(builderForm({ ...officialControls, "#builder-session": { value: "custom" } }), [question]).getAll("packageFiles")[0].text());
-    expect(official.examProfileId).toBe("may-2026:mathematics-analysis-approaches:SL:paper-1");
+    expect(official.examProfileId).toBe("ib-dp:may-2026:mathematics-analysis-approaches:SL:paper-1");
+    expect(official.examFormat).toMatchObject({ systemId: "ib-dp", fidelity: "official-format" });
     expect(official.assessmentSession).toBe("may-2026");
     expect(official.resources[0]).toMatchObject({ key: "paper-1", kind: "document", file: "formula-booklet.pdf" });
     expect(official).toMatchObject({ maximumMarks: 80, subjectWeightPercent: 40 });

@@ -2,6 +2,21 @@ const COLLECTIONS = new Set(["classes", "students", "sessions"]);
 const LIFECYCLE_ACTIONS = new Set(["archive", "restore"]);
 const LEVEL_ORDER = new Map([["SL", 0], ["HL", 1], ["SL/HL", 2]]);
 const PAPER_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+const IB_SUBJECTS = new Set([
+  "english-a-language-literature", "english-a-literature", "english-b",
+  "korean-a-language-literature", "korean-a-literature", "japanese-a-language-literature", "japanese-a-literature",
+  "spanish-a-language-literature", "spanish-a-literature", "spanish-b",
+  "mathematics-analysis-approaches", "mathematics-applications-interpretation",
+  "biology", "chemistry", "physics", "psychology", "business-management",
+]);
+const SYSTEM_ORDER = new Map([
+  ["IB Diploma Programme", 0],
+  ["Cambridge IGCSE", 1],
+  ["Pearson Edexcel International GCSE", 2],
+  ["Advanced Placement", 3],
+  ["Advanced Placement (AP)", 3],
+  ["School/custom", 99],
+]);
 
 function option(select, value, label) {
   const item = select.ownerDocument.createElement("option");
@@ -22,7 +37,18 @@ export function formatPaperOptionLabel(paper) {
   const title = paper.title.trim();
   const component = paper.paper.trim();
   const detail = title.toLocaleLowerCase().includes(component.toLocaleLowerCase()) ? title : `${title} · ${component}`;
-  return `${detail} · ${paper.level}`;
+  return [paper.examSystemLabel, detail, paper.level].filter(Boolean).join(" · ");
+}
+
+export function paperSystemLabel(paper) {
+  if (paper.examSystemLabel) return paper.examSystemLabel;
+  return IB_SUBJECTS.has(paper.subject) ? "IB Diploma Programme" : "School/custom";
+}
+
+export function paperSystemOptions(papers) {
+  return [...new Set(papers.map(paperSystemLabel))]
+    .sort((left, right) => (SYSTEM_ORDER.get(left) ?? 50) - (SYSTEM_ORDER.get(right) ?? 50) || PAPER_COLLATOR.compare(left, right))
+    .map((label) => ({ value: label, label }));
 }
 
 export function paperOptions(papers) {
@@ -35,6 +61,16 @@ export function paperOptions(papers) {
       || PAPER_COLLATOR.compare(left.id, right.id)
     ))
     .map((paper) => ({ value: paper.id, label: formatPaperOptionLabel(paper) }));
+}
+
+export function paperOptionsForSystem(papers, systemLabel) {
+  if (!systemLabel) return [];
+  return paperOptions(papers.filter((paper) => paperSystemLabel(paper) === systemLabel).map((paper) => ({
+    ...paper,
+    examSystemLabel: "",
+    title: paper.title.toLocaleLowerCase().includes(paper.subjectLabel.toLocaleLowerCase())
+      ? paper.title : `${paper.subjectLabel} · ${paper.title}`,
+  })));
 }
 
 export function syncOptions(select, placeholder, items) {
@@ -299,10 +335,22 @@ export function formatTimedPhase(minutes, phase) {
 
 export function formatPaperTime(session) {
   if (!session.durationMinutes) return "Teacher-defined timing";
+  if (session.phases?.length) return `${session.phases.length} timed phases · ${session.durationMinutes} minutes total`;
   const writing = formatTimedPhase(session.durationMinutes, "writing");
   return session.readingTimeMinutes
     ? `${formatTimedPhase(session.readingTimeMinutes, "reading")} · ${writing}`
     : writing;
+}
+
+export function currentSessionPhase(session, now = Date.now()) {
+  if (session.status !== "live" || !session.startedAt || !session.phases?.length) return null;
+  let startsAt = Number(session.startedAt);
+  for (const phase of session.phases) {
+    const endsAt = startsAt + Number(phase.durationMinutes) * 60_000;
+    if (now >= startsAt && now < endsAt) return phase;
+    startsAt = endsAt;
+  }
+  return null;
 }
 
 export function sessionActionModel(session, archived = false) {
@@ -324,7 +372,8 @@ function sessionDetail(documentRoot, session) {
   title.textContent = session.paperTitle;
   const metadata = documentRoot.createElement("span");
   const status = session.status === "draft" ? "ready" : session.status;
-  metadata.textContent = `${session.className} · ${status} · ${formatPaperTime(session)}`;
+  const phase = currentSessionPhase(session);
+  metadata.textContent = `${session.className} · ${status}${phase ? ` · ${phase.label}` : ""} · ${formatPaperTime(session)}`;
   detail.append(title, metadata);
   return detail;
 }

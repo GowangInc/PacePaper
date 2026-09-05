@@ -23,5 +23,14 @@ resources/**/*.flac
 release/*.zip
 release/*.tar.gz
 release/DigitalDP-*/
+release/DigitalDP-*-User-Guide.html
 release/DigitalDP-*-User-Guide.txt
+release/DigitalDP-*-Release-Notes.txt
 release/SHA256SUMS.txt
+research/qa/**/logs/*.cookie
+# Local QA may contain rosters, recovery responses, or browser session data.
+output/
+research/qa/**/logs/
+research/qa/**/pdfs/
+research/qa/**/videos/
+research/qa/**/*.csv

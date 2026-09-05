@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Physics · Paper 1 — original combined 1A and 1B sample",
+  "title": "Physics · Paper 1 (SL) — original full-format practice",
   "subject": "physics",
   "subjectLabel": "Physics",
   "level": "SL",
-  "paper": "Paper 1 — original combined 1A and 1B sample",
-  "durationMinutes": 35,
+  "paper": "Paper 1 (SL) — original full-format practice",
+  "durationMinutes": 90,
   "readingTimeMinutes": 5,
-  "maximumMarks": 13,
+  "maximumMarks": 45,
   "mode": "reading",
   "instructions": "Complete the selected-response and data/working questions under one timer. An approved calculator is required. Use the original reference data supplied within this sample; no external data booklet is needed. Enter each answer beside its question; no separate answer sheet is used.",
   "selectionMode": "all",
@@ -81,7 +81,301 @@
     },
     {
       "id": "q5",
-      "label": "Paper 1B · Question 5",
+      "label": "Paper 1A · Question 5",
+      "prompt": "What is the gradient of a velocity–time graph?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Displacement",
+        "Acceleration",
+        "Momentum",
+        "Power"
+      ]
+    },
+    {
+      "id": "q6",
+      "label": "Paper 1A · Question 6",
+      "prompt": "Which quantity is conserved in every isolated collision?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Kinetic energy",
+        "Momentum",
+        "Speed of each object",
+        "Force"
+      ]
+    },
+    {
+      "id": "q7",
+      "label": "Paper 1A · Question 7",
+      "prompt": "A force acts perpendicular to displacement. What work does it do?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Zero",
+        "Maximum positive",
+        "Maximum negative",
+        "Equal to force"
+      ]
+    },
+    {
+      "id": "q8",
+      "label": "Paper 1A · Question 8",
+      "prompt": "Which expression is power?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Energy × time",
+        "Energy ÷ time",
+        "Force ÷ distance",
+        "Momentum × time"
+      ]
+    },
+    {
+      "id": "q9",
+      "label": "Paper 1A · Question 9",
+      "prompt": "What provides centripetal acceleration in a circular orbit?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "A tangential force only",
+        "A resultant force toward the centre",
+        "No force",
+        "A force away from the centre"
+      ]
+    },
+    {
+      "id": "q10",
+      "label": "Paper 1A · Question 10",
+      "prompt": "Which change doubles gravitational field strength at fixed mass?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Double distance",
+        "Halve distance",
+        "Increase distance by √2",
+        "Reduce distance by 1/√2"
+      ]
+    },
+    {
+      "id": "q11",
+      "label": "Paper 1A · Question 11",
+      "prompt": "Temperature is proportional to which microscopic quantity for an ideal gas?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Total potential energy",
+        "Mean random kinetic energy",
+        "Number of particles only",
+        "Container volume only"
+      ]
+    },
+    {
+      "id": "q12",
+      "label": "Paper 1A · Question 12",
+      "prompt": "During melting at constant pressure, added energy mainly increases",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "mean kinetic energy",
+        "intermolecular potential energy",
+        "mass",
+        "temperature immediately"
+      ]
+    },
+    {
+      "id": "q13",
+      "label": "Paper 1A · Question 13",
+      "prompt": "Which wave phenomenon demonstrates superposition?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Interference",
+        "Radioactive decay",
+        "Charge quantization",
+        "Thermal expansion"
+      ]
+    },
+    {
+      "id": "q14",
+      "label": "Paper 1A · Question 14",
+      "prompt": "A standing wave node has",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "maximum displacement",
+        "zero displacement at all times",
+        "maximum speed at all times",
+        "no neighbouring antinode"
+      ]
+    },
+    {
+      "id": "q15",
+      "label": "Paper 1A · Question 15",
+      "prompt": "Which change increases diffraction?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Aperture much wider than wavelength",
+        "Aperture comparable to wavelength",
+        "Higher amplitude only",
+        "Shorter path only"
+      ]
+    },
+    {
+      "id": "q16",
+      "label": "Paper 1A · Question 16",
+      "prompt": "What is current?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Energy per charge",
+        "Charge per time",
+        "Force per charge",
+        "Power per resistance"
+      ]
+    },
+    {
+      "id": "q17",
+      "label": "Paper 1A · Question 17",
+      "prompt": "For an ohmic conductor at constant temperature, resistance is",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "V/I",
+        "VI",
+        "I/V",
+        "Vt"
+      ]
+    },
+    {
+      "id": "q18",
+      "label": "Paper 1A · Question 18",
+      "prompt": "Which field direction is defined by the force on a positive test charge?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Electric",
+        "Gravitational",
+        "Temperature",
+        "Pressure"
+      ]
+    },
+    {
+      "id": "q19",
+      "label": "Paper 1A · Question 19",
+      "prompt": "A charged particle enters a uniform magnetic field parallel to the field. Its magnetic force is",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "maximum",
+        "zero",
+        "opposite to velocity",
+        "along the field"
+      ]
+    },
+    {
+      "id": "q20",
+      "label": "Paper 1A · Question 20",
+      "prompt": "Electromagnetic induction requires a change in",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "resistance only",
+        "magnetic flux linkage",
+        "electric charge",
+        "mass"
+      ]
+    },
+    {
+      "id": "q21",
+      "label": "Paper 1A · Question 21",
+      "prompt": "Which statement about photons is correct?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Energy is hf",
+        "Energy is independent of frequency",
+        "All photons have equal momentum",
+        "Photons carry charge"
+      ]
+    },
+    {
+      "id": "q22",
+      "label": "Paper 1A · Question 22",
+      "prompt": "What determines the activity of a radioactive sample?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Decay constant and number of undecayed nuclei",
+        "Temperature only",
+        "Pressure only",
+        "Sample shape only"
+      ]
+    },
+    {
+      "id": "q23",
+      "label": "Paper 1A · Question 23",
+      "prompt": "Which interaction binds protons and neutrons in a nucleus?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Gravitational",
+        "Strong",
+        "Electrostatic only",
+        "Frictional"
+      ]
+    },
+    {
+      "id": "q24",
+      "label": "Paper 1A · Question 24",
+      "prompt": "Which graph should be linear for exponential radioactive decay?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "N against t",
+        "ln N against t",
+        "1/N against t",
+        "N² against t"
+      ]
+    },
+    {
+      "id": "q25",
+      "label": "Paper 1A · Question 25",
+      "prompt": "Which statement distinguishes random from systematic uncertainty?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Random uncertainty causes scatter",
+        "Random uncertainty shifts every result equally",
+        "Systematic uncertainty is removed by repeats alone",
+        "Systematic uncertainty never affects accuracy"
+      ]
+    },
+    {
+      "id": "q26",
+      "label": "Paper 1B · Data question 1",
       "prompt": "A 0.40 kg ball is projected vertically upward at 12.0 m s⁻¹. Neglect air resistance. Calculate its maximum height above the launch point and the time taken to return.",
       "type": "ink",
       "resourceKeys": [
@@ -95,17 +389,40 @@
       }
     },
     {
-      "id": "q6",
-      "label": "Paper 1B · Question 6",
-      "prompt": "A 6.0 Ω resistor and a 3.0 Ω resistor are connected in parallel to a 12 V supply. Draw the circuit and calculate the total current.",
+      "id": "q27",
+      "label": "Paper 1B · Data question 2",
+      "prompt": "A 6.0 Ω resistor and a 3.0 Ω resistor are connected in parallel to a 12 V supply. Draw the circuit and calculate the total current and power supplied.",
       "type": "ink",
       "resourceKeys": [],
-      "marks": 4,
+      "marks": 5,
       "ink": {
         "pages": 1,
         "background": "blank",
         "allowTypedAlternative": true
       }
+    },
+    {
+      "id": "q28",
+      "label": "Paper 1B · Data question 3",
+      "prompt": "A student records the period of a pendulum at five lengths. Describe how to process the data to determine g, including the graph, gradient relationship and treatment of uncertainty.",
+      "type": "ink",
+      "resourceKeys": [
+        "physics-reference"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q29",
+      "label": "Paper 1B · Data question 4",
+      "prompt": "Design an investigation of how light intensity affects the current from a photovoltaic cell. Include a labelled arrangement, variables, repeated measurements, graph and two safety or validity controls.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 5
     }
   ]
 }

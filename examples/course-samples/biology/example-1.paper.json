@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Biology · Paper 1 — original combined 1A and 1B sample",
+  "title": "Biology · Paper 1 (SL) — original full-format practice",
   "subject": "biology",
   "subjectLabel": "Biology",
   "level": "SL",
-  "paper": "Paper 1 — original combined 1A and 1B sample",
-  "durationMinutes": 35,
+  "paper": "Paper 1 (SL) — original full-format practice",
+  "durationMinutes": 90,
   "readingTimeMinutes": 5,
-  "maximumMarks": 12,
+  "maximumMarks": 55,
   "mode": "reading",
   "instructions": "Complete the selected-response and data/working questions under one timer. An approved calculator is required; all data needed for this original sample is supplied within DigitalDP. Enter each answer beside its question; no separate answer sheet is used.",
   "selectionMode": "all",
@@ -81,13 +81,377 @@
     },
     {
       "id": "q5",
-      "label": "Paper 1B · Question 5",
+      "label": "Paper 1A · Question 5",
+      "prompt": "Which molecule is the immediate source of energy for active transport?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "DNA",
+        "ATP",
+        "Oxygen",
+        "Glucose"
+      ]
+    },
+    {
+      "id": "q6",
+      "label": "Paper 1A · Question 6",
+      "prompt": "Which feature increases the surface area of an absorptive epithelial cell?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Centrioles",
+        "Microvilli",
+        "Chromatin",
+        "Lysosomes"
+      ]
+    },
+    {
+      "id": "q7",
+      "label": "Paper 1A · Question 7",
+      "prompt": "During which part of the cell cycle is DNA replicated?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "G1",
+        "S",
+        "G2",
+        "M"
+      ]
+    },
+    {
+      "id": "q8",
+      "label": "Paper 1A · Question 8",
+      "prompt": "Which bond joins adjacent amino acids in a polypeptide?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Glycosidic",
+        "Peptide",
+        "Hydrogen",
+        "Phosphodiester"
+      ]
+    },
+    {
+      "id": "q9",
+      "label": "Paper 1A · Question 9",
+      "prompt": "Which process produces mRNA from a DNA template?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Translation",
+        "Replication",
+        "Transcription",
+        "Translocation"
+      ]
+    },
+    {
+      "id": "q10",
+      "label": "Paper 1A · Question 10",
+      "prompt": "Which event occurs at a ribosome?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "DNA unwinds",
+        "Codons pair with anticodons",
+        "Introns replicate",
+        "Lipids polymerize"
+      ]
+    },
+    {
+      "id": "q11",
+      "label": "Paper 1A · Question 11",
+      "prompt": "What is the primary function of xylem vessels?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Transport sugars",
+        "Transport water and ions",
+        "Control gas exchange",
+        "Store genetic information"
+      ]
+    },
+    {
+      "id": "q12",
+      "label": "Paper 1A · Question 12",
+      "prompt": "Which change tends to close stomata?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "High guard-cell turgor",
+        "Water loss from guard cells",
+        "Blue light",
+        "Low internal carbon dioxide"
+      ]
+    },
+    {
+      "id": "q13",
+      "label": "Paper 1A · Question 13",
+      "prompt": "Which hormone lowers blood glucose concentration?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Glucagon",
+        "Insulin",
+        "Adrenaline",
+        "Thyroxine"
+      ]
+    },
+    {
+      "id": "q14",
+      "label": "Paper 1A · Question 14",
+      "prompt": "Which structure prevents backflow in the heart?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Valve",
+        "Septum",
+        "Atrium",
+        "Pacemaker"
+      ]
+    },
+    {
+      "id": "q15",
+      "label": "Paper 1A · Question 15",
+      "prompt": "Which immune cell secretes antibodies?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Platelet",
+        "Plasma cell",
+        "Phagocyte",
+        "Erythrocyte"
+      ]
+    },
+    {
+      "id": "q16",
+      "label": "Paper 1A · Question 16",
+      "prompt": "What is the role of a myelin sheath?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Produce neurotransmitter",
+        "Increase impulse conduction speed",
+        "Connect muscles to bones",
+        "Detect light"
+      ]
+    },
+    {
+      "id": "q17",
+      "label": "Paper 1A · Question 17",
+      "prompt": "Which statement describes negative feedback?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "A change amplifies itself",
+        "A response counteracts a deviation",
+        "A mutation enters a population",
+        "A stimulus is ignored"
+      ]
+    },
+    {
+      "id": "q18",
+      "label": "Paper 1A · Question 18",
+      "prompt": "Which gas is fixed during the Calvin cycle?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Oxygen",
+        "Nitrogen",
+        "Carbon dioxide",
+        "Methane"
+      ]
+    },
+    {
+      "id": "q19",
+      "label": "Paper 1A · Question 19",
+      "prompt": "Where does oxidative phosphorylation occur in a eukaryotic cell?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Golgi apparatus",
+        "Inner mitochondrial membrane",
+        "Nucleolus",
+        "Cell wall"
+      ]
+    },
+    {
+      "id": "q20",
+      "label": "Paper 1A · Question 20",
+      "prompt": "Which ecological term describes all populations living together in an area?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Community",
+        "Habitat",
+        "Species",
+        "Biome"
+      ]
+    },
+    {
+      "id": "q21",
+      "label": "Paper 1A · Question 21",
+      "prompt": "What is measured by species richness?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Number of species",
+        "Biomass of one species",
+        "Rate of mutation",
+        "Area of a habitat"
+      ]
+    },
+    {
+      "id": "q22",
+      "label": "Paper 1A · Question 22",
+      "prompt": "Which process can change allele frequencies by chance most strongly in a small population?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Gene expression",
+        "Genetic drift",
+        "Translation",
+        "Homeostasis"
+      ]
+    },
+    {
+      "id": "q23",
+      "label": "Paper 1A · Question 23",
+      "prompt": "What does a cladogram represent?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Metabolic rate",
+        "Hypothesized evolutionary relationships",
+        "Daily population size",
+        "Protein concentration"
+      ]
+    },
+    {
+      "id": "q24",
+      "label": "Paper 1A · Question 24",
+      "prompt": "Which condition is required for natural selection?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "No heritable variation",
+        "Differential reproductive success",
+        "Identical environments",
+        "No competition"
+      ]
+    },
+    {
+      "id": "q25",
+      "label": "Paper 1A · Question 25",
+      "prompt": "Which technique separates DNA fragments primarily by size?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Gel electrophoresis",
+        "Chromatography",
+        "Titration",
+        "Centrifugation only"
+      ]
+    },
+    {
+      "id": "q26",
+      "label": "Paper 1A · Question 26",
+      "prompt": "What is the purpose of a control group?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Increase the dependent variable",
+        "Provide a comparison without the tested treatment",
+        "Remove replication",
+        "Guarantee the hypothesis"
+      ]
+    },
+    {
+      "id": "q27",
+      "label": "Paper 1A · Question 27",
+      "prompt": "Which value best describes a strong negative correlation?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "−0.92",
+        "−0.08",
+        "+0.08",
+        "+0.92"
+      ]
+    },
+    {
+      "id": "q28",
+      "label": "Paper 1A · Question 28",
+      "prompt": "Which sampling method uses points at regular distances along a line?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Quadrat only",
+        "Transect",
+        "Capture–mark–recapture",
+        "Pedigree"
+      ]
+    },
+    {
+      "id": "q29",
+      "label": "Paper 1A · Question 29",
+      "prompt": "Which observation is evidence of osmosis?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Solute crosses a metal wire",
+        "Water moves across a partially permeable membrane",
+        "ATP is hydrolysed",
+        "A protein is translated"
+      ]
+    },
+    {
+      "id": "q30",
+      "label": "Paper 1A · Question 30",
+      "prompt": "Why are repeated measurements useful?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "They remove all systematic error",
+        "They permit assessment of variability",
+        "They change the independent variable",
+        "They prove causation"
+      ]
+    },
+    {
+      "id": "q31",
+      "label": "Paper 1B · Data question 1",
       "prompt": "Plot the enzyme data on suitable axes, describe the pattern, and identify the optimum temperature in this investigation.",
       "type": "ink",
       "resourceKeys": [
         "enzyme-data"
       ],
-      "marks": 4,
+      "marks": 6,
       "ink": {
         "pages": 2,
         "background": "square-grid",
@@ -95,14 +459,34 @@
       }
     },
     {
-      "id": "q6",
-      "label": "Paper 1B · Question 6",
-      "prompt": "Explain why product formation falls between 40°C and 50°C, referring to molecular structure.",
+      "id": "q32",
+      "label": "Paper 1B · Data question 2",
+      "prompt": "Explain the change in product formation between 30°C and 50°C, referring to collision frequency and molecular structure.",
       "type": "short",
       "resourceKeys": [
         "enzyme-data"
       ],
-      "marks": 4
+      "marks": 6
+    },
+    {
+      "id": "q33",
+      "label": "Paper 1B · Data question 3",
+      "prompt": "Design a controlled investigation to determine how pH affects the same enzyme. Include the independent and dependent variables, at least three controls, replication, uncertainty and a suitable display of results.",
+      "type": "essay",
+      "resourceKeys": [
+        "enzyme-data"
+      ],
+      "marks": 6
+    },
+    {
+      "id": "q34",
+      "label": "Paper 1B · Data question 4",
+      "prompt": "A second group obtains means of 1.1, 2.9, 5.0, 6.8 and 4.9 mg at the same temperatures. Compare the results, identify one anomalous relationship, and evaluate whether the two data sets support the same conclusion.",
+      "type": "short",
+      "resourceKeys": [
+        "enzyme-data"
+      ],
+      "marks": 7
     }
   ]
 }

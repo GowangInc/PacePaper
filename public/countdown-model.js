@@ -13,7 +13,18 @@ export function countdownPhase(config, now) {
   }
 
   const readingEndsAt = startAt + readingTimeMinutes * MINUTE_MS;
-  const endsAt = readingEndsAt + durationMinutes * MINUTE_MS;
+  const phasePlan = Array.isArray(config.phases) && config.phases.length
+    ? config.phases.map((phase) => ({ ...phase }))
+    : null;
+  const scheduledPhases = [];
+  let cursor = startAt;
+  for (const phase of phasePlan ?? []) {
+    const startsAt = cursor;
+    const phaseEndsAt = startsAt + Number(phase.durationMinutes) * MINUTE_MS;
+    scheduledPhases.push({ ...phase, startsAt, endsAt: phaseEndsAt });
+    cursor = phaseEndsAt;
+  }
+  const endsAt = phasePlan ? cursor : readingEndsAt + durationMinutes * MINUTE_MS;
   if (config.sessionStatus === "draft") {
     return {
       phase: "ready",
@@ -43,11 +54,33 @@ export function countdownPhase(config, now) {
       phase: "before-start",
       label: "Starts in",
       remainingMs: startAt - currentTime,
-      nextLabel: readingTimeMinutes > 0 ? "Reading starts" : "Writing starts",
+      nextLabel: phasePlan?.[0]?.label ?? (readingTimeMinutes > 0 ? "Reading starts" : "Writing starts"),
       startAt,
       readingEndsAt,
       endsAt,
     };
+  }
+  if (scheduledPhases.length) {
+    const phaseIndex = scheduledPhases.findIndex((phase) => currentTime >= phase.startsAt && currentTime < phase.endsAt);
+    if (phaseIndex >= 0) {
+      const current = scheduledPhases[phaseIndex];
+      const next = scheduledPhases[phaseIndex + 1];
+      return {
+        phase: current.kind === "work" ? "writing" : current.kind,
+        phaseId: current.id,
+        phaseIndex,
+        phaseCount: scheduledPhases.length,
+        label: current.label,
+        tools: current.tools ?? [],
+        remainingMs: current.endsAt - currentTime,
+        nextLabel: next?.label ?? "Exam ends",
+        nextAt: current.endsAt,
+        startAt,
+        readingEndsAt,
+        endsAt,
+        scheduledPhases,
+      };
+    }
   }
   if (readingTimeMinutes > 0 && currentTime < readingEndsAt) {
     return {
@@ -93,6 +126,10 @@ export function countdownPhase(config, now) {
   };
 }
 
+export function canPersistCandidateTiming(session) {
+  return Boolean(session?.status === "draft" && !session.phases?.length);
+}
+
 export function formatCountdown(milliseconds) {
   const totalSeconds = Math.max(0, Math.ceil(Number(milliseconds) / 1_000));
   const hours = Math.floor(totalSeconds / 3_600);
@@ -125,15 +162,14 @@ export function chooseCountdownSession(sessions, requestedId = "") {
     ?? null;
 }
 
-export function synchronizeLinkedCountdown(config, session) {
+export function synchronizeLinkedCountdown(config, session, now = Date.now()) {
   if (!session || config.sessionId !== session.id) return config;
-  const startingNow = config.sessionStatus !== "live" && session.status === "live";
-  const hasStartedAt = typeof session.startedAt === "number" && Number.isFinite(session.startedAt);
+  // Only presentation belongs to this window. A linked clock never owns a
+  // separate duration, start or phase plan, even after a teacher edits its title.
   return {
-    ...config,
-    sessionStatus: session.status,
-    endedAt: session.endedAt ?? null,
-    ...(startingNow && hasStartedAt ? { startAt: session.startedAt } : {}),
+    ...configFromSession(session, now),
+    title: config.title,
+    subtitle: config.subtitle,
   };
 }
 
@@ -166,5 +202,6 @@ export function configFromSession(session, now) {
     startAt: session.startedAt ?? nextFiveMinuteStart(now),
     readingTimeMinutes: session.readingTimeMinutes,
     durationMinutes: session.durationMinutes,
+    phases: session.phases,
   };
 }

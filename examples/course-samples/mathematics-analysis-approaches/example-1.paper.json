@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Mathematics: Analysis and Approaches · Paper 1 — original integrated-working sample",
+  "title": "Mathematics: Analysis and Approaches · Paper 1 (SL) — original full-format practice",
   "subject": "mathematics-analysis-approaches",
   "subjectLabel": "Mathematics: Analysis and Approaches",
   "level": "SL",
-  "paper": "Paper 1 — original integrated-working sample",
-  "durationMinutes": 45,
+  "paper": "Paper 1 (SL) — original full-format practice",
+  "durationMinutes": 90,
   "readingTimeMinutes": 5,
-  "maximumMarks": 22,
+  "maximumMarks": 80,
   "mode": "reading",
   "instructions": "Do not use a calculator. Answer every question in its digital working area, show all reasoning, and give exact values where requested. No separate answer sheet is used.",
   "selectionMode": "all",
@@ -64,6 +64,110 @@
       "marks": 4,
       "ink": {
         "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — logarithms",
+      "prompt": "Solve exactly log₂(x − 1) + log₂(x + 2) = 3, stating any rejected value.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 6,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — binomial theorem",
+      "prompt": "Find the coefficient of x³ in the expansion of (2 − x)⁶ and use the first four terms to approximate 1.99⁶.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 6,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — probability",
+      "prompt": "Events A and B satisfy P(A) = 0.62, P(B) = 0.45 and P(A ∪ B) = 0.79. Find P(A ∩ B), P(A | B), and determine whether A and B are independent.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 7,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — coordinate geometry",
+      "prompt": "The line 3x − 2y + 7 = 0 is tangent to a circle at P(1, 5). Find the equation of the circle if its centre lies on x + y = 2.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 7,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — functions",
+      "prompt": "Let f(x) = |2x − 3| − 1. Sketch y = f(x), solve f(x) = 2, and state the range of f.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — differentiation",
+      "prompt": "A rectangular sheet 24 cm by 16 cm has squares of side x removed from each corner and is folded into an open box. Find the value of x that maximizes the volume and justify that it is a maximum.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — proof",
+      "prompt": "Prove by mathematical induction that 1·2 + 2·3 + ··· + n(n + 1) = n(n + 1)(n + 2)/3 for every positive integer n.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12 — trigonometric modelling",
+      "prompt": "The depth d metres of water at a harbour is modelled by d(t) = 5.2 + 1.8 cos(πt/6), where t is hours after midnight. Find the first two times when d = 4.3 and the total time in the first 12 hours for which d is below 4.3.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
         "background": "square-grid",
         "allowTypedAlternative": true
       }

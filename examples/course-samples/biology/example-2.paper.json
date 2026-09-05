@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Biology · Paper 2 — original short and extended-response sample",
+  "title": "Biology · Paper 2 (HL) — original full-format practice",
   "subject": "biology",
   "subjectLabel": "Biology",
   "level": "HL",
-  "paper": "Paper 2 — original short and extended-response sample",
-  "durationMinutes": 60,
+  "paper": "Paper 2 (HL) — original full-format practice",
+  "durationMinutes": 150,
   "readingTimeMinutes": 5,
-  "maximumMarks": 30,
+  "maximumMarks": 80,
   "mode": "reading",
   "instructions": "Answer every question using the response area attached to it. An approved calculator is required; all data needed for this original sample is supplied within DigitalDP. Show calculations, units, diagrams and reasoning where required. No separate answer sheet is used.",
   "selectionMode": "all",
@@ -60,11 +60,51 @@
     },
     {
       "id": "q4",
-      "label": "Question 4 — extended response",
-      "prompt": "Explain how membrane transport and cell respiration together maintain cellular conditions, using named examples.",
+      "label": "Section A · Question 4 — membranes",
+      "prompt": "Explain how the properties of phospholipids and membrane proteins permit selective transport, using one passive and one active example.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 7
+    },
+    {
+      "id": "q5",
+      "label": "Section A · Question 5 — genetics",
+      "prompt": "A heterozygous individual for two unlinked genes is test-crossed. Construct the cross, predict the phenotypic ratio, and explain how linkage would alter the result.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 6
+    },
+    {
+      "id": "q6",
+      "label": "Section A · Question 6 — photosynthesis",
+      "prompt": "Outline how light energy is converted into chemical energy and used to produce carbohydrate. Distinguish events at the thylakoid from those in the stroma.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 6
+    },
+    {
+      "id": "q7",
+      "label": "Section A · Question 7 — homeostasis",
+      "prompt": "Explain how insulin and glucagon coordinate the response to a meal and a subsequent period without food.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 5
+    },
+    {
+      "id": "q8",
+      "label": "Section A · Question 8 — evolution",
+      "prompt": "Use natural selection to explain how resistance to a new antibiotic can become common in a bacterial population.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 5
+    },
+    {
+      "id": "q9",
+      "label": "Section B · choose two alternatives",
+      "prompt": "Answer any two alternatives, writing a separate response for each.\nA. Explain how gene expression is regulated and how cell differentiation can arise from a shared genome. [16]\nB. Compare energy transfer and nutrient cycling in ecosystems, and evaluate one human intervention intended to improve sustainability. [16]\nC. Explain how nervous and hormonal communication coordinate responses in mammals. [16]",
       "type": "essay",
       "resourceKeys": [],
-      "marks": 11
+      "marks": 32
     }
   ]
 }

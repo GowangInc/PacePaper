@@ -1,4 +1,7 @@
 import { createPaperPreview } from "./paper-preview.js";
+import { createExamSystems } from "./exam-format-profiles.js";
+import { field, option, responseFields } from "./paper-builder-dom.js";
+import { mountBuilderDrafts } from "./paper-builder-drafts.js";
 
 const AUDIO_PLAY_LIMIT = 2;
 
@@ -149,7 +152,7 @@ const MATHEMATICS_PAPERS = [
     requiredDocumentLabel: "current clean mathematics formula booklet",
   }),
   exam("paper-3", "Paper 3", "working", ["HL"], {
-    duration: 75,
+    duration: 60,
     maximumMarks: 55,
     subjectWeightPercent: 20,
     requiredDocumentLabel: "current clean mathematics formula booklet",
@@ -161,7 +164,7 @@ function sciencePapers(subject) {
   const markMatrix = {
     Biology: { paper1: { SL: 55, HL: 75 }, paper2: { SL: 50, HL: 80 } },
     Chemistry: { paper1: { SL: 55, HL: 75 }, paper2: { SL: 50, HL: 90 } },
-    Physics: { paper1: { SL: 45, HL: 60 }, paper2: { HL: 90 } },
+    Physics: { paper1: { SL: 45, HL: 60 }, paper2: { SL: 50, HL: 90 } },
   }[subject];
   const paperTwoGuidance = subject === "Biology"
     ? {
@@ -304,6 +307,16 @@ export const COURSES = [
   { value: "spanish-b", label: "Spanish B", papers: LANGUAGE_B_PAPERS },
 ];
 
+export const EXAM_SYSTEMS = createExamSystems(COURSES);
+const DEFAULT_EXAM_SYSTEM = EXAM_SYSTEMS[0];
+const ALL_RESPONSE_TYPES = ["essay", "short", "single-choice", "ink"];
+const RESPONSE_TYPE_LABELS = {
+  essay: "Long typed response",
+  short: "Short typed response",
+  "single-choice": "Multiple-choice",
+  ink: "Digital working canvas",
+};
+
 let nextQuestionId = 1;
 
 function questionFrom(template, number = 1) {
@@ -318,27 +331,18 @@ function questionFrom(template, number = 1) {
     wordCountMax: template.wordCountMax ?? "",
     inkPages: template.inkPages ?? 1,
     inkBackground: template.inkBackground ?? "square-grid",
+    sectionId: template.sectionId,
     mediaFiles: [],
   };
 }
 
-function field(tag, attributes, text) {
-  const element = document.createElement(tag);
-  for (const [name, value] of Object.entries(attributes ?? {})) {
-    if (name === "className") element.className = value;
-    else if (name === "value") element.value = value;
-    else element.setAttribute(name, value);
-  }
-  if (text !== undefined) element.textContent = text;
-  return element;
-}
-
-function option(value, label) {
-  return field("option", { value }, label);
+function selectedSystem(form) {
+  const systemId = form.querySelector("#builder-system")?.value ?? DEFAULT_EXAM_SYSTEM.value;
+  return EXAM_SYSTEMS.find((system) => system.value === systemId);
 }
 
 function selectedCourse(form) {
-  return COURSES.find((course) => course.value === form.querySelector("#builder-subject").value);
+  return selectedSystem(form)?.courses.find((course) => course.value === form.querySelector("#builder-subject").value);
 }
 
 export const BUILDER_LEVELS = ["SL", "HL", "SL/HL"];
@@ -349,12 +353,12 @@ function paperSupportsLevel(paper, level) {
     : paper.levels.includes(level);
 }
 
-export function levelsForCourse(course, assessmentSession) {
+export function levelsForCourse(course, assessmentSession, system = DEFAULT_EXAM_SYSTEM) {
   const directLevels = new Set(course.papers
     .filter((paper) => paper.sessions.includes(assessmentSession))
     .flatMap((paper) => paper.levels));
-  if (directLevels.has("SL") && directLevels.has("HL")) directLevels.add("SL/HL");
-  return BUILDER_LEVELS.filter((level) => directLevels.has(level));
+  if (system.combinedLevel && directLevels.has("SL") && directLevels.has("HL")) directLevels.add(system.combinedLevel);
+  return system.levelOrder.filter((level) => directLevels.has(level));
 }
 
 export function papersForLevel(course, assessmentSession, level) {
@@ -364,12 +368,15 @@ export function papersForLevel(course, assessmentSession, level) {
 }
 
 function selectedExam(form) {
+  const system = selectedSystem(form);
   const assessmentSession = form.querySelector("#builder-session").value;
   const course = selectedCourse(form);
   const level = form.querySelector("#builder-level").value;
   const paperValue = form.querySelector("#builder-paper").value;
   const paper = course && papersForLevel(course, assessmentSession, level).find((item) => item.value === paperValue);
-  return assessmentSession && course && level && paper ? { assessmentSession, course, level, paper } : null;
+  return system && assessmentSession && course && level && paper
+    ? { system, assessmentSession, course, level, paper }
+    : null;
 }
 
 export function valueForLevel(paper, property, level) {
@@ -416,10 +423,20 @@ function previewFile(file) {
   return { name: file.name, kind, file, ...(kind === "audio" ? { maxPlays: AUDIO_PLAY_LIMIT } : {}) };
 }
 
+function effectivePhases(selection, form) {
+  const phases = selection.paper.phases;
+  if (!phases?.length) return [];
+  if (Number(form.querySelector("#builder-reading-time").value) !== 0
+    || Number(form.querySelector("#builder-duration").value) !== phases.reduce((sum, phase) => sum + phase.durationMinutes, 0)) {
+    throw new Error("This format uses fixed timed sections and breaks. Keep its total time unchanged, or choose a custom format.");
+  }
+  return phases;
+}
+
 export function paperPreviewData(form, questions) {
   const selection = selectedExam(form);
   if (!selection) return null;
-  const { course, level, paper } = selection;
+  const { system, course, level, paper } = selection;
   const allowedMaterials = new Set(paper.materials);
   const sharedResources = [
     ...(allowedMaterials.has("pdf") ? [...form.querySelector("#builder-pdf").files].map(previewFile) : []),
@@ -427,12 +444,17 @@ export function paperPreviewData(form, questions) {
   ];
   return {
     title: form.querySelector("#builder-title").value.trim(),
+    examSystem: system.label,
+    deliveryFormat: paper.deliveryFormat,
+    toolSummary: paper.toolSummary,
+    phases: effectivePhases(selection, form),
     subject: course.label,
     level,
     paper: form.querySelector("#builder-paper-label").value.trim(),
     sessionLabel: form.querySelector("#builder-session").selectedOptions?.[0]?.textContent ?? selection.assessmentSession,
     readingTimeMinutes: Number(form.querySelector("#builder-reading-time").value),
     durationMinutes: Number(form.querySelector("#builder-duration").value),
+    durationLabel: paper.durationLabel ?? "Writing",
     maximumMarks: integerOrUndefined(form.querySelector("#builder-maximum-marks").value),
     subjectWeightPercent: valueForLevel(paper, "subjectWeightPercent", level),
     instructions: form.querySelector("#builder-instructions").value.trim(),
@@ -450,6 +472,7 @@ export function paperPreviewData(form, questions) {
       wordCountMax: question.wordCountMax,
       inkPages: question.inkPages,
       inkBackground: question.inkBackground,
+      sectionId: question.sectionId,
       media: question.mediaFiles.map(previewFile),
     })),
   };
@@ -457,7 +480,7 @@ export function paperPreviewData(form, questions) {
 
 export function packageData(form, questions) {
   const examSelection = selectedExam(form);
-  if (!examSelection) throw new Error("Choose a course, level and examination paper first.");
+  if (!examSelection) throw new Error("Choose an exam system, course, level or tier, and examination format first.");
   const minimumQuestions = examSelection.paper.minimumQuestions ?? 1;
   if (questions.length < minimumQuestions) {
     throw new Error(`Add at least ${minimumQuestions} question and student entry area cards for this paper.`);
@@ -515,6 +538,7 @@ export function packageData(form, questions) {
       prompt: question.prompt.trim(),
       type: question.type,
       resourceKeys,
+      ...(question.sectionId ? { sectionId: question.sectionId } : {}),
     };
     item.marks = integerOrUndefined(question.marks);
     if (question.type === "single-choice") {
@@ -541,12 +565,12 @@ export function packageData(form, questions) {
   const durationMinutes = Number(form.querySelector("#builder-duration").value);
   const readingTimeMinutes = Number(form.querySelector("#builder-reading-time").value);
   const maximumMarks = integerOrUndefined(form.querySelector("#builder-maximum-marks").value);
-  if (maximumMarks !== undefined && (!Number.isInteger(maximumMarks) || maximumMarks < 1 || maximumMarks > 10_000)) {
-    throw new Error("Maximum marks must be a whole number from 1 to 10,000.");
+  if (maximumMarks !== undefined && (!Number.isInteger(maximumMarks) || maximumMarks < 1 || maximumMarks > 1_000)) {
+    throw new Error("Maximum marks must be a whole number from 1 to 1,000.");
   }
   const instructions = form.querySelector("#builder-instructions").value.trim();
   const presetMatches = examSelection.assessmentSession !== "custom"
-    && examSelection.level !== "SL/HL"
+    && examSelection.level !== examSelection.system.combinedLevel
     && paperLabel === examSelection.paper.label
     && durationMinutes === valueForLevel(examSelection.paper, "duration", examSelection.level)
     && readingTimeMinutes === examSelection.paper.readingTime
@@ -556,7 +580,18 @@ export function packageData(form, questions) {
   const manifest = {
     version: 1,
     assessmentSession: presetMatches ? examSelection.assessmentSession : examSelection.assessmentSession === "custom" ? "custom" : `custom-from-${examSelection.assessmentSession}`,
-    ...(presetMatches ? { examProfileId: `${examSelection.assessmentSession}:${examSelection.course.value}:${examSelection.level}:${examSelection.paper.value}` } : {}),
+    ...(presetMatches ? { examProfileId: `${examSelection.system.value}:${examSelection.assessmentSession}:${examSelection.course.value}:${examSelection.level}:${examSelection.paper.value}` } : {}),
+    examFormat: {
+      systemId: examSelection.system.value,
+      systemLabel: examSelection.system.label,
+      qualificationLabel: examSelection.system.qualificationLabel,
+      deliveryMode: examSelection.paper.deliveryFormat ?? "Digital practice",
+      fidelity: examSelection.system.value === "school-custom"
+        ? "school-custom"
+        : presetMatches ? examSelection.paper.fidelity ?? "official-format" : "adapted",
+      profileVersion: examSelection.paper.profileVersion ?? examSelection.assessmentSession,
+      rulesSummary: examSelection.paper.toolSummary ?? "Teacher-defined practice rules",
+    },
     sourceClassification: "school-authorized",
     exportAuthorized: true,
     title: form.querySelector("#builder-title").value.trim(),
@@ -566,6 +601,7 @@ export function packageData(form, questions) {
     paper: paperLabel,
     durationMinutes,
     readingTimeMinutes,
+    ...(examSelection.paper.phases?.length ? { phases: effectivePhases(examSelection, form) } : {}),
     maximumMarks,
     subjectWeightPercent: valueForLevel(examSelection.paper, "subjectWeightPercent", examSelection.level),
     mode: examSelection.paper.mode,
@@ -581,47 +617,6 @@ export function packageData(form, questions) {
   return data;
 }
 
-function responseFields(question, prefix) {
-  const container = field("div", { className: "builder-response-settings" });
-  if (question.type === "single-choice") {
-    const label = field("label", { for: `${prefix}-options` }, "Answer choices — one per line");
-    const textarea = field("textarea", { id: `${prefix}-options`, rows: "4", required: "", maxlength: "2000" });
-    textarea.value = question.options;
-    textarea.addEventListener("input", () => { question.options = textarea.value; });
-    container.append(label, textarea);
-  } else if (question.type === "essay") {
-    const pair = field("div", { className: "inline-fields" });
-    const minimumLabel = field("label", { for: `${prefix}-minimum` }, "Minimum words");
-    const minimum = field("input", { id: `${prefix}-minimum`, type: "number", min: "1", max: "10000", value: question.wordCountMin });
-    const maximumLabel = field("label", { for: `${prefix}-maximum` }, "Maximum words");
-    const maximum = field("input", { id: `${prefix}-maximum`, type: "number", min: "1", max: "10000", value: question.wordCountMax });
-    minimum.addEventListener("input", () => { question.wordCountMin = minimum.value; });
-    maximum.addEventListener("input", () => { question.wordCountMax = maximum.value; });
-    minimumLabel.append(minimum);
-    maximumLabel.append(maximum);
-    pair.append(minimumLabel, maximumLabel);
-    container.append(pair);
-  } else if (question.type === "ink") {
-    const pair = field("div", { className: "inline-fields" });
-    const pagesLabel = field("label", { for: `${prefix}-pages` }, "Canvas pages");
-    const pages = field("select", { id: `${prefix}-pages` });
-    [1, 2, 3, 4].forEach((value) => pages.append(option(String(value), String(value))));
-    pages.value = String(question.inkPages);
-    const backgroundLabel = field("label", { for: `${prefix}-background` }, "Default canvas background");
-    const background = field("select", { id: `${prefix}-background` });
-    background.append(option("blank", "Blank"), option("lined", "Ruled"), option("square-grid", "Square grid"));
-    background.value = question.inkBackground;
-    pages.addEventListener("change", () => { question.inkPages = Number(pages.value); });
-    background.addEventListener("change", () => { question.inkBackground = background.value; });
-    pagesLabel.append(pages);
-    backgroundLabel.append(background);
-    pair.append(pagesLabel, backgroundLabel);
-    const help = field("small", {}, "Students start with this background and can change it only after confirming the change; their writing remains intact. A typed alternative remains available for accessibility.");
-    container.append(pair, help);
-  }
-  return container;
-}
-
 export function mountPaperBuilder(container, onSubmit) {
   const questions = [];
   container.innerHTML = `
@@ -633,24 +628,25 @@ export function mountPaperBuilder(container, onSubmit) {
       </header>
 
       <fieldset class="builder-step builder-exam-picker">
-        <legend><span>1</span> Choose the exam</legend>
-        <label for="builder-session">Assessment session</label>
-        <select id="builder-session" required>
-          <option value="may-2026">May 2026 — current reference</option>
-          <option value="may-2027">May 2027 — Psychology first-assessment preview</option>
-          <option value="custom">Custom or another session</option>
-        </select>
-        <label for="builder-subject">Course</label><select id="builder-subject" required></select>
+        <legend><span>1</span> Choose the exact exam format</legend>
+        <label for="builder-system">Exam system</label>
+        <select id="builder-system" aria-describedby="builder-system-description" required></select>
+        <p id="builder-system-description" class="builder-system-description" aria-live="polite"></p>
+        <label id="builder-session-label" for="builder-session">Assessment session</label>
+        <select id="builder-session" required></select>
+        <label id="builder-subject-label" for="builder-subject">Course</label><select id="builder-subject" required></select>
         <div class="inline-fields">
-          <label for="builder-level">Level<select id="builder-level" required disabled></select></label>
-          <label for="builder-paper">Paper<select id="builder-paper" required disabled></select></label>
+          <label for="builder-level"><span id="builder-level-label">Level</span><select id="builder-level" required disabled></select></label>
+          <label for="builder-paper"><span id="builder-paper-label-text">Paper</span><select id="builder-paper" required disabled></select></label>
         </div>
-        <p class="form-help">Paper choices are starting points for building practice assessments. Check the current course guide for the examination session you are preparing. Changing an exam selector clears questions and attachments already entered.</p>
+        <p class="form-help">DigitalDP tunes the defaults and available build controls to this selection. Check the current official specification before formal use. Changing format keeps the current paper as a recoverable draft in this browser.</p>
       </fieldset>
 
       <div id="builder-exam-setup" hidden>
-        <div class="builder-exam-summary" role="status"><span>Selected exam</span><strong id="builder-exam-name"></strong></div>
+        <div class="builder-exam-summary" role="status"><span id="builder-fidelity">Selected practice format</span><strong id="builder-exam-name"></strong></div>
         <p id="builder-exam-facts" class="builder-exam-facts"></p>
+        <p id="builder-format-rules" class="builder-format-rules"></p>
+        <ol id="builder-phase-plan" class="builder-phase-plan" aria-label="Timed phase plan" hidden></ol>
         <p id="builder-exam-guidance" class="builder-exam-guidance"></p>
 
         <div class="builder-workspace">
@@ -661,8 +657,8 @@ export function mountPaperBuilder(container, onSubmit) {
               <label for="builder-paper-label">Paper name</label><input id="builder-paper-label" required maxlength="80">
               <div class="inline-fields">
                 <label for="builder-reading-time">Reading time in minutes<input id="builder-reading-time" type="number" min="0" max="60" required></label>
-                <label for="builder-duration">Writing time in minutes<input id="builder-duration" type="number" min="5" max="360" required></label>
-                <label for="builder-maximum-marks">Maximum marks <small>optional</small><input id="builder-maximum-marks" type="number" min="1" max="10000" step="1" inputmode="numeric"></label>
+                <label for="builder-duration"><span id="builder-duration-label-text">Writing time</span> in minutes<input id="builder-duration" type="number" min="5" max="360" required></label>
+                <label for="builder-maximum-marks">Maximum marks <small>optional</small><input id="builder-maximum-marks" type="number" min="1" max="1000" step="1" inputmode="numeric"></label>
               </div>
               <p class="form-help">Reading time runs first and does not use a student's extra writing time. Enter 0 when the paper has no separate reading period.</p>
               <label for="builder-instructions">Student instructions</label><textarea id="builder-instructions" rows="3" required maxlength="20000"></textarea>
@@ -685,6 +681,7 @@ export function mountPaperBuilder(container, onSubmit) {
               <p class="form-help">Enter the wording that should print beside the student's response, then choose the entry area. Images print inline; PDFs and audio are listed as companion materials.</p>
               <div id="builder-questions" class="builder-questions"></div>
               <button id="builder-add-question" type="button">Add question and entry area</button>
+              <button id="builder-undo-remove" type="button" hidden>Undo question removal</button>
             </fieldset>
 
             <p id="builder-error" class="status-message" role="alert" tabindex="-1" hidden></p>
@@ -704,6 +701,7 @@ export function mountPaperBuilder(container, onSubmit) {
   `;
 
   const form = container.querySelector("#paper-builder-form");
+  const system = form.querySelector("#builder-system");
   const assessmentSession = form.querySelector("#builder-session");
   const subject = form.querySelector("#builder-subject");
   const level = form.querySelector("#builder-level");
@@ -711,6 +709,7 @@ export function mountPaperBuilder(container, onSubmit) {
   const setup = form.querySelector("#builder-exam-setup");
   const preview = createPaperPreview(form.querySelector("#builder-preview-scroll"));
   let previewFrame;
+  let removedQuestion;
 
   function updatePreview() {
     cancelAnimationFrame(previewFrame);
@@ -723,18 +722,49 @@ export function mountPaperBuilder(container, onSubmit) {
     select.disabled = true;
   }
 
+  function populateSystems() {
+    system.replaceChildren();
+    for (const item of EXAM_SYSTEMS) system.append(option(item.value, item.label));
+    system.value = DEFAULT_EXAM_SYSTEM.value;
+    populateSessions();
+  }
+
+  function populateSessions() {
+    hideSetup();
+    resetSelect(subject, "Choose course");
+    resetSelect(level, "Choose level");
+    resetSelect(paper, "Choose paper");
+    const selected = selectedSystem(form);
+    assessmentSession.replaceChildren();
+    if (!selected) {
+      assessmentSession.disabled = true;
+      return;
+    }
+    form.querySelector("#builder-system-description").textContent = selected.description;
+    form.querySelector("#builder-subject-label").textContent = selected.courseLabel;
+    form.querySelector("#builder-level-label").textContent = selected.levelLabel;
+    form.querySelector("#builder-paper-label-text").textContent = selected.paperLabel;
+    for (const item of selected.sessions) assessmentSession.append(option(item.value, item.label));
+    assessmentSession.disabled = false;
+    assessmentSession.value = selected.sessions[0]?.value ?? "";
+    populateSubjects();
+  }
+
   function populateSubjects() {
     hideSetup();
     resetSelect(level, "Choose level");
     resetSelect(paper, "Choose paper");
-    subject.replaceChildren(option("", "Choose course"));
-    for (const course of COURSES.filter((item) => courseSupportsSession(item, assessmentSession.value))) {
+    const selected = selectedSystem(form);
+    subject.replaceChildren(option("", selected ? `Choose ${selected.courseLabel.toLowerCase()}` : "Choose course"));
+    for (const course of (selected?.courses ?? []).filter((item) => courseSupportsSession(item, assessmentSession.value))) {
       subject.append(option(course.value, course.label));
     }
-    subject.disabled = false;
+    subject.disabled = !selected;
   }
 
   function hideSetup() {
+    removedQuestion = null;
+    form.querySelector("#builder-undo-remove").hidden = true;
     setup.hidden = true;
     cancelAnimationFrame(previewFrame);
     preview.clear();
@@ -751,8 +781,9 @@ export function mountPaperBuilder(container, onSubmit) {
     const course = selectedCourse(form);
     resetSelect(level, "Choose level");
     if (!course) return;
-    for (const item of levelsForCourse(course, assessmentSession.value)) {
-      level.append(option(item, item === "SL/HL" ? "SL/HL — combined" : item));
+    const selected = selectedSystem(form);
+    for (const item of levelsForCourse(course, assessmentSession.value, selected)) {
+      level.append(option(item, item === selected?.combinedLevel ? `${item} — combined` : item));
     }
     level.disabled = false;
   }
@@ -769,6 +800,7 @@ export function mountPaperBuilder(container, onSubmit) {
   }
 
   function renderQuestions(focusTarget) {
+    nextQuestionId = Math.max(nextQuestionId, ...questions.map((question) => Number(question.key) + 1));
     const list = form.querySelector("#builder-questions");
     list.replaceChildren();
     questions.forEach((question, index) => {
@@ -798,13 +830,28 @@ export function mountPaperBuilder(container, onSubmit) {
       const marks = field("input", { id: `${prefix}-marks`, type: "number", min: "1", max: "1000", value: question.marks });
       const typeLabel = field("label", { for: `${prefix}-type` }, "Student entry area");
       const type = field("select", { id: `${prefix}-type` });
-      type.append(
-        option("essay", "Long typed response"),
-        option("short", "Short typed response"),
-        option("single-choice", "Multiple-choice"),
-        option("ink", "Digital working canvas"),
-      );
+      const availableResponseTypes = selectedExam(form)?.paper.responseTypes ?? ALL_RESPONSE_TYPES;
+      for (const responseType of availableResponseTypes) {
+        type.append(option(responseType, RESPONSE_TYPE_LABELS[responseType]));
+      }
       type.value = question.type;
+      const phaseSections = [];
+      for (const phase of selectedExam(form)?.paper.phases ?? []) {
+        if (!phase.sectionId || phaseSections.some(({ value }) => value === phase.sectionId)) continue;
+        phaseSections.push({ value: phase.sectionId, label: phase.label.replace(/\s+—\s+reading$/u, "") });
+      }
+      let sectionControls = [];
+      if (phaseSections.length) {
+        const sectionLabel = field("label", { for: `${prefix}-section` }, "Exam section or part");
+        const section = field("select", { id: `${prefix}-section`, required: "" });
+        for (const item of phaseSections) section.append(option(item.value, item.label));
+        if (!question.sectionId || !phaseSections.some(({ value }) => value === question.sectionId)) {
+          question.sectionId = phaseSections[0].value;
+        }
+        section.value = question.sectionId;
+        section.addEventListener("change", () => { question.sectionId = section.value; updatePreview(); });
+        sectionControls = [sectionLabel, section];
+      }
       const allowsAudio = selectedExam(form)?.paper.mode === "listening";
       const mediaLabel = field(
         "label",
@@ -852,7 +899,12 @@ export function mountPaperBuilder(container, onSubmit) {
       type.addEventListener("change", () => { question.type = type.value; renderQuestions({ key: question.key, selector: "select[id$='-type']" }); });
       up.addEventListener("click", () => { questions.splice(index - 1, 0, questions.splice(index, 1)[0]); renderQuestions({ key: question.key, selector: "button[data-action='up']" }); });
       down.addEventListener("click", () => { questions.splice(index + 1, 0, questions.splice(index, 1)[0]); renderQuestions({ key: question.key, selector: "button[data-action='down']" }); });
-      remove.addEventListener("click", () => { questions.splice(index, 1); renderQuestions(); });
+      remove.addEventListener("click", () => {
+        removedQuestion = { index, question: questions.splice(index, 1)[0] };
+        form.querySelector("#builder-undo-remove").hidden = false;
+        renderQuestions();
+        form.querySelector("#builder-undo-remove").focus();
+      });
       card.append(
         legend,
         actions,
@@ -862,6 +914,7 @@ export function mountPaperBuilder(container, onSubmit) {
         prompt,
         marksLabel,
         marks,
+        ...sectionControls,
         mediaLabel,
         media,
         mediaStatus,
@@ -884,31 +937,46 @@ export function mountPaperBuilder(container, onSubmit) {
     hideSetup();
     const selection = selectedExam(form);
     if (!selection) return;
-    const { assessmentSession: sessionValue, course, level: selectedLevel, paper: selectedPaper } = selection;
-    const sessionLabel = assessmentSession.selectedOptions[0]?.textContent ?? sessionValue;
-    form.querySelector("#builder-exam-name").textContent = `${sessionLabel} · ${course.label} · ${selectedLevel} · ${selectedPaper.label}`;
+    const { system: selectedSystemProfile, course, level: selectedLevel, paper: selectedPaper } = selection;
+    form.querySelector("#builder-exam-name").textContent = `${selectedSystemProfile.label} · ${course.label} · ${selectedLevel} · ${selectedPaper.label}`;
+    form.querySelector("#builder-fidelity").textContent = selectedPaper.fidelity === "official-format"
+      ? "Official-format practice profile"
+      : selectedPaper.fidelity === "school-custom" ? "School custom practice" : "Adapted practice starter";
     form.querySelector("#builder-title").value = `${course.label} ${selectedLevel} ${selectedPaper.label} practice`;
     form.querySelector("#builder-paper-label").value = selectedPaper.label;
     form.querySelector("#builder-reading-time").value = String(selectedPaper.readingTime);
     const duration = valueForLevel(selectedPaper, "duration", selectedLevel);
+    form.querySelector("#builder-duration-label-text").textContent = selectedPaper.durationLabel ?? "Writing time";
     form.querySelector("#builder-duration").value = String(duration);
+    for (const id of ["builder-reading-time", "builder-duration"]) form.querySelector(`#${id}`).readOnly = Boolean(selectedPaper.phases?.length);
     const maximumMarks = valueForLevel(selectedPaper, "maximumMarks", selectedLevel);
     form.querySelector("#builder-maximum-marks").value = maximumMarks ?? "";
     form.querySelector("#builder-instructions").value = valueForLevel(selectedPaper, "instructions", selectedLevel);
     const guidance = valueForLevel(selectedPaper, "guidance", selectedLevel);
     const guidanceElement = form.querySelector("#builder-exam-guidance");
-    const combinedGuidance = selectedLevel === "SL/HL"
+    const combinedGuidance = selectedLevel === selectedSystemProfile.combinedLevel
       ? "This is a combined-level custom paper. It uses one shared timer and response rule, so review every default before assigning it to both SL and HL students. "
       : "";
     guidanceElement.textContent = `${combinedGuidance}${guidance ?? "Add each question, then choose the response area students should receive."}`;
     const facts = [
       `${selectedPaper.readingTime} min reading`,
-      `${duration} min writing`,
+      `${duration} min ${(selectedPaper.durationLabel ?? "writing time").toLowerCase()}`,
       maximumMarks ? `${maximumMarks} marks` : "marks: enter a maximum",
       valueForLevel(selectedPaper, "subjectWeightPercent", selectedLevel) ? `${valueForLevel(selectedPaper, "subjectWeightPercent", selectedLevel)}% of subject` : null,
     ].filter(Boolean);
-    if (selectedLevel === "SL/HL") facts.unshift("combined custom profile");
+    if (selectedLevel === selectedSystemProfile.combinedLevel) facts.unshift("combined custom profile");
+    if (selectedPaper.deliveryFormat) facts.unshift(selectedPaper.deliveryFormat);
     form.querySelector("#builder-exam-facts").textContent = facts.join(" · ");
+    form.querySelector("#builder-format-rules").textContent = selectedPaper.toolSummary ?? "Teacher-defined practice rules";
+    const phasePlan = form.querySelector("#builder-phase-plan");
+    phasePlan.replaceChildren();
+    for (const phase of selectedPaper.phases ?? []) {
+      const item = document.createElement("li");
+      const tools = phase.tools.length ? ` · ${phase.tools.join(" · ")}` : " · response entry locked";
+      item.textContent = `${phase.label}: ${phase.durationMinutes} min${tools}`;
+      phasePlan.append(item);
+    }
+    phasePlan.hidden = !selectedPaper.phases?.length;
     const pdfLabel = form.querySelector("#builder-pdf-label");
     const pdfStatus = form.querySelector("#builder-pdf-status");
     pdfLabel.textContent = selectedPaper.requiredDocumentLabel
@@ -925,16 +993,32 @@ export function mountPaperBuilder(container, onSubmit) {
     updatePreview();
   }
 
-  subject.addEventListener("change", populateLevels);
-  assessmentSession.addEventListener("change", populateSubjects);
-  level.addEventListener("change", populatePapers);
-  paper.addEventListener("change", applyExam);
+  const drafts = mountBuilderDrafts(form, questions, (values) => {
+    system.value = values["builder-system"]; populateSessions();
+    assessmentSession.value = values["builder-session"]; populateSubjects();
+    subject.value = values["builder-subject"]; populateLevels();
+    level.value = values["builder-level"]; populatePapers();
+    paper.value = values["builder-paper"]; applyExam();
+  }, renderQuestions);
+  for (const [select, change] of [[system, populateSessions], [subject, populateLevels], [assessmentSession, populateSubjects], [level, populatePapers], [paper, applyExam]]) {
+    select.addEventListener("change", (event) => void drafts.changeFormat(event, change));
+  }
+  form.querySelector("#builder-undo-remove").addEventListener("click", () => {
+    if (!removedQuestion) return;
+    questions.splice(Math.min(removedQuestion.index, questions.length), 0, removedQuestion.question);
+    renderQuestions({ key: removedQuestion.question.key, selector: "textarea" });
+    removedQuestion = null;
+    form.querySelector("#builder-undo-remove").hidden = true;
+  });
   form.addEventListener("input", updatePreview);
   form.addEventListener("change", updatePreview);
   form.querySelector("#builder-add-question").addEventListener("click", () => {
     const selection = selectedExam(form);
     const suggested = selection
-      ? questionForLevel(selection.paper, selection.level)
+      ? {
+          ...questionForLevel(selection.paper, selection.level),
+          sectionId: selection.paper.phases?.find(({ kind }) => kind === "work")?.sectionId,
+        }
       : { type: "short", prompt: "Enter your question." };
     questions.push(questionFrom(suggested, questions.length + 1));
     renderQuestions();
@@ -945,21 +1029,25 @@ export function mountPaperBuilder(container, onSubmit) {
     const submit = form.querySelector("button[type=submit]");
     const error = form.querySelector("#builder-error");
     submit.disabled = true;
+    form.inert = true;
     error.hidden = true;
     try {
       await onSubmit(packageData(form, questions));
+      await drafts.savedToLibrary().catch(() => {});
       form.reset();
-      populateSubjects();
-      subject.focus();
+      populateSessions();
+      await drafts.record();
+      system.focus();
     } catch (caught) {
       error.textContent = caught instanceof Error ? caught.message : "Could not add paper";
       error.hidden = false;
       error.focus();
     } finally {
+      form.inert = false;
       submit.disabled = false;
     }
   });
 
-  populateSubjects();
-  updateExportAttestation();
+  populateSystems();
+  void drafts.record();
 }

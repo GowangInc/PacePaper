@@ -1,19 +1,19 @@
 # DigitalDP
 
-DigitalDP is a local-network workspace for supervised IB-style digital examination familiarisation. Teachers prepare papers and classes, students complete timed practice sessions in a focused browser workspace, and teachers review the saved responses afterwards.
+DigitalDP is a local-network workspace for supervised examination practice and candidate familiarisation. Teachers prepare papers and classes, students complete timed practice sessions in a focused browser workspace, and teachers review the saved responses afterwards. Its provider-neutral profile system currently supplies researched practice starters and original demonstrations for IB DP, Cambridge IGCSE, Pearson Edexcel International GCSE, and selected AP formats in the same application.
 
-DigitalDP is an independent internal practice tool. It is not the IB Digital Examination System, is not affiliated with or endorsed by the International Baccalaureate, and should not be used for high-stakes assessment without local technical, safeguarding, accessibility, and assessment-policy approval.
+DigitalDP is an independent school-practice tool. It is not an official examination-delivery system, is not affiliated with or endorsed by the International Baccalaureate, Cambridge University Press & Assessment, Pearson, College Board, ACT, or any other awarding body, and should not be used to deliver live high-stakes examinations.
 
 ## Current capabilities
 
 - Temporary prototype teacher sign-in (`admin` / `admin`, reset on every startup)
 - Classes, class-code/name sign-in, candidate codes, individual extra time, CSV class-list import/export, and reversible roster archiving
-- Exam-first Paper Builder with researched 2026 presets plus a separate first-assessment-2027 Psychology preview
+- Exam-format-first Paper Builder with provider-specific terminology and tuned starters for IB DP, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and school-custom practice
 - Live, independently scrollable paper preview while a teacher edits
 - One-file DigitalDP paper export and re-import, including explicitly authorized attachments
 - PDF, image, text, and controlled-play audio resources, including media attached to individual questions; students receive exactly two complete plays per recording, with no pause or restart once a play begins
-- Separate reading and writing phases, with individual extra time applied to writing only
-- Teacher-controlled second-screen countdown with live-exam defaults, reading/writing phases, editable display timing, and fullscreen mode
+- Legacy reading-then-writing timing plus multi-section phase plans with locked reading periods, fixed monitored breaks, no-return section boundaries, phase-specific tool rules, and extra time applied to the final work phase
+- Second-screen countdown with fullscreen mode and authoritative linked timing; live timing edits are deliberately unavailable
 - Editable student-name roster on the second-screen clock, without changing student accounts or authoritative timers
 - Visible student sign-in address with a copy action on both the teacher dashboard and projected clock
 - Timed sessions with autosave, local unsaved-work recovery, and automatic deadline submission
@@ -22,14 +22,16 @@ DigitalDP is an independent internal practice tool. It is not the IB Digital Exa
 - Rich-text, short-answer, single-choice, and expandable digital-ink responses with blank, ruled, or square-grid pages, Draw/Eraser tools, and Undo/Redo
 - Page context menus suppressed on DigitalDP interface controls while normal clicks, keyboard controls, and text selection remain available
 - Event-driven teacher status updates that preserve active form controls, plus printable/PDF candidate submission review
-- Two original, exportable DigitalDP example papers for each of the 17 current Paper Builder courses, seeded automatically by the standalone app
+- 52 original, exportable DigitalDP papers: 34 IB-oriented examples, 15 full-length non-IB mocks, and three short AP walkthroughs, added automatically by the app launcher
+- Teacher-only worked marking guides for all 15 full-length mocks, accessible from **Mock marking guides** in the teacher sidebar
 - Branded native application icons for macOS and Windows, plus Linux and browser icon assets
+- Illustrated offline user guide accessible from the teacher sidebar
 
 ## Run locally
 
 DigitalDP requires [Bun](https://bun.sh/).
 
-For the simplest app-style source run on a Mac, double-click `Start DigitalDP.command`, or run:
+Install Bun and run `bun install` once from the project folder. For the simplest app-style source run on a Mac, double-click `Start DigitalDP.command`. On any supported platform, open a terminal in the project folder and run:
 
 ```sh
 bun run start:app
@@ -46,7 +48,7 @@ bun test
 bun run dev
 ```
 
-The server listens on `127.0.0.1:9148` by default. `public/index.html` is the application shell, not a standalone page: start the server and use `http://127.0.0.1:9148/` instead of opening the file with a `file://` URL. In the current demo build, every startup sets the sole teacher account to `admin` / `admin` and invalidates old teacher sessions; open `http://localhost:9148/admin` to sign in.
+The development server listens on `127.0.0.1:9148` by default. `public/index.html` is the application shell, not a standalone page: start the server and use `http://127.0.0.1:9148/` instead of opening the file with a `file://` URL. In the current demo build, every startup sets the sole teacher account to `admin` / `admin` and invalidates old teacher sessions; open `http://127.0.0.1:9148/admin` to sign in. Use the same address consistently in that browser.
 
 ## Standalone desktop release
 
@@ -54,7 +56,9 @@ The release builder produces shareable, self-contained macOS, Windows, and Linux
 
 The Mac bundle must be signed with a Developer ID Application certificate and notarized by Apple. The release builder deliberately refuses to create an ad-hoc-signed Mac download, because Gatekeeper can report that download as damaged without offering **Open Anyway**.
 
-Once the signing and notarization credentials described below are available, run `bun run release:build`. The generated archives, standalone user guide, and checksums are placed in `release/`. On macOS, use the notarized `macos-universal` archive for both Apple-silicon and Intel Macs; extract the correct platform archive and start its DigitalDP app or executable. The macOS bundle and Windows executable carry the DigitalDP icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the teacher-facing [`USER_GUIDE.md`](USER_GUIDE.md) for the complete classroom workflow and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
+**Version 0.1.0-demo.5 targets Windows x64 and Linux x64.** A new macOS app is withheld because Apple signing/notarization credentials are not configured. Mac users can run the updated source using `Start DigitalDP.command` or `bun run start:app`; do not use the earlier unsupported Mac downloads. Check the [GitHub release page](https://github.com/GowangInc/DigitalDP/releases) for published assets.
+
+Once the signing and notarization credentials described below are available, run `bun run release:build`. The generated archives, standalone user guides, and checksums are placed in `release/`. On macOS, use the notarized `macos-universal` archive for both Apple-silicon and Intel Macs; extract the correct platform archive and start its DigitalDP app or executable. The macOS bundle and Windows executable carry the DigitalDP icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the illustrated teacher-facing [`USER_GUIDE.html`](USER_GUIDE.html), its editable [`USER_GUIDE.md`](USER_GUIDE.md) source, and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
 
 ### macOS release credentials
 
@@ -70,7 +74,15 @@ Set `DIGITALDP_MAC_NOTARY_KEYCHAIN` as well when the notary profile is stored in
 
 The GitHub release workflow performs the same process using these repository secrets: `APPLE_DEVELOPER_ID_P12_BASE64`, `APPLE_DEVELOPER_ID_P12_PASSWORD`, `APPLE_NOTARY_KEY_BASE64`, `APPLE_NOTARY_KEY_ID`, and `APPLE_NOTARY_ISSUER_ID`. Do not put certificate passwords or private keys in this repository.
 
-The release keeps data outside the replaceable executable, in the per-user application-data location for the platform. It does not package a live database, teacher paper, student response, or protected reference material. It does include the 34 original DigitalDP example definitions and safely seeds them into the local paper library. For this requested demo release, the teacher login remains `admin` / `admin` and is reset on every launch; it is not suitable for real student data.
+To build only Windows and Linux without Apple credentials, explicitly select them:
+
+```sh
+bun run release:build --platforms=windows-x64,linux-x64
+```
+
+For the GitHub workflow, set `include_macos` to `false` for that same platform set. The default still includes macOS and requires successful signing and notarization. Keep the release as a draft until the build and native Windows/Linux startup checks pass; publish only the files listed in that build's `SHA256SUMS.txt` plus the checksum file itself.
+
+The current release builder keeps data outside the replaceable executable, in the per-user application-data location for the platform. It does not package a live database, teacher paper, student response, or protected reference material. It includes all 52 original DigitalDP paper definitions and safely adds or upgrades them in the local paper library while preserving teacher-edited papers and earlier session versions. Previously downloaded apps retain the code and examples from their own release; source edits do not update those downloads. The teacher login remains `admin` / `admin` and is reset on every app launch; it is not suitable for real student data.
 
 For a supervised LAN demo in a packaged release, sign in as the teacher, open **Classroom sharing** on the dashboard, select a detected private IPv4 address, and choose **Apply classroom sharing**. The displayed student sign-in address updates on both the dashboard and examination clock. Choose **This computer only** to stop sharing. The saved interface choice is retained beside the local database, but sharing starts disabled after each launch; it must be deliberately enabled for that session. Sharing cannot be changed while an examination is live.
 
@@ -91,17 +103,41 @@ For a supervised LAN demo in a packaged release, sign in as the teacher, open **
 
 For packaged releases, `PORT` may be set by an advanced launcher; otherwise DigitalDP chooses the first free port from `9148`–`9158`. `DIGITALDP_DATA_DIR` chooses the release data directory (which otherwise defaults to the platform's per-user application-data location), `DIGITALDP_DB` overrides the exact SQLite path, and `DIGITALDP_OPEN_BROWSER=0` prevents automatic opening of the teacher dashboard.
 
-The `data/` directory is intentionally excluded from Git. Back up the live database separately before any real classroom pilot.
+The `data/` directory is intentionally excluded from Git. Stop DigitalDP and back up its complete data folder before updating or testing recovery. The app launcher and basic development server use different default data locations; see the [user guide](USER_GUIDE.md#back-up-all-classroom-data).
 
 Saved papers live in the current installation's SQLite library. Papers made in the internal teacher builder can be downloaded as one `.digitaldp-paper` file and restored through the visible import form on another installation with a new local paper ID. Imported legacy or reference-only packages retain their existing export restrictions.
 
-The Exams section creates a draft session from the selected class and Paper Library record; the same paper can be reused for any number of separate sittings. Students sign in, choose the exact session, and wait until the teacher starts it. The room clock opens in a new tab for a projector or second screen. It follows the live session's authoritative start, reading period, and standard writing period; display-only timing or student-name corrections never change candidate timers or accounts. Candidate-specific extra time remains separate.
+In **Sessions**, choose the class, exam system, and a paper from that system to create a sitting. The same **Paper library** paper can be reused for separate dates or classes. Students sign in, choose the exact session, and wait until the teacher selects **Start exam**. Different classes can run simultaneously; each class can have only one live session.
+
+Open the room clock from the specific session for a projector or second screen. For a ready session with one reading period and one writing period, **Save exam timing and update display** saves the session's configured minutes. Display titles and student-name corrections remain local to the clock, and candidate-specific extra time remains separate.
+
+Linked clocks now follow authoritative timing across windows, independently of decorative titles and names. Ready timing saves reject stale edits from another window. Live/ended timing and fixed-section timing fields are read-only: live corrections are not supported. Mounted student views refresh their server timeline without replacing editors. Check the student view before a classroom trial.
+
+Version 0.1.0-demo.5 includes the September 5 safety fixes: preserved AP phases when instructions change, browser-local builder drafts with attachments, question-removal undo, End exam confirmation, and distinct server/device/unsaved student status with recovery downloads. See the dated [fix verification report](resources/research/2026-09-05-ux-safety-fixes.md) and [release notes](release/RELEASE_NOTES-0.1.0-demo.5.md).
 
 Teacher-facing **Remove** actions archive records instead of permanently deleting them. Removed students cannot sign in, removed classes are unavailable for new sittings, and removed sittings disappear from the active exam list; all remain available under the corresponding **Removed** disclosure for restoration. Existing submissions stay retained and printable. Live sittings cannot be removed, classes with a live sitting must be ended first, and a student with unfinished live work cannot be removed until that response is submitted or the sitting ends.
 
 Four original demonstrations are ready to import from `examples/portable/`, with editable manifests, simulated candidate work, and teacher assessments under `examples/papers/`. These four audited bundles are the only `.digitaldp-paper` files allowlisted for Git; all other portable bundles are ignored. See `examples/README.md` for the exact coverage and rebuild commands.
 
-The wider course library contains 34 additional original examples under `examples/course-samples/`: two for every course currently shown by the Paper Builder. Run `bun run samples:build` to regenerate their editable manifests and ignored portable files, then `bun run samples:seed` to add any missing examples to a source-development library. The standalone app seeds these examples automatically. These are custom familiarisation papers with integrated response areas, not official IB session papers.
+The wider course library contains 52 original papers under `examples/course-samples/`, separate from the four importable demonstrations above:
+
+- 34 IB-oriented examples across 17 course entries.
+- Four full-length Cambridge IGCSE Mathematics 0580 mocks: Papers 1 and 3 Core, and Papers 2 and 4 Extended, using the 2025–2027 format.
+- Eight full-length Pearson Edexcel International GCSE Mathematics A mocks: linear Papers 1F, 2F, 1H, and 2H; and modular Units 1 and 2 at Foundation and Higher tiers.
+- Three full-length AP mocks: English Language and Composition, Biology, and Calculus AB, targeting May 2027.
+- Three short AP walkthroughs for demonstrating the section and break sequence.
+
+This covers 23 course entries, not every course, tier, or component available in Paper Builder. **Full-length mock** means a complete original question workload with the researched component timing and mark allocation, not an official paper, awarding-body endorsement, calibrated difficulty, or official grade boundaries. The existing **full-format practice** and **format rehearsal** labels on IB-oriented examples retain their separate review limits. Subject teachers should moderate every paper before classroom use.
+
+Select **Mock marking guides** in the teacher sidebar for the worked answers and point allocations for the 15 full-length mocks. The `/mock-guides` route requires teacher sign-in. The generated offline index is `docs/mock-marking/index.html`; keep these answer-containing files away from students. Answers and marking guides are not included in exported `.digitaldp-paper` files. DigitalDP does not automatically mark responses. AP guides include weighted practice calculations: the displayed raw total is not an AP score, and no official 1–5 conversion is supplied.
+
+Run `bun run samples:build` to regenerate the editable manifests, ignored portable files, and teacher marking guides, then `bun run samples:seed` to add or safely upgrade examples in a source-development library. Repeating unchanged input does not duplicate papers; teacher edits and previous sessions are preserved. The app launcher performs the library upgrade automatically. These independent practice materials use integrated response areas; an AP hybrid exam's physical response booklet and the official digital application's break-resume behaviour remain classroom adaptations.
+
+## Interface explorations
+
+Three interactive, non-production teacher front-end concepts are available in [`design/mockups/teacher-frontends/`](design/mockups/teacher-frontends/): a live-exam Control Room, a task-led Teacher Desk, and a three-pane Paper Studio. Open its `index.html` directly to compare the flows. The companion [`student tools and calculator profiles`](research/student-tools-and-calculators.md) note records the recommended paper-controlled tool model.
+
+The researched [`examination-system compatibility plan`](research/exam-system-compatibility.md) defines how DigitalDP can support IB, Cambridge IGCSE, Pearson Edexcel International GCSE, AP, and later systems through versioned practice profiles. The [`official-source register`](resources/exam-systems/SOURCES.md) records the public evidence behind the plan without adding protected exam papers to Git.
 
 ## Project structure
 
@@ -110,10 +146,13 @@ public/           Browser interface
 assets/           Master and native application icons
 src/              Validation, authentication, paper model, and SQLite access
 examples/         Original sample manifests, portable bundles, and seed/build tools
+docs/mock-marking/ Generated teacher-only full-mock answers and marking guides
+design/           Additive interface mockups and design explorations
 paper-authoring/  Structured paper-package authoring guidance
 release/          Standalone release guide and generated shareable bundles
-USER_GUIDE.md     Teacher and student operating guide
-resources/ib/     Retained official/public IB reference material and provenance
+USER_GUIDE.md     Editable teacher and student operating guide
+USER_GUIDE.html   Self-contained illustrated guide generated from the Markdown
+resources/        Official-source registers plus ignored private reference material
 resources/private/ Local copyrighted references excluded from Git
 research/         Assessment findings and product-design decisions
 server.ts         Bun HTTP, API, static-file, and WebSocket server

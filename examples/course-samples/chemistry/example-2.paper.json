@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Chemistry · Paper 2 — original short and extended-response sample",
+  "title": "Chemistry · Paper 2 (HL) — original full-format practice",
   "subject": "chemistry",
   "subjectLabel": "Chemistry",
   "level": "HL",
-  "paper": "Paper 2 — original short and extended-response sample",
-  "durationMinutes": 60,
+  "paper": "Paper 2 (HL) — original full-format practice",
+  "durationMinutes": 150,
   "readingTimeMinutes": 5,
-  "maximumMarks": 30,
+  "maximumMarks": 90,
   "mode": "reading",
   "instructions": "Answer every question using the response area attached to it. An approved calculator is required. Use the original reference data supplied within this sample; no external data booklet is needed. Show calculations, units, diagrams and reasoning where required. No separate answer sheet is used.",
   "selectionMode": "all",
@@ -20,6 +20,12 @@
       "label": "Original kinetics data",
       "kind": "text",
       "text": "For reaction X + Y → products at constant temperature:\nExperiment 1: [X] 0.10, [Y] 0.10, rate 2.0 × 10⁻⁴\nExperiment 2: [X] 0.20, [Y] 0.10, rate 8.0 × 10⁻⁴\nExperiment 3: [X] 0.20, [Y] 0.30, rate 2.4 × 10⁻³\nConcentrations are mol dm⁻³; rates are mol dm⁻³ s⁻¹."
+    },
+    {
+      "key": "chem-reference",
+      "label": "Reference data for this sample",
+      "kind": "text",
+      "text": "Relative atomic masses: H 1.01, C 12.01, O 16.00, Na 22.99, Mg 24.31, Cl 35.45\nSpecific heat capacity of water: 4.18 J g⁻¹ K⁻¹\nFaraday constant: 9.65 × 10⁴ C mol⁻¹"
     }
   ],
   "questions": [
@@ -66,6 +72,75 @@
       "type": "essay",
       "resourceKeys": [],
       "marks": 9
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — stoichiometry and gases",
+      "prompt": "A volatile liquid has mass 0.742 g and occupies 286 cm³ as a gas at 99.0 kPa and 373 K. Determine its molar mass, propose a molecular formula from a supplied empirical ratio, and evaluate one source of systematic error.",
+      "type": "ink",
+      "resourceKeys": [
+        "chem-reference"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — energetics",
+      "prompt": "Construct a Hess cycle to determine an unknown enthalpy of formation from combustion data. Then calculate the energy released by 12.0 g of the substance and state why the experimental value may be less exothermic.",
+      "type": "ink",
+      "resourceKeys": [
+        "chem-reference"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — acids and bases",
+      "prompt": "Calculate the pH of a weak monoprotic acid and of the buffer formed after partial neutralization. Explain the response of the buffer to a small addition of strong acid.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 10
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — electrochemistry",
+      "prompt": "Use standard electrode potentials to predict the feasibility and direction of a redox reaction, write the overall equation, calculate E°cell and determine ΔG° at 298 K.",
+      "type": "ink",
+      "resourceKeys": [
+        "chem-reference"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — structure and bonding",
+      "prompt": "Compare the bonding, structure and resulting physical properties of sodium chloride, graphite, silicon dioxide and iodine. Include conductivity in solid and liquid states where applicable.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 10
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — organic mechanisms",
+      "prompt": "For a route from propene to propanone, give reagents and conditions, classify each step, outline one mechanism with curly-arrow descriptions, and identify diagnostic spectroscopic evidence.",
+      "type": "short",
+      "resourceKeys": [],
+      "marks": 10
     }
   ]
 }

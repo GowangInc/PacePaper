@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Three interactive DigitalDP teacher interface concepts for review.">
+    <title>DigitalDP · Teacher interface concepts</title>
+    <link rel="icon" href="../../../assets/app-icon.ico">
+    <link rel="stylesheet" href="tokens.css?v=1">
+    <link rel="stylesheet" href="styles.css?v=1">
+    <link rel="stylesheet" href="control-room.css?v=1">
+    <link rel="stylesheet" href="teacher-desk.css?v=1">
+    <link rel="stylesheet" href="paper-studio.css?v=1">
+    <link rel="stylesheet" href="comparison.css?v=1">
+    <link rel="stylesheet" href="responsive.css?v=1">
+    <script src="app.js?v=1" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to concepts</a>
+
+    <header class="concept-bar" aria-label="Concept navigation">
+      <a class="wordmark" href="#control-room" aria-label="DigitalDP teacher concepts home">
+        <span class="wordmark__mark" aria-hidden="true">D</span>
+        <span>DigitalDP</span>
+        <span class="wordmark__context">Teacher concepts</span>
+      </a>
+
+      <button class="command-pill" id="open-command" type="button" aria-haspopup="dialog">
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"></path>
+        </svg>
+        <span>Find a concept or task</span>
+        <kbd>⌘ K</kbd>
+      </button>
+
+      <span class="review-chip">Exploration only</span>
+    </header>
+
+    <main id="main-content">
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="intro__context">Alternative teacher front ends</p>
+          <h1 id="page-title">Three practical ways to run the same school day.</h1>
+        </div>
+        <div class="intro__brief">
+          <p>Each concept supports paper building, exam setup, live monitoring, and review. The difference is what it puts first.</p>
+          <p class="mock-note"><strong>Mock data:</strong> names, classes, and activity below are illustrative.</p>
+        </div>
+      </section>
+
+      <nav class="concept-tabs" aria-label="Teacher interface concepts">
+        <button class="concept-tab" type="button" data-concept="control-room" aria-pressed="true">
+          <span class="concept-tab__number">A</span>
+          <span><strong>Control room</strong><small>Live exams first</small></span>
+        </button>
+        <button class="concept-tab" type="button" data-concept="teacher-desk" aria-pressed="false">
+          <span class="concept-tab__number">B</span>
+          <span><strong>Teacher desk</strong><small>Tasks and classes first</small></span>
+        </button>
+        <button class="concept-tab" type="button" data-concept="paper-studio" aria-pressed="false">
+          <span class="concept-tab__number">C</span>
+          <span><strong>Paper studio</strong><small>Building first</small></span>
+        </button>
+      </nav>
+
+      <div class="concept-stage" aria-live="off">
+        <article class="concept" id="control-room" data-concept-panel>
+          <header class="concept-heading">
+            <div>
+              <h2 tabindex="-1">Control room</h2>
+              <p>Best when one teacher may be supervising several simultaneous exams and needs problems to surface quickly.</p>
+            </div>
+            <div class="concept-verdict">
+              <span>Strength</span>
+              <strong>At-a-glance supervision</strong>
+            </div>
+          </header>
+
+          <section class="mock-app control-room" aria-label="Control room interface mockup">
+            <header class="mock-app__topbar">
+              <div>
+                <span class="product-kicker">Teacher dashboard</span>
+                <strong>Friday, 4 September</strong>
+              </div>
+              <div class="topbar-actions">
+                <button class="button button--quiet" type="button" data-mock-action="create-paper">New paper</button>
+                <button class="button button--primary" type="button" data-mock-action="setup-exam">Set up exam</button>
+              </div>
+            </header>
+
+            <div class="control-room__body">
+              <aside class="session-rail" aria-label="Exam sessions">
+                <div class="rail-heading">
+                  <h3>Exam sessions</h3>
+                  <button class="icon-button" type="button" aria-label="Add exam session" data-mock-action="setup-exam">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                  </button>
+                </div>
+
+                <button class="session-row session-row--active" type="button" aria-current="true">
+                  <span class="status-dot status-dot--ready" aria-hidden="true"></span>
+                  <span><strong>Biology HL</strong><small>Paper 2 · ready</small></span>
+                  <time datetime="09:00">09:00</time>
+                </button>
+                <button class="session-row" type="button">
+                  <span class="status-dot status-dot--waiting" aria-hidden="true"></span>
+                  <span><strong>English B SL</strong><small>Listening · waiting</small></span>
+                  <time datetime="09:15">09:15</time>
+                </button>
+                <button class="session-row" type="button">
+                  <span class="status-dot" aria-hidden="true"></span>
+                  <span><strong>Math AA HL</strong><small>Paper 1 · later</small></span>
+                  <time datetime="13:00">13:00</time>
+                </button>
+
+                <div class="connection-block">
+                  <span>Student address</span>
+                  <code>192.168.1.42:9148</code>
+                  <button class="text-button" type="button" data-copy="192.168.1.42:9148">Copy address</button>
+                </div>
+              </aside>
+
+              <div class="session-main">
+                <div class="session-summary">
+                  <div>
+                    <p class="context-line">Demo Biology · Year 13</p>
+                    <h3>Biology HL · Paper 2 practice</h3>
+                    <p>10-second demo reading phase, then 2 hours 30 minutes writing time.</p>
+                  </div>
+                  <span class="state-label state-label--ready">Ready to start</span>
+                </div>
+
+                <div class="readiness-strip" role="group" aria-label="Session readiness">
+                  <div><span>Selected</span><strong>4 students</strong></div>
+                  <div><span>Connected</span><strong id="connected-count">4 of 4</strong></div>
+                  <div><span>Paper check</span><strong>Passed</strong></div>
+                  <div><span>Clock</span><strong id="demo-clock">Not started</strong></div>
+                </div>
+
+                <section class="candidate-monitor" aria-labelledby="candidate-title">
+                  <div class="section-title-row">
+                    <div>
+                      <h4 id="candidate-title">Candidate readiness</h4>
+                      <p>Only exceptions need teacher attention.</p>
+                    </div>
+                    <button class="button button--quiet" type="button" data-mock-action="edit-roster">Edit class</button>
+                  </div>
+
+                  <ul class="candidate-list">
+                    <li><span class="candidate-initials">KT</span><span><strong>Kotaro</strong><small>Connected · exam selected</small></span><span class="state-label state-label--ready">Ready</span></li>
+                    <li><span class="candidate-initials">MR</span><span><strong>Minseo</strong><small>Connected · exam selected</small></span><span class="state-label state-label--ready">Ready</span></li>
+                    <li><span class="candidate-initials">AL</span><span><strong>Amelia</strong><small>Connected · exam selected</small></span><span class="state-label state-label--ready">Ready</span></li>
+                    <li><span class="candidate-initials">DS</span><span><strong>Daniel</strong><small>Connected · exam selected</small></span><span class="state-label state-label--ready">Ready</span></li>
+                  </ul>
+                </section>
+
+                <footer class="start-dock">
+                  <div>
+                    <strong>Countdown is stopped</strong>
+                    <span>Reading time begins only when you start the exam.</span>
+                  </div>
+                  <button class="button button--primary button--start" id="start-demo" type="button">Start exam</button>
+                </footer>
+              </div>
+
+              <aside class="session-inspector" aria-label="Selected exam settings">
+                <h3>Before you start</h3>
+                <dl class="spec-list">
+                  <div><dt>Paper</dt><dd>Biology HL · Paper 2</dd></div>
+                  <div><dt>Reading</dt><dd>10 seconds · demo</dd></div>
+                  <div><dt>Writing</dt><dd>2 h 30 min</dd></div>
+                  <div><dt>Calculator</dt><dd>Permitted</dd></div>
+                  <div><dt>Resources</dt><dd>None attached</dd></div>
+                </dl>
+                <button class="button button--wide" type="button" data-mock-action="review-student-view">Review student view</button>
+                <button class="button button--quiet button--wide" type="button" data-mock-action="open-clock">Open display clock</button>
+                <p class="settings-note">Exam settings lock when the session starts.</p>
+              </aside>
+            </div>
+          </section>
+        </article>
+
+        <article class="concept" id="teacher-desk" data-concept-panel hidden>
+          <header class="concept-heading">
+            <div>
+              <h2 tabindex="-1">Teacher desk</h2>
+              <p>Best for occasional users: begin with a familiar job, then show only the decisions needed to finish it.</p>
+            </div>
+            <div class="concept-verdict">
+              <span>Strength</span>
+              <strong>Lowest learning curve</strong>
+            </div>
+          </header>
+
+          <section class="mock-app teacher-desk" aria-label="Teacher desk interface mockup">
+            <header class="desk-header">
+              <div>
+                <span class="product-kicker">DigitalDP</span>
+                <h3>What do you need to do?</h3>
+              </div>
+              <div class="teacher-identity">
+                <span class="candidate-initials">MN</span>
+                <span><strong>Mr Nicholas</strong><small>Teacher account</small></span>
+              </div>
+            </header>
+
+            <div class="desk-layout">
+              <nav class="task-lane" aria-label="Teacher tasks">
+                <button class="task-step task-step--active" type="button" data-desk-task="prepare" aria-pressed="true">
+                  <span class="task-step__index">1</span><span><strong>Prepare</strong><small>Classes and papers</small></span>
+                </button>
+                <button class="task-step" type="button" data-desk-task="run" aria-pressed="false">
+                  <span class="task-step__index">2</span><span><strong>Run</strong><small>Start and supervise</small></span>
+                </button>
+                <button class="task-step" type="button" data-desk-task="review" aria-pressed="false">
+                  <span class="task-step__index">3</span><span><strong>Review</strong><small>Responses and PDFs</small></span>
+                </button>
+              </nav>
+
+              <div class="desk-workspace">
+                <section class="desk-panel" data-desk-panel="prepare" aria-labelledby="prepare-title">
+                  <header>
+                    <div><h4 id="prepare-title">Prepare a class or paper</h4><p>Choose one place to begin. You can connect the other item afterwards.</p></div>
+                    <span class="review-chip">No setup wizard</span>
+                  </header>
+                  <div class="prepare-actions">
+                    <button class="large-action" type="button" data-mock-action="create-class">
+                      <span class="large-action__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+                      <span><strong>Set up a class</strong><small>Add names, or import a prepared class list.</small></span>
+                      <span class="action-arrow" aria-hidden="true">→</span>
+                    </button>
+                    <button class="large-action" type="button" data-mock-action="create-paper">
+                      <span class="large-action__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Zm0 0v6h6M9 13h6M9 17h6"></path></svg></span>
+                      <span><strong>Build a paper</strong><small>Start from an exam type or import a paper.</small></span>
+                      <span class="action-arrow" aria-hidden="true">→</span>
+                    </button>
+                  </div>
+
+                  <div class="desk-columns">
+                    <section>
+                      <div class="section-title-row"><div><h4>Your classes</h4><p>Student lists can be edited at any time.</p></div><button class="text-button" type="button" data-mock-action="import-class">Import list</button></div>
+                      <ul class="plain-list">
+                        <li><span><strong>Demo Biology · Year 13</strong><small>Class ID BIO-13 · 4 students</small></span><button class="button button--quiet" type="button" data-mock-action="open-class">Open</button></li>
+                        <li><span><strong>English B · Year 12</strong><small>Class ID ENB-12 · student count pending</small></span><button class="button button--quiet" type="button" data-mock-action="open-class">Open</button></li>
+                      </ul>
+                    </section>
+                    <section>
+                      <div class="section-title-row"><div><h4>Recent papers</h4><p>Saved locally on this demonstration device.</p></div><button class="text-button" type="button" data-mock-action="import-paper">Import paper</button></div>
+                      <ul class="plain-list">
+                        <li><span><strong>Biology HL · Paper 2 practice</strong><small>Draft · checked today</small></span><button class="button button--quiet" type="button" data-mock-action="edit-paper">Edit</button></li>
+                        <li><span><strong>English B SL · Listening practice</strong><small>Ready · three audio texts</small></span><button class="button button--quiet" type="button" data-mock-action="edit-paper">Edit</button></li>
+                      </ul>
+                    </section>
+                  </div>
+                </section>
+
+                <section class="desk-panel" data-desk-panel="run" hidden aria-labelledby="run-title">
+                  <header><div><h4 id="run-title">Run an exam</h4><p>Select an existing class and paper, check the automatic settings, then invite students.</p></div></header>
+                  <ol class="run-checklist">
+                    <li><span class="task-step__index">1</span><div><strong>Choose a class</strong><p>Demo Biology · Year 13</p></div><button class="button button--quiet" type="button" data-mock-action="change-class">Change</button></li>
+                    <li><span class="task-step__index">2</span><div><strong>Choose a paper</strong><p>Biology HL · Paper 2 practice</p></div><button class="button button--quiet" type="button" data-mock-action="change-paper">Change</button></li>
+                    <li><span class="task-step__index">3</span><div><strong>Check settings</strong><p>10-second demo reading time · calculator permitted</p></div><button class="button button--quiet" type="button" data-mock-action="check-settings">Review</button></li>
+                  </ol>
+                  <div class="callout callout--positive"><strong>Ready for students</strong><span>Share class ID <code>BIO-13</code> and address <code>192.168.1.42:9148</code>.</span></div>
+                  <button class="button button--primary" type="button" data-mock-action="open-waiting-room">Open waiting room</button>
+                </section>
+
+                <section class="desk-panel" data-desk-panel="review" hidden aria-labelledby="review-title">
+                  <header><div><h4 id="review-title">Review completed work</h4><p>Responses stay grouped by class, sitting, and paper.</p></div></header>
+                  <ul class="review-list">
+                    <li><span class="state-label state-label--ready">Complete</span><span><strong>Biology HL · Paper 2 practice</strong><small>Demo Biology · Year 13 · four submissions</small></span><button class="button" type="button" data-mock-action="review-responses">Review</button></li>
+                    <li><span class="state-label">Draft</span><span><strong>English B SL · Listening practice</strong><small>No sitting has been run</small></span><button class="button button--quiet" type="button" data-mock-action="open-paper">Open paper</button></li>
+                  </ul>
+                </section>
+              </div>
+            </div>
+          </section>
+        </article>
+
+        <article class="concept" id="paper-studio" data-concept-panel hidden>
+          <header class="concept-heading">
+            <div>
+              <h2 tabindex="-1">Paper studio</h2>
+              <p>Best for frequent paper authors: outline, edit, and student preview remain visible together without opening a side window.</p>
+            </div>
+            <div class="concept-verdict">
+              <span>Strength</span>
+              <strong>Fast paper authoring</strong>
+            </div>
+          </header>
+
+          <section class="mock-app paper-studio" aria-label="Paper studio interface mockup">
+            <header class="studio-header">
+              <div>
+                <button class="icon-button" type="button" aria-label="Back to paper library" data-mock-action="paper-library">
+                  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg>
+                </button>
+                <div><span class="product-kicker">Paper studio</span><strong id="studio-header-title">Mathematics AA HL · Paper 1 practice</strong></div>
+              </div>
+              <div class="topbar-actions">
+                <span class="save-state" id="save-state">Saved locally</span>
+                <button class="button button--quiet" type="button" data-mock-action="export-paper">Export</button>
+                <button class="button button--primary" type="button" data-mock-action="use-paper">Use in exam</button>
+              </div>
+            </header>
+
+            <div class="studio-layout">
+              <aside class="outline-pane" aria-label="Paper outline">
+                <div class="rail-heading"><h3>Paper outline</h3><button class="icon-button" type="button" aria-label="Add question" data-mock-action="add-question"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+                <button class="outline-item outline-item--active" type="button"><span>Q1</span><span><strong>Functions</strong><small>7 marks · ink response</small></span></button>
+                <button class="outline-item" type="button"><span>Q2</span><span><strong>Sequences</strong><small>8 marks · equation + ink</small></span></button>
+                <button class="outline-item" type="button"><span>Q3</span><span><strong>Graph sketch</strong><small>6 marks · graph canvas</small></span></button>
+                <button class="add-row" type="button" data-mock-action="add-question">+ Add question</button>
+
+                <div class="paper-totals">
+                  <span>Paper total</span><strong>21 marks</strong><small>Illustrative draft</small>
+                </div>
+              </aside>
+
+              <div class="editor-pane" id="paper-form">
+                <div class="editor-heading">
+                  <div><p class="context-line">Question 1</p><h3>Functions</h3></div>
+                  <button class="text-button text-button--danger" type="button" data-mock-action="remove-question">Remove</button>
+                </div>
+
+                <fieldset>
+                  <legend>Question details</legend>
+                  <label class="field">
+                    <span>Question text</span>
+                    <textarea id="question-text" rows="5">A function is defined by f(x) = x² − 6x + 5. Show that the minimum value of f is −4.</textarea>
+                  </label>
+                  <div class="field-row">
+                    <label class="field"><span>Maximum marks</span><input id="question-marks" type="number" min="1" max="50" value="7"></label>
+                    <label class="field"><span>Student response</span><select id="response-type"><option>Ink page</option><option>Typed answer</option><option>Equation and ink</option><option>Graph canvas</option></select></label>
+                  </div>
+                </fieldset>
+
+                <fieldset>
+                  <legend>Question media</legend>
+                  <p class="fieldset-help">Images, PDFs, and audio stay attached to this question.</p>
+                  <div class="attachment-row">
+                    <span class="attachment-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.2-9.19a4 4 0 0 1 5.65 5.65l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.5-8.48"></path></svg></span>
+                    <span><strong>No media attached</strong><small>Add a diagram, PDF source, or audio file.</small></span>
+                    <button class="button button--quiet" type="button" data-mock-action="attach-media">Add media</button>
+                  </div>
+                </fieldset>
+
+                <fieldset>
+                  <legend>Student writing area</legend>
+                  <div class="field-row">
+                    <label class="field"><span>Default background</span><select id="canvas-background"><option>Ruled</option><option>Plain</option><option>Square grid</option><option>Graph grid</option></select></label>
+                    <label class="field"><span>Starting pages</span><input type="number" min="1" max="20" value="1"></label>
+                  </div>
+                  <label class="check-row"><input type="checkbox" checked><span><strong>Allow students to add pages</strong><small>They receive a warning before changing the teacher’s default background.</small></span></label>
+                </fieldset>
+              </div>
+
+              <aside class="preview-pane" aria-label="Student paper preview">
+                <div class="preview-toolbar">
+                  <div><strong>Student preview</strong><span>Question 1 of 3</span></div>
+                  <button class="button button--quiet" type="button" data-mock-action="full-preview">Full preview</button>
+                </div>
+
+                <section class="tool-profile" aria-labelledby="tools-title">
+                  <div>
+                    <span class="tool-profile__lock" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 11V7a5 5 0 0 1 10 0v4m-12 0h14v10H5Z"></path></svg></span>
+                    <div><h4 id="tools-title">Exam tool profile</h4><p>Math AA HL · Paper 1 · current course</p></div>
+                  </div>
+                  <dl>
+                    <div><dt>Calculator</dt><dd class="tool-off">Not permitted</dd></div>
+                    <div><dt>Formula booklet</dt><dd>Available</dd></div>
+                    <div><dt>Writing</dt><dd>Ink, equation entry, graph canvas</dd></div>
+                  </dl>
+                  <button class="text-button" type="button" data-mock-action="practice-copy">Make a custom practice copy</button>
+                </section>
+
+                <article class="paper-preview">
+                  <header><span>DigitalDP practice paper</span><strong>Mathematics: analysis and approaches</strong><small>Higher level · Paper 1</small></header>
+                  <div class="paper-preview__instructions">Calculator use is not permitted. A clean formula booklet is available.</div>
+                  <div class="paper-question"><span class="paper-question__number">1.</span><p id="preview-question">A function is defined by f(x) = x² − 6x + 5. Show that the minimum value of f is −4.</p><strong id="preview-marks">[7 marks]</strong></div>
+                  <div class="answer-sheet answer-sheet--ruled" id="answer-sheet"><span>Student writing area</span></div>
+                  <button class="add-page-preview" type="button" data-mock-action="add-page">+ Student may add another page</button>
+                </article>
+              </aside>
+            </div>
+          </section>
+        </article>
+      </div>
+
+      <section class="comparison" aria-labelledby="comparison-title">
+        <div>
+          <h2 id="comparison-title">What each concept optimizes</h2>
+          <p>These are deliberately different starting points, not colour variations of one dashboard.</p>
+        </div>
+        <table class="comparison-table">
+          <caption class="sr-only">Comparison of the three teacher interface concepts</caption>
+          <thead><tr class="comparison-row comparison-row--head"><th scope="col">Concept</th><th scope="col">Best first screen</th><th scope="col">Trade-off</th></tr></thead>
+          <tbody>
+            <tr class="comparison-row"><th scope="row">Control room</th><td>Concurrent and imminent sessions</td><td>More information on screen</td></tr>
+            <tr class="comparison-row"><th scope="row">Teacher desk</th><td>A clear choice of task</td><td>More steps for expert users</td></tr>
+            <tr class="comparison-row"><th scope="row">Paper studio</th><td>Question authoring and preview</td><td>Live supervision is secondary</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <details class="state-proof">
+        <summary>Component state coverage</summary>
+        <div class="state-proof__grid">
+          <button class="button" type="button">Default</button>
+          <button class="button" type="button" disabled>Disabled</button>
+          <button class="button" type="button" aria-busy="true">Loading</button>
+          <button class="button" type="button" data-state="error">Error</button>
+          <button class="button" type="button" data-state="success">Success</button>
+          <label class="field field--error"><span>Example error</span><input type="text" value=""><small>Enter a name before continuing.</small></label>
+        </div>
+      </details>
+    </main>
+
+    <footer class="page-footer">
+      <span>DigitalDP teacher concepts · September 2026</span>
+      <a href="README.md">Review notes</a>
+      <span>Not connected to production data</span>
+    </footer>
+
+    <dialog class="command-dialog" id="command-dialog" aria-labelledby="command-title">
+      <form method="dialog" class="command-dialog__frame">
+        <header aria-label="Command search">
+          <div><h2 id="command-title">Go to a concept or task</h2><p>Search the three front-end approaches.</p></div>
+          <button class="icon-button" type="submit" value="cancel" aria-label="Close search">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+          </button>
+        </header>
+        <label class="field command-search"><span>Search</span><input id="command-input" type="search" autocomplete="off" placeholder="Try “monitor” or “paper”"></label>
+        <div class="command-results" id="command-results">
+          <button type="button" data-command-target="control-room" data-search="control room monitor supervise start exam simultaneous sessions"><span><strong>Control room</strong><small>Monitor and start exams</small></span><kbd>A</kbd></button>
+          <button type="button" data-command-target="teacher-desk" data-search="teacher desk prepare class run review tasks"><span><strong>Teacher desk</strong><small>Follow a simple task flow</small></span><kbd>B</kbd></button>
+          <button type="button" data-command-target="paper-studio" data-search="paper studio build questions preview calculator tools media"><span><strong>Paper studio</strong><small>Build and preview papers</small></span><kbd>C</kbd></button>
+        </div>
+        <p class="command-count" id="command-count" aria-live="polite">3 results</p>
+      </form>
+    </dialog>
+
+    <div class="toast" id="mock-toast" role="status" aria-live="polite" hidden></div>
+    <p class="sr-only" id="live-region" aria-live="polite"></p>
+  </body>
+</html>

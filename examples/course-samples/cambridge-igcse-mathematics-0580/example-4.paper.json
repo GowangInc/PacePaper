@@ -1,0 +1,396 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "cambridge-igcse",
+    "systemLabel": "Cambridge IGCSE",
+    "qualificationLabel": "Cambridge IGCSE Mathematics 0580",
+    "deliveryMode": "Paper-like digital practice",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "2025–2027 syllabus · Extended · scientific calculator required; no algebraic/graphical calculator · formula facts included · original full-length practice"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Cambridge IGCSE Mathematics (0580) · Paper 4 — original full-length mock (calculator)",
+  "subject": "cambridge-igcse-mathematics-0580",
+  "subjectLabel": "Cambridge IGCSE Mathematics (0580)",
+  "level": "Extended",
+  "paper": "Paper 4 — original full-length mock (calculator)",
+  "durationMinutes": 120,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 100,
+  "mode": "reading",
+  "instructions": "Original full-length practice: 24 questions, 100 marks. This is not an official or endorsed Cambridge examination. Answer every question and all parts. Show your reasoning and calculations in the working canvas beneath each question; add pages when needed. A scientific calculator is required; algebraic and graphical calculators are not permitted. Retain unrounded values during calculations. Unless a question specifies otherwise, give non-exact numerical answers to three significant figures and angles in degrees to one decimal place. Use the calculator value of π or 3.142. Formula facts are attached to every question. Draw and label your own axes where requested; one grid square may represent the scale stated in the question. Use straight ruled lines and smooth curves as appropriate. Dimensions stated in a question are exact unless described as rounded. There is no separate reading period.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formula-facts",
+      "label": "Extended formula facts",
+      "kind": "text",
+      "text": "Mathematical formula facts — independently typeset for this practice paper\nTriangle: area = bh/2 (b is the base, h the perpendicular height).\nCircle: area = πr²; circumference = 2πr (r is the radius).\nCylinder: curved surface area = 2πrh; volume = πr²h.\nCone: curved surface area = πrl; volume = πr²h/3 (l is slant height; h is perpendicular height).\nSphere: surface area = 4πr²; volume = 4πr³/3.\nPrism: volume = cross-sectional area × length.\nPyramid: volume = base area × perpendicular height / 3.\nIf ax² + bx + c = 0 and a ≠ 0: x = (−b ± √(b² − 4ac))/(2a).\nIn a triangle with sides a, b, c opposite angles A, B, C:\na/sin A = b/sin B = c/sin C;\na² = b² + c² − 2bc cos A;\narea = ab sin C / 2."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1",
+      "prompt": "Calculate √(18.7² + 26.4²)/0.0735. Give your answer to three significant figures. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 2,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2",
+      "prompt": "A car travels a distance recorded as 128 km to the nearest kilometre, in a time recorded as 1.6 hours to the nearest 0.1 hour. Calculate the upper bound of its average speed. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3",
+      "prompt": "An invoice total of $763.20 includes a sales tax of 6%. Find the price before tax and the amount of tax. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4",
+      "prompt": "A machine costs $18500 when new and loses 13% of its value each year. Calculate its value after four years and the percentage of its original value that remains. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5",
+      "prompt": "The intensity I of a signal is inversely proportional to the square of the distance d metres from its source. I = 48 when d = 5. Find an equation connecting I and d, then find d when I = 7.5. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6",
+      "prompt": "Make x the subject of y = (3x − 4)/(x + 2). State the value of y for which your rearranged expression is undefined. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7",
+      "prompt": "Solve 3x² − 5x − 11 = 0, giving both answers to three significant figures. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8",
+      "prompt": "Find all points where the line y = 2x + 1 meets the circle x² + y² = 25. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9",
+      "prompt": "A(−3,5) and B(7,1) are endpoints of a segment.\n(a) Find the midpoint of AB. [1]\n(b) Find the gradient of AB. [1]\n(c) Find the equation of the perpendicular bisector of AB in the form y = mx + c. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10",
+      "prompt": "A quadratic sequence begins 6, 15, 28, 45.\n(a) Find the nth term. [3]\n(b) Find the first term greater than 500. State its position and value. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11",
+      "prompt": "Two mathematically similar containers have volumes 640 cm³ and 2160 cm³. The smaller has height 12 cm and total surface area 352 cm².\n(a) Find the larger container's height. [2]\n(b) Find its total surface area. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12",
+      "prompt": "In triangle ABC, AB = 8.6 cm, AC = 12.3 cm and angle BAC = 57°.\n(a) Calculate BC. [2]\n(b) Calculate the area of ABC. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13",
+      "prompt": "A boat travels 12 km due east from P to Q, then 7 km due north from Q to R.\n(a) Calculate the distance PR. [2]\n(b) Calculate the bearing of R from P, to one decimal place. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14",
+      "prompt": "A cuboid has length 9 cm, width 6 cm and height 4 cm.\n(a) Calculate the length of its space diagonal. [2]\n(b) Calculate the angle the space diagonal makes with the horizontal rectangular base. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15",
+      "prompt": "A circle has radius 10 cm. A chord subtends an angle of 74° at the centre. Calculate the area of the smaller segment cut off by the chord. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16",
+      "prompt": "A solid metal cone has radius 4.5 cm and perpendicular height 12 cm. It is melted and recast without loss into a cylinder of radius 3 cm.\n(a) Calculate the cone's volume. [2]\n(b) Calculate the height of the cylinder. [2]\n(c) Calculate the slant height of the original cone. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17",
+      "prompt": "A train accelerates uniformly from rest to 24 m/s in 40 s, continues at 24 m/s for 150 s, then decelerates uniformly to rest in 60 s.\n(a) Draw a labelled speed–time graph for the journey. [2]\n(b) Calculate its initial acceleration. [1]\n(c) Calculate the total distance travelled. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18",
+      "prompt": "A delivery company's parcel masses m kg are:\n0 < m ≤ 2: frequency 12\n2 < m ≤ 5: frequency 24\n5 < m ≤ 10: frequency 20\n10 < m ≤ 20: frequency 4\n(a) Estimate the mean mass. [3]\n(b) Calculate all four frequency densities for a histogram. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19",
+      "prompt": "The masses m grams of 80 apples are recorded cumulatively:\nm ≤ 80: 0; m ≤ 100: 8; m ≤ 120: 28; m ≤ 140: 60; m ≤ 160: 76; m ≤ 180: 80.\n(a) Draw a cumulative-frequency graph. [2]\n(b) Estimate the median mass. [1]\n(c) Estimate the interquartile range. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20",
+      "prompt": "A box contains 5 working and 3 faulty lamps. Two lamps are selected at random without replacement.\n(a) Find the probability that exactly one is faulty. [3]\n(b) There are 140 identical boxes. The same selection process is independently repeated once for each box. Estimate how many selections contain two working lamps. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21",
+      "prompt": "Triangle A has vertices (1,2), (4,2), (1,4). It is reflected in the y-axis, then translated by the column vector (5, −1).\n(a) Draw and label the final image on a grid. [3]\n(b) Give a single mapping rule (x,y) ↦ (…,…) for the combined transformation. [1]\n(c) Is the final image congruent to A? Give a reason. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22",
+      "prompt": "For y = x³ − 4x + 1:\n(a) Calculate y for x = −2.5, −2, −1.5, −1, 0, 1, 1.5, 2. [2]\n(b) Draw the curve for −2.5 ≤ x ≤ 2, using at least two grid squares per x unit and a suitable uniform y scale. [2]\n(c) Use your graph to estimate all three roots of x³ − 4x + 1 = 0 to one decimal place. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 6,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q23",
+      "label": "Question 23",
+      "prompt": "A rectangular pen is built against a straight wall, so fencing is required on only three sides. There are 48 m of fencing. Let x metres be the length of each side perpendicular to the wall.\n(a) Show that the area A is 48x − 2x², and give the range of physically possible x values for a non-zero pen. [2]\n(b) Use differentiation to find the maximum possible area. [3]\n(c) State the length of the side parallel to the wall at this maximum. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 6,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q24",
+      "label": "Question 24",
+      "prompt": "A laboratory model predicts N = 750 × 1.08ᵗ bacteria after t hours.\n(a) Find the predicted population after 12 hours, to the nearest whole bacterium. [2]\n(b) Find the first whole hour when the predicted population exceeds 2000. Show values that justify your answer. [3]\n(c) State one reason this model may be unreliable over a very long period. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 6,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

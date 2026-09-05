@@ -7,8 +7,13 @@ on:
       tag:
         description: Existing draft release tag
         required: true
-        default: v0.1.0-demo.1
+        default: v0.1.0-demo.5
         type: string
+      include_macos:
+        description: Include macOS (requires Developer ID signing and Apple notarization secrets)
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -19,10 +24,14 @@ concurrency:
 
 jobs:
   build-and-upload:
-    runs-on: macos-15-intel
+    runs-on: ${{ inputs.include_macos && 'macos-15-intel' || 'ubuntu-latest' }}
     timeout-minutes: 45
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      sample_count: ${{ steps.package.outputs.sample_count }}
     env:
       RELEASE_TAG: ${{ inputs.tag }}
+      INCLUDE_MACOS: ${{ inputs.include_macos }}
       GH_TOKEN: ${{ github.token }}
 
     steps:
@@ -69,6 +78,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Verify package version
+        id: package
         env:
           VERSION: ${{ steps.meta.outputs.version }}
         shell: bash
@@ -76,6 +86,8 @@ jobs:
           set -euo pipefail
           package_version="$(bun -e 'const p = await Bun.file("package.json").json(); process.stdout.write(p.version)')"
           test "$package_version" = "$VERSION"
+          sample_count="$(bun -e 'import { COURSE_SAMPLE_PAPERS } from "./examples/sample-source/index.ts"; process.stdout.write(String(COURSE_SAMPLE_PAPERS.length))')"
+          echo "sample_count=$sample_count" >> "$GITHUB_OUTPUT"
 
       - name: Type-check
         run: bun run check
@@ -84,6 +96,7 @@ jobs:
         run: bun test
 
       - name: Configure Developer ID signing and notarization
+        if: inputs.include_macos
         env:
           SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
           SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
@@ -149,7 +162,14 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Build release bundles
-        run: bun run release:build
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$INCLUDE_MACOS" = "true" ]]; then
+            bun run release:build
+          else
+            bun run release:build --platforms=windows-x64,linux-x64
+          fi
 
       - name: Verify built bundles
         env:
@@ -158,31 +178,47 @@ jobs:
         run: |
           set -euo pipefail
           files=(
-            "release/DigitalDP-${VERSION}-macos-universal.zip"
             "release/DigitalDP-${VERSION}-windows-x64.zip"
             "release/DigitalDP-${VERSION}-linux-x64.tar.gz"
+            "release/DigitalDP-${VERSION}-User-Guide.html"
             "release/DigitalDP-${VERSION}-User-Guide.txt"
+            "release/DigitalDP-${VERSION}-Release-Notes.txt"
             "release/SHA256SUMS.txt"
           )
+          if [[ "$INCLUDE_MACOS" = "true" ]]; then
+            files+=("release/DigitalDP-${VERSION}-macos-universal.zip")
+          else
+            test ! -e "release/DigitalDP-${VERSION}-macos-universal.zip"
+          fi
           for file in "${files[@]}"; do
             test -s "$file"
           done
-          test "$(wc -l < release/SHA256SUMS.txt | tr -d ' ')" = "4"
+          test "$(wc -l < release/SHA256SUMS.txt | tr -d ' ')" = "$((${#files[@]} - 1))"
           (cd release && shasum -a 256 -c SHA256SUMS.txt)
-          unzip -tq "release/DigitalDP-${VERSION}-macos-universal.zip"
           unzip -tq "release/DigitalDP-${VERSION}-windows-x64.zip"
           tar -tzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" >/dev/null
-          extracted_mac="$RUNNER_TEMP/digitaldp-mac-verification"
-          mkdir -p "$extracted_mac"
-          ditto -x -k "release/DigitalDP-${VERSION}-macos-universal.zip" "$extracted_mac"
-          app="$extracted_mac/DigitalDP-${VERSION}-macos-universal/DigitalDP.app"
-          codesign --verify --deep --strict --all-architectures "$app"
-          xcrun stapler validate -v "$app"
-          spctl --assess --type execute --verbose=4 "$app"
+          if [[ "$INCLUDE_MACOS" = "true" ]]; then
+            unzip -tq "release/DigitalDP-${VERSION}-macos-universal.zip"
+            extracted_mac="$RUNNER_TEMP/digitaldp-mac-verification"
+            mkdir -p "$extracted_mac"
+            ditto -x -k "release/DigitalDP-${VERSION}-macos-universal.zip" "$extracted_mac"
+            app="$extracted_mac/DigitalDP-${VERSION}-macos-universal/DigitalDP.app"
+            codesign --verify --deep --strict --all-architectures "$app"
+            xcrun stapler validate -v "$app"
+            spctl --assess --type execute --verbose=4 "$app"
+            cmp USER_GUIDE.md "$extracted_mac/DigitalDP-${VERSION}-macos-universal/USER-GUIDE.txt"
+            cmp USER_GUIDE.html "$extracted_mac/DigitalDP-${VERSION}-macos-universal/USER-GUIDE.html"
+            cmp "release/RELEASE_NOTES-${VERSION}.md" "$extracted_mac/DigitalDP-${VERSION}-macos-universal/RELEASE-NOTES.txt"
+          fi
+          cmp USER_GUIDE.html "release/DigitalDP-${VERSION}-User-Guide.html"
           cmp USER_GUIDE.md "release/DigitalDP-${VERSION}-User-Guide.txt"
-          unzip -p "release/DigitalDP-${VERSION}-macos-universal.zip" "DigitalDP-${VERSION}-macos-universal/USER-GUIDE.txt" | cmp USER_GUIDE.md -
+          cmp "release/RELEASE_NOTES-${VERSION}.md" "release/DigitalDP-${VERSION}-Release-Notes.txt"
           unzip -p "release/DigitalDP-${VERSION}-windows-x64.zip" "DigitalDP-${VERSION}-windows-x64/USER-GUIDE.txt" | cmp USER_GUIDE.md -
           tar -xOzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" "DigitalDP-${VERSION}-linux-x64/USER-GUIDE.txt" | cmp USER_GUIDE.md -
+          unzip -p "release/DigitalDP-${VERSION}-windows-x64.zip" "DigitalDP-${VERSION}-windows-x64/USER-GUIDE.html" | cmp USER_GUIDE.html -
+          tar -xOzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" "DigitalDP-${VERSION}-linux-x64/USER-GUIDE.html" | cmp USER_GUIDE.html -
+          unzip -p "release/DigitalDP-${VERSION}-windows-x64.zip" "DigitalDP-${VERSION}-windows-x64/RELEASE-NOTES.txt" | cmp "release/RELEASE_NOTES-${VERSION}.md" -
+          tar -xOzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" "DigitalDP-${VERSION}-linux-x64/RELEASE-NOTES.txt" | cmp "release/RELEASE_NOTES-${VERSION}.md" -
 
       - name: Preserve assets as workflow artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -195,7 +231,9 @@ jobs:
             release/DigitalDP-${{ steps.meta.outputs.version }}-macos-universal.zip
             release/DigitalDP-${{ steps.meta.outputs.version }}-windows-x64.zip
             release/DigitalDP-${{ steps.meta.outputs.version }}-linux-x64.tar.gz
+            release/DigitalDP-${{ steps.meta.outputs.version }}-User-Guide.html
             release/DigitalDP-${{ steps.meta.outputs.version }}-User-Guide.txt
+            release/DigitalDP-${{ steps.meta.outputs.version }}-Release-Notes.txt
             release/SHA256SUMS.txt
 
       - name: Upload bundles to the existing draft
@@ -204,15 +242,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh release upload "$RELEASE_TAG" \
-            "release/DigitalDP-${VERSION}-macos-universal.zip" \
-            "release/DigitalDP-${VERSION}-windows-x64.zip" \
-            "release/DigitalDP-${VERSION}-linux-x64.tar.gz" \
-            "release/DigitalDP-${VERSION}-User-Guide.txt" \
+          files=(
+            "release/DigitalDP-${VERSION}-windows-x64.zip"
+            "release/DigitalDP-${VERSION}-linux-x64.tar.gz"
+            "release/DigitalDP-${VERSION}-User-Guide.html"
+            "release/DigitalDP-${VERSION}-User-Guide.txt"
+            "release/DigitalDP-${VERSION}-Release-Notes.txt"
+          )
+          if [[ "$INCLUDE_MACOS" = "true" ]]; then
+            files+=("release/DigitalDP-${VERSION}-macos-universal.zip")
+          fi
+          gh release upload "$RELEASE_TAG" "${files[@]}" \
             --repo "$GITHUB_REPOSITORY" \
             --clobber
 
-          # Replace the checksum only after all three bundle uploads succeed.
+          # Replace the checksum only after every selected bundle upload succeeds.
           gh release upload "$RELEASE_TAG" \
             release/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
@@ -236,12 +280,14 @@ jobs:
           const tag = process.env.RELEASE_TAG;
           const release = JSON.parse(readFileSync(process.env.RELEASE_JSON, "utf8"));
           const expected = [
-            `DigitalDP-${version}-macos-universal.zip`,
             `DigitalDP-${version}-windows-x64.zip`,
             `DigitalDP-${version}-linux-x64.tar.gz`,
+            `DigitalDP-${version}-User-Guide.html`,
             `DigitalDP-${version}-User-Guide.txt`,
+            `DigitalDP-${version}-Release-Notes.txt`,
             "SHA256SUMS.txt",
           ];
+          if (process.env.INCLUDE_MACOS === "true") expected.push(`DigitalDP-${version}-macos-universal.zip`);
 
           if (!release.isDraft) throw new Error("Release is no longer a draft");
           if (!release.isPrerelease) throw new Error("Release is no longer marked as a prerelease");
@@ -263,10 +309,149 @@ jobs:
           NODE
 
       - name: Remove temporary Apple credentials
-        if: always()
+        if: always() && inputs.include_macos
         shell: bash
         run: |
           security delete-keychain "$RUNNER_TEMP/digitaldp-signing.keychain-db" 2>/dev/null || true
           rm -f \
             "$RUNNER_TEMP/digitaldp-developer-id.p12" \
             "$RUNNER_TEMP"/AuthKey_*.p8
+
+  native-smoke:
+    name: Native smoke (${{ matrix.platform }})
+    needs: build-and-upload
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-x64
+            runner: windows-latest
+          - platform: linux-x64
+            runner: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.build-and-upload.outputs.version }}
+      EXPECTED_SAMPLES: ${{ needs.build-and-upload.outputs.sample_count }}
+      RELEASE_PLATFORM: ${{ matrix.platform }}
+    steps:
+      - name: Download this run's verified build artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download "$GITHUB_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "DigitalDP-${VERSION}-release-assets" \
+            --dir "$RUNNER_TEMP/digitaldp-assets"
+
+      - name: Verify native startup, seeded papers, and embedded pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const assert = require("node:assert/strict");
+          const { createHash } = require("node:crypto");
+          const { spawn, execFileSync } = require("node:child_process");
+          const { mkdtempSync, mkdirSync, readFileSync, rmSync } = require("node:fs");
+          const { tmpdir } = require("node:os");
+          const { join } = require("node:path");
+          const { setTimeout: delay } = require("node:timers/promises");
+
+          async function main() {
+            const { VERSION: version, RELEASE_PLATFORM: platform } = process.env;
+            const expectedSamples = Number(process.env.EXPECTED_SAMPLES);
+            assert.ok(Number.isInteger(expectedSamples) && expectedSamples > 0);
+            const assets = join(process.env.RUNNER_TEMP, "digitaldp-assets");
+            const packageName = `DigitalDP-${version}-${platform}`;
+            const archiveName = `${packageName}${platform === "windows-x64" ? ".zip" : ".tar.gz"}`;
+            const checksums = new Map(readFileSync(join(assets, "SHA256SUMS.txt"), "utf8")
+              .trim().split("\n").map((line) => line.split("  ").reverse()));
+            assert.equal(createHash("sha256").update(readFileSync(join(assets, archiveName))).digest("hex"), checksums.get(archiveName));
+
+            const smokeRoot = mkdtempSync(join(tmpdir(), "digitaldp-native-smoke-"));
+            let app;
+            let closed;
+            let logs = "";
+            try {
+              const unpack = join(smokeRoot, "unpack");
+              mkdirSync(unpack);
+              execFileSync("tar", ["-xf", join(assets, archiveName), "-C", unpack]);
+              const packageDirectory = join(unpack, packageName);
+              app = spawn(join(packageDirectory, platform === "windows-x64" ? "DigitalDP.exe" : "DigitalDP"), [], {
+                cwd: smokeRoot,
+                env: { ...process.env, PORT: "19148", DIGITALDP_DATA_DIR: join(smokeRoot, "data"), DIGITALDP_OPEN_BROWSER: "0" },
+                stdio: ["ignore", "pipe", "pipe"],
+              });
+              let spawnError;
+              app.on("error", (error) => { spawnError = error; });
+              closed = new Promise((resolve) => app.once("close", resolve));
+              app.stdout.on("data", (data) => { logs += data; });
+              app.stderr.on("data", (data) => { logs += data; });
+              const origin = "http://127.0.0.1:19148";
+              let ready = false;
+              for (let attempt = 0; attempt < 60; attempt += 1) {
+                if (spawnError) throw spawnError;
+                if (app.exitCode !== null || app.signalCode !== null) throw new Error(`App exited before readiness: ${app.exitCode ?? app.signalCode}`);
+                try {
+                  const response = await fetch(`${origin}/api/bootstrap`, { signal: AbortSignal.timeout(1000) });
+                  if (response.ok) {
+                    const bootstrap = await response.json();
+                    assert.equal(bootstrap.setupRequired, false);
+                    ready = true;
+                    break;
+                  }
+                } catch {}
+                await delay(500);
+              }
+              assert.ok(ready, "App did not become ready");
+              const login = await fetch(`${origin}/api/login/admin`, {
+                method: "POST", headers: { "Content-Type": "application/json", Origin: origin },
+                body: JSON.stringify({ username: "admin", password: "admin" }),
+              });
+              assert.equal(login.status, 200);
+              assert.equal((await login.json()).role, "admin");
+              const cookie = login.headers.get("set-cookie")?.split(";")[0];
+              assert.ok(cookie, "Demo sign-in must issue a session");
+              const auth = { Cookie: cookie };
+              const stateResponse = await fetch(`${origin}/api/admin/state`, { headers: auth });
+              assert.equal(stateResponse.status, 200);
+              const state = await stateResponse.json();
+              assert.equal(state.papers.length, expectedSamples, "Every bundled mock must be seeded");
+              assert.equal(state.classes.length, 0, "Release must not include classroom data");
+              assert.equal(state.students.length, 0);
+              assert.equal(state.sessions.length, 0);
+              for (const path of ["/admin", "/student", "/clock", "/exam.js", "/paper-builder-drafts.js", "/admin-end-exam.js", "/response-save-state.js", "/exam-phase-model.js"]) {
+                const response = await fetch(`${origin}${path}`);
+                assert.equal(response.status, 200, `${path} is embedded`);
+                assert.ok((await response.text()).length > 100, `${path} is not empty`);
+              }
+              const guide = await fetch(`${origin}/guide`);
+              assert.equal(guide.status, 200);
+              assert.equal(await guide.text(), readFileSync(join(packageDirectory, "USER-GUIDE.html"), "utf8"));
+              for (const path of ["/api/admin/state", "/mock-guides"]) {
+                assert.equal((await fetch(`${origin}${path}`)).status, 401, `${path} requires teacher authentication`);
+              }
+              for (const path of ["/data/digitaldp.sqlite", "/resources/private/", "/examples/sample-source/index.ts"]) {
+                assert.equal((await fetch(`${origin}${path}`)).status, 404, `${path} is not public`);
+              }
+              assert.equal((await fetch(`${origin}/mock-guides`, { headers: auth })).status, 200);
+              console.log(`${platform}: native startup, ${expectedSamples} mocks, teacher login, embedded assets, and private-route checks passed`);
+            } catch (error) {
+              console.error(logs);
+              throw error;
+            } finally {
+              if (app && app.exitCode === null && app.signalCode === null) {
+                app.kill();
+                await Promise.race([closed, delay(3000)]);
+                if (app.exitCode === null && app.signalCode === null) app.kill("SIGKILL");
+                await closed;
+              }
+              rmSync(smokeRoot, { recursive: true, force: true });
+            }
+          }
+          main().catch((error) => { console.error(error); process.exitCode = 1; });
+          NODE

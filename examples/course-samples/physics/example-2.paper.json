@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Physics · Paper 2 — original short and extended-response sample",
+  "title": "Physics · Paper 2 (HL) — original full-format practice",
   "subject": "physics",
   "subjectLabel": "Physics",
   "level": "HL",
-  "paper": "Paper 2 — original short and extended-response sample",
-  "durationMinutes": 60,
+  "paper": "Paper 2 (HL) — original full-format practice",
+  "durationMinutes": 150,
   "readingTimeMinutes": 5,
-  "maximumMarks": 30,
+  "maximumMarks": 90,
   "mode": "reading",
   "instructions": "Answer every question using the response area attached to it. An approved calculator is required. Use the original reference data supplied within this sample; no external data booklet is needed. Show calculations, units, diagrams and reasoning where required. No separate answer sheet is used.",
   "selectionMode": "all",
@@ -20,6 +20,12 @@
       "label": "Original induction investigation",
       "kind": "text",
       "text": "A coil of 250 turns and area 3.2 × 10⁻³ m² is perpendicular to a uniform magnetic field. The field falls linearly from 0.80 T to 0.20 T in 0.15 s. The coil resistance is 4.0 Ω."
+    },
+    {
+      "key": "physics-reference",
+      "label": "Reference data for this sample",
+      "kind": "text",
+      "text": "g = 9.81 m s⁻²\nG = 6.67 × 10⁻¹¹ N m² kg⁻²\nSpeed of light c = 3.00 × 10⁸ m s⁻¹\nElementary charge e = 1.60 × 10⁻¹⁹ C"
     }
   ],
   "questions": [
@@ -66,6 +72,91 @@
       "type": "essay",
       "resourceKeys": [],
       "marks": 9
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — mechanics",
+      "prompt": "A trolley moves down an incline with a resistive force proportional to speed. Derive the terminal speed, sketch speed against time, and use supplied measurements to estimate the proportionality constant.",
+      "type": "ink",
+      "resourceKeys": [
+        "physics-reference"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — oscillations",
+      "prompt": "A mass–spring system has amplitude 0.080 m and period 1.60 s. Determine its angular frequency, maximum speed and maximum acceleration, then calculate the speed at displacement 0.050 m.",
+      "type": "ink",
+      "resourceKeys": [
+        "physics-reference"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — wave behaviour",
+      "prompt": "Two coherent sources produce an interference pattern. Use path difference to locate maxima, calculate fringe separation for a double slit, and explain the effect of increasing slit separation.",
+      "type": "ink",
+      "resourceKeys": [
+        "physics-reference"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — electric fields",
+      "prompt": "An electron is accelerated through a potential difference and enters a uniform electric field. Calculate its speed, subsequent acceleration and deflection, stating the assumptions used.",
+      "type": "ink",
+      "resourceKeys": [
+        "physics-reference"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — nuclear physics",
+      "prompt": "Use mass data to calculate the binding energy per nucleon of a nucleus. Compare it with two neighbouring nuclei and explain what the comparison suggests about possible energy-releasing reactions.",
+      "type": "ink",
+      "resourceKeys": [
+        "physics-reference"
+      ],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — energy and climate",
+      "prompt": "Evaluate a simplified planetary energy-balance model. Explain albedo and emissivity, calculate an equilibrium temperature from supplied values, and discuss two limitations of the model.",
+      "type": "essay",
+      "resourceKeys": [
+        "physics-reference"
+      ],
+      "marks": 10
     }
   ]
 }

@@ -1,8 +1,8 @@
 {
-  "scannedAt": "2026-08-27",
+  "scannedAt": "2026-09-04",
   "framework": "vanilla JavaScript modules",
-  "fontStack": null,
-  "palette": null,
-  "motion": "cut",
+  "fontStack": "Avenir Next display; IBM Plex Sans or Segoe UI body; SFMono or Cascadia Mono utility",
+  "palette": "institutional cobalt with cool paper neutrals and semantic green, amber, and red",
+  "motion": "restrained state transitions; reduced-motion fallback",
   "spacing": "4px"
 }

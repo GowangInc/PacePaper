@@ -1,10 +1,30 @@
 import { ApiError, announce, api, connectSocket, setView } from "/app.js";
 
 let stopSocket;
+import { downloadResponseRecovery } from "./response-save-state.js";
 let cleanupExam;
 let pollTimer;
 let loading = false;
 let selectedSessionId = null;
+let connectionState = "connecting";
+let connectionGeneration = 0;
+
+function renderConnectionState() {
+  const indicator = document.querySelector("#connection-state");
+  if (!indicator) return;
+  indicator.textContent = connectionState === "connected"
+    ? "Connected to examination server"
+    : connectionState === "reconnecting" ? "Connection interrupted — reconnecting" : "Connecting";
+  indicator.dataset.connected = String(connectionState === "connected");
+}
+
+function stopLiveConnection() {
+  // Ignore any queued events from the previous socket, including the close caused by stopping it.
+  connectionGeneration += 1;
+  stopSocket?.();
+  stopSocket = undefined;
+  connectionState = "connecting";
+}
 
 export function parseStudentRoster(result) {
   if (!Array.isArray(result?.students)
@@ -197,7 +217,7 @@ function authFrame() {
 
 async function logout() {
   cleanupExam?.();
-  stopSocket?.();
+  stopLiveConnection();
   clearInterval(pollTimer);
   selectedSessionId = null;
   await api("/api/logout", { method: "POST" });
@@ -230,6 +250,7 @@ function renderExamSelection(state) {
       <p id="global-status" class="status-message" role="status" aria-live="polite" hidden></p>
     </section>
   `);
+  renderConnectionState();
   document.querySelector("#student-name").textContent = state.student.name;
   const list = document.querySelector("#student-session-list");
   if (sessions.length === 0) {
@@ -307,6 +328,7 @@ function renderWaiting(state) {
       <p id="global-status" class="status-message" role="status" aria-live="polite" hidden></p>
     </section>
   `);
+  renderConnectionState();
   document.querySelector("#student-name").textContent = state.student.name;
   document.querySelector("#waiting-paper").textContent = state.session.paperTitle;
   document.querySelector("#choose-exam").addEventListener("click", chooseAnotherExam);
@@ -316,11 +338,12 @@ function renderWaiting(state) {
 }
 
 function renderSubmitted(state) {
+  const recovery = cleanupExam?.pendingRecovery?.();
   cleanupExam?.();
   cleanupExam = undefined;
   const responseId = typeof state.response?.id === "string" ? state.response.id : null;
   const localKeys = [
-    responseId && `digitaldp:draft:${responseId}`,
+    !recovery && responseId && `digitaldp:draft:${responseId}`,
     responseId && `digitaldp:highlights:${responseId}`,
     `digitaldp:draft:${state.session.id}`,
     `digitaldp:highlights:${state.session.id}`,
@@ -345,8 +368,22 @@ function renderSubmitted(state) {
     </section>
   `);
   document.querySelector("#submitted-paper").textContent = state.paper.title;
-  document.querySelector("#choose-exam").addEventListener("click", chooseAnotherExam);
-  document.querySelector("#logout").addEventListener("click", logout);
+  let downloaded = false;
+  if (recovery) {
+    const warning = document.createElement("p");
+    warning.setAttribute("role", "alert");
+    warning.textContent = "Some changes in this page were not confirmed saved before the exam ended. Keep this page open, download a recovery copy and tell your teacher. The submitted paper may contain only earlier work.";
+    const download = document.createElement("button");
+    download.type = "button"; download.textContent = "Download recovery copy";
+    download.addEventListener("click", () => { downloadResponseRecovery(recovery); downloaded = true; });
+    document.querySelector("#submitted-paper").after(warning, download);
+    const warnBeforeLeaving = (event) => { if (!downloaded) { event.preventDefault(); event.returnValue = ""; } };
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    cleanupExam = () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }
+  const mayLeave = () => !recovery || downloaded || confirm("Leave without downloading the unsent work? Keep this page open to download a recovery copy for your teacher.");
+  document.querySelector("#choose-exam").addEventListener("click", () => { if (mayLeave()) chooseAnotherExam(); });
+  document.querySelector("#logout").addEventListener("click", () => { if (mayLeave()) logout(); });
   clearInterval(pollTimer);
   pollTimer = setInterval(loadState, 15_000);
 }
@@ -377,13 +414,15 @@ async function loadState() {
       if (!document.querySelector(`.waiting-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) renderWaiting(state);
     } else if (state.status === "submitted") {
       if (!document.querySelector(`.submitted-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) renderSubmitted(state);
-    } else if (!document.querySelector(`[data-session-id="${CSS.escape(state.session.id)}"]`)) {
+    } else if (!document.querySelector(`.exam-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) {
       await renderExam(state);
+    } else {
+      cleanupExam?.updateState?.(state);
     }
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       cleanupExam?.();
-      stopSocket?.();
+      stopLiveConnection();
       clearInterval(pollTimer);
       authFrame();
     } else {
@@ -395,19 +434,17 @@ async function loadState() {
 }
 
 function beginLiveConnection() {
-  stopSocket?.();
+  stopLiveConnection();
+  renderConnectionState();
+  const generation = connectionGeneration;
   stopSocket = connectSocket((event) => {
-    const indicator = document.querySelector("#connection-state");
+    if (generation !== connectionGeneration) return;
     if (event.type === "socket-open" || event.type === "connected") {
-      if (indicator) {
-        indicator.textContent = "Connected to examination server";
-        indicator.dataset.connected = "true";
-      }
+      connectionState = "connected";
+      renderConnectionState();
     } else if (event.type === "socket-closed") {
-      if (indicator) {
-        indicator.textContent = "Connection interrupted — reconnecting";
-        indicator.dataset.connected = "false";
-      }
+      connectionState = "reconnecting";
+      renderConnectionState();
     } else if (["exam-started", "exam-ended", "exam-list-changed"].includes(event.type)) {
       loadState();
     }
@@ -416,6 +453,7 @@ function beginLiveConnection() {
 
 export async function renderStudent(bootstrap) {
   if (bootstrap.role !== "student") {
+    stopLiveConnection();
     authFrame();
     return;
   }

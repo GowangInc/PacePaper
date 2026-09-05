@@ -1,3 +1,5 @@
+import { renderResourceText } from "./resource-text.js";
+
 const RESPONSE_NAMES = {
   essay: "Long typed response",
   short: "Short typed response",
@@ -106,29 +108,45 @@ export function createPaperPreview(container) {
     const paper = node("article", "paper-preview-document");
     const header = node("header", "paper-preview-document-header");
     header.append(
-      node("p", "paper-preview-kicker", "DigitalDP · practice paper preview"),
+      node("p", "paper-preview-kicker", model.examSystem
+        ? `DigitalDP · ${model.examSystem} practice preview`
+        : "DigitalDP · practice paper preview"),
       node("h4", "", model.title || "Untitled practice paper"),
       node("p", "paper-preview-subject", [model.subject, model.level, model.paper].filter(Boolean).join(" · ")),
     );
     const meta = node("dl", "paper-preview-meta");
     meta.append(
       metadata("Reading", `${model.readingTimeMinutes || 0} min`),
-      metadata("Writing", `${model.durationMinutes || 0} min`),
+      metadata(model.durationLabel || "Writing", `${model.durationMinutes || 0} min`),
       metadata("Marks", model.maximumMarks ? String(model.maximumMarks) : "Confirm"),
       metadata("Session", model.sessionLabel),
     );
+    if (model.deliveryFormat) meta.append(metadata("Format", model.deliveryFormat));
     if (model.subjectWeightPercent) meta.append(metadata("Subject weight", `${model.subjectWeightPercent}%`));
     header.append(meta);
     paper.append(header);
 
     const instructions = node("section", "paper-preview-instructions");
     instructions.append(node("h5", "", "Instructions"), node("p", "", model.instructions || "Student instructions will appear here."));
+    if (model.toolSummary) instructions.append(node("p", "paper-preview-rules", model.toolSummary));
     paper.append(instructions);
+
+    if (model.phases?.length) {
+      const phases = node("section", "paper-preview-phases");
+      phases.append(node("h5", "", "Timed phase plan"));
+      const list = node("ol", "paper-preview-phase-list");
+      for (const phase of model.phases) {
+        const tools = phase.tools?.length ? ` · ${phase.tools.join(" · ")}` : " · response entry locked";
+        list.append(node("li", "", `${phase.label}: ${phase.durationMinutes} min${tools}`));
+      }
+      phases.append(list);
+      paper.append(phases);
+    }
 
     if (model.sourceText || model.sharedResources.length) {
       const resources = node("section", "paper-preview-resources");
       resources.append(node("h5", "", "Paper resources"));
-      if (model.sourceText) resources.append(node("p", "paper-preview-source-text", model.sourceText));
+      if (model.sourceText) resources.append(renderResourceText(node("div", "paper-preview-source-text"), model.sourceText, { label: "Paper resources" }));
       if (model.sharedResources.length) {
         const list = node("ul", "paper-preview-files");
         for (const resource of model.sharedResources) list.append(mediaItem(resource, activeFiles));
@@ -143,6 +161,7 @@ export function createPaperPreview(container) {
     }
     model.questions.forEach((question, index) => {
       const section = node("section", "paper-preview-question");
+      if (question.sectionId) section.dataset.sectionId = question.sectionId;
       const heading = node("header", "paper-preview-question-heading");
       heading.append(
         node("span", "paper-preview-question-number", String(index + 1).padStart(2, "0")),

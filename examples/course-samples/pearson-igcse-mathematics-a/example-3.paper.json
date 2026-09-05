@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "pearson-edexcel-igcse",
+    "systemLabel": "Pearson Edexcel International GCSE",
+    "qualificationLabel": "Pearson Edexcel International GCSE",
+    "deliveryMode": "Full-length original paper with integrated digital working",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "Foundation · 120 minutes · 100 marks · calculator permitted · tier-specific formula reference included · answer all 22 questions"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Pearson Edexcel International GCSE Mathematics A · Paper 2F — original full-length mock",
+  "subject": "pearson-igcse-mathematics-a",
+  "subjectLabel": "Pearson Edexcel International GCSE Mathematics A",
+  "level": "Foundation",
+  "paper": "Paper 2F — original full-length mock",
+  "durationMinutes": 120,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 100,
+  "subjectWeightPercent": 50,
+  "mode": "reading",
+  "instructions": "Answer all 22 questions. The total time is 2 hours; there is no separate reading period. Write your answer and all working in each question's response area; add pages if needed. A permitted scientific calculator may be used. The Formula reference attached to every question contains the tier-specific supplied formula facts. Draw your own labelled diagrams or graphs where requested; all necessary coordinates and measurements are provided. Do not infer measurements from a sketch. Use a suitable scale and label axes. Give units where appropriate. Keep unrounded working; give non-exact final numerical answers to 3 significant figures unless otherwise stated. This is an original DigitalDP practice paper, not a Pearson paper. Digital drawing is a classroom adaptation, not a test of physical ruler-and-compass accuracy.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formulae",
+      "label": "Foundation formula reference",
+      "kind": "text",
+      "text": "Formula reference — independently typeset mathematical facts\nTrapezium: area = ½(a + b)h, where a and b are parallel side lengths and h is perpendicular height.\nPrism: volume = cross-sectional area × length.\nCylinder: volume = πr²h; curved surface area = 2πrh. Here r is radius and h is perpendicular height."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — Place value and arithmetic",
+      "prompt": "(a) State the value of the digit 8 in 38042. [1] (b) Calculate 506 − 178. [1] (c) Calculate 4.8 ÷ 0.6. [1] (d) Write 0.37 as a fraction in simplest form. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — Fraction operations",
+      "prompt": "(a) Calculate 3/4 + 2/5. Give a mixed number. [2] (b) Calculate 7/9 × 3/14 in simplest form. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — Packing",
+      "prompt": "A shop has 475 beads. (a) Beads are packed in bags of 12. Find the number of complete bags and the number of beads left. [2] (b) Each complete bag sells for $3.40. Find the income if all complete bags are sold. [1] (c) The beads cost $62 altogether. Find the profit from these sales. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — Substitution and equations",
+      "prompt": "(a) Find 3a − 2b when a = 7 and b = −4. [1] (b) Solve 4x + 9 = 37. [2] (c) Make p the subject of q = p − 6. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — Simple percentages",
+      "prompt": "(a) Find 18% of 250. [1] (b) Increase 320 by 15%. [2] (c) In a class of 28 students, 21 bring lunch. What percentage is this? [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — Ratio and exchange",
+      "prompt": "(a) Share $540 between Ana and Bo in the ratio 4:5. [3] (b) The exchange rate is €1 = $1.20. Ana exchanges all of her share into euros, without fees. How many euros does she receive? [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — Straight line",
+      "prompt": "A straight line passes through P(−2,−1) and Q(4,11). (a) Plot P and Q and draw the line on labelled axes. [2] (b) Calculate the gradient. [2] (c) State the y-intercept. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — Inequalities",
+      "prompt": "(a) Solve 2x + 5 < 17. [2] (b) Show your answer on a number line. [1] (c) A taxi costs $4 plus $2.50 per kilometre. Jo has $24. Find the greatest whole number of kilometres Jo can afford. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — Cuboid and units",
+      "prompt": "A storage box is a cuboid 40 cm long, 25 cm wide and 30 cm high. (a) Find its volume in cm³. [2] (b) Convert the volume to litres. [1] (c) Find the area of its rectangular base in m². [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — Bearings and turns",
+      "prompt": "The bearing of B from A is 065°. (a) Sketch and label this information with north arrows at A and B. [1] (b) Find the bearing of A from B. [2] (c) A traveller facing north turns clockwise through 135° and then anticlockwise through 80°. State the final bearing, using three digits. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — Triangle and area",
+      "prompt": "A right triangle has perpendicular sides 9 cm and 12 cm. (a) Find its hypotenuse. [2] (b) Find its area. [1] (c) Find the acute angle opposite the 9 cm side, to 1 decimal place. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12 — Median and range",
+      "prompt": "Seven lengths in cm are 12, 9, 14, 10, 9, 18, 12. (a) Find the median. [1] (b) Find the range. [1] (c) Find the mode or modes. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13 — Experimental probability",
+      "prompt": "A spinner lands on green 46 times in 200 spins. (a) Estimate P(green). [1] (b) Estimate the number of green results in the next 500 spins. [1] (c) Explain why this is not a guaranteed number. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14 — Mean from a table",
+      "prompt": "Number of pets per household and frequencies are: 0 pets: 5 households; 1: 8; 2: 4; 3: 3. (a) Find the total number of households. [1] (b) Find the total number of pets. [1] (c) Calculate the mean number of pets per household. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15 — Reverse percentage",
+      "prompt": "A jacket costs $68 after a reduction of 20%. (a) Find its original price. [3] (b) A tax of 8% is then added to the reduced price. Find the final price, to the nearest cent. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16 — Factorising and solving",
+      "prompt": "(a) Factorise x² − x − 20. [2] (b) Solve x² − x − 20 = 0. [1] (c) Expand and simplify (2x − 3)(x + 4). [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17 — Hire plans",
+      "prompt": "Hire plan A costs $18 plus $6 per hour. Plan B costs $8 plus $8 per hour. (a) Write expressions for the costs for h hours. [2] (b) Find when the two costs are equal. [2] (c) Which plan is cheaper for 7 hours? State the saving. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18 — Sequence reasoning",
+      "prompt": "The nth term of a sequence is 5n − 2. (a) Find the first three terms. [1] (b) Find the position of the term 133. [2] (c) Another sequence has nth term 3n + 16. Find the position at which both sequences have the same term, and state that term. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19 — Number and indices",
+      "prompt": "(a) Write 360 as a product of prime factors. [2] (b) Find the least common multiple of 72 and 90. [2] (c) Simplify a⁴ × a³ ÷ a², where a ≠ 0. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20 — Semicircular window",
+      "prompt": "A window consists of a rectangle 1.2 m wide and 1.5 m high, topped by a semicircle whose diameter is the rectangle's width. (a) Calculate the window area. [3] (b) Find the length of the outside frame, including the bottom edge but excluding the internal join. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21 — Similar triangles",
+      "prompt": "Triangles ABC and DEF are similar, with A corresponding to D, B to E and C to F. AB = 8 cm, BC = 10 cm, AC = 6 cm and DE = 14 cm. (a) Find the enlargement scale factor. [1] (b) Find EF and DF. [2] (c) Find the area of triangle DEF, explaining why the appropriate base and height are perpendicular. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22 — Venn diagram",
+      "prompt": "Of 60 students, 32 play football, 25 play badminton and 12 play both. (a) Complete a two-set Venn diagram, including the number outside both sets. [3] (b) A student is selected at random. Find the probability that the student plays exactly one of these sports. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

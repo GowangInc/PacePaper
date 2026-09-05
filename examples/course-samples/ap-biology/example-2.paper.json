@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "ap",
+    "systemLabel": "Advanced Placement (AP)",
+    "qualificationLabel": "Advanced Placement",
+    "deliveryMode": "Hybrid digital/paper practice",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "May 2027 Biology · locked sections · nongraphing calculator · teacher-supplied equations and formulas sheet · fixed monitored break"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "AP Biology · End-of-course exam — original 7-minute walkthrough",
+  "subject": "ap-biology",
+  "subjectLabel": "AP Biology",
+  "level": "AP",
+  "paper": "End-of-course exam — original 7-minute walkthrough",
+  "durationMinutes": 7,
+  "readingTimeMinutes": 0,
+  "phases": [
+    {
+      "id": "section-1",
+      "label": "Section I — multiple choice",
+      "kind": "work",
+      "durationMinutes": 3,
+      "sectionId": "section-1",
+      "tools": [
+        "Scientific nongraphing or four-function calculator",
+        "AP Biology equations and formulas sheet",
+        "Digital multiple-choice"
+      ],
+      "instructions": "Complete Section I. Handheld graphing calculators and other handheld calculators with storage capabilities are not allowed. You cannot return after this section ends."
+    },
+    {
+      "id": "break",
+      "label": "Monitored break",
+      "kind": "break",
+      "durationMinutes": 1,
+      "tools": [],
+      "instructions": "Student entry and examination content are locked during the break."
+    },
+    {
+      "id": "section-2",
+      "label": "Section II — free response",
+      "kind": "work",
+      "durationMinutes": 3,
+      "sectionId": "section-2",
+      "tools": [
+        "Scientific nongraphing or four-function calculator",
+        "AP Biology equations and formulas sheet",
+        "Physical response booklet or digital canvas"
+      ],
+      "instructions": "Complete the free-response questions in the response area directed by your teacher. Handheld graphing calculators and other handheld calculators with storage capabilities are not allowed."
+    }
+  ],
+  "maximumMarks": 37,
+  "mode": "reading",
+  "instructions": "This demonstration has 3 multiple-choice questions and 6 free-response questions on one biology topic. It uses a 7-minute classroom walkthrough clock with a 1-minute break. It is not a full mock examination: the real exam has 60 multiple-choice questions and broader topic coverage. Before starting, your teacher should supply the current AP Biology equations and formulas sheet and a four-function calculator with square root or a scientific nongraphing calculator. For May 2027, handheld graphing calculators and other handheld calculators with storage capabilities are not allowed. Bluebook offers Desmos scientific; DigitalDP uses your supplied calculator. Complete Section I digitally and Section II in the supplied practice booklet or digital canvas. DigitalDP opens the next section automatically after the fixed break.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "population-data",
+      "label": "Original population study",
+      "kind": "text",
+      "text": "Researchers grew a freshwater alga at four nitrate concentrations. Each treatment had six independent cultures.\nNitrate (mg L⁻¹): 0, 2, 5, 10\nMean growth rate (day⁻¹): 0.08, 0.19, 0.31, 0.30\nStandard error: 0.01, 0.02, 0.02, 0.03"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Section I — Question 1",
+      "prompt": "Which conclusion is best supported by the overlap in standard-error ranges at 5 and 10 mg L⁻¹ nitrate?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "population-data"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Growth certainly declines above 5 mg L⁻¹",
+        "The two means may not differ detectably",
+        "Nitrate has no effect",
+        "All cultures grew at the same rate"
+      ]
+    },
+    {
+      "id": "q2",
+      "label": "Section I — Question 2",
+      "prompt": "Which change would best test whether light limits growth at 10 mg L⁻¹ nitrate?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "population-data"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Increase replication only",
+        "Vary light while holding nitrate constant",
+        "Remove the zero-nitrate group",
+        "Measure nitrate once"
+      ]
+    },
+    {
+      "id": "q3",
+      "label": "Section I — Question 3",
+      "prompt": "The nitrate taken up by the alga is most directly used to synthesize",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "amino acids",
+        "fatty acids only",
+        "cellulose only",
+        "water"
+      ]
+    },
+    {
+      "id": "q4",
+      "label": "Section II — Question 1: experimental results",
+      "prompt": "Describe the relationship between nitrate concentration and algal growth, propose a cellular explanation for the plateau, and evaluate whether the data support a causal conclusion.",
+      "type": "ink",
+      "resourceKeys": [
+        "population-data"
+      ],
+      "marks": 9,
+      "sectionId": "section-2",
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Section II — Question 2: graphing",
+      "prompt": "Graph the means with correctly labelled axes and error bars. Use the graph to identify a nitrate range for a follow-up treatment and justify the choice.",
+      "type": "ink",
+      "resourceKeys": [
+        "population-data"
+      ],
+      "marks": 9,
+      "sectionId": "section-2",
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Section II — Question 3: scientific investigation",
+      "prompt": "Design a follow-up investigation that tests whether light limits growth at 10 mg L⁻¹ nitrate. State the independent variable, controls, replication, measurement and predicted result.",
+      "type": "ink",
+      "resourceKeys": [
+        "population-data"
+      ],
+      "marks": 4,
+      "sectionId": "section-2",
+      "ink": {
+        "pages": 1,
+        "background": "lined",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Section II — Question 4: conceptual analysis",
+      "prompt": "Explain how nitrate uptake can affect protein synthesis and therefore population growth in the alga.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 4,
+      "sectionId": "section-2",
+      "ink": {
+        "pages": 1,
+        "background": "lined",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Section II — Question 5: model analysis",
+      "prompt": "Construct and label a model showing how nitrate availability, amino-acid synthesis and cell division could produce the observed growth response. Identify one limitation of the model.",
+      "type": "ink",
+      "resourceKeys": [
+        "population-data"
+      ],
+      "marks": 4,
+      "sectionId": "section-2",
+      "ink": {
+        "pages": 1,
+        "background": "blank",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Section II — Question 6: data analysis",
+      "prompt": "Calculate the percentage increase in mean growth rate from 0 to 5 mg L⁻¹ nitrate. Use the standard-error values to explain one limitation of comparing only the two means.",
+      "type": "ink",
+      "resourceKeys": [
+        "population-data"
+      ],
+      "marks": 4,
+      "sectionId": "section-2",
+      "ink": {
+        "pages": 1,
+        "background": "lined",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

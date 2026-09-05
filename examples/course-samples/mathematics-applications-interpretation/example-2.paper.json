@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Mathematics: Applications and Interpretation · Paper 2 — original calculator-and-working sample",
+  "title": "Mathematics: Applications and Interpretation · Paper 2 (HL) — original full-format practice",
   "subject": "mathematics-applications-interpretation",
   "subjectLabel": "Mathematics: Applications and Interpretation",
   "level": "HL",
-  "paper": "Paper 2 — original calculator-and-working sample",
-  "durationMinutes": 60,
+  "paper": "Paper 2 (HL) — original full-format practice",
+  "durationMinutes": 120,
   "readingTimeMinutes": 5,
-  "maximumMarks": 34,
+  "maximumMarks": 110,
   "mode": "reading",
   "instructions": "An approved graphing calculator is required. Answer every question in its linked digital working area, preserving intermediate steps, units and graphs. No separate answer sheet is used.",
   "selectionMode": "all",
@@ -71,6 +71,110 @@
       "type": "ink",
       "resourceKeys": [],
       "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — chi-squared test",
+      "prompt": "A survey records transport choice for 120 students by year group. Construct an appropriate contingency table from the supplied totals, perform a chi-squared test for independence at 5%, and state a contextual conclusion.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — graph theory",
+      "prompt": "A weighted graph models inspection routes between six sites. Use a nearest-neighbour upper bound and a deleted-vertex lower bound to propose a tour, then calculate the percentage gap between the bounds.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — differential equations",
+      "prompt": "A medicine concentration satisfies dC/dt = 12 − 0.25C with C(0)=0. Solve the equation, identify the limiting concentration, and find when the concentration first reaches 40 mg L⁻¹.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — optimization",
+      "prompt": "A manufacturer models unit cost by C(x) = 1800/x + 0.04x + 12 for 20 ≤ x ≤ 400. Find the output minimizing cost and perform a sensitivity check if the fixed-cost term changes by 10%.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — time series",
+      "prompt": "Quarterly sales show a linear trend with additive seasonal effects. Using the supplied eight-quarter pattern, calculate four-point moving averages, estimate seasonal components and forecast the next two quarters.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — inference",
+      "prompt": "Two independent samples compare battery life. Use technology to construct a 95% confidence interval for the difference in population means, test the manufacturer's claim, and state two assumptions.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — matrices",
+      "prompt": "A three-state migration model is represented by a stochastic matrix. Determine its stationary distribution, calculate the population after ten transitions, and explain one limitation of the Markov assumption.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 10,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12 — coupled modelling",
+      "prompt": "Build a piecewise model for a reservoir receiving seasonal inflow and constant demand. Use a spreadsheet or graphing technology to identify the first month storage falls below 20% and evaluate one demand-management proposal.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 10,
       "ink": {
         "pages": 2,
         "background": "square-grid",

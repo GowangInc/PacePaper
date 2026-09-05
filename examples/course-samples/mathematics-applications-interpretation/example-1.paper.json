@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Mathematics: Applications and Interpretation · Paper 1 — original integrated-working sample",
+  "title": "Mathematics: Applications and Interpretation · Paper 1 (SL) — original full-format practice",
   "subject": "mathematics-applications-interpretation",
   "subjectLabel": "Mathematics: Applications and Interpretation",
   "level": "SL",
-  "paper": "Paper 1 — original integrated-working sample",
-  "durationMinutes": 45,
+  "paper": "Paper 1 (SL) — original full-format practice",
+  "durationMinutes": 90,
   "readingTimeMinutes": 5,
-  "maximumMarks": 24,
+  "maximumMarks": 80,
   "mode": "reading",
   "instructions": "An approved graphing calculator is required. Answer every question in its digital working area, preserving intermediate steps, units and graphs. No separate answer sheet is used.",
   "selectionMode": "all",
@@ -73,6 +73,97 @@
       "marks": 5,
       "ink": {
         "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — networks",
+      "prompt": "A delivery network has vertices A, B, C, D and E with edge weights AB 7, AC 4, BC 3, BD 6, CD 5, CE 8 and DE 2. Use Kruskal's algorithm to find a minimum spanning tree and its total weight.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — probability distributions",
+      "prompt": "The number of customers arriving in ten minutes follows a Poisson distribution with mean 3.4. Find the probability of at least five arrivals and the smallest number n such that P(X ≤ n) > 0.95.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — sinusoidal modelling",
+      "prompt": "A daylight model is D(t) = a sin(b(t − c)) + d hours. Given a maximum of 15.2 hours at day 172 and a minimum of 8.8 hours at day 355, determine a, b, c and d and estimate D(80).",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — Voronoi diagram",
+      "prompt": "Three emergency stations are at A(1,2), B(9,2) and C(5,8). Find equations of the perpendicular bisectors and determine the region closest to C. Decide which station serves P(4,4).",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — numerical methods",
+      "prompt": "Use technology to solve 2e^(−0.3x) = 0.2x + 0.5. Explain the meaning of each intersection if the two sides model supply and demand in hundreds of units.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — bivariate statistics",
+      "prompt": "A regression model y = 1.72x + 14.6 has r = 0.81 for x between 10 and 40. Estimate y at x = 32, explain the meaning of r², and evaluate using the model at x = 75.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — calculus with technology",
+      "prompt": "The profit from selling x hundred tickets is P(x) = −2.4x³ + 18x² + 12x − 40. Find all stationary points in 0 ≤ x ≤ 8 and determine the ticket quantity giving maximum profit.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 8,
+      "ink": {
+        "pages": 2,
         "background": "square-grid",
         "allowTypedAlternative": true
       }

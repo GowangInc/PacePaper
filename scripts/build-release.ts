@@ -15,6 +15,9 @@ import {
   notaryAuthenticationArguments,
   type MacDistributionConfig,
 } from "./macos-distribution.ts";
+import { buildUserGuide, userGuideHtmlPath } from "./build-user-guide.ts";
+import { buildMockGuides } from "./build-mock-guides.ts";
+import { RELEASE_PLATFORMS, releaseArchiveName, releasePlatforms, type ReleasePlatform } from "./release-platforms.ts";
 
 interface PackageMetadata {
   version: string;
@@ -23,7 +26,7 @@ interface PackageMetadata {
 interface ReleaseTarget {
   archiveExtension: ".zip" | ".tar.gz";
   binaryName: string;
-  id: string;
+  id: ReleasePlatform;
   target: Bun.Build.CompileTarget;
 }
 
@@ -44,11 +47,15 @@ interface MacAppPaths {
 }
 
 const root = resolve(import.meta.dir, "..");
+const selectedPlatforms = releasePlatforms(process.argv.slice(2));
 const releaseDirectory = join(root, "release");
 const packageMetadata = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as PackageMetadata;
 const version = packageMetadata.version;
 const userGuideSource = join(root, "USER_GUIDE.md");
 const userGuideAssetName = `DigitalDP-${version}-User-Guide.txt`;
+const userGuideHtmlAssetName = `DigitalDP-${version}-User-Guide.html`;
+const releaseNotesSource = join(releaseDirectory, `RELEASE_NOTES-${version}.md`);
+const releaseNotesAssetName = `DigitalDP-${version}-Release-Notes.txt`;
 const appIconPng = join(root, "assets", "app-icon-master.png");
 const appIconIcns = join(root, "assets", "app-icon.icns");
 const appIconIco = join(root, "assets", "app-icon.ico");
@@ -109,7 +116,9 @@ function macInfoPlist(): string {
 
 function copyReleaseDocumentation(destination: string): void {
   copyFileSync(join(releaseDirectory, "README.md"), join(destination, "README.txt"));
+  copyFileSync(userGuideHtmlPath, join(destination, "USER-GUIDE.html"));
   copyFileSync(userGuideSource, join(destination, "USER-GUIDE.txt"));
+  copyFileSync(releaseNotesSource, join(destination, "RELEASE-NOTES.txt"));
 }
 
 function archiveDirectory(directory: string, archivePath: string, extension: ReleaseTarget["archiveExtension"]): void {
@@ -270,21 +279,39 @@ async function buildTarget(target: ReleaseTarget, stagingRoot: string): Promise<
   return archivePackage(packageDirectory, target.archiveExtension, stagingRoot);
 }
 
+buildUserGuide();
+buildMockGuides();
 mkdirSync(releaseDirectory, { recursive: true });
 const stagingRoot = mkdtempSync(join(tmpdir(), "digitaldp-release-"));
 
 try {
-  console.log(`Building ${macUniversalTarget.id}…`);
-  const archives: Archive[] = [await buildMacUniversal(stagingRoot)];
-  for (const target of targets) {
+  const archives: Archive[] = [];
+  if (selectedPlatforms.includes("macos-universal")) {
+    console.log(`Building ${macUniversalTarget.id}…`);
+    archives.push(await buildMacUniversal(stagingRoot));
+  }
+  for (const target of targets.filter(({ id }) => selectedPlatforms.includes(id))) {
     console.log(`Building ${target.id}…`);
     archives.push(await buildTarget(target, stagingRoot));
   }
 
-  for (const archiveName of retiredArchiveNames) rmSync(join(releaseDirectory, archiveName), { force: true });
+  const omittedArchiveNames = RELEASE_PLATFORMS
+    .filter((platform) => !selectedPlatforms.includes(platform))
+    .map((platform) => releaseArchiveName(version, platform));
+  // Never leave a previous current-version Mac archive beside a non-Mac build.
+  for (const archiveName of [...retiredArchiveNames, ...omittedArchiveNames]) {
+    rmSync(join(releaseDirectory, archiveName), { force: true });
+  }
   for (const archive of archives) copyFileSync(archive.archivePath, join(releaseDirectory, archive.archiveName));
+  copyFileSync(userGuideHtmlPath, join(releaseDirectory, userGuideHtmlAssetName));
   copyFileSync(userGuideSource, join(releaseDirectory, userGuideAssetName));
-  const releaseAssetNames = [...archives.map(({ archiveName }) => archiveName), userGuideAssetName];
+  copyFileSync(releaseNotesSource, join(releaseDirectory, releaseNotesAssetName));
+  const releaseAssetNames = [
+    ...archives.map(({ archiveName }) => archiveName),
+    userGuideHtmlAssetName,
+    userGuideAssetName,
+    releaseNotesAssetName,
+  ];
   const checksums = releaseAssetNames
     .map((assetName) => `${sha256(join(releaseDirectory, assetName))}  ${assetName}`)
     .join("\n");

@@ -1,60 +1,158 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "English B · Paper 2 — original reading sample",
+  "title": "English B · Paper 2 reading (HL) — original full-format practice",
   "subject": "english-b",
   "subjectLabel": "English B",
   "level": "HL",
-  "paper": "Paper 2 — original reading sample",
+  "paper": "Paper 2 reading (HL) — original full-format practice",
   "durationMinutes": 60,
   "readingTimeMinutes": 5,
-  "maximumMarks": 20,
+  "maximumMarks": 40,
   "mode": "reading",
   "instructions": "Read all three original texts and answer every question in its linked response area. No separate answer sheet is used.",
   "selectionMode": "all",
   "resources": [
     {
       "key": "text-1",
-      "label": "Text A — tool library",
+      "label": "Text A — Borrowed Ground project page",
       "kind": "text",
-      "text": "At the West Market Tool Library, members borrow drills, sewing machines and camping stoves instead of buying equipment they may use once. The annual fee is modest, but every new member also gives one hour of time. Some repair donated tools; others photograph equipment or translate safety cards. Coordinator Mina Cole says the time exchange matters more than the money: ‘People arrive to borrow an object and discover that somebody nearby knows how to use it.’ The library now runs Saturday workshops led by members, and broken household items are welcome—even when their owners are not sure what is wrong."
+      "text": "BORROWED GROUND\nA free walking project made by the people who know the streets\n\n[1] Visitors often arrive in Bellweather carrying a list of famous places. They photograph the clock tower, cross the old bridge and leave believing that they have seen the town. Borrowed Ground offers a different kind of map: six short walks designed by residents whose names do not usually appear in guidebooks.\n\n[2] Each route begins with an ordinary object. Follow a baker's wooden spoon to discover the night workers who keep the town awake. Choose the blue football scarf to hear how an empty car park became a weekend sports ground. The objects appear on signs along the route, but there are no arrows. Instead, walkers receive clues recorded by the residents themselves. You may get briefly lost. That is part of the invitation.\n\n[3] The project began when local historian Reena Shah noticed that official tours treated Bellweather's past as something complete. \"The dates were correct,\" she explains, \"but the story always stopped before the people living here now had anything to say.\" She invited shopkeepers, students and bus drivers to record three-minute memories. More than eighty recordings arrived in a week.\n\n[4] Borrowed Ground is free. Pick up a paper map at the central library or download the low-data version to a phone. Headphones are recommended, although every recording also has a transcript. Routes take between 35 and 70 minutes and are step-free unless the map says otherwise. Walk alone, with friends or as a class.\n\n[5] Please remember that these are working streets, not museum displays. Keep entrances clear, ask before photographing people and buy something only if you genuinely want it. The project does not measure success by the number of visitors. It asks whether visitors leave with a more complicated picture than the one they brought."
     },
     {
       "key": "text-2",
-      "label": "Text B — quiet railway carriage trial",
+      "label": "Text B — Fixing more than machines",
       "kind": "text",
-      "text": "A regional railway has introduced a quiet carriage on evening services after passengers requested a place to read or rest. Phone calls are discouraged and announcements are reduced, but conversation is not forbidden. During the first month, complaints fell overall, yet staff received new complaints about passengers aggressively correcting one another. The company has replaced its original SILENCE signs with a softer message: SHARE THE QUIET. It will continue the trial while training staff to handle disagreements without turning the carriage into a place of suspicion."
+      "text": "FIXING MORE THAN MACHINES\nAn interview for Tomorrow Made magazine\n\n[1] On Wednesday afternoons, Room 14 at North Quay College sounds like a collection of small disasters. A fan clicks without turning. A radio produces one stubborn note. Someone has removed forty-three screws from a coffee machine and arranged them in worried rows. This is the Repair Studio, a student-led service where local residents bring broken household objects and nobody promises a quick solution.\n\n[2] Magazine reporter Joel Emery spoke to Amara Voss, one of the students who started it.\n\nJOEL: People can already take faulty objects to professionals. Why build a repair service at a college?\n\nAMARA: We are not trying to replace professional technicians. Our first rule is to refuse work involving gas, high-voltage equipment or anything that could be unsafe. But many objects are discarded because the owner cannot identify a simple fault, or because a commercial repair would cost more than a replacement. We can investigate slowly. Time is the resource students have.\n\nJOEL: Was the environmental argument what attracted volunteers?\n\nAMARA: That was our advertisement: reduce waste, learn practical skills. The surprise was the conversation. Owners usually stay while we work. They explain where an object came from and why it matters. One woman brought a lamp that had belonged to her grandfather. Electrically, it was uncomplicated. Emotionally, replacing it was impossible.\n\nJOEL: Do customers ever become impatient with learners?\n\nAMARA: Of course. At first we wrote \"free repairs\" on the poster, which sounded like a guarantee. Now we say \"free investigation\". We explain that the object may leave in the same condition, but its owner will know more. Oddly, complaints fell when our promise became smaller.\n\nJOEL: What has the studio changed for students?\n\nAMARA: It has made uncertainty respectable. In ordinary lessons, we often hide the steps that did not work and present the final answer. Here, a failed test is useful information. We photograph each stage, label every part and leave notes for the next team. Students who were nervous about touching a screwdriver now teach visitors how to clean a filter or replace a plug.\n\nJOEL: What comes next?\n\nAMARA: We are creating short guides in the five languages most commonly spoken near the college. But I do not want the studio to become a repair factory. If we rush people through, we lose the patient exchange that makes the room valuable."
     },
     {
       "key": "text-3",
-      "label": "Text C — interview with a rooftop gardener",
+      "label": "Text C — The room above the weather",
       "kind": "text",
-      "text": "When Ada first planted tomatoes on the roof of her apartment building, she expected vegetables, not meetings. Neighbours began leaving notes under the water tank: Could they grow herbs? Could children visit? Within a year, twelve households shared the work. The harvest is small, Ada admits, and nobody saves much money. The greater change is downstairs. People who once passed silently in the lift now compare weather forecasts and exchange recipes. ‘The garden did not make us self-sufficient,’ Ada says. ‘It made us visible to one another.’"
+      "text": "THE ROOM ABOVE THE WEATHER\nAn original literary extract\n\n[1] The greenhouse stood on the roof of Tower Seven, one floor above the number shown in the lift. To reach it, residents had to climb a final flight of concrete stairs and push a door that complained in every season. Mara had lived in the tower for nine years before she discovered the place. She found it only because a handwritten notice had appeared beside the post boxes: TOMATOES NEED WITNESSES. THURSDAY, 6 P.M.\n\n[2] At six fifteen, Mara was the only witness. Inside, six tomato plants leaned against lengths of string. Their leaves touched the fogged glass like hands testing bathwater. A man in a red woollen hat was transferring rainwater from one bucket to another with a measuring cup.\n\n\"You're late,\" he said.\n\n\"I didn't know attendance was compulsory.\"\n\n\"It isn't. That's why I worried nobody would come.\"\n\n[3] His name was Dae. The plants, he explained, had appeared three months earlier, placed in perfect pots with no note. He had watered them because the soil was dry. Then he had continued because stopping felt like making a decision. Now the first tomatoes were turning orange and he believed the unknown gardener should be invited to see them.\n\n\"So you put up a notice?\"\n\n\"Seven notices. The others were too normal.\"\n\n[4] Mara looked down through the glass at windows brightening across the neighbouring towers. From street level the buildings seemed identical, but up here each rectangle held a separate weather system: blue television light, yellow kitchens, a bedroom flashing briefly as curtains closed. She knew several residents by sound—the child practising scales on level twelve, the dog that barked whenever the rubbish truck reversed—but she could not have named their faces.\n\n[5] The next Thursday, four people came. One was a boy carrying a library book about insects. Another was Mrs Alves from level three, who inspected the plants and immediately removed two dying leaves. \"Too much kindness,\" she said when Dae protested. \"A plant can drown in attention.\" Nobody admitted to owning the tomatoes.\n\n[6] By the fourth week, the mystery had become less urgent. Someone brought mint. Someone else repaired a cracked pane with transparent tape that whistled in the wind. The boy counted seven kinds of visiting insect and revised the number twice. Mara began carrying her dinner upstairs after work, telling herself that the greenhouse was simply cooler than her apartment.\n\n[7] In late August, a storm arrived before sunset. Dae sent a message to the group they had somehow formed: GLASS ROOF. STRONG WIND. HELP. Mara expected three or four people. Seventeen climbed the complaining stairs. They tied the pots to benches, moved the smallest plants into the stairwell and held a sheet of plastic over the cracked pane while rain drummed above their heads. Mrs Alves gave instructions in two languages and gesture supplied the rest.\n\n[8] The power failed. For a moment the towers opposite went dark, every separate square erased. Then phone lights appeared around Mara, illuminating wet sleeves and the leaves they were trying to save. Someone began to laugh. The sound moved through the greenhouse until even Dae, still gripping the plastic, had to sit down.\n\n[9] The next morning, Mara found a bowl outside her door containing three storm-split tomatoes. Beneath it lay a note in the same handwriting as the first: THANK YOU FOR WITNESSING. She carried the bowl upstairs. Nobody there claimed to have written the message, and this time she believed them."
     }
   ],
   "questions": [
     {
       "id": "q1",
       "label": "Text A · Question 1",
-      "prompt": "What is required from every new member in addition to the fee?",
-      "type": "single-choice",
+      "prompt": "According to paragraph 1, what mistaken belief may visitors have when they leave Bellweather?",
+      "type": "short",
       "resourceKeys": [
         "text-1"
       ],
-      "marks": 2,
-      "options": [
-        "One hour of time",
-        "A donated machine",
-        "A safety qualification",
-        "A Saturday workshop"
-      ]
+      "marks": 1
     },
     {
       "id": "q2",
       "label": "Text A · Question 2",
-      "prompt": "Give two ways members contribute to the tool library.",
+      "prompt": "Who designed the six Borrowed Ground walks?",
+      "type": "short",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q3",
+      "label": "Text A · Question 3",
+      "prompt": "Give one example of an ordinary object used to begin a route.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q4",
+      "label": "Text A · Question 4",
+      "prompt": "Why do the routes use recorded clues instead of arrows?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 1,
+      "options": [
+        "To invite exploration rather than direct every step",
+        "To prevent residents from finding the routes",
+        "To make the walks cost less to maintain",
+        "To keep visitors away from the town centre"
+      ]
+    },
+    {
+      "id": "q5",
+      "label": "Text A · Question 5",
+      "prompt": "What does Reena mean when she says the official story was ‘complete’?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 1,
+      "options": [
+        "It left no space for present-day residents",
+        "It contained too many historical errors",
+        "It included every recording residents sent",
+        "It concentrated only on recent events"
+      ]
+    },
+    {
+      "id": "q6",
+      "label": "Text A · Question 6",
+      "prompt": "Give one way a walker can access the route information.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q7",
+      "label": "Text A · Question 7",
+      "prompt": "Which statement is supported by paragraph 4?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 1,
+      "options": [
+        "Accessibility information is supplied for each route",
+        "Every route can be completed in 35 minutes",
+        "A mobile phone is required for every route",
+        "The recordings are available only through headphones"
+      ]
+    },
+    {
+      "id": "q8",
+      "label": "Text A · Question 8",
+      "prompt": "Identify one request made of visitors in paragraph 5.",
+      "type": "short",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q9",
+      "label": "Text A · Question 9",
+      "prompt": "The final sentence suggests that the project's main aim is to make visitors…",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-1"
+      ],
+      "marks": 1,
+      "options": [
+        "question a simple impression of the town",
+        "remember every historical date",
+        "spend more money in local shops",
+        "complete all six routes"
+      ]
+    },
+    {
+      "id": "q10",
+      "label": "Text A · Question 10",
+      "prompt": "Using three details from the text, explain how Borrowed Ground gives residents authority over the way their town is represented.",
       "type": "short",
       "resourceKeys": [
         "text-1"
@@ -62,79 +160,298 @@
       "marks": 3
     },
     {
-      "id": "q3",
-      "label": "Text B · Question 3",
-      "prompt": "Why were the original signs changed?",
-      "type": "single-choice",
-      "resourceKeys": [
-        "text-2"
-      ],
-      "marks": 2,
-      "options": [
-        "They were too expensive",
-        "They encouraged rigid policing",
-        "They could not be translated",
-        "They reduced ticket sales"
-      ]
-    },
-    {
-      "id": "q4",
-      "label": "Text B · Question 4",
-      "prompt": "Explain one tension created by the quiet-carriage trial.",
+      "id": "q11",
+      "label": "Text B · Question 11",
+      "prompt": "Why does the writer compare Room 14 to ‘a collection of small disasters’ in paragraph 1?",
       "type": "short",
       "resourceKeys": [
         "text-2"
       ],
-      "marks": 3
+      "marks": 1
     },
     {
-      "id": "q5",
-      "label": "Text C · Question 5",
-      "prompt": "Which result surprised Ada most?",
+      "id": "q12",
+      "label": "Text B · Question 12",
+      "prompt": "Which work will the Repair Studio refuse?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1,
+      "options": [
+        "Potentially unsafe repairs",
+        "Objects with emotional value",
+        "Repairs that take several weeks",
+        "Objects previously examined by professionals"
+      ]
+    },
+    {
+      "id": "q13",
+      "label": "Text B · Question 13",
+      "prompt": "What advantage do students have that commercial repair services may not have?",
+      "type": "short",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q14",
+      "label": "Text B · Question 14",
+      "prompt": "What surprised Amara about the owners who visited?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1,
+      "options": [
+        "They valued the conversations around their objects",
+        "They preferred replacing objects immediately",
+        "They refused to remain while students worked",
+        "They were mainly professional technicians"
+      ]
+    },
+    {
+      "id": "q15",
+      "label": "Text B · Question 15",
+      "prompt": "Why was replacing the grandfather's lamp ‘impossible’ for its owner?",
+      "type": "short",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q16",
+      "label": "Text B · Question 16",
+      "prompt": "What did the phrase ‘free repairs’ lead customers to expect?",
+      "type": "short",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q17",
+      "label": "Text B · Question 17",
+      "prompt": "What happened after the studio advertised a smaller promise?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1,
+      "options": [
+        "Customers complained less",
+        "Students repaired fewer objects",
+        "Professionals joined the service",
+        "Owners stopped asking questions"
+      ]
+    },
+    {
+      "id": "q18",
+      "label": "Text B · Question 18",
+      "prompt": "In the phrase ‘present the final answer’, what does ‘the final answer’ refer to?",
+      "type": "short",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q19",
+      "label": "Text B · Question 19",
+      "prompt": "Give two practices the teams use so that another group can continue their work.",
+      "type": "short",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q20",
+      "label": "Text B · Question 20",
+      "prompt": "Which word best describes Amara's attitude towards uncertainty?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1,
+      "options": [
+        "Accepting",
+        "Impatient",
+        "Embarrassed",
+        "Suspicious"
+      ]
+    },
+    {
+      "id": "q21",
+      "label": "Text B · Question 21",
+      "prompt": "Why does Amara not want a ‘repair factory’?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1,
+      "options": [
+        "Efficiency could remove the valuable human exchange",
+        "The college intends to close Room 14",
+        "Students are no longer interested in repairing things",
+        "Translations make the service too expensive"
+      ]
+    },
+    {
+      "id": "q22",
+      "label": "Text B · Question 22",
+      "prompt": "Give one way the interview challenges the idea that a successful repair service is measured only by the number of objects fixed.",
+      "type": "short",
+      "resourceKeys": [
+        "text-2"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q23",
+      "label": "Text C · Question 23",
+      "prompt": "What prevented the lift from taking residents directly to the greenhouse?",
+      "type": "short",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q24",
+      "label": "Text C · Question 24",
+      "prompt": "Why did the unusual wording of the notice succeed in attracting Mara?",
+      "type": "short",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q25",
+      "label": "Text C · Question 25",
+      "prompt": "What two explanations does Dae give for continuing to care for the plants?",
+      "type": "short",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q26",
+      "label": "Text C · Question 26",
+      "prompt": "What does the phrase ‘a separate weather system’ emphasize about the apartments?",
       "type": "single-choice",
       "resourceKeys": [
         "text-3"
       ],
-      "marks": 2,
+      "marks": 1,
       "options": [
-        "The size of the tomatoes",
-        "The financial saving",
-        "The new neighbour relationships",
-        "The number of empty roofs"
+        "Each contains a private life largely unknown to neighbours",
+        "Every resident experiences different outdoor weather",
+        "The tower's heating system is unreliable",
+        "Mara can predict storms by watching windows"
       ]
     },
     {
-      "id": "q6",
-      "label": "Text C · Question 6",
-      "prompt": "What does Ada mean when she says the garden made neighbours ‘visible’ to one another?",
+      "id": "q27",
+      "label": "Text C · Question 27",
+      "prompt": "Mrs Alves says a plant can ‘drown in attention’. What is she warning against?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 1,
+      "options": [
+        "Overwatering",
+        "Removing leaves",
+        "Growing plants indoors",
+        "Inviting too many visitors"
+      ]
+    },
+    {
+      "id": "q28",
+      "label": "Text C · Question 28",
+      "prompt": "Give one detail showing that the greenhouse gradually became a shared place.",
       "type": "short",
       "resourceKeys": [
         "text-3"
       ],
-      "marks": 3
+      "marks": 1
     },
     {
-      "id": "q7",
-      "label": "Across texts · Question 7",
-      "prompt": "Identify one shared idea in Texts A and C and support it with one detail from each text.",
-      "type": "short",
+      "id": "q29",
+      "label": "Text C · Question 29",
+      "prompt": "Why does Mara tell herself the greenhouse is cooler than her apartment?",
+      "type": "single-choice",
       "resourceKeys": [
-        "text-1",
         "text-3"
       ],
-      "marks": 3
+      "marks": 1,
+      "options": [
+        "She is reluctant to admit that she enjoys the company",
+        "She needs a scientific reason to study the plants",
+        "She has been ordered to eat away from home",
+        "She is worried that Dae owns the greenhouse"
+      ]
     },
     {
-      "id": "q8",
-      "label": "Across texts · Question 8",
-      "prompt": "Which initiative seems most likely to create lasting community change? Justify your answer using one text.",
+      "id": "q30",
+      "label": "Text C · Question 30",
+      "prompt": "How does the number of people who arrive during the storm differ from Mara's expectation?",
       "type": "short",
       "resourceKeys": [
-        "text-1",
-        "text-2",
+        "text-3"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q31",
+      "label": "Text C · Question 31",
+      "prompt": "What allows Mrs Alves to communicate when not everyone shares a language?",
+      "type": "short",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q32",
+      "label": "Text C · Question 32",
+      "prompt": "What is the main effect of the power failure in paragraph 8?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 1,
+      "options": [
+        "It reveals the group as a new source of light and connection",
+        "It makes the residents abandon the greenhouse",
+        "It proves the storm has destroyed the other towers",
+        "It allows the writer of the notes to escape unseen"
+      ]
+    },
+    {
+      "id": "q33",
+      "label": "Text C · Question 33",
+      "prompt": "Explain two ways the repeated idea of ‘witnessing’ changes meaning between the first and final notices.",
+      "type": "short",
+      "resourceKeys": [
         "text-3"
       ],
       "marks": 2
+    },
+    {
+      "id": "q34",
+      "label": "Text C · Question 34",
+      "prompt": "Using evidence from three different moments in the extract, explain how the greenhouse changes Mara's understanding of the people around her.",
+      "type": "short",
+      "resourceKeys": [
+        "text-3"
+      ],
+      "marks": 3
     }
   ]
 }

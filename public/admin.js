@@ -3,7 +3,6 @@ import {
   collectionActionPath,
   emptyState,
   formatPaperTime,
-  paperOptions,
   populateArchiveDialog,
   readCollectionTarget,
   renderClasses,
@@ -11,11 +10,14 @@ import {
   syncOptions,
   updatePresence,
 } from "/admin-collections.js";
+import { renderPaperLibrary, renderSelectedPaper, renderSessionPaperSelectors } from "/admin-papers.js";
 import { renderInkSubmission } from "/ink-canvas.js";
 import { mountAdminNetwork } from "/admin-network.js";
 import { mountClassRosterTransfer } from "/class-rosters.js";
 import { mountPaperBuilder } from "/paper-builder.js";
+import { confirmEndExam } from "./admin-end-exam.js";
 import { mountStudentConnection } from "/student-connection.js";
+import { renderResourceText } from "./resource-text.js";
 
 let stopSocket;
 let presenceTimer;
@@ -109,44 +111,8 @@ async function refreshPresence() {
 }
 
 function renderPapers(state) {
-  const list = document.querySelector("#paper-list");
-  const sessionPaper = document.querySelector("#session-paper");
-  list.replaceChildren();
-  syncOptions(
-    sessionPaper,
-    "Choose paper",
-    paperOptions(state.papers),
-  );
-  if (state.papers.length === 0) emptyState(list, "Choose an exam in the Paper Builder to add your first practice paper.");
-  for (const paper of state.papers) {
-    const row = document.createElement("li");
-    const main = document.createElement("span");
-    const title = document.createElement("strong");
-    title.textContent = paper.title;
-    const metadata = document.createElement("small");
-    metadata.textContent = `${paper.subjectLabel ?? humanSubject(paper.subject)} · ${paper.level} · ${paper.paper}`;
-    main.append(title, metadata);
-    const actions = document.createElement("div");
-    actions.className = "paper-list-actions";
-    const duration = document.createElement("code");
-    duration.textContent = paper.readingTimeMinutes
-      ? `${paper.readingTimeMinutes} min read + ${paper.durationMinutes} min write`
-      : `${paper.durationMinutes} min`;
-    const canExport = ["teacher-authored", "school-authorized"].includes(paper.sourceClassification)
-      && paper.exportAuthorized;
-    actions.append(duration);
-    if (canExport) {
-      const exportLink = document.createElement("a");
-      exportLink.className = "quiet-action compact";
-      exportLink.href = `/api/admin/papers/${paper.id}/export`;
-      exportLink.download = "";
-      exportLink.textContent = "Export";
-      exportLink.setAttribute("aria-label", `Export ${paper.title}`);
-      actions.append(exportLink);
-    }
-    row.append(main, actions);
-    list.append(row);
-  }
+  renderSessionPaperSelectors(state.papers);
+  renderPaperLibrary(state.papers);
 }
 
 function copy(tag, className, value) {
@@ -158,6 +124,7 @@ function copy(tag, className, value) {
 
 function formatAssessmentSession(value) {
   if (!value || value === "custom") return "Practice session";
+  if (/^digitaldp-original-examples-v\d+$/.test(value)) return "Original practice sample";
   const match = /^(may|november)-(\d{4})$/i.exec(value);
   if (match) return `${match[1][0].toUpperCase()}${match[1].slice(1)} ${match[2]}`;
   return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -190,7 +157,7 @@ function appendQuestionResources(container, question, resourcesByKey, renderedRe
       image.alt = resource.label;
       item.append(image);
     } else if (resource.kind === "text") {
-      item.append(copy("blockquote", "submission-resource-text", resource.text ?? ""));
+      item.append(renderResourceText(copy("blockquote", "submission-resource-text", ""), resource.text, { label: resource.label }));
     } else {
       const description = resource.kind === "audio"
         ? "Listening audio · two complete plays · no pause or restart"
@@ -320,6 +287,14 @@ function renderCandidatePaper(data, response) {
       resourcesByKey,
       renderedResources,
     );
+    if (question.type === "single-choice" && question.options?.length) {
+      const options = document.createElement("ol");
+      options.className = "candidate-question-options";
+      options.type = "A";
+      options.setAttribute("aria-label", "Answer choices");
+      question.options.forEach((option) => options.append(copy("li", "", option)));
+      item.append(options);
+    }
     if (
       data.session.selectionMode === "one" &&
       data.session.mode === "essay" &&
@@ -617,8 +592,12 @@ function bindCollectionController() {
     }
     if (button.dataset.sessionAction) {
       button.disabled = true;
+      const sessionId = button.dataset.sessionId;
+      const action = button.dataset.sessionAction;
       try {
-        await api(`/api/admin/sessions/${button.dataset.sessionId}/${button.dataset.sessionAction}`, { method: "POST" });
+        if (action === "end" && !await confirmEndExam({ trigger: button,
+          loadResults: () => api(`/api/admin/sessions/${sessionId}/responses`) })) return;
+        await api(`/api/admin/sessions/${sessionId}/${action}`, { method: "POST" });
         await refreshState(true);
         announce(button.dataset.sessionAction === "start" ? "Exam started" : "Exam ended and responses submitted", "success");
       } catch (error) {
@@ -683,6 +662,10 @@ function bindCollectionController() {
 
 function bindDashboard() {
   document.querySelector("#logout").addEventListener("click", async () => {
+    if (!await document.querySelector("#paper-builder-form")?.canLeave?.()) {
+      announce("Your paper draft could not be saved. Keep this page open and save it to the library before signing out.", "error");
+      return;
+    }
     await api("/api/logout", { method: "POST" });
     stopSocket?.();
     clearInterval(presenceTimer);
@@ -722,6 +705,10 @@ function bindDashboard() {
     event.preventDefault();
     mutate(event.currentTarget, "/api/admin/sessions");
   });
+  document.querySelector("#session-system").addEventListener("change", () => renderSessionPaperSelectors(currentState.papers));
+  document.querySelector("#session-paper").addEventListener("change", () => renderSelectedPaper(currentState.papers));
+  document.querySelector("#library-search").addEventListener("input", () => renderPaperLibrary(currentState.papers));
+  document.querySelector("#library-system").addEventListener("change", () => renderPaperLibrary(currentState.papers));
 
   bindCollectionController();
 
@@ -732,7 +719,7 @@ function bindDashboard() {
   });
 
   document.querySelectorAll("[data-jump]").forEach((link) => {
-    link.addEventListener("click", () => document.querySelector(link.dataset.jump).scrollIntoView({ behavior: "smooth" }));
+    link.addEventListener("click", () => document.querySelector(link.dataset.jump).scrollIntoView({ behavior: "instant" }));
   });
 }
 
@@ -745,25 +732,27 @@ async function renderDashboard() {
         <nav aria-label="Dashboard sections">
           <button type="button" data-jump="#overview">Overview</button>
           <button type="button" data-jump="#classes">Classes</button>
-          <button type="button" data-jump="#papers">Papers</button>
           <button type="button" data-jump="#sessions">Sessions</button>
+          <button type="button" data-jump="#papers">Paper library</button>
         </nav>
+        <a class="quiet-action" href="/guide" target="_blank" rel="noopener">User guide ↗</a>
+        <a class="quiet-action" href="/mock-guides" target="_blank" rel="noopener">Mock marking guides ↗</a>
         <button id="logout" class="quiet-action" type="button">Sign out</button>
       </aside>
       <div class="admin-main">
         <header class="admin-topbar">
-          <div><p class="eyebrow">Teacher dashboard</p><h1>Exams</h1></div>
+          <div><p class="eyebrow">Teacher dashboard</p><h1>Teacher desk</h1></div>
           <span class="connection-state" id="connection-state">Connecting</span>
         </header>
         <p id="global-status" class="status-message sticky-status" role="status" aria-live="polite" hidden></p>
 
         <section id="overview" class="admin-section">
-          <div class="section-heading"><div><h2>Overview</h2><p>Classes, papers and examinations ready on this school server.</p></div></div>
+          <div class="section-heading"><div><h2>Overview</h2><p>Prepare your classes and papers, then start and monitor exam sessions.</p></div></div>
           <section class="session-row" aria-labelledby="student-connection-title">
             <div>
               <strong id="student-connection-title">Student sign-in</strong>
               <a data-student-connection-link href="/student" target="_blank" rel="noopener">/student</a>
-              <small>Share this address with students using this DigitalDP server.</small>
+              <small>Students on this computer can use the local address. Turn on classroom sharing below for other devices.</small>
             </div>
             <div class="session-actions">
               <button data-copy-student-connection type="button" aria-describedby="student-connection-copy-status">Copy URL</button>
@@ -781,7 +770,7 @@ async function renderDashboard() {
 
         <section id="classes" class="admin-section two-column-section">
           <div>
-            <div class="section-heading"><div><h2>Classes and candidates</h2><p>Prepare rosters in advance, then update them whenever circumstances change.</p></div></div>
+            <div class="section-heading"><div><h2>Classes and students</h2><p>Prepare class lists in advance, then update them whenever circumstances change.</p></div></div>
             <div id="class-list" class="roster-groups"></div>
             <details id="archived-roster" class="archived-collection">
               <summary id="archived-roster-summary">Removed classes and students (<span id="archived-roster-count">0</span>)</summary>
@@ -793,7 +782,7 @@ async function renderDashboard() {
             <form id="class-form" class="utility-form" method="post">
               <fieldset><legend>Create class</legend>
                 <label for="class-name">Class name</label><input id="class-name" name="name" required maxlength="100">
-                <label for="class-code">Class code</label><input id="class-code" name="code" required minlength="4" maxlength="24" pattern="[A-Za-z0-9-]+" autocomplete="off">
+                <label for="class-code">Class code</label><input id="class-code" name="code" required minlength="4" maxlength="24" pattern="[A-Za-z0-9\\-]+" autocomplete="off">
                 <button type="submit">Create class</button>
               </fieldset>
             </form>
@@ -801,7 +790,8 @@ async function renderDashboard() {
               <fieldset><legend>Add student</legend>
                 <label for="student-class">Class</label><select id="student-class" name="classId" required></select>
                 <label for="student-name">Student name</label><input id="student-name" name="name" required maxlength="100" autocomplete="off">
-                <label for="candidate-code">Candidate code</label><input id="candidate-code" name="candidateCode" required maxlength="32" autocomplete="off">
+                <label for="candidate-code">Candidate code</label><input id="candidate-code" name="candidateCode" required minlength="2" maxlength="32" pattern="[A-Za-z0-9\\-]{2,32}" autocomplete="off" aria-describedby="candidate-code-help">
+                <small id="candidate-code-help">A unique student reference for this class, such as S01. Use 2–32 letters, numbers or hyphens.</small>
                 <label for="extra-minutes">Extra time in minutes</label><input id="extra-minutes" name="extraMinutes" type="number" min="0" max="180" value="0">
                 <button type="submit">Add student</button>
               </fieldset>
@@ -813,7 +803,12 @@ async function renderDashboard() {
         <section id="papers" class="admin-section two-column-section">
           <div>
             <div class="section-heading"><div><h2>Paper library</h2><p>Create a paper with the guided builder or import a prepared package.</p></div></div>
-            <ul id="paper-list" class="paper-list"></ul>
+            <div class="library-filters">
+              <label for="library-system">Exam system</label><select id="library-system"></select>
+              <label for="library-search">Find a paper</label><input id="library-search" type="search" placeholder="Subject, paper or level" aria-controls="paper-list">
+              <p id="library-count" role="status" aria-live="polite"></p>
+            </div>
+            <ul id="paper-list" class="paper-list" tabindex="0" aria-label="Available papers"></ul>
           </div>
           <div class="form-stack">
             <form id="portable-paper-form" data-paper-form class="utility-form paper-portability" method="post" enctype="multipart/form-data">
@@ -856,7 +851,7 @@ async function renderDashboard() {
 
         <section id="sessions" class="admin-section two-column-section">
           <div>
-            <div class="section-heading"><div><h2>Exams</h2><p>Each exam sitting is a class-specific use of a reusable Paper Library definition.</p></div><a class="clock-launch" href="/clock" target="_blank" rel="noopener">Open countdown display ↗</a></div>
+            <div class="section-heading"><div><h2>Sessions</h2><p>Choose a prepared paper and a class. Students join the waiting room until you select Start exam.</p></div><a class="clock-launch" href="/clock" target="_blank" rel="noopener">Open examination clock ↗</a></div>
             <ul id="session-list" class="session-list"></ul>
             <details id="archived-sessions" class="archived-collection">
               <summary id="archived-sessions-summary">Removed exam sittings (<span id="archived-session-count">0</span>)</summary>
@@ -868,7 +863,9 @@ async function renderDashboard() {
             <fieldset><legend>Set up an exam</legend>
               <small>This creates a new draft sitting from the library paper. The original stays unchanged and can be reused for other classes or dates.</small>
               <label for="session-class">Class</label><select id="session-class" name="classId" required></select>
+              <label for="session-system">Exam system</label><select id="session-system" required></select>
               <label for="session-paper">Paper</label><select id="session-paper" name="paperId" required></select>
+              <aside id="session-paper-summary" class="paper-readiness" aria-live="polite" hidden></aside>
               <button type="submit">Set up exam</button>
             </fieldset>
           </form>
@@ -881,7 +878,7 @@ async function renderDashboard() {
         <fieldset class="preference-grid">
           <legend class="visually-hidden">Student details</legend>
           <label for="edit-student-name">Display name<input id="edit-student-name" name="name" required maxlength="100" autocomplete="off"></label>
-          <label for="edit-candidate-code">Candidate code<input id="edit-candidate-code" name="candidateCode" required minlength="2" maxlength="32" pattern="[A-Za-z0-9-]{2,32}" autocomplete="off"></label>
+          <label for="edit-candidate-code">Candidate code<input id="edit-candidate-code" name="candidateCode" required minlength="2" maxlength="32" pattern="[A-Za-z0-9\\-]{2,32}" autocomplete="off"></label>
           <label for="edit-extra-minutes">Extra time in minutes<input id="edit-extra-minutes" name="extraMinutes" type="number" min="0" max="180" value="0" required></label>
         </fieldset>
         <p id="student-edit-error" class="status-message" data-tone="error" role="alert" tabindex="-1" hidden></p>
@@ -903,6 +900,7 @@ async function renderDashboard() {
       </form>
     </dialog>
   `);
+  document.querySelector(".admin-main").append(document.querySelector("#papers"));
   mountStudentConnection(document, { origin: studentConnectionOrigin });
   classroomNetworkControls = mountAdminNetwork(document.querySelector("#classroom-network"), {
     request: requestClassroomNetwork,

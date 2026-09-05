@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Business Management · Paper 2 — original quantitative case sample",
+  "title": "Business Management · Paper 2 (SL) — original full-format practice",
   "subject": "business-management",
   "subjectLabel": "Business Management",
   "level": "SL",
-  "paper": "Paper 2 — original quantitative case sample",
+  "paper": "Paper 2 (SL) — original full-format practice",
   "durationMinutes": 90,
   "readingTimeMinutes": 5,
   "maximumMarks": 40,
@@ -19,14 +19,14 @@
       "key": "loop-loom-case",
       "label": "Original case material — Loop & Loom",
       "kind": "text",
-      "text": "Loop & Loom (L&L) repairs used clothing and turns damaged textiles into bags. The business sells each bag for $48. Variable material and labour cost is $27 per bag. Monthly fixed costs are $8,400. Current monthly output and sales are 520 bags. L&L is considering a laser cutter costing $36,000 with an expected residual value of $6,000 after four years. The cutter is forecast to increase annual net cash inflow by $11,500.\n\nA supermarket chain has offered a one-year contract for 300 additional bags per month at $39 each. Fulfilling the order would add monthly fixed quality-control costs of $1,800 and variable cost would fall to $25 per bag because materials could be purchased in bulk. Employees are concerned that accepting the contract may weaken L&L’s repair service and social mission."
+      "text": "CASE A — Loop & Loom\nLoop & Loom (L&L) repairs used clothing and turns damaged textiles into bags. The business sells each bag for $48. Variable material and labour cost is $27 per bag. Monthly fixed costs are $8,400. Current monthly output and sales are 520 bags. The operations manager believes demand could rise by 15%, but the finance manager warns that rent will rise by $900 per month.\n\nCASE B — North Quay Foods\nNorth Quay Foods is considering a laser cutter for its reusable packaging line. The machine costs $36,000 and has an expected residual value of $6,000 after four years. Forecast annual net cash inflows are $8,000, $10,500, $13,000 and $14,500. The firm's cost of capital is 6%. Managers are also considering leasing a slower machine that needs no initial capital but costs $1,150 per month.\n\nCASE C — Supermarket offer to L&L\nA supermarket chain has offered L&L a one-year contract for 300 additional bags per month at $39 each. Fulfilling the order would add monthly fixed quality-control costs of $1,800 and variable cost would fall to $25 per bag because materials could be purchased in bulk. The buyer demands standardized colours and next-day replacement of faulty products. Employees fear that accepting the contract may weaken L&L’s repair service and social mission. The founder sees a chance to make repaired textiles visible to a much wider market.\n\nCASE D — Independent growth\nInstead of accepting the chain contract, L&L could open an online shop. Set-up and photography would cost $9,500. Market research based on 86 existing customers predicts monthly online demand between 120 and 260 bags, but delivery emissions and return rates are uncertain. A local college has offered student interns to help with the launch, while an employee representative argues that permanent staff should control customer service."
     }
   ],
   "questions": [
     {
       "id": "q1",
-      "label": "Section A · Question 1",
-      "prompt": "Using the current figures, calculate L&L’s monthly break-even output, margin of safety and monthly profit. Show every step and include units.",
+      "label": "Section A · Question 1 (Case A)",
+      "prompt": "Using the original figures, calculate L&L’s monthly break-even output, margin of safety and monthly profit. Recalculate break-even after the rent rise, and comment on one limitation of break-even analysis.",
       "type": "ink",
       "resourceKeys": [
         "loop-loom-case"
@@ -40,8 +40,8 @@
     },
     {
       "id": "q2",
-      "label": "Section A · Question 2",
-      "prompt": "Calculate the average rate of return for the proposed laser cutter. State one limitation of using this result alone to make the investment decision.",
+      "label": "Section A · Question 2 (Case B)",
+      "prompt": "Calculate the average rate of return and payback period for the laser cutter. Use the supplied cash flows and state one limitation of using either result alone.",
       "type": "ink",
       "resourceKeys": [
         "loop-loom-case"
@@ -55,8 +55,8 @@
     },
     {
       "id": "q3",
-      "label": "Section B · choose A or B",
-      "prompt": "Choose one alternative and state its letter at the start.\nA. Using quantitative and qualitative evidence, recommend whether L&L should accept the supermarket contract.\nB. Recommend whether L&L should purchase the laser cutter, considering finance, operations and its social mission.",
+      "label": "Section B · choose Question 3 or 4",
+      "prompt": "Answer one alternative and state its number at the start.\n3. Using Case C and relevant business-management tools, recommend whether L&L should accept the supermarket contract. [20]\n4. Using Case D and relevant business-management tools, recommend whether L&L should open its own online shop. [20]",
       "type": "essay",
       "resourceKeys": [
         "loop-loom-case"

@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "ap",
+    "systemLabel": "Advanced Placement (AP)",
+    "qualificationLabel": "Advanced Placement",
+    "deliveryMode": "Hybrid digital/paper practice",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "May 2027 Calculus AB · four locked parts · part-specific graphing-calculator rule · fixed monitored break"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "AP Calculus AB · End-of-course exam — original 5-minute walkthrough",
+  "subject": "ap-calculus-ab",
+  "subjectLabel": "AP Calculus AB",
+  "level": "AP",
+  "paper": "End-of-course exam — original 5-minute walkthrough",
+  "durationMinutes": 5,
+  "readingTimeMinutes": 0,
+  "phases": [
+    {
+      "id": "section-1a",
+      "label": "Section I, Part A",
+      "kind": "work",
+      "durationMinutes": 1,
+      "sectionId": "section-1a",
+      "tools": [
+        "Calculator not permitted",
+        "Digital multiple-choice"
+      ]
+    },
+    {
+      "id": "section-1b",
+      "label": "Section I, Part B",
+      "kind": "work",
+      "durationMinutes": 1,
+      "sectionId": "section-1b",
+      "tools": [
+        "Approved graphing calculator required",
+        "Digital multiple-choice"
+      ]
+    },
+    {
+      "id": "break",
+      "label": "Monitored break",
+      "kind": "break",
+      "durationMinutes": 1,
+      "tools": [],
+      "instructions": "Student entry and examination content are locked during the break."
+    },
+    {
+      "id": "section-2a",
+      "label": "Section II, Part A",
+      "kind": "work",
+      "durationMinutes": 1,
+      "sectionId": "section-2a",
+      "tools": [
+        "Approved graphing calculator required",
+        "Physical response booklet or digital canvas"
+      ]
+    },
+    {
+      "id": "section-2b",
+      "label": "Section II, Part B",
+      "kind": "work",
+      "durationMinutes": 1,
+      "sectionId": "section-2b",
+      "tools": [
+        "Calculator not permitted",
+        "Physical response booklet or digital canvas"
+      ]
+    }
+  ],
+  "maximumMarks": 58,
+  "mode": "reading",
+  "instructions": "This demonstration has 4 multiple-choice questions (2 in each part) and 6 free-response questions. It uses a 5-minute classroom walkthrough clock with a 1-minute break. It is not a full mock examination: the May 2027 exam has 42 multiple-choice questions. Follow the calculator rule shown for each part. Before starting, your teacher should supply an approved handheld graphing calculator for Parts I-B and II-A. Real Bluebook exams also offer Desmos graphing during those parts; DigitalDP uses your supplied calculator. Complete free-response work in the booklet or digital canvas directed by your teacher. DigitalDP opens the next section automatically after the fixed break.",
+  "selectionMode": "all",
+  "resources": [],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Section I, Part A — Question 1",
+      "prompt": "If f(x) = x³ − 3x, what is f′(2)?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "3",
+        "6",
+        "9",
+        "12"
+      ]
+    },
+    {
+      "id": "q2",
+      "label": "Section I, Part A — Question 2",
+      "prompt": "The average value of g on [0, 4] is",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "∫₀⁴g(x)dx",
+        "(1/4)∫₀⁴g(x)dx",
+        "g(4) − g(0)",
+        "g′(2)"
+      ]
+    },
+    {
+      "id": "q3",
+      "label": "Section I, Part B — Question 3",
+      "prompt": "A solution to cos x = x/3 on [0, 3] is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "0.42",
+        "0.91",
+        "1.17",
+        "2.84"
+      ]
+    },
+    {
+      "id": "q4",
+      "label": "Section I, Part B — Question 4",
+      "prompt": "For h(x) = x e^(−x), the absolute maximum on [0, 5] occurs closest to x =",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "0",
+        "1",
+        "2.5",
+        "5"
+      ]
+    },
+    {
+      "id": "q5",
+      "label": "Section II, Part A — Question 1",
+      "prompt": "Let R be the region bounded by y = ln(x + 1), y = 0 and x = 3. Find its area and the volume formed when R is revolved about the x-axis. Give decimal answers to three places.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "sectionId": "section-2a",
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Section II, Part A — Question 2",
+      "prompt": "A particle has velocity v(t) = t² sin(t) for 0 ≤ t ≤ 5. Find its displacement and total distance travelled. State the times when it changes direction.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "sectionId": "section-2a",
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Section II, Part B — Question 3",
+      "prompt": "A differentiable function satisfies dy/dx = (x + 1)y and y(0) = 2. Find d²y/dx² at x = 0 and solve the differential equation for y.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "sectionId": "section-2b",
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Section II, Part B — Question 4",
+      "prompt": "The base of a solid is the region bounded by y = 4 − x² and the x-axis. Cross-sections perpendicular to the x-axis are squares. Write, but do not evaluate, an integral for the volume and explain each limit.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "sectionId": "section-2b",
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Section II, Part B — Question 5",
+      "prompt": "Let f(x) = x³ − 6x² + 9x + 1 on the interval [−1, 5]. Find all critical points, determine the intervals on which f is increasing, and identify the absolute maximum and minimum values.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "sectionId": "section-2b",
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Section II, Part B — Question 6",
+      "prompt": "The region in the first quadrant bounded by y = 2x and y = x² is revolved about the x-axis. Find the area of the region and the exact volume of the resulting solid.",
+      "type": "ink",
+      "resourceKeys": [],
+      "marks": 9,
+      "sectionId": "section-2b",
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

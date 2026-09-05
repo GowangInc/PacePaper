@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "pearson-edexcel-igcse",
+    "systemLabel": "Pearson Edexcel International GCSE",
+    "qualificationLabel": "Pearson Edexcel International GCSE",
+    "deliveryMode": "Full-length original paper with integrated digital working",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "Foundation · 120 minutes · 100 marks · calculator permitted · tier-specific formula reference included · answer all 22 questions"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Pearson Edexcel International GCSE Mathematics A (Modular) · Unit 2 (4WM2F/01) — original full-length mock",
+  "subject": "pearson-igcse-mathematics-a-modular",
+  "subjectLabel": "Pearson Edexcel International GCSE Mathematics A (Modular)",
+  "level": "Foundation",
+  "paper": "Unit 2 (4WM2F/01) — original full-length mock",
+  "durationMinutes": 120,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 100,
+  "subjectWeightPercent": 50,
+  "mode": "reading",
+  "instructions": "Answer all 22 questions. The total time is 2 hours; there is no separate reading period. Write your answer and all working in each question's response area; add pages if needed. A permitted scientific calculator may be used. The Formula reference attached to every question contains the tier-specific supplied formula facts. Draw your own labelled diagrams or graphs where requested; all necessary coordinates and measurements are provided. Do not infer measurements from a sketch. Use a suitable scale and label axes. Give units where appropriate. Keep unrounded working; give non-exact final numerical answers to 3 significant figures unless otherwise stated. This is an original DigitalDP practice paper, not a Pearson paper. Digital drawing is a classroom adaptation, not a test of physical ruler-and-compass accuracy.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formulae",
+      "label": "Foundation formula reference",
+      "kind": "text",
+      "text": "Formula reference — independently typeset mathematical facts\nTrapezium: area = ½(a + b)h, where a and b are parallel side lengths and h is perpendicular height.\nPrism: volume = cross-sectional area × length.\nCylinder: volume = πr²h; curved surface area = 2πrh. Here r is radius and h is perpendicular height."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — Ratio",
+      "prompt": "(a) Simplify the ratio 36:60. [1] (b) Share 480 ml in the ratio 3:5. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — Percentage skills",
+      "prompt": "(a) Write 7/20 as a percentage. [1] (b) Find 12% of 350. [1] (c) A price rises from $80 to $92. Find the percentage increase. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — Standard form",
+      "prompt": "(a) Write 5600000 in standard form. [1] (b) Write 4.8 × 10⁻³ as a decimal. [1] (c) Calculate (3 × 10⁵)(2 × 10⁻²), giving standard form. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — Inequality",
+      "prompt": "(a) Solve 4x − 3 ≤ 17. [2] (b) Show the answer on a number line. [1] (c) List the positive integer solutions. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — Formulae",
+      "prompt": "A delivery charge is given by C = 6 + 2d, where d is distance in kilometres and C is dollars. (a) Find C when d = 9. [1] (b) Make d the subject. [2] (c) Find d when C = 31. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — Sequences",
+      "prompt": "(a) A sequence begins 2, 6, 18, 54. Write the next two terms and state its term-to-term rule. [2] (b) Another sequence has nth term 4n − 1. Find its first three terms. [1] (c) Find the position of 99 in the second sequence. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — Costs and equations",
+      "prompt": "Two sandwiches and one drink cost $11. One sandwich and two drinks cost $10. (a) Write two equations. [2] (b) Find the price of a sandwich and a drink. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — Simple interest",
+      "prompt": "(a) $1500 earns simple interest at 4% per year for 3 years. Find the total interest and the final balance. [3] (b) A different account pays total simple interest of $210 on $1500 over 2 years. Find its annual percentage rate. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — Polygons and symmetry",
+      "prompt": "(a) Find one interior angle of a regular decagon. [2] (b) Find the number of sides of a regular polygon whose exterior angle is 24°. [2] (c) State the order of rotational symmetry of a non-square rectangle. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — Scale plan and bisector",
+      "prompt": "On a plan, A = (0,0) and B = (8,0), with one coordinate unit representing 10 m. (a) Draw AB on a square grid and mark its midpoint M. [1] (b) Draw the perpendicular bisector of AB and state its equation. [2] (c) A point C is at (4,3). Find its actual distance from A. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — Cylinder capacity",
+      "prompt": "A closed cylinder has radius 3 cm and height 10 cm. (a) Find its volume in cm³. [2] (b) Find its total surface area. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12 — Averages",
+      "prompt": "The values are 5, 6, 6, 8, 10. (a) Find the mode. [1] (b) Find the median. [1] (c) Find the range. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13 — Pie chart",
+      "prompt": "A club has 40 members: 10 choose tennis, 15 badminton, 5 squash and 10 table tennis. (a) Calculate the pie-chart angle for badminton. [2] (b) State the fraction choosing squash. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14 — Missing score",
+      "prompt": "(a) Four test scores have a mean of 12. Find their total. [1] (b) Three of them are 9, 14 and 11. Find the fourth. [1] (c) A fifth score of 17 is added. Calculate the new mean. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15 — Discount and original price",
+      "prompt": "A tablet sells for $276 after a reduction of 8%. (a) Find the original price. [3] (b) A shop buys one at $240 and sells it for $276. Find the percentage profit on the buying price. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16 — Simultaneous equations",
+      "prompt": "(a) Solve 4x + 3y = 29 and 2x − y = 7. [4] (b) Find 3x − 2y using your solution. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17 — Arithmetic sequence",
+      "prompt": "An arithmetic sequence begins 11, 17, 23, 29. (a) Find the nth term. [2] (b) Find the 30th term. [1] (c) Show that 202 is not a term. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18 — Changing the subject",
+      "prompt": "(a) Make x the subject of y = 5x − 7. [2] (b) Make h the subject of A = ½(a + b)h. [2] (c) Use your formula to find h when A = 54, a = 7 and b = 11. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19 — Standard form in context",
+      "prompt": "A file contains 3.2 × 10⁸ bytes. (a) Write this as an ordinary number. [1] (b) A device stores 7.5 × 10¹¹ bytes. Find the greatest whole number of these files that it can store. [3] (c) Write the total size of 25 files in standard form. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20 — Triangular prism",
+      "prompt": "A right prism has a right-triangle cross-section with perpendicular sides 6 cm and 8 cm. The prism is 15 cm long. (a) Find its volume. [2] (b) Find its total surface area. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21 — Transformation and similarity",
+      "prompt": "Triangle A has vertices (1,2), (3,2), (1,5). (a) Enlarge it by scale factor 2, centre the origin, and give all image coordinates. [2] (b) Reflect the original triangle in the line y = x and give its image coordinates. [2] (c) Explain which of these two images is congruent to the original. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22 — Grouped mass data",
+      "prompt": "Forty parcels have masses m kg grouped as follows: 0 < m ≤ 2: 8; 2 < m ≤ 4: 15; 4 < m ≤ 6: 11; 6 < m ≤ 8: 6. (a) State the modal class. [1] (b) Estimate the mean mass. [3] (c) Explain why this mean is an estimate. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "pearson-edexcel-igcse",
+    "systemLabel": "Pearson Edexcel International GCSE",
+    "qualificationLabel": "Pearson Edexcel International GCSE",
+    "deliveryMode": "Full-length original paper with integrated digital working",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "Higher · 120 minutes · 100 marks · calculator permitted · tier-specific formula reference included · answer all 22 questions"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Pearson Edexcel International GCSE Mathematics A · Paper 1H — original full-length mock",
+  "subject": "pearson-igcse-mathematics-a",
+  "subjectLabel": "Pearson Edexcel International GCSE Mathematics A",
+  "level": "Higher",
+  "paper": "Paper 1H — original full-length mock",
+  "durationMinutes": 120,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 100,
+  "subjectWeightPercent": 50,
+  "mode": "reading",
+  "instructions": "Answer all 22 questions. The total time is 2 hours; there is no separate reading period. Write your answer and all working in each question's response area; add pages if needed. A permitted scientific calculator may be used. The Formula reference attached to every question contains the tier-specific supplied formula facts. Draw your own labelled diagrams or graphs where requested; all necessary coordinates and measurements are provided. Do not infer measurements from a sketch. Use a suitable scale and label axes. Give units where appropriate. Keep unrounded working; give non-exact final numerical answers to 3 significant figures unless otherwise stated. This is an original DigitalDP practice paper, not a Pearson paper. Digital drawing is a classroom adaptation, not a test of physical ruler-and-compass accuracy.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formulae",
+      "label": "Higher formula reference",
+      "kind": "text",
+      "text": "Formula reference — independently typeset mathematical facts\nTrapezium: area = ½(a + b)h, where a and b are parallel side lengths and h is perpendicular height.\nPrism: volume = cross-sectional area × length.\nCylinder: volume = πr²h; curved surface area = 2πrh. Here r is radius and h is perpendicular height.\nArithmetic series: Sₙ = n[2a + (n − 1)d]/2, where a is the first term and d is the common difference.\nQuadratic equation ax² + bx + c = 0 (a ≠ 0): x = [−b ± √(b² − 4ac)]/(2a).\nTriangle ABC: sides a, b, c lie opposite angles A, B, C respectively.\nSine rule: a/sin A = b/sin B = c/sin C.\nCosine rule: a² = b² + c² − 2bc cos A.\nTriangle area = ½ab sin C.\nRight circular cone: volume = πr²h/3; curved surface area = πrl, where l is slant height.\nSphere: volume = 4πr³/3; surface area = 4πr²."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — Recipe and scale",
+      "prompt": "Flour, oats and seeds are mixed in the ratio 5:3:2. A batch contains 360 g of oats. (a) Find the total mass of the batch. [2] (b) Find the mass of seeds. [1] (c) A new batch has total mass 1.8 kg. Find the extra flour needed compared with the first batch. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — Ticket equations",
+      "prompt": "A museum charges one price for an adult ticket and one price for a child ticket. Two adult tickets and three child tickets cost $39. Three adult tickets and two child tickets cost $46. (a) Form two equations. [2] (b) Find each ticket price. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — Quadratic model",
+      "prompt": "A rectangle has width x cm and length (x + 5) cm. Its area is 84 cm². (a) Form an equation in x. [1] (b) Solve your equation and explain which solution is possible. [3] (c) Find the perimeter. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — Coordinate graph",
+      "prompt": "The line L has equation y = 3x − 4. (a) Complete a table for x = −1, 0, 1, 2. [2] (b) Plot these points and draw L on labelled axes. [2] (c) State the gradient of L. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — Percentage comparison",
+      "prompt": "A bicycle marked at $480 is reduced by 15%. (a) Calculate the sale price. [2] (b) A different shop sells the same bicycle for $420. Find the percentage by which its price exceeds the sale price. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — Ramp geometry",
+      "prompt": "A straight ramp rises 0.9 m over a horizontal distance of 4.8 m. (a) Find its sloping length. [3] (b) Find its angle to the horizontal, to 1 decimal place. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — Cylinder container",
+      "prompt": "An open-top cylindrical container has internal radius 4 cm and height 12 cm. Ignore thickness. (a) Calculate its capacity in millilitres. [2] (b) Find the area of material forming its curved wall and single circular base. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — Grouped travel times",
+      "prompt": "Travel times t minutes for 30 students are grouped as follows: 0 < t ≤ 10: 4; 10 < t ≤ 20: 12; 20 < t ≤ 30: 9; 30 < t ≤ 40: 5. (a) State the modal class. [1] (b) Estimate the mean time. [3] (c) Explain why the exact mean cannot be found from these data. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — Surds and indices",
+      "prompt": "(a) Simplify √75 − √12. [2] (b) Evaluate 81^(3/4). [1] (c) Simplify x⁵x⁻²/x, where x ≠ 0. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — Algebraic fractions",
+      "prompt": "(a) Simplify (x² − 9)/(x² + x − 6), stating excluded x values in the original expression. [3] (b) Solve (x − 3)/(x − 2) = 2. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — Bounds",
+      "prompt": "A distance is 18.6 km to the nearest 0.1 km. A time is 24 minutes to the nearest minute. Find the lower and upper bounds of average speed in km/h. Show the values used in each calculation. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12 — Functions",
+      "prompt": "f(x) = 3x − 2 and g(x) = x² + 1. (a) Find gf(2). [1] (b) Find f⁻¹(x). [2] (c) Solve g(x) = 10. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13 — Arithmetic series",
+      "prompt": "An arithmetic sequence has first term 9 and common difference 4. (a) Find its 20th term. [1] (b) Find the sum of its first 20 terms. [2] (c) Explain why no term is divisible by 4. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14 — Quadratic intersections",
+      "prompt": "The curve y = x² − 4x + 1 meets the line y = 2x − 4. Find both intersection points, giving coordinates in exact form. [5]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15 — Calculus and tangent",
+      "prompt": "A curve has equation y = x³ − 3x² + 2. (a) Find dy/dx. [2] (b) Find the gradient at x = 2. [1] (c) Find the equation of the tangent at x = 1. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16 — Repeated percentage and proof",
+      "prompt": "(a) A machine worth $18000 depreciates by 12% each year. Find its value after 3 years, to the nearest dollar. [2] (b) Prove that the difference between the squares of any two consecutive odd positive integers is divisible by 8. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17 — Non-right triangle",
+      "prompt": "Triangle ABC has AB = 9 cm, AC = 12 cm and angle BAC = 58°. (a) Find BC. [3] (b) Find the area of ABC. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18 — Similarity and volume",
+      "prompt": "Two mathematically similar solid ornaments have surface areas 72 cm² and 162 cm². The smaller has volume 80 cm³. (a) Find the linear scale factor from smaller to larger. [2] (b) Find the larger volume. [2] (c) The smaller height is 6 cm. Find the larger height. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19 — Vector proof",
+      "prompt": "In triangle OAB, OA = a and OB = b. M is the midpoint of OA. N is the point on AB with AN:NB = 1:2. (a) Express ON in terms of a and b. [2] (b) Express MN in terms of a and b. [2] (c) Is MN parallel to OB? Justify your answer. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20 — Conditional probability",
+      "prompt": "A bag has 4 red and 6 blue balls. Two are drawn without replacement. Find the probability that the second is red given that the two balls have different colours. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21 — Histogram",
+      "prompt": "A histogram represents masses m g. The class 10 < m ≤ 20 has frequency 8. The class 20 < m ≤ 45 has frequency 30. (a) Find both frequency densities. [2] (b) Explain why the second bar is not 30/8 times as high as the first. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22 — Cumulative frequency",
+      "prompt": "For 80 waiting times, cumulative frequencies at 0, 10, 20, 30, 40 minutes are 0, 12, 36, 64, 80. (a) Plot a cumulative-frequency graph. [2] (b) Estimate the median and interquartile range by straight-line interpolation between plotted points. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

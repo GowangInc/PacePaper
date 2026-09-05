@@ -2,7 +2,11 @@
 // `bun build --compile` creates a standalone executable. Do not use ordinary
 // JavaScript imports here: browsers must receive the source modules unchanged.
 import adminCollections from "../public/admin-collections.js" with { type: "file" };
+import adminEndExam from "../public/admin-end-exam.js" with { type: "file" };
+import responseSaveState from "../public/response-save-state.js" with { type: "file" };
+import paperBuilderDrafts from "../public/paper-builder-drafts.js" with { type: "file" };
 import adminNetwork from "../public/admin-network.js" with { type: "file" };
+import adminPapers from "../public/admin-papers.js" with { type: "file" };
 import admin from "../public/admin.js" with { type: "file" };
 import appIcon64 from "../public/app-icon-64.png" with { type: "file" };
 import appIcon192 from "../public/app-icon-192.png" with { type: "file" };
@@ -15,13 +19,17 @@ import countdownModel from "../public/countdown-model.js" with { type: "file" };
 import countdownCss from "../public/countdown.css" with { type: "file" };
 import countdown from "../public/countdown.js" with { type: "file" };
 import examAudio from "../public/exam-audio.js" with { type: "file" };
+import examFormatProfiles from "../public/exam-format-profiles.js" with { type: "file" };
+import examPhaseModel from "../public/exam-phase-model.js" with { type: "file" };
 import exam from "../public/exam.js" with { type: "file" };
 import inkCanvas from "../public/ink-canvas.js" with { type: "file" };
 import index from "../public/index.html" with { type: "file" };
 import paperBuilder from "../public/paper-builder.js" with { type: "file" };
+import paperBuilderDom from "../public/paper-builder-dom.js" with { type: "file" };
 import paperPreview from "../public/paper-preview.js" with { type: "file" };
 import presentationCss from "../public/presentation.css" with { type: "file" };
 import presentation from "../public/presentation.html" with { type: "file" };
+import resourceText from "../public/resource-text.js" with { type: "file" };
 import siteWebmanifest from "../public/site.webmanifest" with { type: "file" };
 import studentConnection from "../public/student-connection.js" with { type: "file" };
 import studentWorkspace from "../public/student-workspace.png" with { type: "file" };
@@ -31,10 +39,16 @@ import teacherDashboard from "../public/teacher-dashboard.png" with { type: "fil
 import textHighlights from "../public/text-highlights.js" with { type: "file" };
 import paperAuthoringGuide from "../paper-authoring/SKILL.md" with { type: "file" };
 import tokens from "../tokens.css" with { type: "file" };
+import userGuide from "../USER_GUIDE.html" with { type: "file" };
+import mockGuides from "../docs/mock-marking/index.html" with { type: "file" };
 
 export default {
+  "public/admin-end-exam.js": adminEndExam,
+  "public/response-save-state.js": responseSaveState,
+  "public/paper-builder-drafts.js": paperBuilderDrafts,
   "public/admin-collections.js": adminCollections,
   "public/admin-network.js": adminNetwork,
+  "public/admin-papers.js": adminPapers,
   "public/admin.js": admin,
   "public/app-icon-64.png": appIcon64,
   "public/app-icon-192.png": appIcon192,
@@ -47,13 +61,17 @@ export default {
   "public/countdown.css": countdownCss,
   "public/countdown.js": countdown,
   "public/exam-audio.js": examAudio,
+  "public/exam-format-profiles.js": examFormatProfiles,
+  "public/exam-phase-model.js": examPhaseModel,
   "public/exam.js": exam,
   "public/ink-canvas.js": inkCanvas,
   "public/index.html": index,
   "public/paper-builder.js": paperBuilder,
+  "public/paper-builder-dom.js": paperBuilderDom,
   "public/paper-preview.js": paperPreview,
   "public/presentation.css": presentationCss,
   "public/presentation.html": presentation,
+  "public/resource-text.js": resourceText,
   "public/site.webmanifest": siteWebmanifest,
   "public/student-connection.js": studentConnection,
   "public/student-workspace.png": studentWorkspace,
@@ -63,4 +81,6 @@ export default {
   "public/text-highlights.js": textHighlights,
   "paper-authoring/SKILL.md": paperAuthoringGuide,
   "tokens.css": tokens,
+  "USER_GUIDE.html": userGuide,
+  "docs/mock-marking/index.html": mockGuides,
 };

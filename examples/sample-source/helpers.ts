@@ -1,6 +1,6 @@
 import { parseManifest, type PaperManifest, type PaperQuestion, type PaperResource } from "../../src/papers.ts";
 
-export const SAMPLE_SERIES = "digitaldp-original-examples-v1";
+export const SAMPLE_SERIES = "digitaldp-original-examples-v2";
 
 type SampleInput = Omit<
   PaperManifest,

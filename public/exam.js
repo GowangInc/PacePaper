@@ -1,7 +1,10 @@
 import { ApiError, announce, api, formatTime, setView } from "/app.js";
 import { createExamAudioController } from "/exam-audio.js";
+import { phaseAtTime, phaseLockMessage, questionsForPhase, resourcesForExamContext } from "/exam-phase-model.js";
 import { createInkResponse, hasInkResponse } from "/ink-canvas.js";
 import { createTextHighlighter } from "/text-highlights.js";
+import { renderResourceText } from "./resource-text.js";
+import { createResponseSaveState, downloadResponseRecovery } from "./response-save-state.js";
 
 const RICH_TAGS = new Set([
   "div", "p", "br", "b", "strong", "i", "em", "u", "sup", "sub", "ol", "ul", "li",
@@ -67,6 +70,14 @@ function removeLocalItem(key) {
   }
 }
 
+function readLocalItem(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function writeLocalItem(key, value) {
+  try { localStorage.setItem(key, value); } catch { /* Preferences are optional; response safety is tracked separately. */ }
+}
+
 function button(label, className, attributes = {}) {
   const element = document.createElement("button");
   element.type = "button";
@@ -102,14 +113,15 @@ export function mountExam(state, { onSubmitted }) {
   let questionController = new AbortController();
   let questionSignal = questionController.signal;
   signal.addEventListener("abort", () => questionController.abort(), { once: true });
-  const serverOffset = state.serverTime - Date.now();
+  let serverOffset = state.serverTime - Date.now();
+  const saveState = createResponseSaveState();
   let saveTimer;
   let tickTimer;
   let dirty = false;
   let saving = null;
   let submitting = false;
   let expiredHandled = false;
-  let readingActive = Number(state.session.readingEndsAt) > Date.now() + serverOffset;
+  let activePhase = phaseAtTime(state.session.timeline, Date.now() + serverOffset) ?? state.session.phase;
   let pendingResourceSync = false;
   let activePane = "question";
   let activeQuestionId = response.selectedQuestionId ?? paper.questions[0]?.id ?? null;
@@ -118,7 +130,7 @@ export function mountExam(state, { onSubmitted }) {
   let activeResourceKey = initialQuestion?.resourceKeys.find((key) => resourceKeys.has(key))
     ?? (!hasScopedResources ? paper.resources[0]?.key : null)
     ?? null;
-  let timerMode = localStorage.getItem(timerKey) ?? "countdown";
+  let timerMode = readLocalItem(timerKey) ?? "countdown";
   const savedRanges = new Map();
   const preferences = {
     textSize: "1",
@@ -127,6 +139,18 @@ export function mountExam(state, { onSubmitted }) {
     spacing: "normal",
     ...readJson(preferenceKey, {}),
   };
+
+  function responseLocked() {
+    return !activePhase?.responseAllowed;
+  }
+
+  function finalSubmissionAvailable() {
+    return Boolean(activePhase?.responseAllowed && activePhase.canSubmit);
+  }
+
+  function visibleQuestions() {
+    return questionsForPhase(paper.questions, activePhase);
+  }
   const draft = {
     selectedQuestionId: response.selectedQuestionId ?? null,
     answers: Object.fromEntries(
@@ -142,7 +166,10 @@ export function mountExam(state, { onSubmitted }) {
 
   if (obsoleteDraftKey !== draftKey) removeLocalItem(obsoleteDraftKey);
   const localDraft = readJson(draftKey, null);
-  if (localDraft?.unsaved === true && localDraft.sessionId === sessionId && Number(localDraft.updatedAt) > draft.updatedAt) {
+  const localPending = localDraft?.unsaved === true && localDraft.sessionId === sessionId;
+  const restoreLocal = localPending && (Number(localDraft.updatedAt) > draft.updatedAt
+    || confirm("Unsent work from this browser was found alongside a newer server save. Restore the browser copy? Cancel keeps the server copy."));
+  if (restoreLocal) {
     draft.selectedQuestionId = questionIds.has(localDraft.selectedQuestionId) ? localDraft.selectedQuestionId : draft.selectedQuestionId;
     draft.answers = Object.fromEntries(
       Object.entries(localDraft.answers ?? {}).filter(([id, value]) => questionIds.has(id) && typeof value === "string"),
@@ -152,14 +179,16 @@ export function mountExam(state, { onSubmitted }) {
     draft.updatedAt = Number(localDraft.updatedAt) || draft.updatedAt;
     activeQuestionId = draft.selectedQuestionId ?? activeQuestionId;
     dirty = true;
+    saveState.edit();
+    saveState.backedUp(true);
   }
-  else if (localDraft) removeLocalItem(draftKey);
+  else if (localDraft && !localPending) removeLocalItem(draftKey);
 
   const highlighter = createTextHighlighter({
     storageKey: highlightKey,
     obsoleteStorageKey: obsoleteHighlightKey,
     signal,
-    isLocked: () => readingActive,
+    isLocked: responseLocked,
     announce,
   });
 
@@ -176,6 +205,10 @@ export function mountExam(state, { onSubmitted }) {
         <div class="exam-identity">
           <img class="product-mark exam-mark" src="/app-icon-192.png" alt="" width="192" height="192">
           <div><p id="exam-subject" class="eyebrow"></p><h1 id="exam-title"></h1></div>
+        </div>
+        <div class="exam-phase-summary" aria-live="polite" aria-atomic="true">
+          <strong id="exam-phase-label"></strong>
+          <span id="exam-phase-tools"></span>
         </div>
         <nav class="exam-tools" aria-label="Examination tools">
           <button data-submit-exam class="submit-tool" type="button">Submit</button>
@@ -198,16 +231,16 @@ export function mountExam(state, { onSubmitted }) {
         </nav>
       </header>
 
-      <div id="reading-banner" class="reading-banner" role="status" aria-live="polite" hidden>
-        <strong>Reading time</strong>
-        <span id="reading-copy">Review the materials and questions. Student entry areas will unlock automatically.</span>
+      <div id="phase-banner" class="reading-banner phase-banner" role="status" aria-live="polite" hidden>
+        <strong id="phase-banner-title">Reading time</strong>
+        <span id="phase-banner-copy">Review the materials and questions. Student entry areas will unlock automatically.</span>
       </div>
 
       <div class="exam-workspace">
         <section id="resource-pane" class="exam-pane resource-pane" aria-label="Examination resources">
           <header class="pane-heading"><h2 id="resource-title">Resources</h2><div class="pane-zoom" aria-label="Resource zoom"><button type="button" data-zoom="resource" data-direction="out" aria-label="Zoom resource out">−</button><button type="button" data-zoom="resource" data-direction="in" aria-label="Zoom resource in">+</button></div></header>
-          <div id="resource-viewer" class="pane-scroll resource-viewer" tabindex="0"></div>
           <nav id="resource-tabs" class="resource-tabs" aria-label="Resources"></nav>
+          <div id="resource-viewer" class="pane-scroll resource-viewer" tabindex="0"></div>
         </section>
         <div id="pane-splitter" class="pane-splitter" role="separator" tabindex="0" aria-label="Resize examination panes" aria-orientation="vertical" aria-valuemin="30" aria-valuemax="70" aria-valuenow="50"></div>
         <section id="question-pane" class="exam-pane question-pane" aria-label="Questions and response">
@@ -219,7 +252,7 @@ export function mountExam(state, { onSubmitted }) {
       <footer class="exam-footer">
         <button id="instructions-tool" type="button">Instructions</button>
         <span id="paper-label" class="paper-label"></span>
-        <span id="save-status" class="save-status" role="status" aria-live="polite">Saved</span>
+        <div class="save-recovery"><span id="save-status" class="save-status" role="status" aria-live="polite">Saved to server</span><div id="save-recovery-actions" hidden><button id="retry-save" type="button">Retry save</button><button id="download-recovery" type="button">Download recovery copy</button></div></div>
         <div class="exam-footer-actions">
           <button id="summary-tool" class="summary-action" type="button">View summary</button>
           <button data-submit-exam class="submit-action" type="button">Submit examination</button>
@@ -256,7 +289,8 @@ export function mountExam(state, { onSubmitted }) {
   shell.dataset.split = "50";
   shell.dataset.resourceZoom = "1";
   shell.dataset.questionZoom = "1";
-  shell.dataset.phase = readingActive ? "reading" : "writing";
+  shell.dataset.phase = activePhase?.kind === "work" ? "writing" : activePhase?.kind ?? "transition";
+  shell.dataset.phaseId = activePhase?.id ?? "transition";
   if (!activeResourceKey) shell.dataset.noResources = "true";
   document.querySelector("#exam-subject").textContent = `${paper.subjectLabel} · ${paper.level}`;
   document.querySelector("#exam-title").textContent = paper.title;
@@ -272,7 +306,7 @@ export function mountExam(state, { onSubmitted }) {
     api,
     announce,
     formatTime,
-    isLocked: () => readingActive,
+    isLocked: responseLocked,
     onBusyChange(busy) {
       setResourceTabsLocked(busy);
       syncSubmitAvailability();
@@ -288,7 +322,10 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function syncSubmitAvailability() {
-    document.querySelectorAll("[data-submit-exam]").forEach((control) => { control.disabled = readingActive || submitting || audioController.isBusy(); });
+    document.querySelectorAll("[data-submit-exam]").forEach((control) => {
+      control.disabled = !finalSubmissionAvailable() || submitting || audioController.isBusy();
+      control.title = finalSubmissionAvailable() ? "" : "Final submission opens in the last work section";
+    });
   }
 
   function applyPreferences() {
@@ -327,6 +364,7 @@ export function mountExam(state, { onSubmitted }) {
         unsaved: true,
         updatedAt: draft.updatedAt,
       }));
+      saveState.backedUp(true);
       return true;
     } catch {
       return false;
@@ -334,48 +372,68 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function setSaveStatus(message, tone = "") {
+    if (!shell.isConnected) return;
     const status = document.querySelector("#save-status");
     status.textContent = message;
     status.dataset.tone = tone;
   }
 
+  function showSaveState() {
+    if (!shell.isConnected) return;
+    const status = saveState.status();
+    setSaveStatus(status.message, status.tone);
+    document.querySelector("#save-recovery-actions").hidden = !saveState.pending;
+  }
+
   function markDirty() {
-    if (submitting || readingActive) return;
+    if (submitting || responseLocked()) return;
     dirty = true;
-    const backedUp = persistLocal();
-    setSaveStatus(backedUp ? "Saved on this device" : "Saving to server…", backedUp ? "local" : "");
+    saveState.edit();
+    persistLocal();
+    showSaveState();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveNow, 1_200);
   }
 
   async function saveNow() {
     if (saving) return saving;
-    if (!dirty || submitting || readingActive) return;
+    if (!dirty || submitting || responseLocked()) return;
     dirty = false;
-    setSaveStatus("Saving…");
+    const sentRevision = saveState.revision;
+    showSaveState();
     saving = api("/api/student/response", { method: "PUT", body: payload() })
       .then(({ savedAt, expired }) => {
-        draft.updatedAt = savedAt;
-        if (!dirty) removeLocalItem(draftKey);
-        setSaveStatus(`Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`, "saved");
+        saveState.acknowledge(sentRevision);
+        if (!saveState.pending) {
+          draft.updatedAt = savedAt;
+          removeLocalItem(draftKey);
+        } else {
+          // The server timestamp belongs to the older request, not the newer
+          // draft. Keep recovery ordering correct if the page reloads now.
+          persistLocal(Math.max(Date.now() + serverOffset, savedAt + 1));
+        }
+        showSaveState();
         if (expired) onSubmitted();
       })
       .catch((error) => {
         if (error instanceof ApiError && error.status === 409) {
-          dirty = false;
+          persistLocal();
+          saveState.fail(error.message);
+          showSaveState();
           onSubmitted();
           return;
         }
         if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
           dirty = false;
           persistLocal();
-          const message = `Not saved: ${error.message}`;
-          setSaveStatus(message, "error");
-          announce(message, "error");
+          saveState.fail(error.message);
+          showSaveState();
           return;
         }
         dirty = true;
-        setSaveStatus("Offline — saved on this device", "error");
+        persistLocal();
+        saveState.fail("Server save failed");
+        showSaveState();
       })
       .finally(() => {
         saving = null;
@@ -400,11 +458,8 @@ export function mountExam(state, { onSubmitted }) {
     return "Answered";
   }
 
-  function resourcesForQuestion(questionId) {
-    if (!hasScopedResources) return paper.resources;
-    const question = paper.questions.find((item) => item.id === questionId);
-    const keys = new Set(question?.resourceKeys ?? []);
-    return paper.resources.filter((resource) => keys.has(resource.key));
+  function availableResources() {
+    return resourcesForExamContext(paper.resources, visibleQuestions(), activeQuestionId, activePhase, paper.mode);
   }
 
   function syncResourcesToQuestion(questionId) {
@@ -412,7 +467,7 @@ export function mountExam(state, { onSubmitted }) {
       pendingResourceSync = true;
       return;
     }
-    const available = resourcesForQuestion(questionId);
+    const available = availableResources();
     if (!available.some((resource) => resource.key === activeResourceKey)) {
       activeResourceKey = available[0]?.key ?? null;
     }
@@ -423,7 +478,7 @@ export function mountExam(state, { onSubmitted }) {
   function updateFlagTool() {
     const tool = document.querySelector("#flag-tool");
     const flagged = activeQuestionId ? draft.flags.has(activeQuestionId) : false;
-    tool.disabled = readingActive || !activeQuestionId;
+    tool.disabled = responseLocked() || !activeQuestionId;
     tool.setAttribute("aria-pressed", String(flagged));
     tool.textContent = flagged ? "Flagged" : "Flag";
   }
@@ -547,7 +602,7 @@ export function mountExam(state, { onSubmitted }) {
     const header = document.createElement("header");
     const label = questionHeading("h3", "question-label", question);
     const flag = button(draft.flags.has(question.id) ? "Flagged" : "Flag", "inline-flag", { "aria-pressed": String(draft.flags.has(question.id)) });
-    flag.disabled = readingActive;
+    flag.disabled = responseLocked();
     flag.addEventListener("click", () => {
       setActiveQuestion(question.id);
       if (draft.flags.has(question.id)) draft.flags.delete(question.id); else draft.flags.add(question.id);
@@ -562,14 +617,11 @@ export function mountExam(state, { onSubmitted }) {
       const prompt = textBlock("p", "question-prompt", "");
       card.append(highlighter.decorate(prompt, `question:${question.id}:prompt`, question.prompt));
     }
-    if (readingActive) {
-      card.append(textBlock("p", "reading-lock", "The student entry area opens when reading time ends."));
-      if (question.id === activeQuestionId) card.dataset.active = "";
-      return card;
-    }
+    const locked = responseLocked();
 
     if (question.type === "essay") {
-      card.append(makeEditor(question));
+      if (locked) card.append(textBlock("p", "locked-response-preview", "Long-response area opens when reading time ends."));
+      else card.append(makeEditor(question));
     } else if (question.type === "short") {
       const answerLabel = textBlock("label", "answer-label", "Answer");
       const input = document.createElement("textarea");
@@ -580,6 +632,8 @@ export function mountExam(state, { onSubmitted }) {
       input.setAttribute("autocorrect", "off");
       input.setAttribute("autocapitalize", "off");
       input.setAttribute("translate", "no");
+      input.disabled = locked;
+      input.placeholder = locked ? "Answer area opens when reading time ends." : "";
       answerLabel.append(input);
       input.addEventListener("focus", () => setActiveQuestion(question.id), { signal: questionSignal });
       input.addEventListener("input", () => {
@@ -588,7 +642,8 @@ export function mountExam(state, { onSubmitted }) {
       }, { signal: questionSignal });
       card.append(answerLabel);
     } else if (question.type === "ink" && question.ink) {
-      card.append(createInkResponse({
+      if (locked) card.append(textBlock("p", "locked-response-preview", "Drawing area opens when reading time ends."));
+      else card.append(createInkResponse({
         value: draft.answers[question.id] ?? "",
         settings: question.ink,
         label: question.label,
@@ -609,6 +664,7 @@ export function mountExam(state, { onSubmitted }) {
         input.name = `answer-${question.id}`;
         input.value = choice;
         input.checked = draft.answers[question.id] === choice;
+        input.disabled = locked;
         input.addEventListener("change", () => {
           setActiveQuestion(question.id);
           draft.answers[question.id] = choice;
@@ -621,6 +677,7 @@ export function mountExam(state, { onSubmitted }) {
       }
       card.append(choices);
     }
+    if (locked) card.append(textBlock("p", "reading-lock", phaseLockMessage(activePhase)));
     card.addEventListener("pointerdown", (event) => {
       if (event.target instanceof Element && event.target.closest(".ink-response")) return;
       setActiveQuestion(question.id);
@@ -637,14 +694,14 @@ export function mountExam(state, { onSubmitted }) {
     const choices = document.createElement("fieldset");
     choices.className = "essay-question-choices";
     choices.append(textBlock("legend", "visually-hidden", "Choose one question"));
-    for (const question of paper.questions) {
+    for (const question of visibleQuestions()) {
       const label = document.createElement("label");
       const input = document.createElement("input");
       input.type = "radio";
       input.name = "selected-question";
       input.value = question.id;
       input.checked = draft.selectedQuestionId === question.id;
-      input.disabled = readingActive;
+      input.disabled = responseLocked();
       const number = questionHeading("strong", "", question);
       const prompt = document.createElement("span");
       prompt.className = "essay-choice-prompt";
@@ -659,7 +716,7 @@ export function mountExam(state, { onSubmitted }) {
       choices.append(label);
     }
     viewer.append(intro, choices);
-    const selected = paper.questions.find((question) => question.id === draft.selectedQuestionId);
+    const selected = visibleQuestions().find((question) => question.id === draft.selectedQuestionId);
     if (selected) viewer.append(makeQuestionCard(selected, false));
     else viewer.append(textBlock("p", "selection-empty", "Choose a question to open the writing area."));
     updateFlagTool();
@@ -667,13 +724,26 @@ export function mountExam(state, { onSubmitted }) {
 
   function renderQuestionPanel() {
     beginQuestionRender();
+    const questions = visibleQuestions();
+    if (activePhase?.kind === "break" || questions.length === 0) {
+      const viewer = document.querySelector("#question-viewer");
+      const panel = textBlock("section", "exam-phase-lock", "");
+      panel.append(
+        textBlock("p", "eyebrow", activePhase?.label ?? "Phase transition"),
+        textBlock("h3", "", activePhase?.kind === "break" ? "Examination paused for the monitored break" : "Please wait"),
+        textBlock("p", "", phaseLockMessage(activePhase)),
+      );
+      viewer.replaceChildren(panel);
+      activeQuestionId = null;
+      updateFlagTool();
+      return;
+    }
     if (paper.selectionMode === "one" && paper.mode === "essay") {
       renderEssayChoice();
       return;
     }
     const viewer = document.querySelector("#question-viewer");
     viewer.replaceChildren();
-    const questions = paper.questions;
     if (!questions.some((question) => question.id === activeQuestionId)) {
       activeQuestionId = questions[0]?.id ?? null;
       syncResourcesToQuestion(activeQuestionId);
@@ -684,6 +754,11 @@ export function mountExam(state, { onSubmitted }) {
 
   function renderResource() {
     const viewer = document.querySelector("#resource-viewer");
+    if (activePhase?.kind === "break") {
+      document.querySelector("#resource-title").textContent = "Monitored break";
+      viewer.replaceChildren(textBlock("p", "exam-resource-lock", "Examination materials are hidden during the break."));
+      return;
+    }
     const resource = paper.resources.find((item) => item.key === activeResourceKey);
     document.querySelector("#resource-title").textContent = resource?.label ?? "Resources";
     if (!resource) {
@@ -700,7 +775,7 @@ export function mountExam(state, { onSubmitted }) {
       const copy = document.createElement("article");
       copy.className = "resource-copy";
       copy.tabIndex = 0;
-      highlighter.decorate(copy, `resource:${resource.key}`, resource.text);
+      renderResourceText(copy, resource.text, { decorate: highlighter.decorate, scope: `resource:${resource.key}`, label: resource.label });
       viewer.append(copy);
     } else if (resource.kind === "image") {
       const image = document.createElement("img");
@@ -719,7 +794,7 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function selectResource(key) {
-    if (!resourcesForQuestion(activeQuestionId).some((resource) => resource.key === key) || audioController.isBusy()) return;
+    if (!availableResources().some((resource) => resource.key === key) || audioController.isBusy()) return;
     activeResourceKey = key;
     renderResource();
   }
@@ -727,7 +802,7 @@ export function mountExam(state, { onSubmitted }) {
   function renderResourceTabs() {
     const tabs = document.querySelector("#resource-tabs");
     tabs.replaceChildren();
-    const available = resourcesForQuestion(activeQuestionId);
+    const available = availableResources();
     if (available.length === 0) {
       activeResourceKey = null;
       shell.dataset.noResources = "true";
@@ -738,6 +813,7 @@ export function mountExam(state, { onSubmitted }) {
     for (const resource of available) {
       const tab = button(resource.label, "resource-tab", { "aria-current": resource.key === activeResourceKey ? "page" : "false" });
       tab.dataset.resourceKey = resource.key;
+      tab.title = resource.label;
       tab.disabled = audioController.isBusy();
       tab.addEventListener("click", () => selectResource(resource.key), { signal });
       tabs.append(tab);
@@ -748,16 +824,20 @@ export function mountExam(state, { onSubmitted }) {
     const list = document.querySelector("#summary-list");
     list.replaceChildren();
     let answered = 0;
+    const currentIds = new Set(visibleQuestions().map(({ id }) => id));
     for (const question of paper.questions) {
       const status = questionStatus(question);
       if (status === "Answered") answered += 1;
       const row = button("", "summary-row");
       const identity = textBlock("span", "summary-question", question.label);
       const prompt = textBlock("span", "summary-prompt", question.prompt);
-      const stateLabel = textBlock("span", "summary-state", `${draft.flags.has(question.id) ? "Flagged · " : ""}${status}`);
+      const locked = !currentIds.has(question.id);
+      const stateLabel = textBlock("span", "summary-state", `${locked ? "Locked section · " : ""}${draft.flags.has(question.id) ? "Flagged · " : ""}${status}`);
       stateLabel.dataset.status = status.toLowerCase().replaceAll(" ", "-");
       row.append(identity, prompt, stateLabel);
+      row.disabled = locked;
       row.addEventListener("click", () => {
+        if (locked) return;
         if (paper.selectionMode === "one" && question.type === "essay" && draft.selectedQuestionId !== question.id) {
           draft.selectedQuestionId = question.id;
           markDirty();
@@ -773,6 +853,10 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function openSubmitDialog() {
+    if (!finalSubmissionAvailable()) {
+      announce("Final submission opens in the last work section.", "error");
+      return;
+    }
     if (audioController.isBusy()) {
       announce("Wait for the current recording to finish before submitting.", "error");
       return;
@@ -788,6 +872,7 @@ export function mountExam(state, { onSubmitted }) {
     if (submitting || (!auto && audioController.isBusy())) return;
     if (auto && audioController.isBusy()) audioController.stopForDeadline();
     submitting = true;
+    shell.inert = true;
     shell.dataset.submitting = "true";
     syncSubmitAvailability();
     clearTimeout(saveTimer);
@@ -795,6 +880,8 @@ export function mountExam(state, { onSubmitted }) {
     try {
       if (saving) await saving;
       const { submittedAt } = await api("/api/student/submit", { method: "POST", body: payload() });
+      saveState.acknowledge(saveState.revision);
+      dirty = false;
       removeLocalItem(draftKey);
       highlighter.discard();
       setSaveStatus(`Submitted ${new Date(submittedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`, "saved");
@@ -805,52 +892,73 @@ export function mountExam(state, { onSubmitted }) {
         if (!shell.isConnected) return;
       }
       submitting = false;
+      shell.inert = false;
       shell.dataset.submitting = "false";
       syncSubmitAvailability();
-      setSaveStatus("Submission failed — response retained", "error");
+      persistLocal();
+      saveState.fail("Submission failed");
+      showSaveState();
       announce(error instanceof Error ? error.message : "Submission failed", "error");
     }
   }
 
   function cycleTimer() {
     timerMode = timerMode === "countdown" ? "countup" : timerMode === "countup" ? "hidden" : "countdown";
-    localStorage.setItem(timerKey, timerMode);
+    writeLocalItem(timerKey, timerMode);
     tick();
+  }
+
+  function applyPhase(nextPhase, force = false) {
+    const changed = nextPhase?.id !== activePhase?.id;
+    if (!force && !changed) { activePhase = nextPhase; return; }
+    if (changed && dirty && activePhase?.responseAllowed) void saveNow();
+    activePhase = nextPhase;
+    shell.dataset.phase = activePhase?.kind === "work" ? "writing" : activePhase?.kind ?? "transition";
+    shell.dataset.phaseId = activePhase?.id ?? "transition";
+    document.querySelector("#exam-phase-label").textContent = activePhase?.label ?? "Phase transition";
+    document.querySelector("#exam-phase-tools").textContent = activePhase?.tools?.length
+      ? activePhase.tools.join(" · ")
+      : activePhase?.kind === "work" ? "Standard examination tools" : "Student entry locked";
+
+    const banner = document.querySelector("#phase-banner");
+    banner.hidden = !responseLocked();
+    document.querySelector("#phase-banner-title").textContent = activePhase?.label ?? "Please wait";
+    document.querySelector("#phase-banner-copy").textContent = phaseLockMessage(activePhase);
+    document.querySelector(".exam-workspace").inert = activePhase?.kind === "break";
+    document.querySelector("#notepad-tool").disabled = responseLocked();
+    document.querySelector("#summary-tool").disabled = activePhase?.kind === "break" || visibleQuestions().length === 0;
+    document.querySelectorAll("[data-highlight], [data-clear-highlights]").forEach((control) => {
+      control.disabled = responseLocked();
+    });
+    syncSubmitAvailability();
+
+    const questions = visibleQuestions();
+    if (!questions.some(({ id }) => id === activeQuestionId)) {
+      activeQuestionId = questions[0]?.id ?? null;
+    }
+    const available = resourcesForExamContext(paper.resources, questions, activeQuestionId, activePhase, paper.mode);
+    if (!available.some(({ key }) => key === activeResourceKey)) activeResourceKey = available[0]?.key ?? null;
+    renderResourceTabs();
+    renderResource();
+    renderQuestionPanel();
+    if (changed) {
+      announce(`${activePhase?.label ?? "Next phase"}. ${phaseLockMessage(activePhase)}`, "info");
+    }
   }
 
   function tick() {
     const now = Date.now() + serverOffset;
-    const readingRemaining = Math.max(0, Number(state.session.readingEndsAt) - now);
-    const readingBanner = document.querySelector("#reading-banner");
-    if (readingActive && readingRemaining > 0) {
-      readingBanner.hidden = false;
-      document.querySelector("#reading-copy").textContent = `Review the materials and questions. Student entry areas unlock in ${formatTime(readingRemaining)}.`;
-      const timer = document.querySelector("#timer-tool");
-      timer.dataset.warning = "false";
-      timer.textContent = `Reading ${formatTime(readingRemaining)}`;
-      return;
-    }
-    if (readingActive) {
-      readingActive = false;
-      shell.dataset.phase = "writing";
-      readingBanner.hidden = true;
-      document.querySelector("#notepad-tool").disabled = false;
-      document.querySelector("#summary-tool").disabled = false;
-      syncSubmitAvailability();
-      document.querySelectorAll("[data-highlight], [data-clear-highlights]").forEach((control) => { control.disabled = false; });
-      renderResource();
-      renderQuestionPanel();
-      setSaveStatus("Writing time started", "saved");
-      if (dirty) saveTimer = setTimeout(saveNow, 1_200);
-    }
-    const remaining = Math.max(0, state.session.deadline - now);
-    const elapsed = Math.max(0, now - Number(state.session.readingEndsAt));
+    const nextPhase = phaseAtTime(state.session.timeline, now);
+    if (nextPhase) applyPhase(nextPhase);
+    const remaining = Math.max(0, Number(activePhase?.endsAt ?? state.session.deadline) - now);
+    const elapsed = Math.max(0, now - Number(activePhase?.startsAt ?? state.session.startedAt));
     const timer = document.querySelector("#timer-tool");
     timer.dataset.warning = String(remaining <= 5 * 60_000 && remaining > 0);
     if (timerMode === "hidden") timer.textContent = "Timer hidden";
-    else if (timerMode === "countup") timer.textContent = `Elapsed ${formatTime(elapsed)}`;
-    else timer.textContent = `Time ${formatTime(remaining)}`;
-    if (remaining <= 0 && !expiredHandled) {
+    else if (timerMode === "countup") timer.textContent = `${activePhase?.label ?? "Phase"} elapsed ${formatTime(elapsed)}`;
+    else timer.textContent = `${activePhase?.label ?? "Time"} ${formatTime(remaining)}`;
+    if (activePhase?.responseAllowed && dirty && remaining <= 5_000 && remaining > 0) void saveNow();
+    if (now >= state.session.deadline && !expiredHandled) {
       expiredHandled = true;
       submit(true);
     }
@@ -906,11 +1014,22 @@ export function mountExam(state, { onSubmitted }) {
     if (editor && card?.dataset.questionId) savedRanges.set(card.dataset.questionId, selection.getRangeAt(0).cloneRange());
   }, { signal });
   window.addEventListener("beforeunload", (event) => {
-    if (dirty) persistLocal();
-    if (audioController.isBusy()) {
+    if (saveState.pending) persistLocal();
+    if (saveState.unsafe || audioController.isBusy()) {
       event.preventDefault();
       event.returnValue = "";
     }
+  }, { signal });
+  document.querySelector("#retry-save").addEventListener("click", () => {
+    dirty = true;
+    persistLocal();
+    showSaveState();
+    if (responseLocked()) announce("This section is locked. Keep the page open and ask your teacher for help.", "error");
+    else void saveNow();
+  }, { signal });
+  document.querySelector("#download-recovery").addEventListener("click", () => {
+    downloadResponseRecovery(recoveryPayload());
+    announce("Recovery copy downloaded. This is not an exam submission; give the file to your teacher.", "info");
   }, { signal });
   shell.addEventListener("focusin", (event) => {
     if (event.target.closest("#resource-pane")) activePane = "resource";
@@ -956,37 +1075,44 @@ export function mountExam(state, { onSubmitted }) {
     preferences.scheme = document.querySelector("#colour-scheme").value;
     preferences.font = document.querySelector("#font-choice").value;
     preferences.spacing = document.querySelector("#spacing-choice").value;
-    localStorage.setItem(preferenceKey, JSON.stringify(preferences));
+    writeLocalItem(preferenceKey, JSON.stringify(preferences));
     applyPreferences();
   }, { signal }));
 
   applyPreferences();
-  document.querySelector("#notepad-tool").disabled = readingActive;
-  document.querySelector("#summary-tool").disabled = readingActive;
-  syncSubmitAvailability();
-  document.querySelectorAll("[data-highlight], [data-clear-highlights]").forEach((control) => { control.disabled = readingActive; });
-  renderResourceTabs();
-  renderResource();
-  renderQuestionPanel();
+  applyPhase(activePhase, true);
   bindSplitter();
   tick();
   tickTimer = setInterval(tick, 1_000);
   const autosaveTimer = setInterval(saveNow, 15_000);
-  if (!localStorage.getItem(instructionKey)) {
-    localStorage.setItem(instructionKey, "seen");
+  if (!readLocalItem(instructionKey)) {
+    writeLocalItem(instructionKey, "seen");
     document.querySelector("#instructions-dialog").showModal();
   }
-  if (dirty && !readingActive) {
-    setSaveStatus("Recovered unsaved work", "local");
+  if (dirty && !responseLocked()) {
+    showSaveState();
     saveTimer = setTimeout(saveNow, 1_200);
   }
 
-  return () => {
-    if (dirty) persistLocal();
+  const cleanup = () => {
+    if (saveState.pending) persistLocal();
     clearTimeout(saveTimer);
     clearInterval(tickTimer);
     clearInterval(autosaveTimer);
     audioController.dispose();
     controller.abort();
   };
+  function recoveryPayload() {
+    return { format: "digitaldp-response-recovery", responseId, paperTitle: paper.title,
+      exportedAt: new Date().toISOString(), ...payload() };
+  }
+  cleanup.pendingRecovery = () => saveState.pending ? recoveryPayload() : null;
+  cleanup.updateState = (next) => {
+    if (next.session.id !== sessionId || next.serverTime < state.serverTime) return;
+    state = { ...state, session: next.session, serverTime: next.serverTime };
+    serverOffset = next.serverTime - Date.now();
+    // Keep the existing editors, ink, audio, focus and unsaved answers mounted.
+    tick();
+  };
+  return cleanup;
 }

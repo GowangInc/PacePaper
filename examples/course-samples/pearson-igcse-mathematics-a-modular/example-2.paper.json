@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "pearson-edexcel-igcse",
+    "systemLabel": "Pearson Edexcel International GCSE",
+    "qualificationLabel": "Pearson Edexcel International GCSE",
+    "deliveryMode": "Full-length original paper with integrated digital working",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "Higher · 120 minutes · 100 marks · calculator permitted · tier-specific formula reference included · answer all 22 questions"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Pearson Edexcel International GCSE Mathematics A (Modular) · Unit 1 (4WM1H/01) — original full-length mock",
+  "subject": "pearson-igcse-mathematics-a-modular",
+  "subjectLabel": "Pearson Edexcel International GCSE Mathematics A (Modular)",
+  "level": "Higher",
+  "paper": "Unit 1 (4WM1H/01) — original full-length mock",
+  "durationMinutes": 120,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 100,
+  "subjectWeightPercent": 50,
+  "mode": "reading",
+  "instructions": "Answer all 22 questions. The total time is 2 hours; there is no separate reading period. Write your answer and all working in each question's response area; add pages if needed. A permitted scientific calculator may be used. The Formula reference attached to every question contains the tier-specific supplied formula facts. Draw your own labelled diagrams or graphs where requested; all necessary coordinates and measurements are provided. Do not infer measurements from a sketch. Use a suitable scale and label axes. Give units where appropriate. Keep unrounded working; give non-exact final numerical answers to 3 significant figures unless otherwise stated. This is an original DigitalDP practice paper, not a Pearson paper. Digital drawing is a classroom adaptation, not a test of physical ruler-and-compass accuracy.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formulae",
+      "label": "Higher formula reference",
+      "kind": "text",
+      "text": "Formula reference — independently typeset mathematical facts\nTrapezium: area = ½(a + b)h, where a and b are parallel side lengths and h is perpendicular height.\nPrism: volume = cross-sectional area × length.\nCylinder: volume = πr²h; curved surface area = 2πrh. Here r is radius and h is perpendicular height.\nArithmetic series: Sₙ = n[2a + (n − 1)d]/2, where a is the first term and d is the common difference.\nQuadratic equation ax² + bx + c = 0 (a ≠ 0): x = [−b ± √(b² − 4ac)]/(2a).\nTriangle ABC: sides a, b, c lie opposite angles A, B, C respectively.\nSine rule: a/sin A = b/sin B = c/sin C.\nCosine rule: a² = b² + c² − 2bc cos A.\nTriangle area = ½ab sin C.\nRight circular cone: volume = πr²h/3; curved surface area = πrl, where l is slant height.\nSphere: volume = 4πr³/3; surface area = 4πr²."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — Measurement bounds",
+      "prompt": "A length L is 7.4 cm to the nearest 0.1 cm. A width W is 5 cm to the nearest centimetre. (a) State the lower and upper bounds for L. [2] (b) State the lower and upper bounds for W. [2] (c) Explain why W = 5.5 cm does not round to 5 cm under the usual rounding convention. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — Sets and notation",
+      "prompt": "The universal set is the integers from 1 to 15 inclusive. A is the set of multiples of 3 and B is the set of factors of 12. (a) List A and B. [2] (b) List A ∩ B. [1] (c) List A ∪ B. [1] (d) Find the number of elements in A′. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — Quadratic rectangle",
+      "prompt": "A rectangle has length (x + 4) cm, width x cm and area 60 cm². (a) Form an equation. [1] (b) Solve it, rejecting any unsuitable root. [3] (c) Find the perimeter. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — Quadratic graph",
+      "prompt": "For y = x² − 2x − 3: (a) Find y when x = −2, −1, 0, 1, 2, 3, 4. [2] (b) Plot a smooth graph on labelled axes. [2] (c) Use the graph to state both roots of x² − 2x − 3 = 0. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — Algebraic manipulation",
+      "prompt": "(a) Expand and simplify (x + 5)(x − 2). [2] (b) Factorise 3x² + 12x fully. [1] (c) Simplify 12a³b² ÷ 4ab, where a and b are nonzero. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — Trapezium design",
+      "prompt": "A trapezium has parallel sides 8 cm and 14 cm and perpendicular height 6 cm. (a) Find its area. [2] (b) A triangle with base 9 cm has the same area. Find its perpendicular height. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — Ladder",
+      "prompt": "A 5.2 m ladder rests against a vertical wall with its foot 1.5 m from the wall on level ground. (a) Find the vertical height reached. [3] (b) Find the angle between the ladder and the ground, to 1 decimal place. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — Survey probability",
+      "prompt": "Among 80 people, 45 own a bicycle, 30 own a scooter and 12 own both. (a) Draw a two-set Venn diagram, including people with neither. [3] (b) One person is selected at random. Find P(exactly one of these vehicles). [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — Surds",
+      "prompt": "(a) Simplify 4√12 − √75. [2] (b) Rationalise 5/(2 + √3). [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — Recurring decimal",
+      "prompt": "Let x = 0.272727… . (a) Show algebraically that x = 3/11. [3] (b) Hence write 1 − x as a fraction in simplest form. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — Fractional indices",
+      "prompt": "(a) Evaluate 32^(2/5). [1] (b) Evaluate 16^(−3/4). [2] (c) Simplify (x^(3/2))⁴/x² for x > 0. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12 — Algebraic fractions",
+      "prompt": "Simplify (x² − 16)/(x² − x − 12). State all values excluded from the original expression. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13 — Completing the square",
+      "prompt": "Write 3x² + 12x − 5 in completed-square form. Hence give the coordinates of the turning point of y = 3x² + 12x − 5. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14 — Quadratic formula",
+      "prompt": "(a) Solve 2x² + 3x − 7 = 0 using the quadratic formula. Give both roots to 3 decimal places. [4] (b) Explain why the equation has two distinct real roots. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15 — Perpendicular lines",
+      "prompt": "A has coordinates (−1,4) and B has coordinates (5,2). (a) Find the equation of AB. [3] (b) Find the equation of the perpendicular bisector of AB. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16 — Cubic graph",
+      "prompt": "For y = x³ − 4x: (a) Find y at x = −2, −1, 0, 1, 2. [2] (b) Draw a smooth sketch through those points. [2] (c) Solve x³ − 4x = 0 exactly. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17 — Sine rule",
+      "prompt": "In triangle ABC, angle A = 40°, angle B = 75° and side a = 8 cm is opposite A. (a) Find angle C. [1] (b) Find side b opposite B. [2] (c) Find side c opposite C. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18 — Triangle land plot",
+      "prompt": "A triangular plot has two sides 24 m and 31 m with included angle 67°. (a) Find the third side. [3] (b) Find the area. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19 — Three-dimensional Pythagoras",
+      "prompt": "A rectangular box measures 10 cm by 7 cm by 5 cm. (a) Find the length of the longest straight rod that fits inside it. [3] (b) A different cuboid has perpendicular edges x cm, 2x cm and 3x cm and a space diagonal of 28 cm. Find x. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20 — Without replacement",
+      "prompt": "A bag contains 5 black and 3 white counters. Two are drawn without replacement. Find the probability that the counters have different colours. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21 — Conditional probability",
+      "prompt": "A fair six-sided die is rolled twice. Given that the total is greater than 9, find the probability that both rolls are even. Show the relevant equally likely outcomes. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22 — Histogram with unequal widths",
+      "prompt": "The lengths l mm of 50 bolts have frequencies: 0 < l ≤ 10: 6; 10 < l ≤ 25: 18; 25 < l ≤ 30: 16; 30 < l ≤ 50: 10. Draw a histogram, labelling both axes and showing your frequency-density calculations. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

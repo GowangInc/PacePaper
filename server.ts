@@ -37,6 +37,7 @@ import {
   startExamSession,
   submitResponse,
   touchStudent,
+  updateDraftExamSessionTiming,
   updateStudent,
   type ResponsePayload,
   type Role,
@@ -74,9 +75,10 @@ import {
   loadSelectedClassroomAddress,
   persistSelectedClassroomAddress,
 } from "./src/classroom-network.ts";
-import { isStudentStaticPath, staticFilePath } from "./src/static-files.ts";
+import { guideStylesheetSource, isStudentStaticPath, staticFilePath } from "./src/static-files.ts";
 import { staticAssetPath } from "./src/static-assets.ts";
-import { examTiming } from "./src/timing.ts";
+import { examPhaseAt, examTimeline, examTiming, type ScheduledExamPhase } from "./src/timing.ts";
+import { responseFitsPhase, type CandidateResponseSnapshot } from "./src/exam-phase-access.ts";
 import {
   AudioPlaybackError,
   AudioPlaybackTickets,
@@ -127,6 +129,7 @@ let network = demoNetworkConfig({
 const hostname = network.bindHostname;
 const RESPONSE_BODY_BYTES = 12_000_000;
 const DEADLINE_GRACE_MS = 5_000;
+const PHASE_BOUNDARY_GRACE_MS = 5_000;
 const CLASS_ROSTER_BYTES = 1_000_000;
 const audioPlayback = new AudioPlaybackTickets();
 
@@ -140,7 +143,7 @@ function parseTestReadingSeconds(raw: string | undefined): number | null {
 }
 const TEST_READING_SECONDS = parseTestReadingSeconds(process.env.DIGITALDP_TEST_READING_SECONDS);
 
-const SECURITY_HEADERS: Record<string, string> = {
+const SECURITY_HEADERS = {
   "Content-Security-Policy": "default-src 'self'; base-uri 'none'; connect-src 'self' ws: wss:; font-src 'self'; form-action 'self'; frame-ancestors 'self'; frame-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self'; style-src 'self'",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
@@ -238,6 +241,15 @@ function requiredInteger(value: unknown, label: string, min: number, max: number
   return optionalInteger(value, label, min, max);
 }
 
+function requiredNumber(value: unknown, label: string, min: number, max: number): number {
+  if (value === undefined || value === null || value === "") throw new HttpError(`${label} is required`, 400);
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < min || number > max) {
+    throw new HttpError(`${label} must be between ${min} and ${max}`, 400);
+  }
+  return number;
+}
+
 async function jsonBody(request: Request, maxBytes = 1_000_000): Promise<Record<string, unknown>> {
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > maxBytes) throw new HttpError("Request body is too large", 413);
@@ -285,14 +297,74 @@ function clientAddress(request: Request, server: Server<SocketData>): string {
   return server.requestIP(request)?.address ?? "unknown";
 }
 
-function timingFor(exam: { startedAt: number; durationMinutes: number; extraMinutes: number; manifestJson: string }) {
+function timingFor(exam: { startedAt: number; durationMinutes: number; readingTimeMinutes: number; extraMinutes: number; manifestJson: string }) {
   const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-  return examTiming({
+  const input = {
     startedAt: exam.startedAt,
-    readingTimeMinutes: effectiveReadingTimeMinutes(manifest.readingTimeMinutes ?? 0),
+    readingTimeMinutes: effectiveReadingTimeMinutes(exam.readingTimeMinutes),
     durationMinutes: exam.durationMinutes,
     extraMinutes: exam.extraMinutes,
-  });
+    phases: manifest.phases,
+  };
+  return { ...examTiming(input), timeline: examTimeline(input) };
+}
+
+function phaseForResponse(timing: ReturnType<typeof timingFor>, now: number): ScheduledExamPhase | null {
+  if (now < timing.deadline) return examPhaseAt(timing.timeline, now);
+  if (now <= timing.deadline + DEADLINE_GRACE_MS) return examPhaseAt(timing.timeline, timing.deadline - 1);
+  return null;
+}
+
+function publicPhase(phase: ScheduledExamPhase | null) {
+  if (!phase) return null;
+  return {
+    id: phase.id,
+    label: phase.label,
+    kind: phase.kind,
+    sectionId: phase.sectionId,
+    tools: phase.tools,
+    instructions: phase.instructions,
+    startsAt: phase.startsAt,
+    standardEndsAt: phase.standardEndsAt,
+    endsAt: phase.endsAt,
+    responseAllowed: phase.responseAllowed,
+    canSubmit: phase.canSubmit,
+  };
+}
+
+function responseSnapshot(exam: StudentExamRow): CandidateResponseSnapshot {
+  return {
+    answers: JSON.parse(exam.answersJson) as Record<string, string>,
+    flags: JSON.parse(exam.flagsJson) as string[],
+    selectedQuestionId: exam.selectedQuestionId,
+  };
+}
+
+function eligibleResponsePhases(timing: ReturnType<typeof timingFor>, now: number): ScheduledExamPhase[] {
+  const current = phaseForResponse(timing, now);
+  if (!current) return [];
+  const eligible = current.responseAllowed ? [current] : [];
+  const index = timing.timeline.findIndex(({ id }) => id === current.id);
+  const previous = timing.timeline[index - 1];
+  if (previous?.responseAllowed && now - current.startsAt <= PHASE_BOUNDARY_GRACE_MS) eligible.push(previous);
+  return eligible;
+}
+
+function assertResponseWithinPhases(
+  exam: StudentExamRow,
+  manifest: PaperManifest,
+  validated: SavedResponseInput,
+  phases: ScheduledExamPhase[],
+): void {
+  const previous = responseSnapshot(exam);
+  const next = {
+    answers: validated.answers,
+    flags: validated.flags,
+    selectedQuestionId: validated.selectedQuestionId,
+  };
+  if (!phases.some((phase) => responseFitsPhase(manifest, previous, next, phase))) {
+    throw new HttpError("A response from a locked examination section cannot be changed", 409);
+  }
 }
 
 function studentAudioContext(studentId: string, sessionId: string, resourceKey: string): {
@@ -321,7 +393,8 @@ function availableAudioTiming(exam: StudentExamRow) {
   if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
   const timing = timingFor(exam);
   const now = Date.now();
-  if (exam.submittedAt !== null || now < timing.readingEndsAt || now >= timing.deadline) {
+  const phase = phaseForResponse(timing, now);
+  if (exam.submittedAt !== null || !phase?.responseAllowed || now >= timing.deadline) {
     throw new HttpError("Response is not available", 409);
   }
   return timing;
@@ -335,6 +408,7 @@ function listAdminExamSessions(archived = false) {
   return listExamSessions(archived).map((session) => ({
     ...session,
     readingTimeMinutes: effectiveReadingTimeMinutes(session.readingTimeMinutes),
+    phases: getPaper(session.paperId)?.manifest.phases,
   }));
 }
 
@@ -694,6 +768,38 @@ async function handleApi(
     return json({ id, status: "draft" }, 201);
   }
 
+  const timingMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/timing$/);
+  if (timingMatch && method === "PUT") {
+    requireRole(request, "admin");
+    const sessionId = timingMatch[1] as string;
+    const session = listExamSessions().find((item) => item.id === sessionId);
+    if (!session) throw new HttpError("Exam session not found", 404);
+    const paper = getPaper(session.paperId);
+    if (!paper) throw new HttpError("Paper not found", 404);
+    if (paper.manifest.phases?.length) {
+      throw new HttpError("This exam uses a fixed multi-phase schedule; edit the paper definition to change it", 409);
+    }
+    const body = await jsonBody(request);
+    const readingTimeMinutes = requiredNumber(body.readingTimeMinutes, "Reading time", 0, 60);
+    const durationMinutes = requiredInteger(body.durationMinutes, "Writing time", 1, 360);
+    const hasExpected = body.expectedReadingTimeMinutes !== undefined || body.expectedDurationMinutes !== undefined;
+    const expected = hasExpected ? {
+      readingTimeMinutes: requiredNumber(body.expectedReadingTimeMinutes, "Previous reading time", 0, 60),
+      durationMinutes: requiredInteger(body.expectedDurationMinutes, "Previous writing time", 1, 360),
+    } : undefined;
+    if (TEST_READING_SECONDS !== null) {
+      throw new HttpError("A test reading-time override is active. Restart without DIGITALDP_TEST_READING_SECONDS before changing exam timing", 409);
+    }
+    try {
+      updateDraftExamSessionTiming(sessionId, readingTimeMinutes, durationMinutes, expected);
+    } catch (error) {
+      throw new HttpError(error instanceof Error ? error.message : "Exam timing could not be changed", 409);
+    }
+    publish(server, `class:${session.classId}`, "exam-list-changed");
+    publish(server, "admin", "admin-state");
+    return json({ id: sessionId, status: "draft", readingTimeMinutes, durationMinutes });
+  }
+
   const responsesMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/responses$/);
   if (responsesMatch && method === "GET") {
     requireRole(request, "admin");
@@ -712,8 +818,9 @@ async function handleApi(
         subjectLabel: manifest.subjectLabel,
         level: manifest.level,
         paper: manifest.paper,
-        durationMinutes: manifest.durationMinutes,
-        readingTimeMinutes: effectiveReadingTimeMinutes(manifest.readingTimeMinutes ?? 0),
+        durationMinutes: results.durationMinutes,
+        readingTimeMinutes: effectiveReadingTimeMinutes(results.readingTimeMinutes),
+        phases: manifest.phases,
         maximumMarks: manifest.maximumMarks,
         subjectWeightPercent: manifest.subjectWeightPercent,
         mode: manifest.mode,
@@ -725,11 +832,12 @@ async function handleApi(
         file: undefined,
         url: resource.file ? `/api/assets/${results.paperId}/${resource.key}` : undefined,
       })),
-      questions: manifest.questions.map(({ id, label, prompt, type, ink, resourceKeys, marks }) => ({
+      questions: manifest.questions.map(({ id, label, prompt, type, options, ink, resourceKeys, marks }) => ({
         id,
         label,
         prompt,
         type,
+        options,
         ink,
         resourceKeys,
         marks,
@@ -809,6 +917,7 @@ async function handleApi(
       publish(server, "admin", "admin-state");
     }
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
+    const phase = phaseForResponse(timing, Date.now());
     return json({
       status: exam.submittedAt === null ? "live" : "submitted",
       student: { name: student.name, extraMinutes: student.extraMinutes },
@@ -817,7 +926,8 @@ async function handleApi(
         startedAt: exam.startedAt,
         readingEndsAt: timing.readingEndsAt,
         deadline: timing.deadline,
-        phase: Date.now() < timing.readingEndsAt ? "reading" : "writing",
+        phase: publicPhase(phase),
+        timeline: timing.timeline.map(publicPhase),
       },
       paper: publicManifest(manifest, exam.paperId, exam.sessionId),
       response: {
@@ -843,9 +953,11 @@ async function handleApi(
     if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
     const timing = timingFor(exam);
     const now = Date.now();
-    if (now < timing.readingEndsAt) throw new HttpError("Answering is locked during reading time", 409);
+    const phases = eligibleResponsePhases(timing, now);
+    if (phases.length === 0) throw new HttpError("Student entry is locked during this exam phase", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
     const validated = await validatedResponse(body, manifest);
+    assertResponseWithinPhases(exam, manifest, validated, phases);
     const payload: ResponsePayload = {
       answersJson: JSON.stringify(validated.answers),
       selectedQuestionId: validated.selectedQuestionId,
@@ -876,9 +988,12 @@ async function handleApi(
     if (exam.sessionStatus !== "live" || exam.submittedAt !== null) throw new HttpError("Response is not available", 409);
     const timing = timingFor(exam);
     const now = Date.now();
-    if (now < timing.readingEndsAt) throw new HttpError("Answering is locked during reading time", 409);
+    const phase = phaseForResponse(timing, now);
+    if (!phase?.responseAllowed) throw new HttpError("Student entry is locked during this exam phase", 409);
+    if (!phase.canSubmit) throw new HttpError("Final submission opens in the last work section", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
     const validated = await validatedResponse(body, manifest);
+    assertResponseWithinPhases(exam, manifest, validated, [phase]);
     if (now > timing.deadline + DEADLINE_GRACE_MS) {
       submitResponse(exam.responseId);
       throw new HttpError("Time has expired and the last saved response was submitted", 409);
@@ -1025,9 +1140,20 @@ const server = Bun.serve<SocketData>({
       }
       const sourcePath = staticFilePath(url.pathname);
       if (!sourcePath || request.method !== "GET") throw new HttpError("Page not found", 404);
+      if (url.pathname === "/mock-guides") requireRole(request, "admin");
       const filePath = staticAssetPath(sourcePath) ?? sourcePath;
       const file = Bun.file(filePath);
       if (!(await file.exists())) throw new HttpError("Page not found", 404);
+      if (sourcePath === "USER_GUIDE.html" || sourcePath === "docs/mock-marking/index.html") {
+        const html = await file.text();
+        const response = responseWithSecurity(new Response(html, {
+          headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": url.pathname === "/mock-guides" ? "private, no-store" : "no-cache" },
+        }));
+        const styleSource = guideStylesheetSource(html);
+        if (styleSource) response.headers.set("Content-Security-Policy",
+          SECURITY_HEADERS["Content-Security-Policy"].replace("style-src 'self'", `style-src 'self' ${styleSource}`));
+        return response;
+      }
       const response = new Response(file);
       response.headers.set("Cache-Control", "no-cache");
       return responseWithSecurity(response);

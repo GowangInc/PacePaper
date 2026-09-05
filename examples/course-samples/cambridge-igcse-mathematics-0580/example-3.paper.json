@@ -1,0 +1,396 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "cambridge-igcse",
+    "systemLabel": "Cambridge IGCSE",
+    "qualificationLabel": "Cambridge IGCSE Mathematics 0580",
+    "deliveryMode": "Paper-like digital practice",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "2025–2027 syllabus · Core · scientific calculator required; no algebraic/graphical calculator · formula facts included · original full-length practice"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Cambridge IGCSE Mathematics (0580) · Paper 3 — original full-length mock (calculator)",
+  "subject": "cambridge-igcse-mathematics-0580",
+  "subjectLabel": "Cambridge IGCSE Mathematics (0580)",
+  "level": "Core",
+  "paper": "Paper 3 — original full-length mock (calculator)",
+  "durationMinutes": 90,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 80,
+  "mode": "reading",
+  "instructions": "Original full-length practice: 24 questions, 80 marks. This is not an official or endorsed Cambridge examination. Answer every question and all parts. Show your reasoning and calculations in the working canvas beneath each question; add pages when needed. A scientific calculator is required; algebraic and graphical calculators are not permitted. Retain unrounded values during calculations. Unless a question specifies otherwise, give non-exact numerical answers to three significant figures and angles in degrees to one decimal place. Use the calculator value of π or 3.142. Formula facts are attached to every question. Draw and label your own axes where requested; one grid square may represent the scale stated in the question. Use straight ruled lines and smooth curves as appropriate. Dimensions stated in a question are exact unless described as rounded. There is no separate reading period.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formula-facts",
+      "label": "Core formula facts",
+      "kind": "text",
+      "text": "Mathematical formula facts — independently typeset for this practice paper\nTriangle: area = bh/2 (b is the base, h the perpendicular height).\nCircle: area = πr²; circumference = 2πr (r is the radius).\nCylinder: curved surface area = 2πrh; volume = πr²h.\nCone: curved surface area = πrl; volume = πr²h/3 (l is slant height; h is perpendicular height).\nSphere: surface area = 4πr²; volume = 4πr³/3.\nPrism: volume = cross-sectional area × length.\nPyramid: volume = base area × perpendicular height / 3."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1",
+      "prompt": "(a) Calculate (7.84² − 3.19)/2.6. Give your answer to three significant figures. [2]\n(b) Round 0.006784 to two significant figures. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2",
+      "prompt": "$1800 is invested for three years at 4.2% compound interest per year. No money is added or withdrawn. Calculate the interest earned after three years, to the nearest cent. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3",
+      "prompt": "A metal block has volume 18.6 cm³ and mass 145.08 g. Density = mass ÷ volume.\n(a) Find the density of the metal. [2]\n(b) Find the mass of a 25 cm³ block of the same metal. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4",
+      "prompt": "A spacecraft travels 4.86 × 10⁷ km in 1.35 × 10⁵ seconds. Calculate its average speed in km/s, giving the answer in standard form. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5",
+      "prompt": "A container holds V litres, recorded as 3.8 litres to the nearest 0.1 litre.\n(a) Write the error interval for V. [2]\n(b) Convert the recorded volume of 3.8 litres to cm³. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6",
+      "prompt": "The formula C = 5(F − 32)/9 connects two temperature scales.\n(a) Calculate C when F = 95. [1]\n(b) Make F the subject of the formula. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7",
+      "prompt": "A taxi fare is a fixed charge of $3.20 plus $1.85 for every kilometre travelled. A passenger pays $25.40. Form an equation and calculate the distance travelled. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8",
+      "prompt": "Two notebooks and three pens cost $10.10. Three notebooks and one pen cost $10.60. Find the price of one notebook and one pen. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9",
+      "prompt": "Line L has equation y = 3x − 4.\n(a) State its gradient. [1]\n(b) Find the equation of the line parallel to L that passes through (2,7). [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10",
+      "prompt": "Each interior angle of a regular polygon is 156°.\n(a) Calculate each exterior angle. [1]\n(b) Find the number of sides of the polygon. Show your method. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11",
+      "prompt": "An open cylindrical container has internal radius 4.2 cm and height 11 cm. Ignore its wall thickness.\n(a) Calculate its capacity in millilitres. [2]\n(b) Calculate the area of material needed for its curved side and its circular base. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12",
+      "prompt": "A ramp rises 1.35 m above horizontal ground over a horizontal distance of 6.2 m.\n(a) Calculate the length of the sloping ramp. [2]\n(b) Calculate the angle it makes with the horizontal. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13",
+      "prompt": "A map has scale 1:25000. The straight-line distance from a station A to a school B measures 7.6 cm on the map. The bearing of B from A is 068°.\n(a) Calculate the actual distance in kilometres. [2]\n(b) State the bearing of A from B. [1]\n(c) A park C is due south of A. State the bearing of C from A. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14",
+      "prompt": "The function is y = x² − 2x − 3.\n(a) Make a table for x = −2, −1, 0, 1, 2, 3, 4. [1]\n(b) Draw the graph on a square grid, using one square for one unit on each axis. [2]\n(c) Use the graph to solve x² − 2x − 3 = 0. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15",
+      "prompt": "The number of bicycles owned by each of 30 households is recorded below.\nBicycles: 0, 1, 2, 3, 4\nFrequency: 4, 9, 10, 5, 2\n(a) Find the modal number of bicycles. [1]\n(b) Find the median. [1]\n(c) Calculate the mean. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16",
+      "prompt": "Six households record the number of people and daily water use.\nPeople x: 1, 2, 3, 4, 5, 6\nWater y (litres): 85, 155, 205, 300, 345, 430\n(a) Draw a scatter diagram: use x from 0 to 7 and y from 0 to 500, with clearly labelled uniform scales. [2]\n(b) Describe the correlation. [1]\n(c) Draw a line of best fit by eye and use it to estimate daily water use for a household of 4.5 people on average. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17",
+      "prompt": "A bag contains 4 yellow and 6 black counters. A counter is chosen at random, its colour recorded, and it is replaced. A second counter is then chosen at random.\n(a) Draw a probability tree with probabilities on every branch. [2]\n(b) Find the probability that both counters are yellow. [1]\n(c) Find the probability that the two counters have different colours. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18",
+      "prompt": "A walker leaves home at 0900 and walks directly away from home at a constant speed. At 0930 she is 2 km from home, then rests there until 0945. She walks directly home at a constant speed and arrives at 1015.\n(a) Draw the distance-from-home against time graph from 0900 to 1015. [2]\n(b) Find her speed on the outward walk. [1]\n(c) Calculate her average speed for the complete journey, including the rest. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19",
+      "prompt": "Triangle PQR has P(2,2), Q(6,2), R(2,4).\n(a) Enlarge it by scale factor ½ with centre the origin. Draw and label the image on a coordinate grid. [3]\n(b) State the scale factor of the enlargement that maps this image back to the original triangle. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20",
+      "prompt": "Of 40 students, 23 play football, 18 play basketball and 9 play both.\n(a) Draw a two-circle Venn diagram and put the number of students in each of its four regions. [3]\n(b) A student is chosen at random. Find the probability that the student plays exactly one of these sports. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21",
+      "prompt": "A traveller exchanges $450 into euros. The rate is €0.92 for $1. The exchange office first deducts a fee of 2% of the dollar amount, then converts the remaining dollars. Calculate the euros received. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22",
+      "prompt": "A closed cuboid measures 6 cm by 4 cm by 3 cm.\n(a) Sketch a valid net and label the dimensions of each rectangular face. The sketch need not be to scale. [2]\n(b) Calculate its total surface area. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q23",
+      "label": "Question 23",
+      "prompt": "A line touches a circle at T. O is the centre.\n(a) State the angle between OT and the tangent at T. [1]\n(b) Give the geometrical reason for your answer. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 2,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q24",
+      "label": "Question 24",
+      "prompt": "A shop increases a price by 20%, then reduces the new price by 20%. A customer says the final price equals the original price. Decide whether the customer is correct and justify your answer using multipliers or a numerical example. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formula-facts"
+      ],
+      "marks": 2,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,367 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "pearson-edexcel-igcse",
+    "systemLabel": "Pearson Edexcel International GCSE",
+    "qualificationLabel": "Pearson Edexcel International GCSE",
+    "deliveryMode": "Full-length original paper with integrated digital working",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "Higher · 120 minutes · 100 marks · calculator permitted · tier-specific formula reference included · answer all 22 questions"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "Pearson Edexcel International GCSE Mathematics A · Paper 2H — original full-length mock",
+  "subject": "pearson-igcse-mathematics-a",
+  "subjectLabel": "Pearson Edexcel International GCSE Mathematics A",
+  "level": "Higher",
+  "paper": "Paper 2H — original full-length mock",
+  "durationMinutes": 120,
+  "readingTimeMinutes": 0,
+  "maximumMarks": 100,
+  "subjectWeightPercent": 50,
+  "mode": "reading",
+  "instructions": "Answer all 22 questions. The total time is 2 hours; there is no separate reading period. Write your answer and all working in each question's response area; add pages if needed. A permitted scientific calculator may be used. The Formula reference attached to every question contains the tier-specific supplied formula facts. Draw your own labelled diagrams or graphs where requested; all necessary coordinates and measurements are provided. Do not infer measurements from a sketch. Use a suitable scale and label axes. Give units where appropriate. Keep unrounded working; give non-exact final numerical answers to 3 significant figures unless otherwise stated. This is an original DigitalDP practice paper, not a Pearson paper. Digital drawing is a classroom adaptation, not a test of physical ruler-and-compass accuracy.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "formulae",
+      "label": "Higher formula reference",
+      "kind": "text",
+      "text": "Formula reference — independently typeset mathematical facts\nTrapezium: area = ½(a + b)h, where a and b are parallel side lengths and h is perpendicular height.\nPrism: volume = cross-sectional area × length.\nCylinder: volume = πr²h; curved surface area = 2πrh. Here r is radius and h is perpendicular height.\nArithmetic series: Sₙ = n[2a + (n − 1)d]/2, where a is the first term and d is the common difference.\nQuadratic equation ax² + bx + c = 0 (a ≠ 0): x = [−b ± √(b² − 4ac)]/(2a).\nTriangle ABC: sides a, b, c lie opposite angles A, B, C respectively.\nSine rule: a/sin A = b/sin B = c/sin C.\nCosine rule: a² = b² + c² − 2bc cos A.\nTriangle area = ½ab sin C.\nRight circular cone: volume = πr²h/3; curved surface area = πrl, where l is slant height.\nSphere: volume = 4πr³/3; surface area = 4πr²."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Question 1 — Reverse percentage",
+      "prompt": "A jacket costs $68 after a reduction of 20%. (a) Find its original price. [3] (b) A tax of 8% is then added to the reduced price. Find the final price, to the nearest cent. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q2",
+      "label": "Question 2 — Factorising and solving",
+      "prompt": "(a) Factorise x² − x − 20. [2] (b) Solve x² − x − 20 = 0. [1] (c) Expand and simplify (2x − 3)(x + 4). [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q3",
+      "label": "Question 3 — Hire plans",
+      "prompt": "Hire plan A costs $18 plus $6 per hour. Plan B costs $8 plus $8 per hour. (a) Write expressions for the costs for h hours. [2] (b) Find when the two costs are equal. [2] (c) Which plan is cheaper for 7 hours? State the saving. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q4",
+      "label": "Question 4 — Sequence reasoning",
+      "prompt": "The nth term of a sequence is 5n − 2. (a) Find the first three terms. [1] (b) Find the position of the term 133. [2] (c) Another sequence has nth term 3n + 16. Find the position at which both sequences have the same term, and state that term. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q5",
+      "label": "Question 5 — Number and indices",
+      "prompt": "(a) Write 360 as a product of prime factors. [2] (b) Find the least common multiple of 72 and 90. [2] (c) Simplify a⁴ × a³ ÷ a², where a ≠ 0. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q6",
+      "label": "Question 6 — Semicircular window",
+      "prompt": "A window consists of a rectangle 1.2 m wide and 1.5 m high, topped by a semicircle whose diameter is the rectangle's width. (a) Calculate the window area. [3] (b) Find the length of the outside frame, including the bottom edge but excluding the internal join. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q7",
+      "label": "Question 7 — Similar triangles",
+      "prompt": "Triangles ABC and DEF are similar, with A corresponding to D, B to E and C to F. AB = 8 cm, BC = 10 cm, AC = 6 cm and DE = 14 cm. (a) Find the enlargement scale factor. [1] (b) Find EF and DF. [2] (c) Find the area of triangle DEF, explaining why the appropriate base and height are perpendicular. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q8",
+      "label": "Question 8 — Venn diagram",
+      "prompt": "Of 60 students, 32 play football, 25 play badminton and 12 play both. (a) Complete a two-set Venn diagram, including the number outside both sets. [3] (b) A student is selected at random. Find the probability that the student plays exactly one of these sports. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q9",
+      "label": "Question 9 — Rationalising",
+      "prompt": "(a) Simplify 2√48 + √27. [2] (b) Rationalise 6/(√5 − 1). [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q10",
+      "label": "Question 10 — Inverse proportion",
+      "prompt": "y is inversely proportional to the square of x. When x = 3, y = 20. (a) Find y in terms of x. [2] (b) Find the positive x when y = 5. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q11",
+      "label": "Question 11 — Completed square",
+      "prompt": "(a) Write 2x² − 12x + 11 as a(x − b)² + c. [3] (b) State the minimum value and the x at which it occurs. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q12",
+      "label": "Question 12 — Algebraic equation",
+      "prompt": "Solve 3/(x − 1) + 2/(x + 1) = 2, stating any excluded values and giving both solutions exactly. [4]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q13",
+      "label": "Question 13 — Exponential threshold",
+      "prompt": "A population is modelled by P = 800(1.06)ⁿ after n complete years. (a) Find P after 4 years, to the nearest whole number. [1] (b) Find the first complete year when P exceeds 1200. Show enough calculations to establish that it is the first. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q14",
+      "label": "Question 14 — Function transformation",
+      "prompt": "f(x) = x² for all real x. (a) The graph of g is formed by translating the graph of f by the vector (3, −2). Write g(x) and its turning point. [3] (b) Solve g(x) = 14. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q15",
+      "label": "Question 15 — Stationary points",
+      "prompt": "For y = x³ − 6x² + 9x + 1, find both stationary points and classify each as a maximum or minimum using the behaviour of the gradient on either side. [5]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q16",
+      "label": "Question 16 — Arithmetic series model",
+      "prompt": "A theatre has 24 seats in its first row and 3 more seats in each successive row. (a) Find the number in row 18. [1] (b) Find the total in the first 18 rows. [2] (c) A different theatre uses the same pattern and has 816 seats altogether. Find its number of rows. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q17",
+      "label": "Question 17 — Circle angles",
+      "prompt": "A, B, C and D lie in that order around a circle. Angle ABC = 108° and angle BAC = 27°. (a) Find angle ADC, giving a reason. [2] (b) Find angle ACB. [1] (c) Find the acute angle between the tangent at A and chord AC, giving a circle theorem reason. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q18",
+      "label": "Question 18 — Cone and density",
+      "prompt": "A solid right circular cone has radius 5 cm and perpendicular height 12 cm. (a) Find its total surface area. [3] (b) Its material has density 2.4 g/cm³. Find its mass in grams. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q19",
+      "label": "Question 19 — Three-dimensional angle",
+      "prompt": "A cuboid has a horizontal base 8 cm by 6 cm and vertical height 9 cm. (a) Find the length of its space diagonal. [3] (b) Find the angle between that space diagonal and the horizontal base, to 1 decimal place. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 5,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q20",
+      "label": "Question 20 — Tree probability",
+      "prompt": "A factory uses machines A and B for 60% and 40% of its output. The defect probabilities are 0.02 for A and 0.05 for B. Find the probability that a randomly selected defective item came from machine B. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q21",
+      "label": "Question 21 — Quartiles",
+      "prompt": "Nine sorted observations are 3, 5, 7, 8, 10, 12, 15, 17, 23. Exclude the overall median when finding the medians of the two halves. (a) Find the lower quartile. [1] (b) Find the upper quartile. [1] (c) Find the interquartile range. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 3,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q22",
+      "label": "Question 22 — Cumulative frequency graph",
+      "prompt": "For 50 delivery times, the cumulative frequencies at 0, 5, 10, 15 and 20 minutes are 0, 6, 20, 42 and 50. (a) Draw a cumulative-frequency graph. [2] (b) Estimate the median using straight-line interpolation between successive points. [1] (c) One delivery is selected at random. Find the probability that its time was greater than 15 minutes. [1]",
+      "type": "ink",
+      "resourceKeys": [
+        "formulae"
+      ],
+      "marks": 4,
+      "ink": {
+        "pages": 1,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

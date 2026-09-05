@@ -1,0 +1,878 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "ap",
+    "systemLabel": "Advanced Placement (AP)",
+    "qualificationLabel": "Advanced Placement",
+    "deliveryMode": "Hybrid-exam digital-ink practice",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "May 2027 · 29+13 MCQ · 2+4 FRQ · 62/38/30/60 working minutes · 10-minute break · part-specific graphing calculator rule"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "AP Calculus AB · End-of-course exam — original full-length mock (May 2027)",
+  "subject": "ap-calculus-ab",
+  "subjectLabel": "AP Calculus AB",
+  "level": "AP",
+  "paper": "End-of-course exam — original full-length mock (May 2027)",
+  "durationMinutes": 200,
+  "readingTimeMinutes": 0,
+  "phases": [
+    {
+      "id": "section-1a",
+      "label": "Section I, Part A — 29 multiple-choice questions",
+      "kind": "work",
+      "durationMinutes": 62,
+      "sectionId": "section-1a",
+      "tools": [
+        "Calculator not permitted",
+        "Digital multiple choice"
+      ],
+      "instructions": "Questions 1–29. Complete this part before time expires; you cannot return to it later."
+    },
+    {
+      "id": "section-1b",
+      "label": "Section I, Part B — 13 multiple-choice questions",
+      "kind": "work",
+      "durationMinutes": 38,
+      "sectionId": "section-1b",
+      "tools": [
+        "Approved graphing calculator required",
+        "Digital multiple choice"
+      ],
+      "instructions": "Questions 30–42. Use radian mode. Part A remains locked."
+    },
+    {
+      "id": "break",
+      "label": "Monitored break",
+      "kind": "break",
+      "durationMinutes": 10,
+      "tools": [],
+      "instructions": "Content and responses are locked. Section II starts automatically when this fixed break ends."
+    },
+    {
+      "id": "section-2a",
+      "label": "Section II, Part A — 2 free-response questions",
+      "kind": "work",
+      "durationMinutes": 30,
+      "sectionId": "section-2a",
+      "tools": [
+        "Approved graphing calculator required",
+        "Digital working canvas"
+      ],
+      "instructions": "Questions 1–2. Show mathematical setup and reasoning, not just calculator output."
+    },
+    {
+      "id": "section-2b",
+      "label": "Section II, Part B — 4 free-response questions",
+      "kind": "work",
+      "durationMinutes": 60,
+      "sectionId": "section-2b",
+      "tools": [
+        "Calculator not permitted",
+        "Digital working canvas"
+      ],
+      "instructions": "Questions 3–6. Earlier parts remain locked. Show exact work and justify conclusions."
+    }
+  ],
+  "maximumMarks": 96,
+  "mode": "reading",
+  "instructions": "Original full-length May 2027-format practice, not an official or endorsed AP exam. Section I-A: 29 MCQ in 62 minutes, no calculator. I-B: 13 MCQ in 38 minutes, graphing calculator required. After a 10-minute monitored break, Section II-A: two 9-point FRQ in 30 minutes, graphing calculator required. II-B: four 9-point FRQ in 60 minutes, no calculator. Answer all questions and choose one best answer per MCQ. Use radians unless a question specifies otherwise. Give exact answers or decimal answers accurate to three places; retain unrounded intermediate values. Show mathematical setup and reasoning in the integrated canvas for every FRQ, adding pages as needed. Supply an approved graphing calculator for the permitted parts; real Bluebook also offers Desmos graphing. There is no separate reading period or formula sheet. Real AP free responses are handwritten in booklets. DigitalDP automatically starts the next part and ends the fixed break; expired parts remain locked, including II-A during II-B. This mock does not reproduce accommodated-paper permission to revisit II-A without a calculator, and omits Bluebook's two one-minute between-part transitions. Raw marks are not AP scaled scores.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "calc-function-table",
+      "label": "Differentiable functions · supplied values",
+      "kind": "text",
+      "text": "The functions f and g are differentiable near x=1 and x=2. The following are exact values, not points to be joined by line segments.\nx | f(x) | f′(x) | g(x) | g′(x)\n1 | 2 | 3 | 4 | −1\n2 | 3 | 5 | 1 | 2\nFor the inverse-function question only, assume f is one-to-one and its inverse is differentiable near 3."
+    },
+    {
+      "key": "calc-trapezoids",
+      "label": "Question 23 · numerical integration data",
+      "kind": "text",
+      "text": "Selected values of a continuous function h:\nx | 0 | 1 | 3\nh(x) | 2 | 4 | 8\nUse the two subintervals determined by the three listed x-values. Do not assume h is linear between measurements."
+    },
+    {
+      "key": "calc-rate-table",
+      "label": "Question 38 · flow-rate data",
+      "kind": "text",
+      "text": "A differentiable inflow rate r(t), in liters per minute, is sampled at these times:\nt / minutes | 0 | 2 | 5 | 9\nr(t) / liters per minute | 1.2 | 2.5 | 3.1 | 2.0\nUse the three subintervals determined by the four measurements."
+    },
+    {
+      "key": "calc-frq-reservoir",
+      "label": "FRQ 1 · reservoir model",
+      "kind": "text",
+      "text": "Original model. A reservoir contains 80 cubic meters of water at time t=0 hours. Water enters at rate R(t)=12+4 sin(t/3) cubic meters per hour and leaves at rate D(t)=8+0.4t cubic meters per hour, for 0≤t≤12. No other water enters or leaves. The reservoir has sufficient capacity. Use radians and report decimal answers to three places unless an exact expression is given."
+    },
+    {
+      "key": "calc-frq-region",
+      "label": "FRQ 2 · region between two curves",
+      "kind": "text",
+      "text": "Let f(x)=1+e^(−x/2) and g(x)=0.4x+0.2 for x≥0. Their unique positive intersection has x-coordinate a. Region R is bounded by x=0 and the two curves from x=0 to x=a. On that interval, f is the upper boundary and g is the lower boundary. This description fully specifies the region; no scale drawing is needed. Use a graphing calculator where appropriate."
+    },
+    {
+      "key": "calc-frq-derivative",
+      "label": "FRQ 3 · graph of a derivative, specified by vertices",
+      "kind": "text",
+      "text": "The continuous graph of f′ on [−2, 5] consists of straight line segments joining these successive points:\n(−2, 0) → (0, 2) → (2, 0) → (3, −2) → (5, 0).\nThe horizontal coordinate is x and the vertical coordinate is f′(x). The listed vertices are exact. The function f is differentiable and f(0)=1. You may sketch the supplied derivative graph to assist your work. It is f′, not f, that is piecewise linear."
+    },
+    {
+      "key": "calc-frq-equation",
+      "label": "FRQ 4 · differential equation",
+      "kind": "text",
+      "text": "A differentiable function y=f(x) satisfies dy/dx=x(2−y) and f(0)=1. Consider the particular solution containing (0, 1)."
+    },
+    {
+      "key": "calc-frq-parabola",
+      "label": "FRQ 5 · inscribed rectangle and region",
+      "kind": "text",
+      "text": "The region under y=12−3x² and above the x-axis extends from x=−2 to x=2. A rectangle is inscribed in this region with its lower side on the x-axis and its upper corners on the parabola at x=−a and x=a, where 0<a<2. All lengths are in centimeters."
+    },
+    {
+      "key": "calc-frq-motion",
+      "label": "FRQ 6 · tabulated velocity",
+      "kind": "text",
+      "text": "A particle moves on a straight track. Its velocity v is continuously differentiable for 0≤t≤5 seconds. Selected exact values are shown below. The particle starts at position s(0)=4 meters. The table does not imply constant acceleration between measurements.\nt / seconds | 0 | 1 | 3 | 5\nv(t) / meters per second | 2 | −1 | 3 | 5\nAcceleration is denoted a(t)=v′(t)."
+    }
+  ],
+  "questions": [
+    {
+      "id": "calc-mcq-1",
+      "label": "Section I, Part A — Question 1",
+      "prompt": "What is lim as x→4 of [√(x+5)−3]/(x−4)?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "0",
+        "1/3",
+        "1/6",
+        "The limit does not exist."
+      ]
+    },
+    {
+      "id": "calc-mcq-2",
+      "label": "Section I, Part A — Question 2",
+      "prompt": "Let f(x)=x²−1 for x<2 and f(x)=kx+1 for x≥2. For what value of k is f continuous at x=2?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "1",
+        "−1",
+        "2",
+        "0"
+      ]
+    },
+    {
+      "id": "calc-mcq-3",
+      "label": "Section I, Part A — Question 3",
+      "prompt": "Angles are in radians. What is lim as x→0 of sin(5x)/(2x)?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "2/5",
+        "5",
+        "0",
+        "5/2"
+      ]
+    },
+    {
+      "id": "calc-mcq-4",
+      "label": "Section I, Part A — Question 4",
+      "prompt": "The function f is continuous on [1, 4], with f(1)=−2 and f(4)=6. Which statement must be true?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "f has exactly one zero in (1, 4).",
+        "f′(c)=8/3 for every c in (1, 4).",
+        "There is a c in (1, 4) for which f(c)=0.",
+        "f is differentiable at every point in (1, 4)."
+      ]
+    },
+    {
+      "id": "calc-mcq-5",
+      "label": "Section I, Part A — Question 5",
+      "prompt": "If f(x)=x²eˣ, what is f′(1)?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "e",
+        "2e",
+        "3e",
+        "e²"
+      ]
+    },
+    {
+      "id": "calc-mcq-6",
+      "label": "Section I, Part A — Question 6",
+      "prompt": "Let h(x)=f(x)g(x). Using the supplied table, find h′(2).",
+      "type": "single-choice",
+      "resourceKeys": [
+        "calc-function-table"
+      ],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "5",
+        "11",
+        "8",
+        "6"
+      ]
+    },
+    {
+      "id": "calc-mcq-7",
+      "label": "Section I, Part A — Question 7",
+      "prompt": "The expression lim as h→0 of [ln(2+h)−ln 2]/h has which value?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "ln2",
+        "1/2",
+        "2",
+        "0"
+      ]
+    },
+    {
+      "id": "calc-mcq-8",
+      "label": "Section I, Part A — Question 8",
+      "prompt": "Let j(x)=f(x)/g(x). Using the supplied table, find j′(1).",
+      "type": "single-choice",
+      "resourceKeys": [
+        "calc-function-table"
+      ],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "1/4",
+        "7/8",
+        "−7/8",
+        "5/4"
+      ]
+    },
+    {
+      "id": "calc-mcq-9",
+      "label": "Section I, Part A — Question 9",
+      "prompt": "If f(x)=ln(3x²+1), which expression equals f′(x)?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "6xln(3x²+1)",
+        "3/(x²+1)",
+        "1/(3x²+1)",
+        "6x/(3x²+1)"
+      ]
+    },
+    {
+      "id": "calc-mcq-10",
+      "label": "Section I, Part A — Question 10",
+      "prompt": "For the curve x²+xy+y²=7, what is dy/dx at (1, 2)?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "−5/4",
+        "4/5",
+        "−4/5",
+        "−1/2"
+      ]
+    },
+    {
+      "id": "calc-mcq-11",
+      "label": "Section I, Part A — Question 11",
+      "prompt": "Let k be the inverse of f. Using the supplied table and inverse-function assumptions, find k′(3).",
+      "type": "single-choice",
+      "resourceKeys": [
+        "calc-function-table"
+      ],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "1/5",
+        "1/3",
+        "5",
+        "3"
+      ]
+    },
+    {
+      "id": "calc-mcq-12",
+      "label": "Section I, Part A — Question 12",
+      "prompt": "A sphere's radius is increasing at 3 cm/s. At the instant its radius is 2 cm, at what rate is its volume increasing? Use V=(4/3)πr³.",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "36π cm³/s",
+        "48π cm³/s",
+        "12π cm³/s",
+        "24π cm³/s"
+      ]
+    },
+    {
+      "id": "calc-mcq-13",
+      "label": "Section I, Part A — Question 13",
+      "prompt": "Use the tangent line to y=√x at x=4 to approximate √4.12.",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "2.06",
+        "2.24",
+        "2.12",
+        "2.03"
+      ]
+    },
+    {
+      "id": "calc-mcq-14",
+      "label": "Section I, Part A — Question 14",
+      "prompt": "A particle's position is s(t)=t³−6t²+9t for 0≤t≤4. On which open intervals is the particle's speed increasing?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "(1, 2) and (3, 4)",
+        "(2, 4) only",
+        "(0, 1) and (2, 3)",
+        "(1, 3) only"
+      ]
+    },
+    {
+      "id": "calc-mcq-15",
+      "label": "Section I, Part A — Question 15",
+      "prompt": "A differentiable function has f′(x)=(x−1)²(x+2) for all real x. At which x-value does f have a local minimum?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "−2 only",
+        "1 only",
+        "Neither −2 nor 1",
+        "−2 and 1"
+      ]
+    },
+    {
+      "id": "calc-mcq-16",
+      "label": "Section I, Part A — Question 16",
+      "prompt": "A twice-differentiable function has f″(x)=x(x−3). On which interval is its graph concave down?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "(−∞, 0)",
+        "(3, ∞)",
+        "(0, 3)",
+        "(−∞, 0) and (3, ∞)"
+      ]
+    },
+    {
+      "id": "calc-mcq-17",
+      "label": "Section I, Part A — Question 17",
+      "prompt": "What is the absolute maximum value of f(x)=x³−3x on [−2, 2]?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "3",
+        "2",
+        "6",
+        "−2"
+      ]
+    },
+    {
+      "id": "calc-mcq-18",
+      "label": "Section I, Part A — Question 18",
+      "prompt": "For f(x)=ln x on [1, e], which c satisfies the conclusion of the Mean Value Theorem?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "e−1",
+        "1",
+        "e",
+        "e/2"
+      ]
+    },
+    {
+      "id": "calc-mcq-19",
+      "label": "Section I, Part A — Question 19",
+      "prompt": "A rectangle has perimeter 24 cm. What is its greatest possible area?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "36 cm²",
+        "24 cm²",
+        "48 cm²",
+        "144 cm²"
+      ]
+    },
+    {
+      "id": "calc-mcq-20",
+      "label": "Section I, Part A — Question 20",
+      "prompt": "Evaluate ∫ from 0 to 2 of (3x²−2x)dx.",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "4",
+        "2",
+        "8",
+        "6"
+      ]
+    },
+    {
+      "id": "calc-mcq-21",
+      "label": "Section I, Part A — Question 21",
+      "prompt": "Let F(x)=∫ from 1 to x² of √(1+t²)dt. Which expression equals F′(x)?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "2x√(1+x⁴)",
+        "√(1+x⁴)",
+        "2x√(1+x²)",
+        "√(1+x²)"
+      ]
+    },
+    {
+      "id": "calc-mcq-22",
+      "label": "Section I, Part A — Question 22",
+      "prompt": "Which is an antiderivative of 2x/(x²+4)?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "2ln(x²+4)",
+        "arctan(x/2)",
+        "ln(x²+4)",
+        "1/(x²+4)"
+      ]
+    },
+    {
+      "id": "calc-mcq-23",
+      "label": "Section I, Part A — Question 23",
+      "prompt": "Using the two stated subintervals, what is the trapezoidal approximation to ∫ from 0 to 3 of h(x)dx?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "calc-trapezoids"
+      ],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "15",
+        "21",
+        "14",
+        "12"
+      ]
+    },
+    {
+      "id": "calc-mcq-24",
+      "label": "Section I, Part A — Question 24",
+      "prompt": "Which definite integral is represented by lim as n→∞ of Σ from k=1 to n of (3/n)(1+3k/n)²?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "∫ from 1 to 4 of x²dx",
+        "∫ from 1 to 3 of x²dx",
+        "∫ from 0 to 3 of x²dx",
+        "∫ from 0 to 4 of 3x²dx"
+      ]
+    },
+    {
+      "id": "calc-mcq-25",
+      "label": "Section I, Part A — Question 25",
+      "prompt": "Which function satisfies dy/dx=2xy and y(0)=3?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "y=3e²ˣ",
+        "y=eˣ²+2",
+        "y=3eˣ²",
+        "y=3+x²"
+      ]
+    },
+    {
+      "id": "calc-mcq-26",
+      "label": "Section I, Part A — Question 26",
+      "prompt": "A slope field represents dy/dx=x−y. Along which line do all the short segments have slope −1?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "y=−x+1",
+        "y=−1",
+        "y=x+1",
+        "y=x−1"
+      ]
+    },
+    {
+      "id": "calc-mcq-27",
+      "label": "Section I, Part A — Question 27",
+      "prompt": "What is the average value of f(x)=x² on [0, 2]?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "2",
+        "4/3",
+        "4",
+        "8/3"
+      ]
+    },
+    {
+      "id": "calc-mcq-28",
+      "label": "Section I, Part A — Question 28",
+      "prompt": "What is the area enclosed by y=x and y=x²?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "1/6",
+        "1/2",
+        "2/3",
+        "1/3"
+      ]
+    },
+    {
+      "id": "calc-mcq-29",
+      "label": "Section I, Part A — Question 29",
+      "prompt": "A solid's base is the region between y=x and y=x². Cross sections perpendicular to the x-axis are squares whose sides lie in the base. Which integral gives the volume?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1a",
+      "options": [
+        "π∫ from 0 to 1 of (x²−x⁴)dx",
+        "∫ from 0 to 1 of (x²+x⁴)dx",
+        "∫ from 0 to 1 of (x−x²)²dx",
+        "∫ from 0 to 1 of (x−x²)dx"
+      ]
+    },
+    {
+      "id": "calc-mcq-30",
+      "label": "Section I, Part B — Question 30",
+      "prompt": "A graphing calculator is permitted. The value of lim as h→0 of [e^(1.3+h)−e^1.3]/h is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "1.300",
+        "4.770",
+        "0.273",
+        "3.669"
+      ]
+    },
+    {
+      "id": "calc-mcq-31",
+      "label": "Section I, Part B — Question 31",
+      "prompt": "If f(x)=x sin(x²), then f′(1.2) is closest to which value? Use radian mode.",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "1.190",
+        "2.852",
+        "0.995",
+        "1.367"
+      ]
+    },
+    {
+      "id": "calc-mcq-32",
+      "label": "Section I, Part B — Question 32",
+      "prompt": "The point (0.8, b), where b>0, lies on x²+xy+y²=7. The slope of the tangent there is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "−1.361",
+        "−0.735",
+        "0.735",
+        "−0.800"
+      ]
+    },
+    {
+      "id": "calc-mcq-33",
+      "label": "Section I, Part B — Question 33",
+      "prompt": "Water enters an inverted conical tank at 5 m³/min. The cone's radius is always half its water depth h, and V=πr²h/3. When h=3 m, dh/dt in meters per minute is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "0.707",
+        "5.000",
+        "0.354",
+        "1.768"
+      ]
+    },
+    {
+      "id": "calc-mcq-34",
+      "label": "Section I, Part B — Question 34",
+      "prompt": "A heated object's temperature is T(t)=20+65e^(−0.12t) degrees Celsius, t minutes after heating stops. Its instantaneous temperature-change rate at t=5, in °C/min, is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "55.673",
+        "−0.600",
+        "−4.281",
+        "−7.800"
+      ]
+    },
+    {
+      "id": "calc-mcq-35",
+      "label": "Section I, Part B — Question 35",
+      "prompt": "What is the absolute maximum value of f(x)=x+2sin x on [0, 5]? Use radian mode.",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "3.826",
+        "5.000",
+        "3.082",
+        "2.094"
+      ]
+    },
+    {
+      "id": "calc-mcq-36",
+      "label": "Section I, Part B — Question 36",
+      "prompt": "A function f has derivative f′(x)=2+cos(x²). How many points of inflection does its graph have for 0<x<3?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "One",
+        "Four",
+        "Two",
+        "Three"
+      ]
+    },
+    {
+      "id": "calc-mcq-37",
+      "label": "Section I, Part B — Question 37",
+      "prompt": "The value of ∫ from 0 to 2 of e^(−x²)dx is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "0.432",
+        "0.882",
+        "1.135",
+        "1.765"
+      ]
+    },
+    {
+      "id": "calc-mcq-38",
+      "label": "Section I, Part B — Question 38",
+      "prompt": "Use a trapezoidal sum over the stated subintervals to estimate the total inflow over the first 9 minutes.",
+      "type": "single-choice",
+      "resourceKeys": [
+        "calc-rate-table"
+      ],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "14.8 L",
+        "24.8 L",
+        "22.3 L",
+        "18.5 L"
+      ]
+    },
+    {
+      "id": "calc-mcq-39",
+      "label": "Section I, Part B — Question 39",
+      "prompt": "A population follows dP/dt=0.35P, with P(0)=12. At what time does the model predict P=30?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "7.143",
+        "0.916",
+        "1.980",
+        "2.618"
+      ]
+    },
+    {
+      "id": "calc-mcq-40",
+      "label": "Section I, Part B — Question 40",
+      "prompt": "Let a be the first positive solution of sin x=0.4x. The area enclosed by y=sin x and y=0.4x on 0≤x≤a is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "0.905",
+        "2.125",
+        "0.623",
+        "1.528"
+      ]
+    },
+    {
+      "id": "calc-mcq-41",
+      "label": "Section I, Part B — Question 41",
+      "prompt": "The region bounded by y=ln x, y=0, x=1 and x=3 is revolved about the x-axis. Its volume is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "1.029",
+        "4.071",
+        "3.233",
+        "1.296"
+      ]
+    },
+    {
+      "id": "calc-mcq-42",
+      "label": "Section I, Part B — Question 42",
+      "prompt": "A particle moves on a line with velocity v(t)=sin(t²)m/s for 0≤t≤3. Its total distance traveled, in meters, is closest to",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "sectionId": "section-1b",
+      "options": [
+        "3.000",
+        "1.702",
+        "0.774",
+        "0.707"
+      ]
+    },
+    {
+      "id": "calc-frq-1",
+      "label": "Section II, Part A — Question 1",
+      "prompt": "(a) Find R′(6). Interpret its sign and units in the context of the inflow rate. [2]\n(b) Find the total volume of water that enters during 0≤t≤12. Show the integral setup. [2]\n(c) Find the amount of water in the reservoir at t=12. Show how you use both rates and the initial amount. [2]\n(d) At what time in [0, 12] is the amount of water greatest? Find that greatest amount and justify that it is an absolute maximum. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "calc-frq-reservoir"
+      ],
+      "marks": 9,
+      "sectionId": "section-2a",
+      "ink": {
+        "pages": 3,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "calc-frq-2",
+      "label": "Section II, Part A — Question 2",
+      "prompt": "(a) Write the equation used to find a and determine a to three decimal places. [2]\n(b) Find the area of R. Show an integral and its value. [2]\n(c) Find the volume when R is revolved about the horizontal line y=−1. Identify the outer and inner radii in your setup. [3]\n(d) Region R is also the base of a different solid. Cross sections perpendicular to the x-axis are squares with one side in R. Write, but do not evaluate, an integral for that solid's volume. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "calc-frq-region"
+      ],
+      "marks": 9,
+      "sectionId": "section-2a",
+      "ink": {
+        "pages": 3,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "calc-frq-3",
+      "label": "Section II, Part B — Question 3",
+      "prompt": "(a) Find f(3), using signed areas or an integral. Show the work. [2]\n(b) State every open interval on which f is increasing. Identify the x-coordinate of every local maximum of f in (−2, 5), and justify using f′. [3]\n(c) State every open interval on which the graph of f is concave up, and justify your answer from the supplied derivative graph. [2]\n(d) Let G(x)=∫ from 0 to x of f(t)dt. Find G″(3) and determine whether G is concave up or concave down near x=3. Justify your conclusion. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "calc-frq-derivative"
+      ],
+      "marks": 9,
+      "sectionId": "section-2b",
+      "ink": {
+        "pages": 3,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "calc-frq-4",
+      "label": "Section II, Part B — Question 4",
+      "prompt": "(a) Write the equation of the tangent line to the solution curve at (0, 1). [1]\n(b) Find d²y/dx² at (0, 1). Use it to determine whether the tangent-line approximation underestimates or overestimates f(x) for positive x sufficiently close to 0. [2]\n(c) Solve the differential equation for this particular solution. Show separation, integration and the use of the initial condition. [4]\n(d) Determine lim as x→∞ of f(x), and justify the result using your solution. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "calc-frq-equation"
+      ],
+      "marks": 9,
+      "sectionId": "section-2b",
+      "ink": {
+        "pages": 3,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "calc-frq-5",
+      "label": "Section II, Part B — Question 5",
+      "prompt": "(a) Express the rectangle's area A as a function of a. [1]\n(b) Find the value of a that gives the greatest area, find that area, and justify the maximum. Give exact values. [3]\n(c) The entire region under the parabola and above the x-axis is revolved about the x-axis. Find its volume, showing the definite integral and an exact result. [3]\n(d) Find the area of that entire region, showing your integral calculation. [2]",
+      "type": "ink",
+      "resourceKeys": [
+        "calc-frq-parabola"
+      ],
+      "marks": 9,
+      "sectionId": "section-2b",
+      "ink": {
+        "pages": 3,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "calc-frq-6",
+      "label": "Section II, Part B — Question 6",
+      "prompt": "(a) Approximate a(2) using the average rate of change of velocity on [1, 3]. Show your calculation and units. [2]\n(b) Use a trapezoidal sum on the three subintervals in the table to approximate the particle's position at t=5. [2]\n(c) Must there be a c in (3, 5) for which a(c)=1 m/s²? Justify by naming an appropriate theorem and checking its conditions. [2]\n(d) Evaluate ∫ from 0 to 5 of a(t)dt and explain the physical meaning of its value, including units. Explain why this integral is not the total distance traveled. [3]",
+      "type": "ink",
+      "resourceKeys": [
+        "calc-frq-motion"
+      ],
+      "marks": 9,
+      "sectionId": "section-2b",
+      "ink": {
+        "pages": 3,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    }
+  ]
+}

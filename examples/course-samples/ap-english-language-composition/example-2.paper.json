@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "ap",
+    "systemLabel": "Advanced Placement (AP)",
+    "qualificationLabel": "Advanced Placement",
+    "deliveryMode": "Fully digital practice",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "May 2027 English Language and Composition · locked sections · fixed monitored break · typed free response"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "AP English Language and Composition · End-of-course exam — original 8-minute walkthrough",
+  "subject": "ap-english-language-composition",
+  "subjectLabel": "AP English Language and Composition",
+  "level": "AP",
+  "paper": "End-of-course exam — original 8-minute walkthrough",
+  "durationMinutes": 8,
+  "readingTimeMinutes": 0,
+  "phases": [
+    {
+      "id": "section-1",
+      "label": "Section I — multiple choice",
+      "kind": "work",
+      "durationMinutes": 2,
+      "sectionId": "section-1",
+      "tools": [
+        "Digital multiple-choice",
+        "Text highlighting",
+        "Mark for review"
+      ],
+      "instructions": "Complete Section I. You cannot return after this section ends."
+    },
+    {
+      "id": "break",
+      "label": "Monitored break",
+      "kind": "break",
+      "durationMinutes": 1,
+      "tools": [],
+      "instructions": "Student entry and examination content are locked during the break."
+    },
+    {
+      "id": "section-2",
+      "label": "Section II — free response",
+      "kind": "work",
+      "durationMinutes": 5,
+      "sectionId": "section-2",
+      "tools": [
+        "Typed free response",
+        "Text highlighting",
+        "Optional reading period"
+      ],
+      "instructions": "Complete the free-response tasks. The recommended reading period is optional, so you may begin writing immediately. Section I remains locked."
+    }
+  ],
+  "maximumMarks": 21,
+  "mode": "essay",
+  "instructions": "This demonstration has 3 multiple-choice questions and 3 essay tasks. It uses an 8-minute classroom walkthrough clock with a 1-minute break. It is not a full mock examination: the real exam has 45 multiple-choice questions and substantial source passages. Complete each section in order. The reading/planning period within free response is optional; you may start writing immediately. DigitalDP opens the next section automatically after the fixed break.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "civic-source",
+      "label": "Original source set — public shade structures",
+      "kind": "text",
+      "text": "Source A: A city survey found that shaded bus stops were used 28% more often during summer afternoons than unshaded stops.\n\nSource B: A maintenance report estimated that each shade structure would require inspection twice a year and replacement fabric every eight years.\n\nSource C: A resident wrote that shade is a basic accessibility measure for older passengers, young children and people whose medication increases heat sensitivity.\n\nSource D: A budget statement warned that installing structures at every stop would delay planned pavement repairs.\n\nSource E: A transit planner proposed beginning with stops that combine high ridership, long waits and little natural shade, then reviewing usage after one summer.\n\nSource F: A neighbourhood association argued that small street trees would cool a wider area and improve air quality, although they would take years to mature and could not be planted at every stop."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Section I — Question 1",
+      "prompt": "Which source most directly frames shade as an issue of equitable access?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "civic-source"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Source A",
+        "Source B",
+        "Source C",
+        "Source D"
+      ]
+    },
+    {
+      "id": "q2",
+      "label": "Section I — Question 2",
+      "prompt": "Which pair of sources presents the clearest tension between immediate benefit and opportunity cost?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "civic-source"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "A and C",
+        "A and D",
+        "B and C",
+        "B and D"
+      ]
+    },
+    {
+      "id": "q3",
+      "label": "Section I — Question 3",
+      "prompt": "The numerical evidence in Source A would be most strengthened by information about",
+      "type": "single-choice",
+      "resourceKeys": [
+        "civic-source"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "the colour of each bus",
+        "weather and ridership controls",
+        "the author's education",
+        "fabric manufacturers"
+      ]
+    },
+    {
+      "id": "q4",
+      "label": "Section II — Synthesis",
+      "prompt": "Write an argument that uses evidence from at least three sources to develop a position on how a city should prioritize shade structures at public-transport stops.",
+      "type": "essay",
+      "resourceKeys": [
+        "civic-source"
+      ],
+      "marks": 6,
+      "sectionId": "section-2"
+    },
+    {
+      "id": "q5",
+      "label": "Section II — Rhetorical analysis",
+      "prompt": "Analyze how the writer of Source C uses rhetorical choices to present shade as a public responsibility rather than a convenience.",
+      "type": "essay",
+      "resourceKeys": [
+        "civic-source"
+      ],
+      "marks": 6,
+      "sectionId": "section-2"
+    },
+    {
+      "id": "q6",
+      "label": "Section II — Argument",
+      "prompt": "Write an argument that develops your position on whether public projects should prioritize the greatest total benefit or the needs of people facing the greatest barriers.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 6,
+      "sectionId": "section-2"
+    }
+  ]
+}

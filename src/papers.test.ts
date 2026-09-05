@@ -19,6 +19,13 @@ const manifest = {
 };
 
 describe("paper manifests", () => {
+  test("accepts substantial answer choices without relaxing identifier limits", () => {
+    const choice = { ...manifest.questions[0], type: "single-choice", options: ["A".repeat(1_000), "A concise alternative"] };
+    expect(parseManifest({ ...manifest, questions: [choice] }).questions[0]?.options?.[0]).toHaveLength(1_000);
+    expect(() => parseManifest({ ...manifest, questions: [{ ...choice, options: ["A".repeat(1_001), "B"] }] })).toThrow("questions[0].options[0]");
+    expect(() => parseManifest({ ...manifest, questions: [{ ...choice, resourceKeys: ["x".repeat(65)] }] })).toThrow("resourceKeys[0]");
+  });
+
   test("accepts subject-extensible manifests", () => {
     expect(parseManifest(manifest)).toMatchObject({
       subject: "history",
@@ -40,8 +47,25 @@ describe("paper manifests", () => {
     expect(() => parseManifest({ ...manifest, exportAuthorized: "yes" })).toThrow("manifest.exportAuthorized");
   });
 
-  test("rejects unsupported level labels", () => {
-    expect(() => parseManifest({ ...manifest, level: "SL + HL" })).toThrow("manifest.level");
+  test("accepts provider-specific level labels and rejects malformed ones", () => {
+    expect(parseManifest({ ...manifest, level: "Extended" }).level).toBe("Extended");
+    expect(parseManifest({ ...manifest, level: "Higher" }).level).toBe("Higher");
+    expect(() => parseManifest({ ...manifest, level: "<script>" })).toThrow("manifest.level");
+  });
+
+  test("preserves and validates an optional exam-format profile", () => {
+    const examFormat = {
+      systemId: "cambridge-igcse",
+      systemLabel: "Cambridge IGCSE",
+      qualificationLabel: "Cambridge IGCSE",
+      deliveryMode: "Paper-like digital practice",
+      fidelity: "official-format" as const,
+      profileVersion: "2026-09-04",
+      rulesSummary: "No calculator · digital working canvas",
+    };
+    expect(parseManifest({ ...manifest, level: "Extended", examFormat }).examFormat).toEqual(examFormat);
+    expect(() => parseManifest({ ...manifest, examFormat: { ...examFormat, fidelity: "official" } })).toThrow("examFormat.fidelity");
+    expect(() => parseManifest({ ...manifest, examFormat: { ...examFormat, systemId: "Cambridge IGCSE" } })).toThrow("examFormat.systemId");
   });
 
   test("defaults legacy manifests to no separate reading period", () => {
@@ -51,6 +75,34 @@ describe("paper manifests", () => {
 
   test("rejects implausible reading periods", () => {
     expect(() => parseManifest({ ...manifest, readingTimeMinutes: 61 })).toThrow("manifest.readingTimeMinutes");
+  });
+
+  test("validates a sectioned paper and preserves its phase-specific tools", () => {
+    const phased = {
+      ...manifest,
+      readingTimeMinutes: 0,
+      durationMinutes: 25,
+      phases: [
+        { id: "section-1", label: "Section I", kind: "work", durationMinutes: 10, sectionId: "section-1", tools: ["No calculator"] },
+        { id: "break", label: "Break", kind: "break", durationMinutes: 5, tools: [] },
+        { id: "section-2", label: "Section II", kind: "work", durationMinutes: 10, sectionId: "section-2", tools: ["Calculator permitted"] },
+      ],
+      questions: [
+        { ...manifest.questions[0], id: "q1", sectionId: "section-1" },
+        { ...manifest.questions[0], id: "q2", sectionId: "section-2" },
+      ],
+    };
+    expect(parseManifest(phased)).toMatchObject({
+      phases: [
+        { id: "section-1", kind: "work", tools: ["No calculator"] },
+        { id: "break", kind: "break", tools: [] },
+        { id: "section-2", kind: "work", tools: ["Calculator permitted"] },
+      ],
+      questions: [{ sectionId: "section-1" }, { sectionId: "section-2" }],
+    });
+    expect(() => parseManifest({ ...phased, durationMinutes: 30 })).toThrow("must add up");
+    expect(() => parseManifest({ ...phased, readingTimeMinutes: 5 })).toThrow("must be 0");
+    expect(() => parseManifest({ ...phased, questions: [{ ...manifest.questions[0], sectionId: "missing" }] })).toThrow("work-phase section");
   });
 
   test("rejects questions that reference missing resources", () => {

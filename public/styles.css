@@ -467,8 +467,15 @@ legend {
 }
 
 .admin-section {
+  scroll-margin-top: 7rem;
   padding: clamp(2rem, 5vw, 5rem) clamp(1.5rem, 4vw, 4rem);
 }
+
+.library-filters { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
+.library-filters p { margin: 0; color: var(--color-ink-muted); }
+#paper-list { max-height: 38rem; overflow-y: auto; overscroll-behavior: contain; }
+.paper-readiness { padding: var(--space-4); background: var(--color-paper); border-left: 3px solid var(--color-rule-strong); }
+.paper-readiness p { margin: var(--space-3) 0 0; overflow-wrap: anywhere; }
 
 .admin-section + .admin-section {
   border-top: var(--rule-thin) solid var(--color-rule);
@@ -669,6 +676,41 @@ legend {
   font-size: var(--text-sm);
 }
 
+.builder-system-description {
+  margin: calc(-1 * var(--space-1)) 0 var(--space-1);
+  border-inline-start: 0.25rem solid var(--color-accent);
+  background: var(--color-accent-soft);
+  padding: var(--space-3);
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+.builder-format-rules {
+  margin: 0;
+  border-top: var(--rule-thin) solid color-mix(in srgb, var(--color-accent-strong) 22%, transparent);
+  background: var(--color-accent-soft);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-ink);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.builder-phase-plan {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  border-top: var(--rule-thin) solid color-mix(in srgb, var(--color-accent-strong) 22%, transparent);
+  background: var(--color-accent-soft);
+  padding: var(--space-3) var(--space-5) var(--space-4) calc(var(--space-5) + 1.25rem);
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.builder-phase-plan[hidden] {
+  display: none;
+}
+
 .builder-exam-guidance {
   margin: 0;
   border-bottom: var(--rule-thin) solid var(--color-rule);
@@ -841,10 +883,20 @@ legend {
 }
 
 .paper-preview-instructions,
-.paper-preview-resources {
+.paper-preview-resources,
+.paper-preview-phases {
   margin-top: var(--space-5);
   border: 0.05rem solid #94a3b8;
   padding: var(--space-3);
+}
+
+.paper-preview-phase-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+  padding-inline-start: 1.25rem;
+  color: #334155;
+  font-size: var(--text-xs);
 }
 
 .paper-preview-document h5 {
@@ -1211,6 +1263,16 @@ legend {
   align-items: center;
   justify-content: end;
   gap: var(--space-2);
+}
+
+.paper-list li {
+  align-items: stretch;
+  flex-direction: column;
+  overflow-wrap: anywhere;
+}
+
+.paper-list-actions {
+  justify-content: space-between;
 }
 
 .paper-list-actions a {
@@ -1664,6 +1726,10 @@ legend {
 
 /* Candidate examination */
 
+.save-recovery { min-width: 0; max-width: 40rem; }
+.save-recovery [data-tone="error"] { font-weight: 700; }
+#save-recovery-actions:not([hidden]) { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.35rem; }
+
 .exam-shell {
   --exam-background: oklch(99% 0.004 250);
   --exam-surface: oklch(100% 0 0);
@@ -1678,6 +1744,8 @@ legend {
   display: grid;
   height: 100dvh;
   min-height: 33rem;
+  /* Regression: long AP titles must not grow the implicit track beyond 1280/1440px screens. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   grid-template-areas:
     "exam-topbar"
@@ -1755,7 +1823,9 @@ legend {
   grid-area: exam-topbar;
   z-index: 10;
   display: flex;
+  min-width: 0;
   min-height: 3.85rem;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
@@ -1766,7 +1836,8 @@ legend {
 
 .exam-identity {
   display: flex;
-  min-width: 17rem;
+  flex: 1 1 17rem;
+  min-width: 0;
   align-items: center;
   gap: var(--space-3);
 }
@@ -1776,6 +1847,7 @@ legend {
 }
 
 .exam-mark {
+  flex-shrink: 0;
   width: 2.2rem;
   height: 2.2rem;
   background: var(--exam-accent);
@@ -1794,12 +1866,33 @@ legend {
   margin: 0.15rem 0 0;
   font-size: var(--text-sm);
   font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.exam-phase-summary {
+  display: grid;
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 24rem;
+  gap: 0.15rem;
+  color: var(--exam-muted);
+  font-size: var(--text-xs);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.exam-phase-summary strong {
+  color: var(--exam-accent);
+  font-size: var(--text-sm);
 }
 
 .exam-tools {
   display: flex;
+  flex: 1 1 36rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
   align-items: center;
   justify-content: end;
   gap: var(--space-2);
@@ -1844,6 +1937,8 @@ legend {
 .reading-banner {
   grid-area: reading-banner;
   display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-3);
   border-bottom: var(--rule-thin) solid var(--exam-accent);
@@ -1859,7 +1954,42 @@ legend {
 
 .reading-banner strong {
   color: var(--exam-accent);
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+.exam-shell[data-phase="break"] .phase-banner {
+  border-color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 16%, var(--exam-surface));
+}
+
+.exam-shell[data-phase="break"] .phase-banner strong {
+  color: var(--color-warning-ink, #7a4b00);
+}
+
+.exam-phase-lock {
+  display: grid;
+  min-height: 100%;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.exam-phase-lock h3,
+.exam-phase-lock p {
+  max-width: 52ch;
+  margin: 0;
+}
+
+.exam-resource-lock {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  margin: 0;
+  padding: var(--space-8);
+  color: var(--exam-muted);
+  text-align: center;
 }
 
 .language-tool select {
@@ -1965,6 +2095,7 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 .exam-workspace {
   grid-area: exam-workspace;
   display: grid;
+  min-width: 0;
   min-height: 0;
   grid-template-columns: minmax(0, 1fr) 0.45rem minmax(0, 1fr);
   background: var(--exam-background);
@@ -1995,6 +2126,10 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
   min-height: 0;
   grid-template-rows: auto minmax(0, 1fr) auto;
   background: var(--exam-surface);
+}
+
+.resource-pane {
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
 .pane-heading {
@@ -2073,23 +2208,79 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
   white-space: pre-wrap;
 }
 
+.formatted-resource-text {
+  min-width: 0;
+  white-space: normal;
+}
+
+.formatted-resource-text .resource-text-prose {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.resource-text-table-scroll {
+  max-width: 100%;
+  margin-block: 0.75rem;
+  overflow-x: auto;
+}
+
+.resource-text-table-scroll:focus-visible {
+  outline: 2px solid var(--color-ink, #1e293b);
+  outline-offset: 3px;
+}
+
+.resource-text-table {
+  width: 100%;
+  min-width: 30rem;
+  border-collapse: collapse;
+  font: inherit;
+  line-height: 1.4;
+}
+
+.resource-text-table caption {
+  padding-block: 0.35rem;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-align: start;
+}
+
+.resource-text-table th,
+.resource-text-table td {
+  border: 1px solid #94a3b8;
+  padding: 0.4rem 0.5rem;
+  vertical-align: top;
+  text-align: start;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.resource-text-table th {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
 .resource-tabs {
   display: flex;
   min-height: 3.4rem;
   align-items: stretch;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--space-2);
   overflow-x: auto;
-  border-top: var(--rule-thin) solid var(--exam-rule);
+  overscroll-behavior-inline: contain;
+  border-bottom: var(--rule-thin) solid var(--exam-rule);
   padding: var(--space-2);
 }
 
 .resource-tab {
+  flex: 0 0 auto;
   min-width: 6rem;
+  max-width: min(13rem, 70vw);
+  overflow: hidden;
   border-color: transparent;
   background: transparent;
   color: var(--exam-ink);
   padding-inline: var(--space-3);
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -2192,6 +2383,19 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
   padding: var(--space-3);
   color: var(--exam-muted);
   font-size: var(--text-sm);
+}
+
+.locked-response-preview {
+  min-height: 4rem;
+  border: var(--rule-thin) dashed var(--exam-rule);
+  border-radius: var(--radius-md);
+  background: var(--exam-surface);
+  padding: var(--space-4);
+  color: var(--exam-muted);
+}
+
+.answer-choices:has(input:disabled) label {
+  cursor: default;
 }
 
 .answer-choices {
@@ -3006,8 +3210,18 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
     overflow: hidden;
   }
 
+  .exam-identity h1 {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .exam-phase-summary {
+    display: none;
+  }
+
   .exam-tools {
     flex: 1 1 62vw;
+    flex-wrap: nowrap;
     min-width: 0;
     max-width: 62vw;
     justify-content: start;
@@ -3063,13 +3277,16 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
   .section-heading,
   .roster-heading,
   .roster-list li,
+  .paper-list li,
   .archived-list li,
   .session-row {
     align-items: start;
   }
 
+  .section-heading,
   .roster-heading,
   .roster-list li,
+  .paper-list li,
   .archived-list li,
   .session-row {
     flex-direction: column;
@@ -3246,6 +3463,32 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 }
 
 @media print {
+  .resource-text-table-scroll {
+    overflow: visible;
+  }
+
+  .resource-text-table {
+    min-width: 0;
+    max-width: 100%;
+    table-layout: fixed;
+    font-size: 9pt;
+  }
+
+  .resource-text-table thead { display: table-header-group; }
+  .resource-text-table tr { break-inside: avoid; }
+  .resource-text-table th,
+  .resource-text-table td {
+    padding: 1.5mm;
+    border-color: #666;
+    background: transparent;
+    color: #000;
+  }
+
+  .paper-preview-source-text.formatted-resource-text {
+    max-block-size: none;
+    overflow: visible;
+  }
+
   html,
   body {
     min-width: 0;
@@ -3403,6 +3646,12 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
   .submission-prompt,
   .submission-resources h4 {
     break-after: avoid-page;
+  }
+
+  .candidate-question:has(.candidate-question-options),
+  .candidate-question-options,
+  .submission-prompt {
+    break-inside: avoid-page;
   }
 
   .candidate-question-heading {

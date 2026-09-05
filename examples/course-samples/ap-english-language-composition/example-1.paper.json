@@ -1,0 +1,939 @@
+{
+  "version": 1,
+  "assessmentSession": "digitaldp-original-examples-v2",
+  "examFormat": {
+    "systemId": "ap",
+    "systemLabel": "Advanced Placement (AP)",
+    "qualificationLabel": "Advanced Placement",
+    "deliveryMode": "Fully digital practice",
+    "fidelity": "adapted",
+    "profileVersion": "2026-09-05",
+    "rulesSummary": "May 2027 format · 45 four-choice questions in five sets · 3 essays · 60 min / 10-min break / 135 min · optional reading inside Section II"
+  },
+  "sourceClassification": "teacher-authored",
+  "exportAuthorized": true,
+  "title": "AP English Language and Composition · End-of-course exam — original full-length mock",
+  "subject": "ap-english-language-composition",
+  "subjectLabel": "AP English Language and Composition",
+  "level": "AP",
+  "paper": "End-of-course exam — original full-length mock",
+  "durationMinutes": 205,
+  "readingTimeMinutes": 0,
+  "phases": [
+    {
+      "id": "section-1",
+      "label": "Section I — multiple choice",
+      "kind": "work",
+      "durationMinutes": 60,
+      "sectionId": "section-1",
+      "tools": [
+        "Text highlighting",
+        "Digital multiple-choice",
+        "Mark for review"
+      ],
+      "instructions": "Answer all 45 questions in the five passage sets. Select one answer per question. You cannot return to this section after it ends."
+    },
+    {
+      "id": "break",
+      "label": "Monitored break",
+      "kind": "break",
+      "durationMinutes": 10,
+      "tools": [],
+      "instructions": "Take the supervised break. Examination content and response entry are unavailable during the break."
+    },
+    {
+      "id": "section-2",
+      "label": "Section II — free response",
+      "kind": "work",
+      "durationMinutes": 135,
+      "sectionId": "section-2",
+      "tools": [
+        "Typed essays",
+        "Text highlighting",
+        "Optional 15-minute planning/reading period"
+      ],
+      "instructions": "Write all three essays. You may spend the first 15 minutes reading and planning, or begin writing immediately. This optional period is part of your 135 minutes, not extra time. You may move among these three questions while this section remains open; Section I stays closed."
+    }
+  ],
+  "maximumMarks": 63,
+  "mode": "essay",
+  "instructions": "Original full-length practice, not an official or endorsed College Board exam. Section I has 45 four-choice questions in five sets: 24 reading-analysis questions and 21 writing-revision questions. Section II has three essays. Answer every question. The 205-minute session contains 195 minutes of working time and a 10-minute supervised break. Section II's optional 15-minute reading/planning period is included in its 135 minutes; writing is permitted immediately. DigitalDP advances after its fixed break, unlike Bluebook's candidate-controlled resume. All passages, people, institutions and source data in this mock are fictional creations presented in nonfiction genres for rhetorical practice; they are not quotations from real research. All necessary sources are attached. No external research is required. The 63 raw marks are a classroom tally, not an AP 1–5 score; the teacher companion explains the 45%/55% section weighting.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "reading-a",
+      "label": "Reading set A — public archives",
+      "kind": "text",
+      "text": "Reading set A — The index is not the archive\nThis original simulated public essay is attributed to the fictional municipal archivist Imani Vale, addressing residents considering a town archive's digitisation budget. All events and institutions are invented for this practice examination.\n\n[1] A woman came to our reading room carrying a photograph of a street that officially had never flooded. In the photograph, her grandfather stood on a chair outside a shop, holding a broom above a brown, level world. She wanted to know the year. Our new search portal offered hundreds of results for “flood,” but none named her street. My first impulse was to refine the search. Her first impulse was to turn the photograph over. On the back, a child had written, “The day the milk came by boat.” We had been asking the archive a question in the archive's vocabulary. The photograph suggested another language.\n\n[2] We eventually found the event under “temporary interruption of deliveries,” in a ledger belonging to the transport office. The water had entered the records through its inconvenience to commerce, not through its height against a doorstep. No clerk had necessarily intended to hide a flood. A clerk had needed to record a delivery problem. Yet the distinction mattered to a resident whose account of her family's life seemed to contradict the town's searchable memory. An index is not merely a smaller archive. It is an argument about the routes by which people should be able to enter one.\n\n[3] I am sometimes invited to tell this story as a warning against computers. That invitation mistakes the instrument for the decision. Before we scanned the ledger, only a person able to travel here during a narrow weekday opening could have read it. The portal has allowed former residents, shift workers and students in other places to examine records that previously required a train ticket and a patient morning. To abandon it in the name of authenticity would restore a very authentic exclusion. The question is not whether a screen can replace a dusty box. It is what assistance must accompany either of them.\n\n[4] A search result looks finished. It arrives in a neat rectangle, with a title and a date, as if those were properties as natural as the paper's weight. Behind the rectangle are uncertain identifications, inherited filing categories and choices about which handwritten words to transcribe. Making these decisions visible would not make the records useless. It would make them answerable. A note saying “street name uncertain” may help a resident more than a confident label borrowed from an unreliable map. Precision sometimes requires us to display the limits of our precision instead of polishing them away.\n\n[5] There is a danger on the other side, too. A missing result is not proof of a suppressed history. The relevant file may have been lost, the spelling may have changed, or the event may never have generated an official document. Suspicion can begin a worthwhile inquiry; it cannot do the inquiry's work. We should therefore teach users how to follow an entry back to its source, how to compare records produced for different purposes, and how to distinguish an absence in the catalogue from an absence in the past. That teaching is not an apology for the collection. It is part of providing access to it.\n\n[6] Next month's budget offers a choice between scanning another large batch of pages and employing a part-time assistant to improve descriptions of pages already available. The first option produces an impressive number for an annual report. The second may enable someone to find the one page that changes a question. We need both activities eventually, but they should not be confused. Residents could suggest names and connections, while staff preserve the original descriptions and identify the evidence behind revisions. Public participation would then add a documented layer, not quietly replace an inconvenient record with a popular recollection.\n\n[7] The woman left with a date, a copy of the ledger entry and a new question about the boat. That last item was not a failure of our service. A useful archive does not conclude every conversation it begins. It equips people to continue a conversation with evidence, including evidence that may correct us. Let us build a portal that opens onto a workshop rather than one that pretends to be a verdict. The town's memory will be stronger when its citizens can see not only what we have found, but how a finding can be questioned."
+    },
+    {
+      "key": "reading-b",
+      "label": "Reading set B — field notebooks",
+      "kind": "text",
+      "text": "Reading set B — What the notebook keeps\nThis original simulated science essay is attributed to the fictional field researcher Rowan Merek and intended for a general-interest magazine. The fieldwork described is invented; no actual study is reported.\n\n[1] On the map I brought to the hillside, the boundary between two kinds of rock was a clean red line. On the hillside, it was bracken, loose stones and an afternoon of uncertainty. My receiver could tell me where I stood to a precision that would have astonished the researchers whose notebooks I had borrowed. It could not tell me whether the grey material under my boot belonged to the ridge or had slipped down from somewhere above it. Location was no longer my principal difficulty. Deciding what, exactly, I had located was.\n\n[2] The old notebooks initially seemed an embarrassment beside the instrument. Their pages contained crossed-out numbers, unfinished sketches and a recurring complaint about a gate that would not open. One researcher had drawn a specimen three times, then written, “Probably transported; compare upper slope.” I had expected the notebooks to supply answers to the gaps in the published map. Instead, they preserved the questions that the map's orderly colours had absorbed. The tentative word “probably” was not a blemish left by an inattentive editor. It was information about the strength of the observation.\n\n[3] A map must simplify. A traveller does not need every argument about a contour, any more than a reader needs the printer's invoice beside each paragraph of an essay. But useful simplification is not the same as the disappearance of its working history. When a boundary is challenged, an investigator needs to know whether it rested on five exposed outcrops or on one hurried glimpse through vegetation. The map tells us what its maker judged. The notebook can tell us what the maker had an opportunity to judge, a difference that becomes decisive when the landscape or the question changes.\n\n[4] At noon I reached the stream named in an earlier survey. My receiver confirmed the coordinates; the stream refused the description. It ran several metres away, behind a recently repaired bank. In the notebook, however, I found a sketch of an abandoned channel and the words “wet clay after rain.” That apparently marginal observation helped me recognise where the old course had been. The instrument and the notebook did not compete for the honour of being right. One fixed my present position; the other made an earlier position intelligible. Their disagreement had become a way to ask a more accurate question.\n\n[5] This is not an argument for damp paper over reliable electronics. A sensor can keep a patient record of changes that a person visiting once would miss. Digital photographs allow a colleague to inspect details a hurried sketch might omit. Nor should every hesitation be promoted into wisdom: some crossed-out numbers are simply mistakes. The relevant distinction is between an observation and a conclusion that conceals how it was reached. A digital field record can preserve that distinction exceptionally well, provided its designer does not treat uncertainty as a field that ought to be left blank.\n\n[6] I now ask students to record what would make them revise an identification. At first, some regard this as an invitation to sound unprepared. They have learned to associate expertise with an answer delivered without visible friction. Yet “I would change my mind if the layer continued beyond the fault” is more demanding than a decorative admission that anything is possible. It names a test. It also gives the next observer something to do. The notebook becomes less a private certificate of competence and more a set of instructions for a person who may disagree intelligently with its author.\n\n[7] On the final page of that day's notes I redrew the boundary with a short dotted section. The dots did not mean that the ground underneath them lacked a history, or that every account of it was equally good. They meant that this part of my account had earned less confidence than the rest. Months later, another researcher sent a photograph of an exposure revealed by winter weather. We moved the line. The revised map was more useful because the earlier notebook had made revision possible. I trust a careful observer not because the observer never changes a line, but because I can discover what it would take to move one."
+    },
+    {
+      "key": "draft-c",
+      "label": "Writing set C — tool lending",
+      "kind": "text",
+      "text": "Writing set C — Draft for a community newsletter\nThe following unfinished article argues for a small tool-lending collection at the fictional Northbank Library. All local examples and numbers are invented. Sentence numbers are supplied for revision questions.\n\n(1) A ladder can spend fifty weeks in a cupboard while its owner needs an electric drill that sits unused next door. (2) A tool-lending collection would not solve every household problem, but it could make occasional repairs less expensive for Northbank residents. (3) Our library already lends books, so obviously it can lend any object at all without changing how it works. (4) The proposal deserves a trial, provided the library plans for maintenance as carefully as it plans for borrowing.\n\n(5) Under the proposed six-month trial, members would reserve a small selection of hand tools and low-risk equipment through the existing catalogue. (6) A trained assistant would check each item before and after a loan, record damage and explain the return procedure. (7) Instructions would accompany every item in clear print, and demonstrations would be offered at a weekly session. (8) A volunteer who has repaired bicycles for thirty years said that knowing when not to use a tool is sometimes the most useful instruction of all.\n\n(9) Some residents worry that tools will displace books and take staff away from readers who need help. (10) These are practical objections, not evidence that the residents dislike cooperation. (11) The trial would occupy one locked cabinet in the unused storeroom, and its staffing budget would be separate from the reading-room budget. (12) The storeroom was painted green several years ago, although the paint is now quite faded. (13) The council should publish the trial's actual staff hours as well as its number of loans, since a popular collection might still require more support than the library can afford.\n\n(14) Access also depends on rules that appear minor on a form. (15) A large cash deposit could exclude precisely the residents who cannot afford to buy tools, while an online-only reservation system could exclude residents who rarely use the internet. (16) Telephone reservations and a modest, clearly explained replacement policy would address those barriers without pretending that lost equipment costs nothing. (17) At the end of the trial, residents and staff should review both successful loans and the repairs, refusals and delays that do not fit neatly into a publicity photograph. (18) In conclusion, tools are very useful things and libraries have many different kinds of members."
+    },
+    {
+      "key": "draft-d",
+      "label": "Writing set D — street lighting",
+      "kind": "text",
+      "text": "Writing set D — Draft opinion article for a town newspaper\nThe writer is discussing street lighting in the fictional town of Ellerton. The trial, observations and quoted comments are invented for this examination.\n\n(1) When the street outside my flat received brighter lamps, I expected the walk from the bus stop to become easier. (2) Instead, I could see the pavement directly beneath each lamp brilliantly and had trouble seeing into the darker stretch beyond it. (3) My experience alone cannot establish what lighting plan is safest, but it prompted a question the council's proposal barely addresses: where does the light go? (4) Ellerton should test the placement and shielding of its street lights before committing to a town-wide increase in brightness.\n\n(5) A lamp that sends light toward a bedroom window or above the street spends part of its output illuminating places pedestrians do not need to see. (6) Shielding redirects more light toward the intended area, although the result still depends on spacing and the shape of the street. (7) New lamps are always good for the environment because new technology uses less energy. (8) A comparison should therefore measure electricity used by the complete installation, rather than assuming that the efficiency of each lamp settles the matter.\n\n(9) Last winter the council tried shielded lamps on two similar residential streets. (10) Both streets used less electricity than they had in the previous winter, and residents reported fewer complaints about light entering bedrooms. (11) The report did not record changes in traffic, weather or the hours during which the lamps operated. (12) Nor were the two streets chosen at random from all streets in the town. (13) The trial suggests questions worth investigating; it does not yet justify announcing a result for every neighbourhood.\n\n(14) Shopkeepers on the late bus route have raised a different concern. (15) They want customers and staff to feel comfortable waiting outside after closing time, and they fear that any mention of reducing wasted light is a disguised proposal to leave the route dark. (16) The council could invite these users on evening walks with lighting staff, comparing faces, steps and crossing points under several arrangements. (17) The aim would be to discover what people need to distinguish, not to win an argument by making one photograph look brighter than another. (18) After these walks, the council should publish a comparison of visibility, energy use and residents' concerns. (19) A successful lighting plan is not one that makes the town look brightest from a distant hill. (20) It is one that helps the people on its streets see what matters."
+    },
+    {
+      "key": "draft-e",
+      "label": "Writing set E — oral history",
+      "kind": "text",
+      "text": "Writing set E — Draft memo to a school history department\nThe fictional student writer proposes an oral-history project about the closure of a local factory. All names, events and examples are invented. The memo is unfinished.\n\n(1) Our town's factory closed before most current students were born, but its story still enters conversations about work, housing and the river. (2) The history department should support a student oral-history project that records several accounts of the closure and preserves the conditions under which each account was given. (3) Interviewing residents would supply a complete and unquestionably accurate replacement for the documents we already have. (4) The project would be stronger if interviews and written records were used to question one another.\n\n(5) A retired supervisor might remember the last week through decisions about machinery, while a nearby shopkeeper might remember cancelled orders. (6) A worker who moved away could connect the closure to events outside the town that local residents rarely mention. (7) Such differences need not be removed to make a useful collection. (8) They can reveal how a single event altered people's lives in different ways, although interviewers must still check dates and distinguish recollection from direct observation.\n\n(9) Before recording, students should explain who will hear the interview, where it will be stored and whether the speaker can request restrictions on particular passages. (10) Consent should be treated as an ongoing agreement rather than a signature that ends the conversation. (11) For example, a speaker may become uncomfortable when an apparently ordinary workplace story begins to identify another person. (12) The department will need a procedure for reviewing such requests, because a promise that students cannot keep would damage the trust on which later interviews depend.\n\n(13) Students should begin with open questions that allow a speaker to establish what mattered to them. (14) Follow-up questions can then ask for a specific scene, a date or the reason the speaker interprets an event in a particular way. (15) We should buy the most expensive microphones available, since the price of recording equipment determines the historical value of an interview. (16) A short pilot with borrowed equipment would let students practise listening, checking the recording and writing a description that helps future users understand its context. (17) The pilot should be reviewed before the department promises a large public collection. (18) If we design the process carefully, the finished recordings will preserve not just answers about the factory but evidence of how those answers were shaped in conversation."
+    },
+    {
+      "key": "synthesis-a",
+      "label": "Source A — Planning office proposal",
+      "kind": "text",
+      "text": "Source A — Extract from the fictional Bellford Planning Office's corridor proposal\nOriginal simulated policy document. All places, dates, estimates and institutional statements are invented for this practice examination.\n\nThe disused East Branch railway runs for fourteen kilometres between Bellford's centre and three residential districts. It has carried no trains for eighteen years. The council owns the track bed but has not yet completed the engineering inspection needed to decide how its bridges could be reused. The planning office proposes converting it into a walking and cycling route, with access points near schools, shops and the regional bus station.\n\nThe proposal is not simply to provide a pleasant destination for weekend visitors. At present, a resident travelling between two of the districts must follow a road that bends away from the former railway. A direct route could make some short everyday journeys practicable without a car. Whether residents would use it for that purpose depends on surfaces, crossings, connections and maintenance, not merely on the number of kilometres opened.\n\nThe office recommends a staged decision. First, inspect the bridges, identify ownership restrictions and publish the cost of providing continuous access. Then compare a complete route with a shorter initial section. Construction grants should not be treated as a maintenance budget. If the council cannot identify who will clear drainage channels, repair surfaces and respond to damaged crossings, it should reduce or delay the scheme rather than present opening day as the end of its responsibility."
+    },
+    {
+      "key": "synthesis-b",
+      "label": "Source B — Adjacent residents' letter",
+      "kind": "text",
+      "text": "Source B — Letter from the fictional East Branch Neighbours Association to Bellford Council\nOriginal simulated public comment. The association and experiences described are invented; this is not testimony from real residents.\n\nMany of our members favour a path, and several expect to use it. Our concern is that the phrase “unused railway” makes the land sound as though it has no neighbours. Gardens back onto the embankment, an informal footpath reaches a bus stop, and a small drainage ditch carries water away from two streets. A new public route will change those relationships even if no train has passed for years.\n\nThe drawings shown at the first meeting marked attractive entrances but not the boundaries behind people's homes. Residents were told that fencing could be considered later. For a family whose kitchen faces the proposed path, later is not a design. We ask for clear sight lines at crossings, agreed boundary treatments and a contact responsible for maintenance problems. We do not ask the council to promise that no visitor will ever behave badly; we ask it to explain how ordinary problems will be handled.\n\nA survey sent only to nearby householders would not settle the question either. Future users and people who cannot currently reach this area also have interests. The council should bring those groups together before choosing a design. Consultation should expose conflicts early enough to change the project, not merely collect comments on a scheme whose major choices have already been made."
+    },
+    {
+      "key": "synthesis-c",
+      "label": "Source C — Quantitative options table",
+      "kind": "text",
+      "text": "Source C — Bellford options comparison, fictional preliminary estimates\nOriginal quantitative table created for this practice. These are invented planning estimates, not real research findings or quotations. The three options concern the same fourteen-kilometre council-owned corridor.\n\nMeasure                         | Full trail | Phased trail | Retain closed\n--------------------------------|------------|--------------|--------------\nInitial capital cost            | $3.2m      | $2.1m        | $0.6m\nEstimated yearly maintenance     | $140000    | $110000      | $80000\nPublic route opened initially   | 14 km      | 8 km         | 0 km\nStep-free route opened initially| 10 km      | 6 km         | 0 km\nDistrict centres connected      | 3          | 1            | 0\nHabitat disturbed in works      | 2.4 ha     | 1.1 ha       | 0.3 ha\n\nNotes: m = million; ha = hectares. Initial cost includes essential bridge safety work but excludes land purchases outside the existing corridor. All options require drainage and structural inspections, including keeping the line closed. Estimates have an indicative uncertainty of ±25%; they are not contractor bids. No forecast of visitor numbers, health outcomes or future property values is included. “Step-free” does not by itself certify a route's complete accessibility. The phased option defers the two largest bridges; completing its remaining section later would require a separate funding decision. Costs shown are not discounted lifetime totals."
+    },
+    {
+      "key": "synthesis-d",
+      "label": "Source D — Ecologist's consultation note",
+      "kind": "text",
+      "text": "Source D — Consultation note by fictional ecologist Dr Saira Noll\nOriginal simulated expert commentary on the invented East Branch scheme. It reports no actual ecological survey.\n\nA disused transport corridor can develop into habitat without becoming ecologically uniform. In the preliminary drawings for East Branch, open gravel, young trees and wet ditches are coloured the same green. That makes a tidy map but conceals different functions. Clearing a narrow strip may remove little tree cover yet interrupt a route between two wet areas. Conversely, leaving an invasive plant untouched because it looks established may not protect the habitat that residents value.\n\nBefore comparing trail widths, the council should commission seasonal observation along the whole corridor, especially at the proposed access points. The number of hectares disturbed is a useful warning measure, not a complete account of ecological effect. Location, timing and the way a route is maintained can matter as much as total area. A contractor's promise to plant new trees does not automatically replace an older habitat elsewhere on the line.\n\nThere may also be benefits from bringing more people into a carefully managed space. Regular users can notice blocked drains, dumping or damaged fencing, and public access can build support for conservation. But visitors cannot substitute for an agreed management plan. I would support a route designed around the survey's findings, including restricted sections where necessary. I would not support describing either conversion or continued closure as environmentally harmless before the relevant evidence has been gathered."
+    },
+    {
+      "key": "synthesis-e",
+      "label": "Source E — Access advocate's article",
+      "kind": "text",
+      "text": "Source E — Article by fictional access advocate Tomas Reed in a community magazine\nOriginal simulated commentary. The people and route examples are invented for this exercise.\n\nA line on a map can be continuous while a journey is not. A wheelchair user may find a beautifully surfaced path ending at a steep ramp. A parent with a pushchair may reach a road crossing with no safe waiting space. Someone who cannot walk far may need seats placed at intervals that a confident cyclist scarcely notices. Calling the old railway “mostly level” answers only one of these questions.\n\nBellford's proposed trail should be judged as a sequence of usable journeys, including the connections from homes and bus stops. Ten step-free kilometres do not necessarily provide a useful trip if the inaccessible gap lies between a neighbourhood and its nearest shops. Similarly, an eight-kilometre first phase could offer considerable benefit if it connects places that people already need to reach. Length alone does not tell us which possibility the design creates.\n\nThe council should ask people with varied access requirements to test the proposed entrances and crossings before construction, not invite them only to celebrate the opening. Design reviews must also consider how surfaces change after rain and who can report a problem without using a smartphone. Accessibility is not a decorative addition to a completed route. It is a way of deciding where the route goes, what gets built first and whether the maintenance promises will allow the same person to make the same journey next year."
+    },
+    {
+      "key": "synthesis-f",
+      "label": "Source F — Transport historian's essay",
+      "kind": "text",
+      "text": "Source F — Essay by fictional transport historian Evelyn Marr\nOriginal simulated historical-policy commentary. It makes no claim about the prospects of any real railway.\n\nWhen a railway closes, it leaves more than rails. It leaves a connected strip of land through places where assembling a new route might later be difficult. That continuity has value even when no immediate transport project can justify the expense of reopening the line. Selling the strip in fragments can remove a choice that a future council might otherwise have been able to consider.\n\nThis is not a prediction that passenger trains will return to East Branch. No operator has proposed a service, and no costed study shows that one would attract sufficient use. Nostalgia is not a timetable. Nevertheless, the absence of a viable project today does not establish that a continuous public corridor has no future transport value. A trail could preserve the route and build public support for keeping it connected, provided bridges, property agreements and new structures do not quietly make other uses impossible.\n\nThe sensible question is therefore not simply “trains or bicycles?” It is which decisions are reversible, at what cost, and with what benefit while they remain in place. The council should document the consequences of removing structures or permitting buildings beside narrow sections. It may reasonably decide that a present public benefit outweighs an uncertain future option. That is a stronger decision when the trade-off has been named than when one possibility disappears inside a drawing labelled improvement."
+    },
+    {
+      "key": "rhetoric-speech",
+      "label": "Free response 2 — orchestra welcome",
+      "kind": "text",
+      "text": "Free response 2 — Welcome to the unfinished rehearsal\nThe following original simulated speech is attributed to the fictional conductor Leona Faris, welcoming new and returning members of an amateur community orchestra at its first rehearsal after a long closure. The speaker, orchestra and occasion are invented, not a historical source.\n\n[1] Before we begin, I should confess that I practised these opening remarks more often this week than I practised the difficult entrance in tonight's score. That is an unfortunate example for a conductor to set, but perhaps an honest one. We have all been preparing different things for this evening. Some of you have been preparing scales; some have been preparing an explanation to the people at home of why Tuesday nights now belong to a violin case. One person has written to ask whether there is a place here for someone who can still read music but no longer quite trusts the hands that must play it. There is a place. It is not at the back unless that is where you would like to sit.\n\n[2] During the closure I kept our last programme on the piano. At first I treated it as a promise that we would return to exactly the same sound. Then I noticed how much the programme left out. It did not mention the bus that brought two players from the other side of town, the neighbour who watched a child, or the patient person who repaired a borrowed bow. It named the music and the musicians. It did not name all the work that allowed the music to happen. Tonight, returning is an opportunity to hear that quieter work and to share it more fairly.\n\n[3] We are not going to pretend that everyone arrives with the same experience. A beginner does not need to be told that a difficult passage is easy; an experienced player does not need to apologise for having learned it. What we can promise is that difficulty will not become a private embarrassment. Ask for the rhythm again. Mark the passage you cannot yet follow. If you have mastered it, play it slowly enough for someone beside you to find the way in. Generosity does not lower the standard. It changes how we reach it.\n\n[4] You will hear a wrong note this evening. You may even hear one from the conductor's keyboard. A wrong note is information: the finger arrived early, the eye lost its place, the breath ran short. What matters next is whether the room makes that information usable. Laughter that welcomes an attempt can release a whole section's shoulders. Laughter that assigns someone the role of permanent beginner can silence that person for months. I cannot print the difference as a rule on the music stand, but every one of us can help the person next to us feel it.\n\n[5] There are practical promises behind this welcome. We have set aside the first fifteen minutes before each rehearsal for anyone who wants to try a passage in a smaller group. The instrument fund will remain anonymous, because borrowing a cello should not require performing gratitude in public. We will rotate some seating positions, not to pretend that experience is irrelevant, but to make sure that advice and responsibility do not travel in only one direction. If one of these arrangements makes participation harder for you, tell us. A policy can sound generous from the podium and still put a staircase in somebody's path.\n\n[6] Our concert will have an audience, and we owe that audience careful work. I would not ask you to spend these evenings producing a performance that we excuse in advance. But applause cannot be our only evidence of success. Listen for the returning player who stops apologising before every entrance. Listen for the experienced player who discovers a better way to explain a phrase. Listen for the rest that everyone keeps together: a moment in which nobody is displaying a note and everybody is making music possible. Those achievements are not alternatives to a good concert. They are part of its construction.\n\n[7] So let us begin with the passage that none of us quite likes. We could save it until we feel more certain of one another, but certainty is not the admission ticket to this room. It is something we may build here, by returning, by listening, by making an honest attempt that leaves room for another person's attempt. Open the score. Leave space on the stand. We have a great deal to practise, and at last we have people with whom to practise it."
+    }
+  ],
+  "questions": [
+    {
+      "id": "mcq1",
+      "label": "Section I — Question 1",
+      "prompt": "The writer's principal purpose in Reading set A is to",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "argue that residents' recollections should take priority over municipal documents",
+        "advocate an accessible archive whose descriptions and methods remain open to examination",
+        "demonstrate that digitisation is less economical than retaining printed catalogues",
+        "defend archivists against demands to explain the decisions involved in their work"
+      ]
+    },
+    {
+      "id": "mcq2",
+      "label": "Section I — Question 2",
+      "prompt": "The inscription on the photograph in paragraph 1 primarily helps the writer",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "establish that a child's memory is more dependable than a clerk's ledger",
+        "shift attention from flooding to the history of milk distribution",
+        "explain why photographs should be catalogued separately from written documents",
+        "introduce the possibility that a familiar event can be described in unexpected terms"
+      ]
+    },
+    {
+      "id": "mcq3",
+      "label": "Section I — Question 3",
+      "prompt": "The statement that the street “officially had never flooded” in paragraph 1 is best understood as",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "an ironic description of the gap between a searchable record and the event the photograph depicts",
+        "a literal assurance that an official investigation had ruled out every possible flood",
+        "a concession that the woman probably misunderstood what her photograph showed",
+        "a prediction that the town would refuse to recognise any evidence provided by residents"
+      ]
+    },
+    {
+      "id": "mcq4",
+      "label": "Section I — Question 4",
+      "prompt": "In paragraph 2, the contrast between the clerk's task and the resident's inquiry most strongly suggests that interpreting a document requires attention to",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "whether the document's author and its later readers use the same technology",
+        "whether a later reader has a personal rather than a professional interest in the event",
+        "the practical purpose and situation for which the document was originally produced",
+        "the comparative social status of the person who produced it and the person consulting it"
+      ]
+    },
+    {
+      "id": "mcq5",
+      "label": "Section I — Question 5",
+      "prompt": "The claim that an index is “an argument about the routes” into an archive (paragraph 2) implies that",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "all catalogue entries must contain an explicit persuasive statement",
+        "disagreements among archivists are the chief obstacle to public access",
+        "choices about organisation shape which inquiries users can readily pursue",
+        "an archive's value depends mainly on the number of ways its building can be entered"
+      ]
+    },
+    {
+      "id": "mcq6",
+      "label": "Section I — Question 6",
+      "prompt": "The examples of former residents, shift workers and distant students in paragraph 3 develop the argument by",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "acknowledging a substantial benefit of digitisation before identifying what access still requires",
+        "limiting the archive's intended audience to people unable to visit in person",
+        "proposing that remote users should receive priority over residents in the reading room",
+        "showing that the original photograph problem would disappear if every record were scanned"
+      ]
+    },
+    {
+      "id": "mcq7",
+      "label": "Section I — Question 7",
+      "prompt": "The writer's response to invitations to tell the story as a warning against computers (paragraph 3) suggests an awareness of listeners who",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "have already concluded that travelling to an archive is impossible for every resident",
+        "want the archive to discard every document that has been scanned",
+        "consider remote users less interested in evidence than visitors to the reading room",
+        "regard older in-person research methods as more authentic and therefore preferable"
+      ]
+    },
+    {
+      "id": "mcq8",
+      "label": "Section I — Question 8",
+      "prompt": "In paragraph 4, comparing a title and date to “the paper's weight” emphasises that a search result can",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "make digital copies seem physically heavier than their originals",
+        "present interpretive labels as though they were unproblematic physical properties",
+        "encourage users to investigate the conservation needs of paper documents",
+        "make approximate dates more useful than accurately measured quantities"
+      ]
+    },
+    {
+      "id": "mcq9",
+      "label": "Section I — Question 9",
+      "prompt": "In the claim that visible decisions would make records “answerable” (paragraph 4), “answerable” most nearly means",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "capable of answering every question a user asks",
+        "dependent on the approval of the most frequent users",
+        "arranged so that questions can be answered more quickly",
+        "open to scrutiny and a reasoned request for justification"
+      ]
+    },
+    {
+      "id": "mcq10",
+      "label": "Section I — Question 10",
+      "prompt": "Paragraph 5 qualifies the preceding criticism of catalogues by arguing that",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "an incomplete catalogue cannot be improved through public participation",
+        "a failed search alone cannot establish that someone deliberately suppressed a history",
+        "uncertain records should be withheld until every ambiguity has been resolved",
+        "teaching research methods is less important than increasing the number of records"
+      ]
+    },
+    {
+      "id": "mcq11",
+      "label": "Section I — Question 11",
+      "prompt": "The budget comparison in paragraph 6 most clearly distinguishes between",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "the volume of material made available and the practical ability to find useful material",
+        "the historical importance of old documents and that of recently created documents",
+        "residents who prefer photographs and researchers who prefer written ledgers",
+        "the low cost of scanning and the high cost of employing an archive assistant"
+      ]
+    },
+    {
+      "id": "mcq12",
+      "label": "Section I — Question 12",
+      "prompt": "The contrast between a “workshop” and a “verdict” in the final paragraph reinforces the writer's view that archives should",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-a"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "replace professional research with unrestricted public debate",
+        "focus on practical crafts rather than disputes over the past",
+        "support continuing evidence-based inquiry rather than imply that an account is beyond revision",
+        "avoid reaching any conclusions because historical evidence is always incomplete"
+      ]
+    },
+    {
+      "id": "mcq13",
+      "label": "Section I — Question 13",
+      "prompt": "Reading set B primarily argues that scientific records are most useful when they",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "replace maps that simplify the landscape with complete descriptions of every observation",
+        "demonstrate that a researcher reached the correct answer on the first visit",
+        "preserve the basis and limits of judgments so that later observers can revise them",
+        "privilege older handwritten observations over readings from newer instruments"
+      ]
+    },
+    {
+      "id": "mcq14",
+      "label": "Section I — Question 14",
+      "prompt": "The distinction between knowing “where I stood” and “what, exactly, I had located” in paragraph 1 establishes a contrast between",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "precise position measurement and interpretation of the material found there",
+        "a published map's age and the physical age of the rocks it represents",
+        "the researcher's confidence before a journey and fear of getting lost during it",
+        "the ease of using instruments and the difficulty of learning to write field notes"
+      ]
+    },
+    {
+      "id": "mcq15",
+      "label": "Section I — Question 15",
+      "prompt": "The writer's discussion of “probably” in paragraph 2 treats the word as",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "evidence that the earlier researcher had not completed the assigned survey",
+        "a useful indication of how much confidence the recorded observation warranted",
+        "an unfortunate stylistic habit that publication should have removed",
+        "a warning that the notebook's measurements should not be trusted at all"
+      ]
+    },
+    {
+      "id": "mcq16",
+      "label": "Section I — Question 16",
+      "prompt": "The reference to a printer's invoice in paragraph 3 supports the point that",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "scientific publications should disclose the financial interests behind every survey",
+        "readers usually underestimate the labour required to publish a map",
+        "the details omitted from a map are as irrelevant as printing costs",
+        "a useful finished product need not display every detail of its production"
+      ]
+    },
+    {
+      "id": "mcq17",
+      "label": "Section I — Question 17",
+      "prompt": "Paragraph 4 develops paragraph 3 chiefly by",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "challenging the earlier paragraph's claim that maps must simplify",
+        "illustrating how contextual notes can help explain a discrepancy that a finished record cannot resolve alone",
+        "showing that an old observation remains accurate even when the landscape has changed",
+        "introducing a competing account of why the earlier researcher abandoned the survey"
+      ]
+    },
+    {
+      "id": "mcq18",
+      "label": "Section I — Question 18",
+      "prompt": "The statement that “the stream refused the description” in paragraph 4 gives emphasis to",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "the stream's exceptional force during a recent flood",
+        "the earlier researcher's unwillingness to name a watercourse",
+        "the narrator's preference for informal rather than technical language",
+        "the resistance of the observed landscape to the narrator's expectation"
+      ]
+    },
+    {
+      "id": "mcq19",
+      "label": "Section I — Question 19",
+      "prompt": "In the stream episode, the receiver and notebook prove valuable because they",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "supply independent measurements that confirm an unchanged channel",
+        "show that the notebook's coordinates are more precise than the receiver's",
+        "provide different kinds of information that become useful in combination",
+        "allow the researcher to dispense with further direct observation"
+      ]
+    },
+    {
+      "id": "mcq20",
+      "label": "Section I — Question 20",
+      "prompt": "The discussion of sensors and digital photographs in paragraph 5 primarily prevents readers from concluding that the writer",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "regards uncertainty-preserving observation as possible only with traditional materials",
+        "believes different observers can notice different features of one place",
+        "thinks measurements should be reconsidered when conditions change",
+        "values an instrument's patient record of changes over time"
+      ]
+    },
+    {
+      "id": "mcq21",
+      "label": "Section I — Question 21",
+      "prompt": "The example “I would change my mind if the layer continued beyond the fault” (paragraph 6) is important because it",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "identifies a specific observation that could test an interpretation",
+        "makes a general concession that all interpretations are equally plausible",
+        "protects the researcher from being held responsible for an incorrect identification",
+        "substitutes an expression of personal confidence for field evidence"
+      ]
+    },
+    {
+      "id": "mcq22",
+      "label": "Section I — Question 22",
+      "prompt": "Describing the notebook as instructions for a person who may “disagree intelligently” (paragraph 6) reframes field notes as",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "private writing intended mainly to reassure an anxious novice",
+        "a formal set of rules that later investigators must follow without modification",
+        "a means of enabling subsequent investigators to engage with and test a judgment",
+        "a published argument addressed only to researchers who already share the author's conclusions"
+      ]
+    },
+    {
+      "id": "mcq23",
+      "label": "Section I — Question 23",
+      "prompt": "In paragraph 7, the dotted section of the boundary represents",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "an area where geological processes have not yet produced a distinct history",
+        "the researcher's decision to give competing accounts equal status",
+        "a part of the hillside that the receiver failed to locate accurately",
+        "a distinction between levels of confidence within the researcher's own account"
+      ]
+    },
+    {
+      "id": "mcq24",
+      "label": "Section I — Question 24",
+      "prompt": "The later photograph and movement of the boundary in the final paragraph chiefly serve to",
+      "type": "single-choice",
+      "resourceKeys": [
+        "reading-b"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "undermine the earlier claim that the notebooks had practical value",
+        "demonstrate the productive revision that transparent field records make possible",
+        "suggest that winter observations should replace all summer fieldwork",
+        "resolve the writer's uncertainty by establishing that maps can now be permanent"
+      ]
+    },
+    {
+      "id": "mcq25",
+      "label": "Section I — Question 25",
+      "prompt": "The writer wants to replace sentence 3 with a statement that encourages librarians to consider the trial while respecting their concerns about safety and workload. Which revision best accomplishes this?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-c"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Since tools and books are both physical objects, the library should use identical rules for lending them.",
+        "Libraries should avoid lending objects whose possible uses cannot be listed in advance.",
+        "Every successful tool collection proves that a library can expand its services without any extra spending.",
+        "The library's lending experience provides a useful starting point, but tools require additional safety and maintenance arrangements."
+      ]
+    },
+    {
+      "id": "mcq26",
+      "label": "Section I — Question 26",
+      "prompt": "The writer wants to add evidence after sentence 2 that most directly supports the claim about making occasional repairs less expensive. Which invented finding would best serve that purpose?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-c"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "In a pilot, borrowers who completed a one-time repair reported paying a small loan fee instead of buying equipment they did not otherwise need.",
+        "The library catalogue recorded an increase in the number of books with repair-related words in their titles.",
+        "A survey found that residents preferred a tool cabinet made of metal to one made of wood.",
+        "Several nearby libraries recently changed the opening hours of their reading rooms."
+      ]
+    },
+    {
+      "id": "mcq27",
+      "label": "Section I — Question 27",
+      "prompt": "Should the writer keep sentence 8?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-c"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "No, because introducing a volunteer shifts the article's focus from equipment to a biography.",
+        "No, because a newsletter argument may use statistics but not an individual's observation.",
+        "Yes, because it gives a concrete reason that the instruction arrangements in sentence 7 matter.",
+        "Yes, because it establishes that every volunteer has the expertise to approve every available tool."
+      ]
+    },
+    {
+      "id": "mcq28",
+      "label": "Section I — Question 28",
+      "prompt": "Which sentence would be best deleted because it interrupts the reasoning of its paragraph?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-c"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Sentence 10",
+        "Sentence 12",
+        "Sentence 13",
+        "Sentence 15"
+      ]
+    },
+    {
+      "id": "mcq29",
+      "label": "Section I — Question 29",
+      "prompt": "The writer wants to revise sentence 15 so that parallel phrasing emphasises the two different ways borrowing rules could exclude users. Which version best accomplishes this?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-c"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "A large deposit could bar residents short of money; an online-only booking system could bar residents without reliable internet access.",
+        "Residents need money and internet access, so the rules should not be mentioned until after they have joined the library.",
+        "Although booking takes place online, a deposit is a sum of money that the library asks someone to pay.",
+        "Deposits and online bookings are different things, and the library has many rules about the services that members may use."
+      ]
+    },
+    {
+      "id": "mcq30",
+      "label": "Section I — Question 30",
+      "prompt": "The writer is considering adding “No borrower would ever have to pay to replace lost equipment” after sentence 16. Which is the best reason NOT to add it?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-c"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "It repeats the exact information already provided by sentence 11.",
+        "It makes the argument too specific for an article addressed to local residents.",
+        "It shifts the article from a discussion of tools to a discussion of printed books.",
+        "It makes an unsupported absolute promise about replacement costs where the proposal calls for a modest, clearly explained policy."
+      ]
+    },
+    {
+      "id": "mcq31",
+      "label": "Section I — Question 31",
+      "prompt": "Which replacement for sentence 18 best preserves the article's cautiously encouraging, practical tone while bringing it to a close?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-c"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Libraries have changed many times, so their future cannot be predicted with any confidence.",
+        "The council should buy as many tools as possible before deciding how the collection will operate.",
+        "A modest trial with visible costs and accessible rules would let Northbank test the promise of sharing without hiding the work it requires.",
+        "A collection of tools will be popular because most people occasionally need a tool."
+      ]
+    },
+    {
+      "id": "mcq32",
+      "label": "Section I — Question 32",
+      "prompt": "The writer wants to keep the personal opening without implying that one experience proves a town-wide result. Which sentence most clearly performs that qualification?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-d"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Sentence 1",
+        "Sentence 3",
+        "Sentence 9",
+        "Sentence 19"
+      ]
+    },
+    {
+      "id": "mcq33",
+      "label": "Section I — Question 33",
+      "prompt": "Which replacement for sentence 7 best supports the reasoning in sentence 8?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-d"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "The appearance of a new lamp is the most reliable guide to its environmental effects.",
+        "The council should assume that an old lamp always uses more electricity than any newer replacement.",
+        "An efficient lamp may save little overall if many more lamps are installed or they operate for longer hours.",
+        "Residents are unlikely to notice environmental changes if the new lamps look like the old ones."
+      ]
+    },
+    {
+      "id": "mcq34",
+      "label": "Section I — Question 34",
+      "prompt": "The writer wants to add this sentence: “Consequently, the lower electricity use cannot confidently be attributed to shielding alone.” Where would it best fit?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-d"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Before sentence 1",
+        "After sentence 6",
+        "After sentence 9",
+        "After sentence 12"
+      ]
+    },
+    {
+      "id": "mcq35",
+      "label": "Section I — Question 35",
+      "prompt": "Which additional information would most strengthen an argument that the shielded installation, rather than other changes, reduced electricity use in the trial?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-d"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "A comparison with similar unchanged streets, accounting for lamp numbers, operating hours and other relevant differences",
+        "A photograph showing that the new lamps had a more modern appearance than the old ones",
+        "A statement that the two trial streets were easy for council officers to reach",
+        "A count of how often the word efficiency appeared in residents' written comments"
+      ]
+    },
+    {
+      "id": "mcq36",
+      "label": "Section I — Question 36",
+      "prompt": "Which revision of sentence 15 would best preserve its role while making the shopkeepers' concern more concise?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-d"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Shopkeepers oppose environmental improvements because they do not understand lighting design.",
+        "Shopkeepers agree that any reduction in wasted light must make the route safer.",
+        "They worry that efforts to reduce wasted light could leave late customers and staff with inadequate visibility.",
+        "They have concerns about several matters that the council may or may not be able to address."
+      ]
+    },
+    {
+      "id": "mcq37",
+      "label": "Section I — Question 37",
+      "prompt": "The writer wants to add a sentence after sentence 16 that explains how the evening walks could inform a decision. Which best does so?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-d"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Evening walks have sometimes been included in other kinds of community events.",
+        "Participants could use the same checklist at each location to record whether they can recognise faces, edges and crossing hazards.",
+        "The walks should be advertised using photographs taken from the most flattering angle.",
+        "Because all participants will be outside together, their judgments will necessarily be identical."
+      ]
+    },
+    {
+      "id": "mcq38",
+      "label": "Section I — Question 38",
+      "prompt": "Should the writer retain sentences 19 and 20 as the conclusion?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-d"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Yes, because their contrast returns to the article's distinction between visible brightness and useful street-level visibility.",
+        "Yes, because they introduce an unrelated scenic viewpoint that balances the technical discussion.",
+        "No, because the article has already proved that the dimmest arrangement is always the safest.",
+        "No, because an argument about a local policy must conclude with a precise numerical prediction."
+      ]
+    },
+    {
+      "id": "mcq39",
+      "label": "Section I — Question 39",
+      "prompt": "The department values written evidence and is cautious about the reliability of memory. Which replacement for sentence 3 best establishes common ground with these readers while encouraging them to consider interviews?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-e"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Interviews could preserve experiences missing from official records, but recollection also needs context and careful comparison.",
+        "Because people remember important events, interviews eliminate the need to retain written documents.",
+        "Written records are always impartial, whereas spoken recollections can have no historical value.",
+        "The project should collect the largest possible number of recordings before deciding what questions to ask."
+      ]
+    },
+    {
+      "id": "mcq40",
+      "label": "Section I — Question 40",
+      "prompt": "The writer wants to add another perspective after sentence 6. Which sentence best develops the paragraph's reasoning?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-e"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "The factory's buildings were made from materials common in the region at that time.",
+        "The department owns several books with chapters about the factory's machinery.",
+        "The town's population can be displayed using either a table or a line graph.",
+        "A worker's child might recall changed routines at home rather than decisions made inside the factory."
+      ]
+    },
+    {
+      "id": "mcq41",
+      "label": "Section I — Question 41",
+      "prompt": "Where would this sentence most effectively be placed? “The purpose is not to force these memories into agreement but to make their differences available for examination.”",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-e"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Before sentence 1",
+        "After sentence 8",
+        "After sentence 12",
+        "After sentence 15"
+      ]
+    },
+    {
+      "id": "mcq42",
+      "label": "Section I — Question 42",
+      "prompt": "Should sentence 11 be kept?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-e"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "No, because a memo about historical evidence should not discuss the people who provide it.",
+        "No, because any example makes the consent policy less applicable to future interviews.",
+        "Yes, because it illustrates why a speaker's consent may need to be reconsidered during an interview.",
+        "Yes, because it proves that every workplace story identifies someone who will object."
+      ]
+    },
+    {
+      "id": "mcq43",
+      "label": "Section I — Question 43",
+      "prompt": "Which replacement for sentence 15 best advances the writer's proposal for a manageable pilot?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-e"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "Recording quality is unimportant because the students will remember everything that speakers say.",
+        "The project will have little value unless the department immediately purchases professional studio equipment.",
+        "A large public collection should be announced before students learn whether the equipment works.",
+        "Clear, reliable recordings matter, but a small project can begin with equipment that students know how to test and use."
+      ]
+    },
+    {
+      "id": "mcq44",
+      "label": "Section I — Question 44",
+      "prompt": "The department wants assurance that a pilot can produce usable records without making promises it cannot keep. Which addition to sentence 17 best addresses that concern?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-e"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "including whether recordings are intelligible, consent requests can be honoured, and descriptions explain who spoke and in what circumstances",
+        "including whether the recordings are longer than every interview previously made in the town",
+        "including whether all speakers give the same account of the factory's final week",
+        "including whether the microphones cost more than those used by another school"
+      ]
+    },
+    {
+      "id": "mcq45",
+      "label": "Section I — Question 45",
+      "prompt": "Which alternative version of sentence 18 uses balanced phrasing to emphasise the relationship between recollections and their context?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "draft-e"
+      ],
+      "marks": 1,
+      "sectionId": "section-1",
+      "options": [
+        "The number of answers is important, and the answers should be counted when the project is finally completed.",
+        "We would preserve not only what people remember, but also the circumstances in which those memories were shared.",
+        "Questions should be removed from the transcripts, since the answers will then appear to speak entirely for themselves.",
+        "Because spoken accounts settle historical disputes, the department can expect a final answer from every recording."
+      ]
+    },
+    {
+      "id": "frq1",
+      "label": "Section II — Question 1: Synthesis",
+      "prompt": "Bellford is considering converting a disused railway into a public walking and cycling route. Read all six attached sources and their headnotes. Develop an argument about the most important considerations Bellford should use in deciding whether and how to carry out the conversion. Establish a defensible position, use evidence from at least three sources, and explain the connections between the evidence and your reasoning. Identify sources clearly as Source A, Source B, and so on; quotation, paraphrase and summary are all acceptable when attributed. Do more than describe the sources separately. The scenario and evidence are fictional but should be treated as the supplied policy record for this task. Write a coherent essay; no fixed word count is required.",
+      "type": "essay",
+      "resourceKeys": [
+        "synthesis-a",
+        "synthesis-b",
+        "synthesis-c",
+        "synthesis-d",
+        "synthesis-e",
+        "synthesis-f"
+      ],
+      "marks": 6,
+      "sectionId": "section-2"
+    },
+    {
+      "id": "frq2",
+      "label": "Section II — Question 2: Rhetorical analysis",
+      "prompt": "Read Leona Faris's attached welcome speech to the returning community orchestra. Write an essay analysing how her rhetorical choices convey her message about rebuilding the ensemble. Develop an interpretive thesis, use specific evidence from the speech, and explain how the choices work in relation to the speaker's purpose, occasion and mixed-experience audience. Analyse the rhetoric rather than merely summarising the speech or stating whether you agree with it. No fixed word count is required.",
+      "type": "essay",
+      "resourceKeys": [
+        "rhetoric-speech"
+      ],
+      "marks": 6,
+      "sectionId": "section-2"
+    },
+    {
+      "id": "frq3",
+      "label": "Section II — Question 3: Argument",
+      "prompt": "Consider this original claim: Having more options does not necessarily give a person more freedom. Write an essay developing your position on the relationship between the number of options available and a person's meaningful freedom to act. You may agree, disagree or qualify the claim. Support a defensible thesis with specific evidence from your knowledge, reading, observations or experience, and explain how that evidence advances your reasoning. Acknowledge relevant limits or complexities where they matter to your position. No external research or fixed word count is required.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 6,
+      "sectionId": "section-2"
+    }
+  ]
+}

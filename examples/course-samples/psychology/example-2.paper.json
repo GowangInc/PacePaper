@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Psychology · Paper 3 — original research-methods sample",
+  "title": "Psychology · Paper 3 (HL) — original full-format practice",
   "subject": "psychology",
   "subjectLabel": "Psychology",
   "level": "HL",
-  "paper": "Paper 3 — original research-methods sample",
+  "paper": "Paper 3 (HL) — original full-format practice",
   "durationMinutes": 60,
   "readingTimeMinutes": 5,
   "maximumMarks": 24,
@@ -19,19 +19,19 @@
       "key": "research-stimulus",
       "label": "Original research stimulus",
       "kind": "text",
-      "text": "A researcher investigated how recently arrived boarding students experience shared study spaces. Twelve volunteers aged 16–18 took part in semi-structured interviews during their first month at school. Interviews lasted 25–40 minutes and were audio-recorded with consent. The researcher used open questions, including ‘Describe a time when the study room helped or prevented you from working.’ Transcripts were coded independently by the researcher and a colleague. They agreed on three initial themes: visibility, informal rules, and control of noise. Participants then received a one-page summary and could correct factual details or withdraw a quotation. Two participants asked for wording changes because they feared classmates might recognize an incident."
+      "text": "A researcher investigated how recently arrived boarding students experience shared study spaces. The study focused on students aged 16–18 during their first month at one residential school. Notices were placed in two boarding houses and the researcher then selected twelve volunteers who had used both the library and the evening study room at least three times. Nine participants identified English as an additional language.\n\nEach participant took part in a semi-structured interview lasting 25–40 minutes. Interviews opened with the same broad invitation: ‘Describe a time when a shared study space helped or prevented you from working.’ The interviewer used follow-up questions to ask about noise, visibility, seating, friendships and interactions with supervising adults, but changed the order in response to each participant. Interviews were conducted in a private meeting room, audio-recorded with written consent and transcribed verbatim. Students and parents received an information sheet, and students were reminded that participation would not affect school reports or boarding privileges.\n\nThe researcher and a colleague independently coded four transcripts before agreeing on a provisional coding framework. They then coded the remaining transcripts and compared disagreements. Three initial themes were reported: visibility, informal rules and control of noise. The researchers deliberately retained two accounts that contradicted the dominant pattern. One student described visible supervision as reassuring, while most described it as pressure.\n\nParticipants received a one-page summary and could correct factual details or withdraw a quotation. Two participants asked for wording changes because they feared classmates might recognize an incident. The final report used pseudonyms, removed boarding-house names and stated that its findings represented experiences at one school rather than all boarding students. The researcher proposed a later observation study to compare what participants said with how the rooms were used."
     }
   ],
   "questions": [
     {
       "id": "q1",
-      "label": "Question 1 — method",
-      "prompt": "Explain why a semi-structured interview was an appropriate method for this investigation.",
+      "label": "Question 1 — method and sampling",
+      "prompt": "Identify the research method and outline two of its characteristics. Describe the sampling method, then suggest one alternative or additional method with one reason for the choice.",
       "type": "short",
       "resourceKeys": [
         "research-stimulus"
       ],
-      "marks": 6
+      "marks": 9
     },
     {
       "id": "q2",
@@ -45,13 +45,13 @@
     },
     {
       "id": "q3",
-      "label": "Question 3 — trustworthiness",
-      "prompt": "Evaluate the trustworthiness of the findings. Refer to researcher triangulation, participant checking, sampling and one additional relevant consideration.",
+      "label": "Question 3 — credibility",
+      "prompt": "Discuss how the researchers could ensure that the results are credible. Refer to the procedures used, sampling, reflexivity and at least one additional relevant consideration.",
       "type": "essay",
       "resourceKeys": [
         "research-stimulus"
       ],
-      "marks": 12
+      "marks": 9
     }
   ]
 }

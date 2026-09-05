@@ -12,12 +12,26 @@ export const SOURCE_CLASSIFICATIONS = [
   "official-public-reference",
   "unknown-local-only",
 ] as const;
+export const PRACTICE_FIDELITIES = ["official-format", "adapted", "school-custom"] as const;
+export const EXAM_PHASE_KINDS = ["reading", "work", "break"] as const;
 
-export type Level = (typeof LEVELS)[number];
+export type Level = string;
 export type PaperMode = (typeof PAPER_MODES)[number];
 export type QuestionType = (typeof QUESTION_TYPES)[number];
 export type ResourceKind = (typeof RESOURCE_KINDS)[number];
 export type SourceClassification = (typeof SOURCE_CLASSIFICATIONS)[number];
+export type PracticeFidelity = (typeof PRACTICE_FIDELITIES)[number];
+export type ExamPhaseKind = (typeof EXAM_PHASE_KINDS)[number];
+
+export interface ExamFormatMetadata {
+  systemId: string;
+  systemLabel: string;
+  qualificationLabel: string;
+  deliveryMode: string;
+  fidelity: PracticeFidelity;
+  profileVersion: string;
+  rulesSummary: string;
+}
 
 export interface PaperResource {
   key: string;
@@ -39,12 +53,24 @@ export interface PaperQuestion {
   wordCountMin?: number;
   wordCountMax?: number;
   ink?: InkSettings;
+  sectionId?: string;
+}
+
+export interface ExamPhase {
+  id: string;
+  label: string;
+  kind: ExamPhaseKind;
+  durationMinutes: number;
+  sectionId?: string;
+  tools: string[];
+  instructions?: string;
 }
 
 export interface PaperManifest {
   version: 1;
   assessmentSession?: string;
   examProfileId?: string;
+  examFormat?: ExamFormatMetadata;
   sourceClassification: SourceClassification;
   exportAuthorized: boolean;
   title: string;
@@ -54,6 +80,7 @@ export interface PaperManifest {
   paper: string;
   durationMinutes: number;
   readingTimeMinutes: number;
+  phases?: ExamPhase[];
   maximumMarks?: number;
   subjectWeightPercent?: number;
   mode: PaperMode;
@@ -82,6 +109,7 @@ export interface PortablePaperAsset {
 }
 
 const KEY = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+const LEVEL_LABEL = /^[\p{L}\p{N}][\p{L}\p{N} /&()+.:-]{0,39}$/u;
 const FILE_NAME = /^[^/\\\u0000]{1,128}$/;
 const MAX_MANIFEST_BYTES = 1_000_000;
 const MAX_ASSET_BYTES = 40_000_000;
@@ -137,9 +165,9 @@ function oneOf<const T extends readonly string[]>(value: unknown, values: T, lab
   return value as T[number];
 }
 
-function stringList(value: unknown, label: string, maxItems: number): string[] {
+function stringList(value: unknown, label: string, maxItems: number, maxLength = 64): string[] {
   if (!Array.isArray(value) || value.length > maxItems) throw new Error(`${label} must be a list`);
-  return value.map((item, index) => text(item, `${label}[${index}]`, 64));
+  return value.map((item, index) => text(item, `${label}[${index}]`, maxLength));
 }
 
 function optionalInteger(value: unknown, label: string, min: number, max: number): number | undefined {
@@ -150,6 +178,22 @@ function optionalBoolean(value: unknown, label: string): boolean {
   if (value === undefined) return false;
   if (typeof value !== "boolean") throw new Error(`${label} must be true or false`);
   return value;
+}
+
+function parseExamFormat(value: unknown): ExamFormatMetadata | undefined {
+  if (value === undefined) return undefined;
+  const source = record(value, "manifest.examFormat");
+  const systemId = text(source.systemId, "manifest.examFormat.systemId", 64).toLowerCase();
+  if (!KEY.test(systemId)) throw new Error("manifest.examFormat.systemId must be a lowercase slug");
+  return {
+    systemId,
+    systemLabel: text(source.systemLabel, "manifest.examFormat.systemLabel", 100),
+    qualificationLabel: text(source.qualificationLabel, "manifest.examFormat.qualificationLabel", 100),
+    deliveryMode: text(source.deliveryMode, "manifest.examFormat.deliveryMode", 100),
+    fidelity: oneOf(source.fidelity, PRACTICE_FIDELITIES, "manifest.examFormat.fidelity"),
+    profileVersion: text(source.profileVersion, "manifest.examFormat.profileVersion", 40),
+    rulesSummary: text(source.rulesSummary, "manifest.examFormat.rulesSummary", 500),
+  };
 }
 
 function parseResource(value: unknown, index: number): PaperResource {
@@ -192,10 +236,15 @@ function parseQuestion(value: unknown, index: number): PaperQuestion {
     type,
     resourceKeys: stringList(source.resourceKeys ?? [], `questions[${index}].resourceKeys`, 20),
     marks: optionalInteger(source.marks, `questions[${index}].marks`, 1, 1_000),
+    sectionId: source.sectionId === undefined ? undefined : text(source.sectionId, `questions[${index}].sectionId`, 64),
   };
 
+  if (question.sectionId && !KEY.test(question.sectionId)) {
+    throw new Error(`questions[${index}].sectionId has an invalid format`);
+  }
+
   if (type === "single-choice") {
-    const options = stringList(source.options, `questions[${index}].options`, 12);
+    const options = stringList(source.options, `questions[${index}].options`, 12, 1_000);
     if (options.length < 2) throw new Error(`questions[${index}].options needs at least two choices`);
     question.options = options;
   }
@@ -212,6 +261,54 @@ function parseQuestion(value: unknown, index: number): PaperQuestion {
     throw new Error(`questions[${index}] has an invalid word-count range`);
   }
   return question;
+}
+
+function parsePhases(value: unknown, durationMinutes: number, readingTimeMinutes: number, questions: PaperQuestion[]): ExamPhase[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length < 2 || value.length > 12) {
+    throw new Error("manifest.phases must contain 2 to 12 timed phases");
+  }
+  if (readingTimeMinutes !== 0) throw new Error("manifest.readingTimeMinutes must be 0 when manifest.phases is present");
+
+  const phases = value.map((item, index): ExamPhase => {
+    const source = record(item, `phases[${index}]`);
+    const id = text(source.id, `phases[${index}].id`, 64);
+    if (!KEY.test(id)) throw new Error(`phases[${index}].id has an invalid format`);
+    const kind = oneOf(source.kind, EXAM_PHASE_KINDS, `phases[${index}].kind`);
+    const sectionId = source.sectionId === undefined ? undefined : text(source.sectionId, `phases[${index}].sectionId`, 64);
+    if (sectionId && !KEY.test(sectionId)) throw new Error(`phases[${index}].sectionId has an invalid format`);
+    if (kind === "break" && sectionId) throw new Error(`phases[${index}] cannot attach a break to a question section`);
+    if (kind !== "break" && !sectionId) throw new Error(`phases[${index}] must identify its question section`);
+    return {
+      id,
+      label: text(source.label, `phases[${index}].label`, 100),
+      kind,
+      durationMinutes: integer(source.durationMinutes, `phases[${index}].durationMinutes`, 1, 240),
+      sectionId,
+      tools: stringList(source.tools ?? [], `phases[${index}].tools`, 8),
+      instructions: source.instructions === undefined
+        ? undefined
+        : text(source.instructions, `phases[${index}].instructions`, 1_000),
+    };
+  });
+
+  if (new Set(phases.map(({ id }) => id)).size !== phases.length) throw new Error("Phase ids must be unique");
+  if (phases.reduce((sum, phase) => sum + phase.durationMinutes, 0) !== durationMinutes) {
+    throw new Error("Timed phase minutes must add up to manifest.durationMinutes");
+  }
+  if (phases.at(-1)?.kind !== "work") throw new Error("The final timed phase must be a work phase");
+  const workSections = new Set(phases.filter(({ kind }) => kind === "work").map(({ sectionId }) => sectionId));
+  for (const question of questions) {
+    if (!question.sectionId || !workSections.has(question.sectionId)) {
+      throw new Error(`Question ${question.id} must belong to a work-phase section`);
+    }
+  }
+  for (const sectionId of workSections) {
+    if (!questions.some((question) => question.sectionId === sectionId)) {
+      throw new Error(`Work-phase section ${sectionId} has no questions`);
+    }
+  }
+  return phases;
 }
 
 export function parseManifest(value: unknown): PaperManifest {
@@ -243,10 +340,16 @@ export function parseManifest(value: unknown): PaperManifest {
 
   const subject = text(source.subject, "manifest.subject", 64).toLowerCase();
   if (!KEY.test(subject)) throw new Error("manifest.subject must be a lowercase slug");
+  const level = text(source.level, "manifest.level", 40);
+  if (!LEVEL_LABEL.test(level)) throw new Error("manifest.level has an invalid format");
+  const durationMinutes = integer(source.durationMinutes, "manifest.durationMinutes", 5, 360);
+  const readingTimeMinutes = optionalInteger(source.readingTimeMinutes, "manifest.readingTimeMinutes", 0, 60) ?? 0;
+  const phases = parsePhases(source.phases, durationMinutes, readingTimeMinutes, questions);
   return {
     version: 1,
     assessmentSession: source.assessmentSession === undefined ? undefined : text(source.assessmentSession, "manifest.assessmentSession", 80),
     examProfileId: source.examProfileId === undefined ? undefined : text(source.examProfileId, "manifest.examProfileId", 240),
+    examFormat: parseExamFormat(source.examFormat),
     sourceClassification: oneOf(
       source.sourceClassification ?? "unknown-local-only",
       SOURCE_CLASSIFICATIONS,
@@ -256,10 +359,11 @@ export function parseManifest(value: unknown): PaperManifest {
     title: text(source.title, "manifest.title", 160),
     subject,
     subjectLabel: text(source.subjectLabel, "manifest.subjectLabel", 100),
-    level: oneOf(source.level, LEVELS, "manifest.level"),
+    level,
     paper: text(source.paper, "manifest.paper", 80),
-    durationMinutes: integer(source.durationMinutes, "manifest.durationMinutes", 5, 360),
-    readingTimeMinutes: optionalInteger(source.readingTimeMinutes, "manifest.readingTimeMinutes", 0, 60) ?? 0,
+    durationMinutes,
+    readingTimeMinutes,
+    phases,
     maximumMarks: optionalInteger(source.maximumMarks, "manifest.maximumMarks", 1, 1_000),
     subjectWeightPercent: optionalInteger(source.subjectWeightPercent, "manifest.subjectWeightPercent", 1, 100),
     mode,

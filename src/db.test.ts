@@ -48,12 +48,15 @@ afterAll(() => {
 });
 
 describe("database schema migration", () => {
-  test("adds nullable archive timestamps to an existing database", () => {
+  test("adds nullable lifecycle and ready-exam timing fields to an existing database", () => {
     initializeDatabaseSchema(database.db);
     for (const table of ["classes", "students", "exam_sessions"] as const) {
       const columns = database.db.query<{ name: string; notnull: number }, []>(`PRAGMA table_info(${table})`).all();
       expect(columns.find(({ name }) => name === "archived_at")).toMatchObject({ notnull: 0 });
     }
+    const sessionColumns = database.db.query<{ name: string; notnull: number }, []>("PRAGMA table_info(exam_sessions)").all();
+    expect(sessionColumns.find(({ name }) => name === "duration_minutes_override")).toMatchObject({ notnull: 0 });
+    expect(sessionColumns.find(({ name }) => name === "reading_time_minutes_override")).toMatchObject({ notnull: 0 });
   });
 });
 
@@ -320,6 +323,42 @@ describe("student examination selection", () => {
     expect(database.listStudentExamSessions(lateStudent.id).filter((session) => session.paperId === paper.id)).toEqual([
       expect.objectContaining({ id: futureSessionId, status: "draft", submittedAt: null }),
     ]);
+  });
+
+  test("saves decimal reading time on a ready exam and freezes it when the exam starts", () => {
+    const schoolClass = database.createClass("Timing Override", "TIMING-OVERRIDE");
+    const student = database.createStudent({
+      classId: schoolClass.id,
+      name: "Timer Tester",
+      candidateCode: "T-101",
+      pinHash: "test-hash",
+      extraMinutes: 0,
+    });
+    const paper = database.createPaper({ manifest: paperManifest, assets: [] });
+    const sessionId = database.createExamSession(schoolClass.id, paper.id);
+
+    database.updateDraftExamSessionTiming(sessionId, 0.1, 12);
+    expect(database.listExamSessions().find(({ id }) => id === sessionId)).toMatchObject({
+      readingTimeMinutes: 0.1,
+      durationMinutes: 12,
+      status: "draft",
+    });
+    expect(database.listStudentExamSessions(student.id).find(({ id }) => id === sessionId)).toMatchObject({
+      readingTimeMinutes: 0.1,
+      durationMinutes: 12,
+    });
+    database.updateDraftExamSessionTiming(sessionId, 0.2, 12, { readingTimeMinutes: 0.1, durationMinutes: 12 });
+    expect(() => database.updateDraftExamSessionTiming(sessionId, 5, 30, { readingTimeMinutes: 0.1, durationMinutes: 12 }))
+      .toThrow("another window");
+    expect(database.listExamSessions().find(({ id }) => id === sessionId)?.readingTimeMinutes).toBe(0.2);
+    database.updateDraftExamSessionTiming(sessionId, 0.1, 12, { readingTimeMinutes: 0.2, durationMinutes: 12 });
+
+    database.startExamSession(sessionId);
+    expect(database.getStudentExam(student.id, sessionId)).toMatchObject({
+      readingTimeMinutes: 0.1,
+      durationMinutes: 12,
+    });
+    expect(() => database.updateDraftExamSessionTiming(sessionId, 5, 30)).toThrow("Only a ready exam");
   });
 
   test("reads and atomically enforces the fixed two-play audio limit", async () => {

@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "assessmentSession": "digitaldp-original-examples-v1",
+  "assessmentSession": "digitaldp-original-examples-v2",
   "sourceClassification": "teacher-authored",
   "exportAuthorized": true,
-  "title": "Chemistry · Paper 1 — original combined 1A and 1B sample",
+  "title": "Chemistry · Paper 1 (SL) — original full-format practice",
   "subject": "chemistry",
   "subjectLabel": "Chemistry",
   "level": "SL",
-  "paper": "Paper 1 — original combined 1A and 1B sample",
-  "durationMinutes": 35,
+  "paper": "Paper 1 (SL) — original full-format practice",
+  "durationMinutes": 90,
   "readingTimeMinutes": 5,
-  "maximumMarks": 12,
+  "maximumMarks": 55,
   "mode": "reading",
   "instructions": "Complete the selected-response and data/working questions under one timer. An approved calculator is required. Use the original reference data supplied within this sample; no external data booklet is needed. Enter each answer beside its question; no separate answer sheet is used.",
   "selectionMode": "all",
@@ -83,7 +83,371 @@
     },
     {
       "id": "q5",
-      "label": "Paper 1B · Question 5",
+      "label": "Paper 1A · Question 5",
+      "prompt": "Which isotope notation represents an atom with 17 protons and 18 neutrons?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "³⁵₁₇X",
+        "¹⁸₁₇X",
+        "³⁵₁₈X",
+        "¹⁷₃₅X"
+      ]
+    },
+    {
+      "id": "q6",
+      "label": "Paper 1A · Question 6",
+      "prompt": "Which species has the smallest radius?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Na",
+        "Na⁺",
+        "Mg",
+        "Mg²⁺"
+      ]
+    },
+    {
+      "id": "q7",
+      "label": "Paper 1A · Question 7",
+      "prompt": "Which bond is most polar?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "H–F",
+        "H–Cl",
+        "H–Br",
+        "H–I"
+      ]
+    },
+    {
+      "id": "q8",
+      "label": "Paper 1A · Question 8",
+      "prompt": "What is the molecular geometry of ammonia?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Linear",
+        "Trigonal planar",
+        "Trigonal pyramidal",
+        "Tetrahedral"
+      ]
+    },
+    {
+      "id": "q9",
+      "label": "Paper 1A · Question 9",
+      "prompt": "Which intermolecular force acts between all molecular substances?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Hydrogen bonding",
+        "Ion–dipole attraction",
+        "London dispersion",
+        "Metallic bonding"
+      ]
+    },
+    {
+      "id": "q10",
+      "label": "Paper 1A · Question 10",
+      "prompt": "Which sample contains the greatest number of molecules?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "1 g H₂",
+        "1 g O₂",
+        "1 g N₂",
+        "1 g CO₂"
+      ]
+    },
+    {
+      "id": "q11",
+      "label": "Paper 1A · Question 11",
+      "prompt": "Which expression gives concentration in mol dm⁻³?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "mass × volume",
+        "amount ÷ volume",
+        "volume ÷ amount",
+        "mass ÷ molar mass only"
+      ]
+    },
+    {
+      "id": "q12",
+      "label": "Paper 1A · Question 12",
+      "prompt": "For an exothermic reaction, which sign does ΔH have?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Positive",
+        "Negative",
+        "Always zero",
+        "Undefined"
+      ]
+    },
+    {
+      "id": "q13",
+      "label": "Paper 1A · Question 13",
+      "prompt": "Which change raises the temperature of the surroundings most directly?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "An endothermic process",
+        "An exothermic process",
+        "Melting",
+        "Bond breaking alone"
+      ]
+    },
+    {
+      "id": "q14",
+      "label": "Paper 1A · Question 14",
+      "prompt": "At dynamic equilibrium, what is equal?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Reactant and product concentrations",
+        "Forward and reverse rates",
+        "All stoichiometric coefficients",
+        "Activation energies"
+      ]
+    },
+    {
+      "id": "q15",
+      "label": "Paper 1A · Question 15",
+      "prompt": "Which change shifts a gaseous equilibrium toward the side with fewer gas particles?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Lower pressure",
+        "Higher pressure",
+        "A catalyst",
+        "Greater surface area"
+      ]
+    },
+    {
+      "id": "q16",
+      "label": "Paper 1A · Question 16",
+      "prompt": "Which solution is acidic at 298 K?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "pH 3",
+        "pH 7",
+        "pH 9",
+        "pH 12"
+      ]
+    },
+    {
+      "id": "q17",
+      "label": "Paper 1A · Question 17",
+      "prompt": "Which pair can form a buffer?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Strong acid and strong base",
+        "Weak acid and its conjugate base",
+        "Two salts with no common ion",
+        "Pure water and ethanol"
+      ]
+    },
+    {
+      "id": "q18",
+      "label": "Paper 1A · Question 18",
+      "prompt": "What is reduced in Zn + Cu²⁺ → Zn²⁺ + Cu?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Zn",
+        "Cu²⁺",
+        "Zn²⁺",
+        "Neither species"
+      ]
+    },
+    {
+      "id": "q19",
+      "label": "Paper 1A · Question 19",
+      "prompt": "At the cathode of an electrolytic cell, which process occurs?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Oxidation",
+        "Reduction",
+        "Neutralization",
+        "Combustion"
+      ]
+    },
+    {
+      "id": "q20",
+      "label": "Paper 1A · Question 20",
+      "prompt": "Which hydrocarbon is unsaturated?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Ethane",
+        "Propane",
+        "Ethene",
+        "Methane"
+      ]
+    },
+    {
+      "id": "q21",
+      "label": "Paper 1A · Question 21",
+      "prompt": "Which reagent distinguishes an alkene from an alkane?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Bromine water",
+        "Sodium chloride",
+        "Universal indicator only",
+        "Distilled water"
+      ]
+    },
+    {
+      "id": "q22",
+      "label": "Paper 1A · Question 22",
+      "prompt": "What is the functional group in an ester?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "–OH",
+        "–COO–",
+        "–CHO",
+        "–NH₂"
+      ]
+    },
+    {
+      "id": "q23",
+      "label": "Paper 1A · Question 23",
+      "prompt": "Which polymerization joins alkene monomers without a small-molecule by-product?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Condensation",
+        "Addition",
+        "Hydrolysis",
+        "Substitution"
+      ]
+    },
+    {
+      "id": "q24",
+      "label": "Paper 1A · Question 24",
+      "prompt": "Which spectrum is used most directly to identify molecular fragments by mass-to-charge ratio?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Infrared",
+        "Mass",
+        "Visible",
+        "Microwave"
+      ]
+    },
+    {
+      "id": "q25",
+      "label": "Paper 1A · Question 25",
+      "prompt": "Which signal is expected for a carboxylic acid in an infrared spectrum?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Broad O–H absorption",
+        "No carbonyl absorption",
+        "Only a sharp C–H signal",
+        "An atomic emission line"
+      ]
+    },
+    {
+      "id": "q26",
+      "label": "Paper 1A · Question 26",
+      "prompt": "Which factor does a catalyst change?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Reaction enthalpy",
+        "Equilibrium constant",
+        "Activation energy",
+        "Product identity"
+      ]
+    },
+    {
+      "id": "q27",
+      "label": "Paper 1A · Question 27",
+      "prompt": "What is the order with respect to X if doubling [X] quadruples rate?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Zero",
+        "One",
+        "Two",
+        "Four"
+      ]
+    },
+    {
+      "id": "q28",
+      "label": "Paper 1A · Question 28",
+      "prompt": "Which observation best indicates precision?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "A mean near the accepted value",
+        "Repeated values close together",
+        "A large uncertainty",
+        "A zero systematic error by assumption"
+      ]
+    },
+    {
+      "id": "q29",
+      "label": "Paper 1A · Question 29",
+      "prompt": "Which glassware is best for delivering one fixed volume accurately?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "Beaker",
+        "Volumetric pipette",
+        "Conical flask",
+        "Evaporating basin"
+      ]
+    },
+    {
+      "id": "q30",
+      "label": "Paper 1A · Question 30",
+      "prompt": "Which graph linearizes a first-order decay in concentration?",
+      "type": "single-choice",
+      "resourceKeys": [],
+      "marks": 1,
+      "options": [
+        "[A] against time",
+        "ln[A] against time",
+        "1/[A] against time",
+        "rate against 1/time"
+      ]
+    },
+    {
+      "id": "q31",
+      "label": "Paper 1B · Data question 1",
       "prompt": "Magnesium reacts with excess hydrochloric acid. Calculate the maximum volume of hydrogen at 100 kPa and 298 K produced from 0.486 g Mg. Use R = 8.31 J mol⁻¹ K⁻¹.",
       "type": "ink",
       "resourceKeys": [
@@ -97,12 +461,35 @@
       }
     },
     {
-      "id": "q6",
-      "label": "Paper 1B · Question 6",
-      "prompt": "Explain, using collision theory, why powdered magnesium reacts faster than a ribbon of the same mass under identical conditions.",
+      "id": "q32",
+      "label": "Paper 1B · Data question 2",
+      "prompt": "Explain, using collision theory, why powdered magnesium reacts faster than a ribbon of the same mass under identical conditions. Propose one controlled measurement of rate.",
       "type": "short",
       "resourceKeys": [],
-      "marks": 3
+      "marks": 5
+    },
+    {
+      "id": "q33",
+      "label": "Paper 1B · Data question 3",
+      "prompt": "A 50.0 g water sample warms from 21.4°C to 29.8°C. Calculate the heat transferred and the molar enthalpy change if 0.0125 mol reacted. State one assumption and its likely effect.",
+      "type": "ink",
+      "resourceKeys": [
+        "chem-reference"
+      ],
+      "marks": 7,
+      "ink": {
+        "pages": 2,
+        "background": "square-grid",
+        "allowTypedAlternative": true
+      }
+    },
+    {
+      "id": "q34",
+      "label": "Paper 1B · Data question 4",
+      "prompt": "Design an investigation to determine the rate law for a reaction between two aqueous reactants. Specify the data table, control variables, processing, uncertainty treatment and safety measures.",
+      "type": "essay",
+      "resourceKeys": [],
+      "marks": 8
     }
   ]
 }

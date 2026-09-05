@@ -1,12 +1,15 @@
 import { readdir } from "node:fs/promises";
 import { describe, expect, test } from "bun:test";
-import { isStudentStaticPath, publicAssetPath, staticFilePath } from "./static-files.ts";
+import { guideStylesheetSource, isStudentStaticPath, publicAssetPath, staticFilePath } from "./static-files.ts";
 
 const ROOT_IMPORT = /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["'](\/[^"']+\.js)["']/gu;
 
 describe("static application files", () => {
   test("resolves app pages and safe root assets without exposing test modules", () => {
     expect(staticFilePath("/student")).toBe("public/index.html");
+    expect(staticFilePath("/guide")).toBe("USER_GUIDE.html");
+    expect(staticFilePath("/mock-guides")).toBe("docs/mock-marking/index.html");
+    expect(staticFilePath("/docs/mock-marking/index.html")).toBeNull();
     expect(staticFilePath("/exam-audio.js")).toBe("public/exam-audio.js");
     expect(staticFilePath("/styles.css")).toBe("public/styles.css");
     expect(staticFilePath("/app-icon-192.png")).toBe("public/app-icon-192.png");
@@ -22,7 +25,19 @@ describe("static application files", () => {
     expect(isStudentStaticPath("/exam-audio.js")).toBeTrue();
     expect(isStudentStaticPath("/admin")).toBeFalse();
     expect(isStudentStaticPath("/clock")).toBeFalse();
+    expect(isStudentStaticPath("/guide")).toBeFalse();
+    expect(isStudentStaticPath("/mock-guides")).toBeFalse();
+    expect(isStudentStaticPath("/USER_GUIDE.html")).toBeFalse();
     expect(isStudentStaticPath("/paper-authoring/SKILL.md")).toBeFalse();
+  });
+
+  test("authorizes only the exact single guide stylesheet", () => {
+    expect(guideStylesheetSource("<style>body { color: blue; }</style>"))
+      .toBe("'sha256-sokadS0efMciREADA7GMJWbN3AjFe0yrFzItCxPq11k='");
+    expect(guideStylesheetSource("<style>body { color: blue; } </style>"))
+      .not.toBe(guideStylesheetSource("<style>body { color: blue; }</style>"));
+    expect(guideStylesheetSource("<script>alert(1)</script>")).toBeNull();
+    expect(guideStylesheetSource("<style>a{}</style><style>b{}</style>")).toBeNull();
   });
 
   test("serves the complete root-relative module graph", async () => {

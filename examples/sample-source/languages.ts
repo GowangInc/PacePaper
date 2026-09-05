@@ -4,6 +4,7 @@ import { choiceQuestion, essayQuestion, samplePaper, shortQuestion, textResource
 interface LanguageAConfig {
   subject: string;
   label: string;
+  validatedFullFormat?: boolean;
   instructionsOne: string;
   instructionsTwo: string;
   promptLabel?: string;
@@ -36,7 +37,9 @@ function languageASamples(config: LanguageAConfig): PaperManifest[] {
       subject: config.subject,
       subjectLabel: config.label,
       level: "SL",
-      paper: "Paper 1 — original textual-analysis sample",
+      paper: config.validatedFullFormat
+        ? "Paper 1 (SL) — original full-format practice"
+        : "Paper 1 (SL) — original format rehearsal",
       durationMinutes: 75,
       readingTimeMinutes: 5,
       maximumMarks: 20,
@@ -50,7 +53,9 @@ function languageASamples(config: LanguageAConfig): PaperManifest[] {
       subject: config.subject,
       subjectLabel: config.label,
       level: "HL",
-      paper: "Paper 2 — original comparative-essay sample",
+      paper: config.validatedFullFormat
+        ? "Paper 2 (HL) — original full-format practice"
+        : "Paper 2 (HL) — original format rehearsal",
       durationMinutes: 105,
       readingTimeMinutes: 5,
       maximumMarks: 30,
@@ -67,17 +72,79 @@ const languageAConfigs: LanguageAConfig[] = [
   {
     subject: "english-a-language-literature",
     label: "English A: Language and Literature",
+    validatedFullFormat: true,
     instructionsOne: "Choose one original text and analyse how its language, structure and design choices shape meaning for its intended audience. Enter the response beside the chosen text; no separate answer sheet is used.",
     instructionsTwo: "Choose one prompt and compare two works studied in class. Enter the complete essay in DigitalDP; no separate answer sheet is used.",
     sources: [
       {
         label: "Text 1 — community-library campaign",
-        text: "BORROW THE EVENING. The East Gate Library is staying open until 10 p.m. every Thursday. Not because everyone needs another meeting room, but because a city needs quiet places that do not ask you to buy anything. Bring unfinished homework, a half-read novel, or simply an hour you have not planned. At 7 p.m. our volunteers will run a ten-minute ‘shelf tour’ for first-time visitors. At 8 p.m. the lights in the children’s room will soften for family reading. No membership card? We will make one while the kettle boils. Late opening begins this month. The doors are already yours.",
+        text: `BORROW THE EVENING
+The East Gate Library stays open until 10 p.m. every Thursday
+
+NOT EVERY EVENING NEEDS A RECEIPT
+
+At six o'clock, much of East Gate begins asking you to buy something. Cafés place small clocks beside laptops. Shopping centres brighten their signs. Even a quiet seat can arrive with the price of a drink. We think a city also needs places where time is not for sale.
+
+That is why the East Gate Library is lending the evening.
+
+Bring unfinished homework, a half-read novel, a job application, a friend who needs help with a form, or simply an hour you have not planned. You do not have to whisper, but you do have to share the quiet. You do not have to borrow a book, but we hope you will borrow the feeling that this building belongs to you.
+
+THURSDAY EVENING
+
+6:00 — The daytime desk closes; the Evening Desk opens. Return books, collect reservations or ask for help without an appointment.
+
+7:00 — First visit? Join a ten-minute shelf tour. We will show you where the sockets hide, which tables welcome group work, and where to find a chair that faces nobody.
+
+8:00 — The lights in the children's room soften for family reading. Stories are available in eight languages. Bring your own favourite or choose one from the floor-level shelves.
+
+9:00 — Last cup from the community kettle. Tea is free. Wash your mug and leave it for the next Thursday.
+
+10:00 — Doors close. Ideas may remain unfinished.
+
+WHO IS THE EVENING FOR?
+
+For Jia, who shares a kitchen table with three younger brothers. For Mr Ellis, whose heating costs less when he spends an evening somewhere warm. For the nursing students who finish placement after our old closing time. For the parent who wants a story but cannot translate every page. For you, including if we have not yet learned your name.
+
+No membership card? We will make one while the kettle boils. No permanent address? Speak to us; we have a local-access card. Need step-free entry, a screen reader, a large-print keyboard or a desk away from fluorescent light? The side entrance and assistive equipment remain available all evening. If our arrangements do not work, tell us what would.
+
+WHY ONLY THURSDAY?
+
+Because this is a beginning, not a promise written in stone. For twelve weeks we will count more than footsteps. We will ask who could use the building, who still could not, and what people did with the extra time. A busy room is not automatically an accessible room. If Thursday evenings help, we will seek funding for more. If they do not, we will change them.
+
+Libraries are sometimes described as warehouses for books. Ours is not a warehouse. It is a public kitchen without a menu, an indoor square protected from rain, a power socket beside someone who knows how to read an official letter, a children's room where a tired adult can finish one whole story.
+
+Late opening begins this month.
+
+THE DOORS ARE ALREADY YOURS.
+
+East Gate Library · 14 Market Lane · Buses 2, 7 and 11 · eastgatelibrary.example/evening
+This campaign was written with the Thursday Evening Advisory Group and is available in large print and audio on request.`,
         prompt: "Analyse how the campaign combines language and structural choices to present the library as more than a place for borrowing books.",
       },
       {
         label: "Text 2 — student editorial",
-        text: "Our school has installed six new clocks, each accurate to the second. Yet the corridor between lessons feels less punctual than ever. We do not need another reminder that time is moving; we need somewhere to stop without being treated as an obstacle. A bench near the science block disappeared during renovation and was replaced by a sign saying KEEP MOVING. That instruction may improve traffic, but it also tells us what kind of school we are becoming. Put the bench back. Let a corridor be a route, but also let it be a place where a friend can notice that another friend is not all right.",
+        text: `THE BENCH WAS NOT THE PROBLEM
+An editorial from The North Corridor, the student newspaper
+
+Our school has installed six new clocks, each accurate to the second. One faces the entrance, two supervise the cafeteria and three hang along the renovated science corridor. Their hands move together with military confidence. Yet the five minutes between lessons feel less manageable than ever.
+
+The renovation removed the old bench outside Laboratory 3. The bench was scratched, uneven and frequently occupied by somebody's bag. It was also the place where students tied a shoelace, waited for a teacher, finished an argument, or noticed that a friend did not want to enter the next lesson. In its place there is now a white wall and a sign: KEEP MOVING.
+
+The sign may have begun as practical advice. At 10:25 the corridor is undeniably crowded. Students turning toward the stairs meet classes leaving science, and a bench cannot create extra width. But instructions do more than control traffic. They reveal what a place believes people are for. KEEP MOVING turns every student into an item being delivered. A good student arrives. A late student obstructs. A stationary student has become a fault in the system.
+
+The school's own explanation praises the corridor as “efficient, visible and easy to supervise.” Efficient for what? Visible to whom? The display cases contain photographs of experiments, but the corridor itself allows no experiment in how we might share space. Every surface is wipe-clean. Every chair has been moved inside a room that requires permission to enter. The only approved activity between bells is travel.
+
+We understand the obvious objection: put the bench back and a group will gather around it. The route will narrow. Someone will leave a bottle underneath. These are management problems, not arguments against a place to pause. Paint a waiting zone beside the wall. Use two short seats rather than one long bench. Ask the students who use the corridor to test positions for a week. The solution does not need to be nostalgic; nobody is demanding the return of the bench's loose metal leg.
+
+There is also a less obvious objection. Some adults fear that providing somewhere to stop encourages students to be late. This confuses cause and effect. A student who intends to avoid class does not require school furniture. Meanwhile, a student who is dizzy, overwhelmed or simply early deserves an option other than standing in the flow or hiding in a bathroom. Punctuality should measure whether learning begins well, not whether every body is in motion until the bell.
+
+Consider what happened last Tuesday. A Year 11 student dropped a folder near the absent bench. Sheets spread across the floor. The students behind him did exactly what the architecture requested: they kept moving, stepping around the paper because stopping would block the route. Nobody behaved cruelly. The corridor had trained them to treat help as congestion.
+
+We can build a different instruction into the same space. Put back a place to pause. Angle it away from the narrowest point. Add a small shelf for bags. Let the student council monitor the trial and publish the results. If the corridor becomes unsafe, move the seat. That is what responsible experimentation looks like.
+
+Keep the clocks. Accuracy is useful. But time at school is not only the number of seconds required to travel from mathematics to chemistry. Sometimes five minutes must contain an apology, a question, a breath, or the sentence “Are you all right?”
+
+Let a corridor remain a route. Let it also become a place where one person can notice another.`,
         prompt: "Analyse how the writer uses voice and contrast to argue for a change in the school environment.",
       },
     ],
@@ -91,17 +158,128 @@ const languageAConfigs: LanguageAConfig[] = [
   {
     subject: "english-a-literature",
     label: "English A: Literature",
+    validatedFullFormat: true,
     instructionsOne: "Choose one original literary text and write a close analysis of the ways in which its literary features create meaning. Enter the response beside the chosen text; no separate answer sheet is used.",
     instructionsTwo: "Choose one prompt and compare two literary works studied in class. Enter the complete essay in DigitalDP; no separate answer sheet is used.",
     sources: [
       {
         label: "Text 1 — prose extract, The Tide Clock",
-        text: "Mara wound the clock every morning although it had not kept time since the winter storm. Its hands remained at eleven minutes past four, the hour the sea climbed the harbour steps and entered the shop without knocking. Customers assumed the clock was an heirloom. Mara let them. She polished its cracked glass while they described the weather as unusual, historic, impossible. Behind the counter, a pale line crossed the wall above her shoulder. She never pointed to it. On the first warm day of spring, a boy asked why the clock was broken. ‘It isn’t,’ she said, and for the first time heard how strange that answer sounded.",
+        text: `From THE TIDE CLOCK
+
+Mara wound the clock every morning although it had not kept time since the winter storm. Its hands remained at eleven minutes past four, the hour the sea climbed the harbour steps and entered the shop without knocking.
+
+The winding key lived in the blue saucer beneath the till. She turned it seven times, stopping before the spring tightened, and listened to the small dry complaint inside the case. No ticking followed. Customers assumed the clock was an heirloom. Mara let them. It was easier than explaining that she had bought it from a hotel clearance sale fourteen months before the flood, because its face was the same green as deep water.
+
+“Victorian?” visitors sometimes asked.
+
+“Earlier than it looks,” Mara would say, which satisfied everybody.
+
+She polished its cracked glass while they described the storm as unusual, historic, impossible. Those were the words used by people whose shoes had stayed dry. Behind the counter, a pale line crossed the wall above her shoulder. She never pointed to it. The new paint covered the stain but not the change in texture, and on bright afternoons salt crystals lifted through the white surface like a message refusing to remain buried.
+
+Before the storm, the shop sold maps. Not useful maps of bus routes or footpaths, but handsome maps printed before the sea wall, when the marsh was drawn as empty green and the harbour ended exactly where the cartographer wished. Holidaymakers bought them rolled in tissue. Mara liked the faith of those clean borders. Water here. Land there. A dark line between.
+
+Afterward, the damaged maps dried into waves. She placed them under heavy books, but coastlines had buckled and roads met themselves at strange angles. The council offered a recovery grant for ruined stock if she submitted photographs. Mara photographed shelves, boxes and the brown fan of water beneath the door. She did not photograph the maps. Instead she hung the least damaged ones from string in the upstairs room and waited for gravity to remember what flatness was.
+
+In February, a man from the insurance company asked why the clock had not been included in her claim.
+
+“It still tells me what I need,” she said.
+
+He wrote “sentimental value only” on his form.
+
+The harbour reopened in March. Fresh boards covered the broken sections of the sea wall, conspicuously pale among the old timber. Shops placed buckets of daffodils outside their doors. The bakery produced buns iced with blue waves until somebody complained. Visitors returned and photographed the brass marker showing the height of the water. They stood below it smiling, one hand raised to indicate scale.
+
+Mara developed a habit of watching their wrists. Watches continued around the marker. Eleven ten. Eleven eleven. Eleven twelve. The world moved through the stopped minute without resistance.
+
+On the first warm day of spring, a boy came in alone. He wore a school jumper with both cuffs unraveling and spent twenty minutes turning the rack of postcards without choosing one. Mara knew he was waiting for somebody because every time the door opened his shoulders rose.
+
+At last he approached the counter and looked not at her but at the clock.
+
+“Why is it broken?”
+
+“It isn't,” Mara said.
+
+The boy examined the silent pendulum. “The hands don't move.”
+
+“Some clocks keep an hour instead of losing it.”
+
+He considered this with an attention adults rarely gave her. Outside, a delivery van struck the loose drain cover, making a sound like a dropped tray.
+
+“Was it a good hour?” he asked.
+
+Mara's fingers found the winding key in the saucer.
+
+The truthful answer arrived first: cold water around her knees, a cabinet tipping forward, glass jars knocking together in the dark. Then came another memory, one she had not invited: three neighbours linking arms across the doorway, passing boxes upward; somebody laughing because all the umbrellas had floated to the ceiling; the baker wrapping Mara in a flour-dusted coat.
+
+“It was an hour,” she said.
+
+The door opened. A woman entered, breathless, and the boy's shoulders fell. While apologies filled the shop, Mara lifted the clock down from its hook. Salt had furred the back of the case. Beneath it, hidden for months, the wall was clean.
+
+She did not move the hands. Not yet. But that evening, instead of returning the clock to the nail, she set it on the worktable beside the upstairs maps, where the paper coastlines were slowly becoming still.`,
         prompt: "Analyse how the passage uses the clock and the shop setting to reveal Mara’s relationship with the past.",
       },
       {
         label: "Text 2 — poem, Borrowed Light",
-        text: "At dawn the windows lend us gold,\nnot asking what we did with night.\nThe cups stand patient in a row,\nsmall moons with handles, holding light.\n\nBy noon the gift has crossed the floor;\nour shadows occupy the chairs.\nWe speak as if the day were ours,\nthen leave our fingerprints on air.\n\nAt dusk the windows take it back.\nThe room grows honest, blue and slight.\nWe wash the cups. We close the blinds.\nTomorrow owes us borrowed light.",
+        text: `BORROWED LIGHT
+
+At dawn the windows lend us gold,
+not asking what we did with night.
+The cups stand patient in a row,
+small moons with handles, holding light.
+
+The table keeps its older scars:
+a compass-point, a candle's shore,
+the pale square where a photograph
+protected what it covered for.
+
+You enter carrying yesterday
+folded small inside your coat.
+The kettle rehearses weather;
+steam edits the sentence in your throat.
+
+We do not name the empty chair.
+We move the sugar bowl instead.
+Outside, the roofs begin to burn.
+Inside, you butter both sides of bread.
+
+By noon the gift has crossed the floor;
+our shadows occupy the chairs.
+We speak as if the day were ours,
+then leave our fingerprints on air.
+
+A delivery bicycle rings below.
+The lift complains, then climbs, then stops.
+The building practises being alive:
+keys, pipes, footsteps, sudden drops.
+
+You hold a cup against your cheek
+as though warmth could be overheard.
+I ask about the train at three.
+You answer with a smaller word.
+
+Soon sunlight reaches the clock's brass rim
+and makes each minute briefly bright.
+We have mistaken being seen
+for being understood by light.
+
+At four the neighbouring tower throws
+our borrowed window back at us:
+two figures caught in distant glass,
+reduced to shape, anonymous.
+
+At dusk the windows take it back.
+The room grows honest, blue and slight.
+We wash the cups. We close the blinds.
+No surface now pretends to write.
+
+Yet on the table, cooling rings
+remain where both our hands had been—
+small proofs that what the light revealed
+was neither borrowed nor unseen.
+
+Tomorrow's windows may lend gold.
+Tomorrow may revise the night.
+We leave one curtain open still,
+not owed, not owned: a square of light.`,
         prompt: "Analyse how imagery and shifts across the day develop the poem’s treatment of time and possession.",
       },
     ],
@@ -273,6 +451,7 @@ const languageAConfigs: LanguageAConfig[] = [
 interface LanguageBConfig {
   subject: string;
   label: string;
+  validatedFullFormat?: boolean;
   writingInstructions: string;
   readingInstructions: string;
   taskLabel?: string;
@@ -299,7 +478,9 @@ function languageBSamples(config: LanguageBConfig): PaperManifest[] {
       subject: config.subject,
       subjectLabel: config.label,
       level: "SL",
-      paper: "Paper 1 — original productive-skills sample",
+      paper: config.validatedFullFormat
+        ? "Paper 1 (SL) — original full-format practice"
+        : "Paper 1 (SL) — original format rehearsal",
       durationMinutes: 75,
       readingTimeMinutes: 5,
       maximumMarks: 30,
@@ -313,10 +494,12 @@ function languageBSamples(config: LanguageBConfig): PaperManifest[] {
       subject: config.subject,
       subjectLabel: config.label,
       level: "HL",
-      paper: "Paper 2 — original reading sample",
+      paper: config.validatedFullFormat
+        ? "Paper 2 reading (HL) — original full-format practice"
+        : "Paper 2 reading (HL) — original format rehearsal",
       durationMinutes: 60,
       readingTimeMinutes: 5,
-      maximumMarks: 20,
+      maximumMarks: config.readingQuestions.reduce((sum, question) => sum + (question.marks ?? 0), 0),
       mode: "reading",
       instructions: config.readingInstructions,
       selectionMode: "all",
@@ -330,6 +513,7 @@ const languageBConfigs: LanguageBConfig[] = [
   {
     subject: "english-b",
     label: "English B",
+    validatedFullFormat: true,
     writingInstructions: "Choose one task. Use an appropriate text type and write 250–400 words. Enter the response in DigitalDP; no separate answer sheet is used.",
     readingInstructions: "Read all three original texts and answer every question in its linked response area. No separate answer sheet is used.",
     writingTasks: [
@@ -338,19 +522,121 @@ const languageBConfigs: LanguageBConfig[] = [
       "Your school wants students to welcome new classmates more effectively. Write a set of guidelines for student mentors, explaining what they should do during a new student’s first month.",
     ],
     readingTexts: [
-      { label: "Text A — tool library", text: "At the West Market Tool Library, members borrow drills, sewing machines and camping stoves instead of buying equipment they may use once. The annual fee is modest, but every new member also gives one hour of time. Some repair donated tools; others photograph equipment or translate safety cards. Coordinator Mina Cole says the time exchange matters more than the money: ‘People arrive to borrow an object and discover that somebody nearby knows how to use it.’ The library now runs Saturday workshops led by members, and broken household items are welcome—even when their owners are not sure what is wrong." },
-      { label: "Text B — quiet railway carriage trial", text: "A regional railway has introduced a quiet carriage on evening services after passengers requested a place to read or rest. Phone calls are discouraged and announcements are reduced, but conversation is not forbidden. During the first month, complaints fell overall, yet staff received new complaints about passengers aggressively correcting one another. The company has replaced its original SILENCE signs with a softer message: SHARE THE QUIET. It will continue the trial while training staff to handle disagreements without turning the carriage into a place of suspicion." },
-      { label: "Text C — interview with a rooftop gardener", text: "When Ada first planted tomatoes on the roof of her apartment building, she expected vegetables, not meetings. Neighbours began leaving notes under the water tank: Could they grow herbs? Could children visit? Within a year, twelve households shared the work. The harvest is small, Ada admits, and nobody saves much money. The greater change is downstairs. People who once passed silently in the lift now compare weather forecasts and exchange recipes. ‘The garden did not make us self-sufficient,’ Ada says. ‘It made us visible to one another.’" },
+      {
+        label: "Text A — Borrowed Ground project page",
+        text: `BORROWED GROUND
+A free walking project made by the people who know the streets
+
+[1] Visitors often arrive in Bellweather carrying a list of famous places. They photograph the clock tower, cross the old bridge and leave believing that they have seen the town. Borrowed Ground offers a different kind of map: six short walks designed by residents whose names do not usually appear in guidebooks.
+
+[2] Each route begins with an ordinary object. Follow a baker's wooden spoon to discover the night workers who keep the town awake. Choose the blue football scarf to hear how an empty car park became a weekend sports ground. The objects appear on signs along the route, but there are no arrows. Instead, walkers receive clues recorded by the residents themselves. You may get briefly lost. That is part of the invitation.
+
+[3] The project began when local historian Reena Shah noticed that official tours treated Bellweather's past as something complete. "The dates were correct," she explains, "but the story always stopped before the people living here now had anything to say." She invited shopkeepers, students and bus drivers to record three-minute memories. More than eighty recordings arrived in a week.
+
+[4] Borrowed Ground is free. Pick up a paper map at the central library or download the low-data version to a phone. Headphones are recommended, although every recording also has a transcript. Routes take between 35 and 70 minutes and are step-free unless the map says otherwise. Walk alone, with friends or as a class.
+
+[5] Please remember that these are working streets, not museum displays. Keep entrances clear, ask before photographing people and buy something only if you genuinely want it. The project does not measure success by the number of visitors. It asks whether visitors leave with a more complicated picture than the one they brought.`,
+      },
+      {
+        label: "Text B — Fixing more than machines",
+        text: `FIXING MORE THAN MACHINES
+An interview for Tomorrow Made magazine
+
+[1] On Wednesday afternoons, Room 14 at North Quay College sounds like a collection of small disasters. A fan clicks without turning. A radio produces one stubborn note. Someone has removed forty-three screws from a coffee machine and arranged them in worried rows. This is the Repair Studio, a student-led service where local residents bring broken household objects and nobody promises a quick solution.
+
+[2] Magazine reporter Joel Emery spoke to Amara Voss, one of the students who started it.
+
+JOEL: People can already take faulty objects to professionals. Why build a repair service at a college?
+
+AMARA: We are not trying to replace professional technicians. Our first rule is to refuse work involving gas, high-voltage equipment or anything that could be unsafe. But many objects are discarded because the owner cannot identify a simple fault, or because a commercial repair would cost more than a replacement. We can investigate slowly. Time is the resource students have.
+
+JOEL: Was the environmental argument what attracted volunteers?
+
+AMARA: That was our advertisement: reduce waste, learn practical skills. The surprise was the conversation. Owners usually stay while we work. They explain where an object came from and why it matters. One woman brought a lamp that had belonged to her grandfather. Electrically, it was uncomplicated. Emotionally, replacing it was impossible.
+
+JOEL: Do customers ever become impatient with learners?
+
+AMARA: Of course. At first we wrote "free repairs" on the poster, which sounded like a guarantee. Now we say "free investigation". We explain that the object may leave in the same condition, but its owner will know more. Oddly, complaints fell when our promise became smaller.
+
+JOEL: What has the studio changed for students?
+
+AMARA: It has made uncertainty respectable. In ordinary lessons, we often hide the steps that did not work and present the final answer. Here, a failed test is useful information. We photograph each stage, label every part and leave notes for the next team. Students who were nervous about touching a screwdriver now teach visitors how to clean a filter or replace a plug.
+
+JOEL: What comes next?
+
+AMARA: We are creating short guides in the five languages most commonly spoken near the college. But I do not want the studio to become a repair factory. If we rush people through, we lose the patient exchange that makes the room valuable.`,
+      },
+      {
+        label: "Text C — The room above the weather",
+        text: `THE ROOM ABOVE THE WEATHER
+An original literary extract
+
+[1] The greenhouse stood on the roof of Tower Seven, one floor above the number shown in the lift. To reach it, residents had to climb a final flight of concrete stairs and push a door that complained in every season. Mara had lived in the tower for nine years before she discovered the place. She found it only because a handwritten notice had appeared beside the post boxes: TOMATOES NEED WITNESSES. THURSDAY, 6 P.M.
+
+[2] At six fifteen, Mara was the only witness. Inside, six tomato plants leaned against lengths of string. Their leaves touched the fogged glass like hands testing bathwater. A man in a red woollen hat was transferring rainwater from one bucket to another with a measuring cup.
+
+"You're late," he said.
+
+"I didn't know attendance was compulsory."
+
+"It isn't. That's why I worried nobody would come."
+
+[3] His name was Dae. The plants, he explained, had appeared three months earlier, placed in perfect pots with no note. He had watered them because the soil was dry. Then he had continued because stopping felt like making a decision. Now the first tomatoes were turning orange and he believed the unknown gardener should be invited to see them.
+
+"So you put up a notice?"
+
+"Seven notices. The others were too normal."
+
+[4] Mara looked down through the glass at windows brightening across the neighbouring towers. From street level the buildings seemed identical, but up here each rectangle held a separate weather system: blue television light, yellow kitchens, a bedroom flashing briefly as curtains closed. She knew several residents by sound—the child practising scales on level twelve, the dog that barked whenever the rubbish truck reversed—but she could not have named their faces.
+
+[5] The next Thursday, four people came. One was a boy carrying a library book about insects. Another was Mrs Alves from level three, who inspected the plants and immediately removed two dying leaves. "Too much kindness," she said when Dae protested. "A plant can drown in attention." Nobody admitted to owning the tomatoes.
+
+[6] By the fourth week, the mystery had become less urgent. Someone brought mint. Someone else repaired a cracked pane with transparent tape that whistled in the wind. The boy counted seven kinds of visiting insect and revised the number twice. Mara began carrying her dinner upstairs after work, telling herself that the greenhouse was simply cooler than her apartment.
+
+[7] In late August, a storm arrived before sunset. Dae sent a message to the group they had somehow formed: GLASS ROOF. STRONG WIND. HELP. Mara expected three or four people. Seventeen climbed the complaining stairs. They tied the pots to benches, moved the smallest plants into the stairwell and held a sheet of plastic over the cracked pane while rain drummed above their heads. Mrs Alves gave instructions in two languages and gesture supplied the rest.
+
+[8] The power failed. For a moment the towers opposite went dark, every separate square erased. Then phone lights appeared around Mara, illuminating wet sleeves and the leaves they were trying to save. Someone began to laugh. The sound moved through the greenhouse until even Dae, still gripping the plastic, had to sit down.
+
+[9] The next morning, Mara found a bowl outside her door containing three storm-split tomatoes. Beneath it lay a note in the same handwriting as the first: THANK YOU FOR WITNESSING. She carried the bowl upstairs. Nobody there claimed to have written the message, and this time she believed them.`,
+      },
     ],
     readingQuestions: [
-      choiceQuestion("q1", "Text A · Question 1", "What is required from every new member in addition to the fee?", ["One hour of time", "A donated machine", "A safety qualification", "A Saturday workshop"], 2, ["text-1"]),
-      shortQuestion("q2", "Text A · Question 2", "Give two ways members contribute to the tool library.", 3, ["text-1"]),
-      choiceQuestion("q3", "Text B · Question 3", "Why were the original signs changed?", ["They were too expensive", "They encouraged rigid policing", "They could not be translated", "They reduced ticket sales"], 2, ["text-2"]),
-      shortQuestion("q4", "Text B · Question 4", "Explain one tension created by the quiet-carriage trial.", 3, ["text-2"]),
-      choiceQuestion("q5", "Text C · Question 5", "Which result surprised Ada most?", ["The size of the tomatoes", "The financial saving", "The new neighbour relationships", "The number of empty roofs"], 2, ["text-3"]),
-      shortQuestion("q6", "Text C · Question 6", "What does Ada mean when she says the garden made neighbours ‘visible’ to one another?", 3, ["text-3"]),
-      shortQuestion("q7", "Across texts · Question 7", "Identify one shared idea in Texts A and C and support it with one detail from each text.", 3, ["text-1", "text-3"]),
-      shortQuestion("q8", "Across texts · Question 8", "Which initiative seems most likely to create lasting community change? Justify your answer using one text.", 2, ["text-1", "text-2", "text-3"]),
+      shortQuestion("q1", "Text A · Question 1", "According to paragraph 1, what mistaken belief may visitors have when they leave Bellweather?", 1, ["text-1"]),
+      shortQuestion("q2", "Text A · Question 2", "Who designed the six Borrowed Ground walks?", 1, ["text-1"]),
+      shortQuestion("q3", "Text A · Question 3", "Give one example of an ordinary object used to begin a route.", 1, ["text-1"]),
+      choiceQuestion("q4", "Text A · Question 4", "Why do the routes use recorded clues instead of arrows?", ["To invite exploration rather than direct every step", "To prevent residents from finding the routes", "To make the walks cost less to maintain", "To keep visitors away from the town centre"], 1, ["text-1"]),
+      choiceQuestion("q5", "Text A · Question 5", "What does Reena mean when she says the official story was ‘complete’?", ["It left no space for present-day residents", "It contained too many historical errors", "It included every recording residents sent", "It concentrated only on recent events"], 1, ["text-1"]),
+      shortQuestion("q6", "Text A · Question 6", "Give one way a walker can access the route information.", 1, ["text-1"]),
+      choiceQuestion("q7", "Text A · Question 7", "Which statement is supported by paragraph 4?", ["Accessibility information is supplied for each route", "Every route can be completed in 35 minutes", "A mobile phone is required for every route", "The recordings are available only through headphones"], 1, ["text-1"]),
+      shortQuestion("q8", "Text A · Question 8", "Identify one request made of visitors in paragraph 5.", 1, ["text-1"]),
+      choiceQuestion("q9", "Text A · Question 9", "The final sentence suggests that the project's main aim is to make visitors…", ["question a simple impression of the town", "remember every historical date", "spend more money in local shops", "complete all six routes"], 1, ["text-1"]),
+      shortQuestion("q10", "Text A · Question 10", "Using three details from the text, explain how Borrowed Ground gives residents authority over the way their town is represented.", 3, ["text-1"]),
+
+      shortQuestion("q11", "Text B · Question 11", "Why does the writer compare Room 14 to ‘a collection of small disasters’ in paragraph 1?", 1, ["text-2"]),
+      choiceQuestion("q12", "Text B · Question 12", "Which work will the Repair Studio refuse?", ["Potentially unsafe repairs", "Objects with emotional value", "Repairs that take several weeks", "Objects previously examined by professionals"], 1, ["text-2"]),
+      shortQuestion("q13", "Text B · Question 13", "What advantage do students have that commercial repair services may not have?", 1, ["text-2"]),
+      choiceQuestion("q14", "Text B · Question 14", "What surprised Amara about the owners who visited?", ["They valued the conversations around their objects", "They preferred replacing objects immediately", "They refused to remain while students worked", "They were mainly professional technicians"], 1, ["text-2"]),
+      shortQuestion("q15", "Text B · Question 15", "Why was replacing the grandfather's lamp ‘impossible’ for its owner?", 1, ["text-2"]),
+      shortQuestion("q16", "Text B · Question 16", "What did the phrase ‘free repairs’ lead customers to expect?", 1, ["text-2"]),
+      choiceQuestion("q17", "Text B · Question 17", "What happened after the studio advertised a smaller promise?", ["Customers complained less", "Students repaired fewer objects", "Professionals joined the service", "Owners stopped asking questions"], 1, ["text-2"]),
+      shortQuestion("q18", "Text B · Question 18", "In the phrase ‘present the final answer’, what does ‘the final answer’ refer to?", 1, ["text-2"]),
+      shortQuestion("q19", "Text B · Question 19", "Give two practices the teams use so that another group can continue their work.", 2, ["text-2"]),
+      choiceQuestion("q20", "Text B · Question 20", "Which word best describes Amara's attitude towards uncertainty?", ["Accepting", "Impatient", "Embarrassed", "Suspicious"], 1, ["text-2"]),
+      choiceQuestion("q21", "Text B · Question 21", "Why does Amara not want a ‘repair factory’?", ["Efficiency could remove the valuable human exchange", "The college intends to close Room 14", "Students are no longer interested in repairing things", "Translations make the service too expensive"], 1, ["text-2"]),
+      shortQuestion("q22", "Text B · Question 22", "Give one way the interview challenges the idea that a successful repair service is measured only by the number of objects fixed.", 1, ["text-2"]),
+
+      shortQuestion("q23", "Text C · Question 23", "What prevented the lift from taking residents directly to the greenhouse?", 1, ["text-3"]),
+      shortQuestion("q24", "Text C · Question 24", "Why did the unusual wording of the notice succeed in attracting Mara?", 1, ["text-3"]),
+      shortQuestion("q25", "Text C · Question 25", "What two explanations does Dae give for continuing to care for the plants?", 1, ["text-3"]),
+      choiceQuestion("q26", "Text C · Question 26", "What does the phrase ‘a separate weather system’ emphasize about the apartments?", ["Each contains a private life largely unknown to neighbours", "Every resident experiences different outdoor weather", "The tower's heating system is unreliable", "Mara can predict storms by watching windows"], 1, ["text-3"]),
+      choiceQuestion("q27", "Text C · Question 27", "Mrs Alves says a plant can ‘drown in attention’. What is she warning against?", ["Overwatering", "Removing leaves", "Growing plants indoors", "Inviting too many visitors"], 1, ["text-3"]),
+      shortQuestion("q28", "Text C · Question 28", "Give one detail showing that the greenhouse gradually became a shared place.", 1, ["text-3"]),
+      choiceQuestion("q29", "Text C · Question 29", "Why does Mara tell herself the greenhouse is cooler than her apartment?", ["She is reluctant to admit that she enjoys the company", "She needs a scientific reason to study the plants", "She has been ordered to eat away from home", "She is worried that Dae owns the greenhouse"], 1, ["text-3"]),
+      shortQuestion("q30", "Text C · Question 30", "How does the number of people who arrive during the storm differ from Mara's expectation?", 1, ["text-3"]),
+      shortQuestion("q31", "Text C · Question 31", "What allows Mrs Alves to communicate when not everyone shares a language?", 1, ["text-3"]),
+      choiceQuestion("q32", "Text C · Question 32", "What is the main effect of the power failure in paragraph 8?", ["It reveals the group as a new source of light and connection", "It makes the residents abandon the greenhouse", "It proves the storm has destroyed the other towers", "It allows the writer of the notes to escape unseen"], 1, ["text-3"]),
+      shortQuestion("q33", "Text C · Question 33", "Explain two ways the repeated idea of ‘witnessing’ changes meaning between the first and final notices.", 2, ["text-3"]),
+      shortQuestion("q34", "Text C · Question 34", "Using evidence from three different moments in the extract, explain how the greenhouse changes Mara's understanding of the people around her.", 3, ["text-3"]),
     ],
   },
   {

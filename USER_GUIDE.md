@@ -1,194 +1,375 @@
-# DigitalDP quick user guide
+# DigitalDP teacher guide
 
-This guide is for the current standalone classroom demo. DigitalDP runs on one teacher computer; students connect through the school network.
+This step-by-step guide covers the current DigitalDP classroom demo. DigitalDP runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.
 
-## Run a classroom exam
+DigitalDP is for **practice and candidate familiarisation only**. It does not deliver an official examination. Version 0.1.0-demo.5 includes 52 original papers: 34 IB-oriented examples, 15 full-length non-IB mocks, and three short AP walkthroughs. An older app download does not update itself; use the guide supplied with your version.
 
-1. Extract the DigitalDP download and open the app.
-2. Sign in with username `admin` and password `admin`.
-3. In **Classroom sharing**, choose the classroom network and select **Apply classroom sharing**.
-4. Copy the **Student sign-in** URL and test it on one student device.
-5. In **Classes and candidates**, create a class and add or edit every student.
-6. Check **Extra time in minutes** before starting the exam.
-7. In **Paper library**, build or import a paper.
-8. In **Set up an exam**, choose the class and paper, then select **Set up exam**.
-9. Students sign in, choose the exam, and wait. Select **Start exam** when everyone is ready.
-10. When finished, select **View submissions**, then **Print or save PDF**.
+## The four parts of the teacher dashboard
 
-## Install and open
+Use the left-hand menu to move between these areas:
 
-DigitalDP is a portable app, not an installer. Extract the whole download before opening it.
+| Area | What it is for |
+| --- | --- |
+| **Overview** | Turn classroom sharing on, copy the student address, and check that DigitalDP is connected. |
+| **Classes** | Create classes, add students, import class lists, and set extra time. |
+| **Sessions** | Give a paper to a class, open its clock, start the exam, and review submissions. |
+| **Paper library** | Choose an included example, build a paper, or import a saved paper. |
+
+A **paper** is reusable exam content. A **session** is one sitting of that paper with one class. You can use the same paper again without rebuilding it.
+
+Select **User guide** in the teacher sidebar to open these instructions in another tab. The guide also works offline from the HTML file supplied with the app.
+
+Select **Mock marking guides** for the worked answers to the 15 full-length mocks. These are for teachers only; do not share them with students.
+
+## Quick classroom checklist
+
+Follow this order for a complete practice exam:
+
+1. Start DigitalDP and sign in as the teacher.
+2. In **Overview**, turn on **Classroom sharing**.
+3. Copy the **Student sign-in** address and test it on one student device.
+4. In **Classes**, create or import the class and check every student's details.
+5. In **Paper library**, choose an included example or create/import a paper. Review its questions, materials, and matching marking guide before the lesson.
+6. In **Sessions**, choose the class, exam system, and paper, then select **Set up exam**.
+7. Open that session's clock on the second screen.
+8. Ask students to sign in, select the exam, and wait.
+9. Check that the correct students are present.
+10. Select **Start exam**. Reading time begins now, when applicable.
+11. Monitor online and submitted counts while students work.
+12. After submission, open **View submissions** and select **Print or save PDF**.
+
+The detailed instructions below follow the same order.
+
+## Step 1 — Start DigitalDP
+
+DigitalDP is a portable app, not an installer. Extract the complete download before opening it.
 
 | Computer | Download | Open |
 | --- | --- | --- |
-| Apple-silicon or Intel Mac | Notarized `macos-universal.zip` | `DigitalDP.app` |
+| Apple-silicon or Intel Mac | No Mac app in demo.5; use the source option below | `Start DigitalDP.command` |
 | Windows x64 | `windows-x64.zip` | `DigitalDP.exe` |
 | Linux x64 | `linux-x64.tar.gz` | `DigitalDP` |
 
-Use only a Mac release whose notes say it is notarized. The earlier `0.1.0-demo.3` and `0.1.0-demo.4` Mac downloads are superseded and may be rejected as damaged. On Windows, continue only if the file came from the private DigitalDP release.
+The demo.5 portable downloads are for Windows and Linux. A new Mac app is on hold until it can be signed and notarized by Apple. For a Mac, follow **Run from a source checkout** below, with IT help for the one-time setup.
 
-To run the source on Arboghast for now, open the DigitalDP project folder and double-click `Start DigitalDP.command`. Keep the Terminal window open while DigitalDP is in use; press Control-C there to stop it.
+1. Open DigitalDP once on the teacher computer.
+2. Leave the application running for the whole lesson.
+3. Wait for the teacher dashboard to open in the normal browser.
+4. Sign in with username `admin` and password `admin`.
 
-Run only one copy of DigitalDP at a time. Do not open `public/index.html` or a `file://` address. Sign in with username `admin` and password `admin`. The dashboard opens in a normal browser at an address like `http://127.0.0.1:9148/admin`.
+The local address usually looks like `http://127.0.0.1:9148/admin`. It may use a port from `9148` to `9158` if another program is already using the first one.
 
-## Let students connect
+Do not open `public/index.html` or any `file://` address. Run only one copy of DigitalDP at a time.
 
-DigitalDP starts in **This computer only** mode each time it opens.
+### Run from a source checkout
 
-1. Open **Classroom sharing**.
-2. Choose the private network address used by the classroom.
-3. Select **Apply classroom sharing**.
-4. Use **Copy URL** beside **Student sign-in**.
-5. Open that exact URL on one real student device before the exam.
+This option needs [Bun](https://bun.sh/) installed on the teacher computer. If it is not already installed, ask your IT support to install Bun and run `bun install` once in the DigitalDP project folder.
 
-Student devices must be on a network that allows them to reach the teacher computer. Guest Wi-Fi or separate school networks may block the connection.
+On a Mac:
 
-Do not quit or restart DigitalDP during a live exam. Classroom sharing cannot be changed while an exam is live.
+1. Open the DigitalDP project folder.
+2. Double-click `Start DigitalDP.command`.
+3. Leave the Terminal window open.
+4. Use the teacher page that opens automatically.
+5. When completely finished, press Control-C in the Terminal window to stop DigitalDP.
 
-## Create a class and add students
+On Windows or Linux, open a terminal in the project folder and run `bun run start:app`. Keep the terminal open and press Control-C there when finished. This also works on a Mac.
 
-Open **Classes and candidates**.
+Use the page that opens automatically. This launcher includes the example library and the **Classroom sharing** controls described below.
 
-1. Enter the **Class name** and a short **Class code**, then select **Create class**.
-2. Under **Add student**, choose the **Class**.
-3. Enter the **Student name**, **Candidate code**, and any **Extra time in minutes**.
-4. Select **Add student**.
+Use only a Mac release whose notes say it is notarized. Earlier `0.1.0-demo.3` and `0.1.0-demo.4` Mac downloads are superseded and may be rejected as damaged.
 
-Use **Edit** and **Save changes** to update a student's name, candidate code, or extra time.
+## Step 2 — Let students connect
 
-### Import a class list
+DigitalDP starts in **This computer only** mode every time it opens.
 
-For a whole class, use a CSV spreadsheet instead of adding students one at a time.
+1. Select **Overview**.
+2. Find **Classroom sharing**.
+3. Choose the private network used by the teacher and student devices.
+4. Select **Apply classroom sharing**.
+5. Find the **Student sign-in** address.
+6. Select **Copy URL**.
+7. Open that exact address on one real student device.
+8. Confirm that the DigitalDP student sign-in page appears.
+
+Do this test before students begin. `localhost` and `127.0.0.1` work only on the teacher computer.
+
+The teacher and students must be on a network that allows their devices to communicate. Guest Wi-Fi, different school networks, or network isolation may block access.
+
+Classroom sharing cannot be changed while any examination is live. Do not quit or restart DigitalDP during an exam.
+
+## Step 3 — Prepare the class
+
+Select **Classes**. Add students one at a time or import a prepared CSV class list.
+
+### Option A — Add students manually
+
+1. Under **Create class**, enter a clear **Class name**.
+2. Enter a short **Class code** using at least four letters, numbers, or hyphens.
+3. Select **Create class**.
+4. Under **Add student**, select the class.
+5. Enter the student's **Student name** and **Candidate code**.
+6. Enter **Extra time in minutes**, or leave it at `0`.
+7. Select **Add student**.
+8. Repeat for the rest of the class.
+9. Check the class list before moving on.
+
+Select **Edit** beside a student to change their name, candidate code, or extra time. Select **Save changes** when finished.
+
+### Option B — Import a class list
 
 1. Select **Download blank template**.
-2. Open the file in Excel, Numbers, or Google Sheets.
-3. Add one row for each student. Repeat the class name and class code on every row.
-4. Enter `0` in **extra_minutes** when a student has no extra time.
-5. Save or download the sheet as a CSV file.
-6. Choose the file under **Class-list CSV**, then select **Import class list**.
+2. Open the CSV file in Excel, Numbers, or Google Sheets.
+3. Add one row for each student.
+4. Repeat the class name and class code on every student row.
+5. Enter `0` in `extra_minutes` when a student has no extra time.
+6. Save or download the completed sheet as a CSV file.
+7. Back in DigitalDP, choose the file under **Class-list CSV**.
+8. Select **Import class list**.
+9. Check the displayed classes and students.
 
-The same file can contain several classes. A class with no students needs one row with the three student fields left blank.
+One CSV file may contain several classes. To create an empty class, include one row with the three student fields left blank.
 
-Class codes and candidate codes identify existing records. Importing the same file again updates names and extra time; it adds missing students but never removes anyone. Restore a removed class or student before importing a row with the same code.
+Class codes and candidate codes identify existing records. Importing the same file again updates matching names and extra time and adds missing students. It does not remove students. Restore a removed class or student before importing a row with the same code.
 
-Select **Export active classes** to download the current active class lists as a CSV file. Keep exported files secure because they contain student names.
+Select **Export active classes** to save the current active rosters as CSV. Store exported files securely because they contain student names.
 
-Add or edit all students before selecting **Start exam**. Changes made afterwards do not change the candidates or extra time in that live sitting.
+### Check before starting
 
-**Remove** hides a class, student, or sitting without deleting previous responses. Use **Restore** in the relevant removed-items section if needed.
+Add or edit every candidate before selecting **Start exam**. DigitalDP creates the candidate responses from the active class list when the exam starts. Students added afterwards are not added to that live sitting. Avoid changing extra time during a live exam.
 
-## Create a paper
+## Step 4 — Choose or create the paper
 
-Open **Paper Builder** in the **Paper library**.
+Select **Paper library**, the final dashboard section. The current app source includes 52 original papers:
 
-The standalone app includes 34 original DigitalDP example papers: two for each course currently supported by the builder. They appear automatically and do not replace papers made by a teacher.
+- 34 IB-oriented examples.
+- Four full-length Cambridge IGCSE Mathematics 0580 mocks: Papers 1 and 3 Core, and Papers 2 and 4 Extended, in the 2025–2027 format.
+- Eight full-length Pearson Edexcel International GCSE Mathematics A mocks: linear Papers 1F, 2F, 1H, and 2H, plus modular Units 1 and 2 at Foundation and Higher tiers.
+- Three full-length AP mocks: English Language, Biology, and Calculus AB, in the May 2027 format.
+- Three short AP walkthroughs for trying section changes and breaks.
 
-1. Under **Choose the exam**, select the **Assessment session**, **Course**, **Level**, and **Paper**.
-2. Check the **Practice paper title**, **Paper name**, **Reading time in minutes**, **Writing time in minutes**, and **Maximum marks**.
-3. Add clear **Student instructions**.
-4. Add each question under **Questions and student entry areas**.
-5. Choose **Long typed response**, **Short typed response**, **Multiple-choice**, or **Digital working canvas** for each question.
-6. Check the **Paper preview**.
-7. Select **Save paper to library**.
+These cover 23 course entries, not every course or paper in Paper Builder. They appear automatically when using the current source app launcher. Check your download's release notes if an older standalone app shows a different library.
 
-Choose the exam type before adding questions. Changing it clears questions and attachments already entered in the builder.
+An installation with past sessions may also show papers labelled **earlier demo version**. Choose the current version for a new session; the earlier one remains available with its previous work.
 
-The suggested settings are starting points. Check the current course guide before using them.
+### Use an included example
 
-### Paper files and canvas
+1. In **Paper library**, choose an **Exam system** to narrow the list, or leave **All exam systems** selected.
+2. Use **Find a paper** to search by subject, paper number, level, or title.
+3. Read the full paper title and paper number.
+4. Confirm the displayed level or tier, such as **SL**, **HL**, **Core**, **Extended**, **Foundation**, **Higher**, or **AP**.
+5. For a full-length mock, open **Mock marking guides** and review the guide with the matching paper title and tier.
+6. Use that paper when setting up the session in Step 5.
 
-- Add **Paper-wide PDFs**, **Source text**, or **Listening audio** under **Details and student materials**.
-- Add an image or PDF to one question when only that question needs it. Listening papers can also use question-specific audio.
-- Images print with the response. PDFs and audio are listed as companion material.
-- Enter the complete question wording in **Question or prompt**. Attached PDF pages are not copied into the final response PDF.
-- Listening audio allows two complete listens. Students cannot pause, restart, seek, or change speed once a listen begins.
-- For a canvas question, choose the starting pages and **Default canvas background**: **Blank**, **Ruled**, or **Square grid**.
+Read the label in each title before using an example:
+
+- **Full-length mock** provides a complete original question workload with the researched timing and mark allocation. Review the questions and worked marking guide before use.
+- **Full-format practice** identifies an IB-oriented example following the researched paper structure, timing, and allocated marks. The questions still need a subject teacher's review for suitability and difficulty.
+- **Format rehearsal** demonstrates the type of paper and still needs subject-language review.
+- **Walkthrough** uses short timings to demonstrate section changes, breaks, and submission in a few minutes.
+
+Full-length does not mean official or difficulty-calibrated. No awarding body has approved these papers, and no official grade boundaries are supplied. Have your subject team check the questions, materials, difficulty, and marking before using a mock with a class.
+
+### Build a new paper
+
+1. Find **Paper Builder** in the Paper library area.
+2. Under **Choose the exact exam format**, select the **Exam system**.
+3. Select the assessment session or profile year.
+4. Select the course, syllabus, or qualification.
+5. Select the level or tier when the chosen system uses one.
+6. Select the exact paper, component, or delivery format.
+7. Read the **practice profile**, timing facts, tool rules, and teacher guidance that appear.
+8. Check the **Practice paper title** and **Paper name**.
+9. Check the **Reading time**, **Writing time**, and **Maximum marks**.
+10. Add clear **Student instructions**.
+11. Add the first question under **Questions and student entry areas**.
+12. Enter the complete question wording and its marks.
+13. Choose one of the response areas offered for that exam format.
+14. Attach any image, PDF, or audio required only for that question.
+15. Repeat for the remaining questions.
+16. Scroll through **Paper preview** and check the full student view.
+17. Confirm that the marks a student can earn match **Maximum marks**. For a choose-one paper, count the selected question rather than adding all alternatives together.
+18. Select **Save paper to library**.
+19. Confirm that the paper appears in the **Paper library** with the correct exam-system name.
+
+Choose the exam type before entering questions. If you change format, DigitalDP asks first and keeps the old paper as a recoverable draft in this browser, including attachments. Select **Recover an unfinished paper**, choose the draft, then **Restore draft**. **Undo question removal** restores the last removed question and its attachments.
+
+Wait for **Draft saved in this browser** before closing the page. Drafts belong to this browser and this DigitalDP address; they are not in the shared paper library or a database backup. Use **Save paper to library**, then export the paper, when you want to keep or move it. If draft storage fails, keep the page open and save to the library; format changes and sign-out are blocked to protect the draft.
+
+For papers with fixed timed sections, the reading and total-time fields are read-only. Editing the instructions, title or marks keeps the sections and breaks intact. Choose a custom format if you need a different schedule.
+
+The selected profile changes the terminology, timing, marks, materials, suggested question cards, available response areas, delivery description, phase plan, and tool guidance. For an AP paper, assign every question to the correct section or part using the field shown on its question card. DigitalDP then locks earlier sections, blocks entry during explicitly locked phases and the monitored break, and changes the displayed calculator/material rule for each part. AP English's optional 15-minute reading period remains inside its writable 135-minute free-response phase; it is not a separate lock.
+
+The AP profiles target **May 2027** and remain visibly marked **Adapted practice**. DigitalDP currently uses one fixed classroom break timer that advances automatically; the official digital application waits for each candidate to select **Resume Testing** after the break timer. AP hybrid free-response practice should use a physical response booklet when closest format rehearsal is required. DigitalDP does not include an exam calculator: supply the type shown for that paper and section. Check the current official course guide, specification, and session instructions before a full mock exam.
+
+### Add paper materials
+
+- Add paper-wide PDFs, source text, or listening audio under **Details and student materials**.
+- When building your own paper, attach any reference document required by the selected preset, such as a mathematics formula sheet or the AP Biology equations and formulas sheet.
+- The included full mathematics mocks supply independently typeset formula facts. For every included paper, read **Before you start** and supply any further permitted calculator, equipment, or materials listed there.
+- Add an image, PDF, or audio file to an individual question when only that question needs it.
+- Enter the complete question wording in **Question or prompt**. Attached PDF pages are not copied into the printed candidate response automatically.
+- Images appear with the response when printed. PDFs and audio are listed as companion material.
+- Listening audio allows two complete listens. Students cannot pause, restart, seek, or change speed after a listen begins.
+- For a canvas question, choose its starting page count and default background: **Blank**, **Ruled**, or **Square grid**.
 - Students can draw, erase, undo, redo, add pages, and change the background. DigitalDP warns them before changing the teacher's default.
 
-Use **Export** beside a paper made in the builder to save a `.digitaldp-paper` file. To load the file elsewhere, use **Import a saved paper** and select **Import paper**. It does not contain classes, students, sittings, or responses.
+### Export or import a paper
 
-## Set up and run the exam
+To move a teacher-created paper to another DigitalDP installation:
 
-1. Under **Set up an exam**, choose the **Class** and **Paper**.
-2. Select **Set up exam**.
-3. Give students the displayed **Student sign-in** URL and class code.
-4. Ask students to join the correct waiting room.
+1. Find the paper in the library.
+2. Select **Export** to save one `.digitaldp-paper` file.
+3. On the other installation, open **Paper library**.
+4. Under **Import a saved paper**, choose the file.
+5. Select **Import paper**.
+6. Confirm that it appears in the Paper library.
 
-The same library paper can be used for more than one sitting.
+The paper file contains its questions, settings, and permitted attachments. It does not contain classes, students, exam sessions, responses, or the teacher-only mock marking guide.
 
-### Show the examination clock
+## Step 5 — Set up the exam session
 
-Select **Open clock ↗** beside the sitting, or **Open countdown display ↗**. Move the new tab to a projector or second screen.
+Select **Sessions**.
 
-The clock can show the start time, reading time, writing time, student names, and student URL. It stays on **Ready to start** until the teacher selects **Start exam**; reading time begins from that action. Its display settings do not change the timers on student devices.
+1. Under **Set up an exam**, choose the **Class**.
+2. Choose the **Exam system**.
+3. Choose the **Paper**. Only papers from the chosen system are shown.
+4. Read **Before you start**. Check the number of question cards, marks, timing, instructions, and any calculator or materials requirements.
+5. Select **Set up exam**.
+6. Find the new session in the list.
+7. Confirm that it says **Ready to start**.
 
-### Start and finish
+Setting up a session does not start its clock. It only makes the exam available for that class to choose and wait for.
 
-1. Ask students to confirm that the correct paper appears in their waiting room.
-2. Select **Start exam**.
-3. During reading time, students can read but cannot enter responses.
-4. Monitor the online and submitted counts.
-5. Wait for all students, including extra-time candidates, to submit.
-6. Select **End exam** only when the whole sitting should finish.
+One question card may contain several parts. Choose a **full-length mock** for a complete non-IB question workload, or a **walkthrough** for a short AP demonstration. Check the questions and timing before students join.
 
-**Important:** **End exam** submits every remaining candidate immediately, including students who still have extra time.
+You may set up several sessions in advance. Different classes can take different exams at the same time. One class can have only one live session at a time.
 
-## Student instructions
+## Step 6 — Open the examination clock
 
-You can give this section directly to students.
+1. Find the correct session.
+2. Select its **Open clock ↗** link.
+3. Move the new tab or window to the projector or second screen.
+4. Check the paper, class, start time, reading time, and writing time.
+5. Edit the displayed student names if needed.
+6. Confirm that the student sign-in address is visible.
 
-### Join
+For a **Ready to start** paper with one reading period and one writing period, changing **Reading minutes** or **Writing minutes** and selecting **Save exam timing and update display** saves the configured minutes for that sitting. For example, `0.1` reading minutes is six seconds. Set this before students join and check the saved confirmation and the session's timing on the teacher dashboard.
 
-1. Open the **Student sign-in** URL from your teacher.
-2. Enter the **Class code** and select **Load names**.
-3. Choose your name and select **Continue**.
-4. Under **Choose your examination**, select **Join waiting room**.
-5. Check that the correct paper is shown and wait for the teacher.
+The display title, details and student-name list stay local to that clock window. Linked clocks always follow the saved exam start, duration and sections, including changes saved in another window. The start date is read-only; **Start exam** on the teacher dashboard controls the start.
 
-If the exam has already started, select **Enter exam**.
+**Live timing corrections are not supported.** Once an exam starts, or if it has fixed timed sections, the clock's timing fields are disabled. It cannot show a different duration from the saved student schedule. Use an included accelerated AP walkthrough for a short demonstration. Candidate-specific extra time remains separate from the standard room clock.
 
-### Work
+If another window changes the timing while you are editing, saving shows a conflict message. Select **Reload exam defaults**, review the updated times, then make your change again. A temporary **Custom countdown** is separate from student exams and is not saved after refresh.
 
-- Answer in the area below each question. Your work saves automatically.
-- Keep the exam tab open and check the save message.
-- Use **Notepad** for rough notes. These notes are included in the teacher's PDF.
-- Select text shown directly on the DigitalDP page, then use **Highlight** to mark it. The tool does not mark inside a PDF or image.
-- Use **Flag** to mark a question and **View summary** to review your progress.
-- Use **Accessibility** to change text size, colours, typeface, or spacing.
-- During reading time, response areas remain locked.
+For simultaneous exams, open the clock from each specific session row. A clock opened without a chosen session prefers an ongoing exam, so always check its paper and class before projecting it.
 
-For a drawing question, use **Draw**, **Eraser**, **Undo**, **Redo**, or **Add page**. You may choose **Blank**, **Ruled**, or **Square grid** under **Canvas background**.
+The clock remains on **Ready to start** until the teacher selects **Start exam**. Reading time does not count down while students are joining.
 
-For audio, select **Start first listen** only when ready. Let it play to the end. After it finishes, **Start final listen** becomes available.
+## Step 7 — Ask students to join
 
-### Submit
+Give students the **Student sign-in** address and the class code.
 
-1. Select **Submit** or **Submit examination**.
-2. Check **Response summary**.
-3. Select **Submit now**.
+Ask each student to:
 
-Submission is final. If time expires, DigitalDP submits the response automatically.
+1. Open the exact address supplied by the teacher.
+2. Enter the **Class code**.
+3. Select **Load names**.
+4. Choose their own name.
+5. Select **Continue**.
+6. Under **Choose your examination**, find the correct paper.
+7. Select **Join waiting room**.
+8. Check the paper title and wait for the teacher.
 
-## Review and print responses
+Ask students to confirm that the correct paper title appears in their waiting room. In **Classes**, connected students should show as **online**.
 
-1. Select **View submissions** for the sitting.
-2. Open a candidate to review the response.
-3. Select **Print or save PDF**. For several candidates, use **Print all or save PDF**.
-4. In the browser print window, choose a printer or **Save as PDF**.
+## Step 8 — Start and monitor the exam
+
+1. Return to the correct session on the teacher dashboard.
+2. Check the class and paper title one last time.
+3. Select **Start exam**.
+4. Confirm that the clock changes from ready to reading or writing time.
+5. For a sectioned paper, confirm that the clock shows the current section, permitted tools, next transition, and full room schedule.
+6. During reading time or a monitored break, confirm that student response areas remain locked.
+7. On a reading paper, confirm that students can still open every text, read every question, and inspect every answer option. Reading time locks entry, not inspection.
+8. At a section boundary, confirm that the previous section disappears and the next section's questions and tool rule appear.
+9. During working time, monitor the **online** and **submitted** counts.
+10. Let candidates with extra time continue until their individual time ends.
+
+If a student's page says **Reconnecting**, keep the page open. Check that DigitalDP is still running and that both devices remain on the same network.
+
+Students normally finish by selecting **Submit** or **Submit examination**, checking their response summary, and selecting **Submit now**. Submission is final. DigitalDP submits automatically when a student's time expires.
+
+Select **End exam** only when the entire sitting must finish. A confirmation names the paper, class and students who have not submitted. Select **Keep exam running** to cancel, or **End exam and submit remaining responses** to finish. Confirming submits their last saved responses, including students who still have extra time. This cannot be undone.
+
+### If a student's work is not saving
+
+1. **Saved to server** means the teacher's computer has the latest response.
+2. **Saved on this device** means a browser recovery copy exists, but the server has not confirmed the latest response. Keep the page open and select **Retry save**.
+3. **Not saved** means the latest changes are not confirmed safe. Keep the page open, tell the teacher and select **Download recovery copy**. Check that the download completed.
+4. Restore the connection and select **Retry save**. Wait for **Saved to server**.
+
+The recovery JSON file includes typed answers, canvas data and notes. It is an emergency copy for the teacher, not a submission or a paper import. If the teacher ends the exam before pending work is confirmed saved, the student page offers the recovery download again. Do not clear browser data, close the app, or rely on recovery after a browser crash.
+
+## Step 9 — Review and save candidate papers
+
+1. Find the session on the teacher dashboard.
+2. Select **View submissions**.
+3. Open a candidate and check the saved response.
+4. Select **Print this candidate** for one student, or **Print all or save PDF** for the group.
+5. In the browser print window, choose a printer or **Save as PDF**.
+6. Open the saved PDF and check it before closing DigitalDP.
+
+The printable record includes questions, typed responses, canvas pages, inline images, and the student's notepad. PDFs and audio used as companion materials are listed rather than reproduced inside the response paper.
 
 Use a normal browser such as Chrome, Edge, or Safari. An in-app browser may ignore the print button.
 
-The PDF includes questions, responses, canvas pages, inline images, and the student's notepad.
+DigitalDP currently collects, reviews, and prints responses. It does not mark or grade them.
 
-DigitalDP currently reviews and prints responses but does not mark or grade them.
+### Mark an included full-length mock
 
-## Back up classroom data
+1. Select **Mock marking guides** in the teacher sidebar.
+2. Choose the guide matching the paper title, component, and tier.
+3. Compare each saved answer with its worked solution and point allocation.
+4. Apply your subject team's judgement to alternative valid answers.
 
-Class-list and paper exports are not full backups. To back up everything:
+For AP papers, follow the guide's weighted practice calculation. The raw total shown on a paper is not an AP score, and the guides do not convert results into official 1–5 grades.
 
-1. Finish all live exams.
+The guides require teacher sign-in when opened through the app. A source checkout also has an offline index at `docs/mock-marking/index.html`. Keep those answer-containing files private; do not send them to students. The exported `.digitaldp-paper` contains no teacher marking guide.
+
+### Review the timed AP walkthroughs
+
+Use these short included papers when demonstrating the phase engine:
+
+1. Choose an AP paper whose title ends in **walkthrough**.
+2. Set up a session with a small demo class.
+3. Open its clock on a second screen.
+4. Join as a demo student in another browser.
+5. Start the exam and watch each one-minute or short phase change.
+6. Confirm that working sections accept only their own questions, the break hides examination content, calculator rules change where applicable, and only the final work section offers final submission.
+
+The walkthroughs deliberately compress the timing and workload. Each of these three AP courses also has a **full-length mock** with a complete original question set and the researched section durations. Choose that paper for a full practice sitting, after reviewing its questions and teacher marking guide.
+
+## After the exam
+
+### Remove or restore items
+
+**Remove** hides a class, student, or exam session without deleting earlier responses. Removed students cannot sign in, and removed classes cannot be used for new sessions.
+
+1. Select **Remove** beside the item.
+2. Read the confirmation message.
+3. Confirm only after checking the name or session.
+4. To bring it back, open the appropriate **Removed** section and select **Restore**.
+
+A live session cannot be removed. A class with a live session must be ended first. A student with unfinished live work cannot be removed until that response is submitted or the session ends.
+
+### Back up all classroom data
+
+Class-list and paper exports are not complete backups.
+
+1. Finish every live exam.
 2. Quit DigitalDP completely.
-3. Copy the whole DigitalDP data folder to approved secure storage.
+3. Copy the entire DigitalDP data folder to approved secure storage.
 
 Default data folders:
 
@@ -196,20 +377,57 @@ Default data folders:
 - Windows: `%LOCALAPPDATA%\DigitalDP\`
 - Linux: `~/.local/share/DigitalDP/`
 
-Back up before replacing the app with a newer version.
+On a Mac, choose **Go → Go to Folder** in Finder and paste the path above. On Windows, press Windows-R and paste its path. On Linux, paste the path into the file manager's location bar. If IT set a custom data folder, use that folder instead.
 
-## Quick troubleshooting
+These locations apply to the standalone app and `bun run start:app`. The basic development commands `bun run start` and `bun run dev` instead use the project's `data/` folder unless configured otherwise.
 
-- **The Mac app says it is damaged:** Do not bypass Gatekeeper. Confirm that the release is notarized; for now, use `Start DigitalDP.command` from the source folder on Arboghast.
-- **The app will not open:** Extract the full download, use the correct platform file, and close any second copy of DigitalDP.
-- **Students cannot connect:** Confirm that **Classroom sharing** is on, use the displayed private-network URL, and test it on a student device. `localhost` and `127.0.0.1` work only on the teacher computer.
-- **A name is missing:** Check the class code, select **Refresh names**, and confirm that the student was added before **Start exam**.
-- **An exam is missing:** Confirm that the teacher selected **Set up exam**. The student may need to return to **Choose your examination**.
-- **The page says Reconnecting:** Keep the page open. Check that DigitalDP is still running and both devices remain on the same network.
-- **The print button does nothing:** Open the teacher dashboard in Chrome, Edge, or Safari, then try **Print or save PDF** again.
+Back up the data folder before replacing DigitalDP with a newer version. Class-list CSV files move rosters; `.digitaldp-paper` files move individual papers. Only a complete data-folder backup also keeps the sessions and student responses.
+
+### Restore a backup
+
+1. Stop DigitalDP completely.
+2. Make a separate copy of the current data folder so you can undo the restoration.
+3. Replace the data folder's contents with the complete backup.
+4. Start DigitalDP and check a class, a paper, and a saved response.
+
+Restoring a backup returns the installation to the date of that backup. Later work remains only in the separate copy you made in step 2. If you want to add a roster or paper while keeping current work, use its import option instead.
+
+## Student quick instructions
+
+Teachers may give this section directly to students.
+
+1. Open the address supplied by your teacher.
+2. Enter the class code and select **Load names**.
+3. Choose your own name and select **Continue**.
+4. Choose the correct examination and select **Join waiting room**.
+5. Wait for the teacher to start it.
+6. Answer in the area below each question. Work saves automatically.
+7. Use **Flag** and **View summary** to check unfinished questions.
+8. Use the **Notepad** only for rough work. It is included in the teacher's PDF but is separate from your answers.
+9. When finished, select **Submit**, check the summary, and select **Submit now**.
+
+During reading time, answer areas remain locked. You can still read the questions and answer choices and switch between the available texts.
+
+You may highlight text shown directly on the DigitalDP page. Highlighting does not work inside attached PDFs or images. **Accessibility** controls can change text size, colours, typeface, or spacing without changing the paper.
+
+For a drawing question, use **Draw**, **Eraser**, **Undo**, **Redo**, or **Add page**. You may choose **Blank**, **Ruled**, or **Square grid** under **Canvas background**.
+
+For listening audio, select **Start first listen** only when ready and let it play to the end. After completion, **Start final listen** becomes available.
+
+## Troubleshooting
+
+- **The Mac app says it is damaged:** Do not bypass Gatekeeper. Confirm that the release is notarized. If you are working from a source checkout, use `Start DigitalDP.command` from the project folder.
+- **The app does not open:** Extract the complete download, use the correct platform file, and close any second copy of DigitalDP.
+- **Students cannot connect:** Confirm that classroom sharing is on, use the displayed private-network address, and test it on a real student device. Do not give students `localhost` or `127.0.0.1`.
+- **A student name is missing:** Check the class code, select **Refresh names**, and confirm that the student is active in the correct class.
+- **An exam is missing:** Confirm that the teacher selected **Set up exam**. Ask the student to return to **Choose your examination**.
+- **A student is stuck on Connecting or Reconnecting:** Keep the page open. Confirm that DigitalDP is running and both devices are still on the same network.
+- **The clock is counting the wrong session:** Choose the exam from the clock's session list, or reopen the clock from the correct session row.
+- **Clock timing cannot be edited:** Only a ready exam with a simple reading/writing schedule supports timing edits. Live exams and fixed-section papers use the saved schedule. Read Step 6; changing display details never changes student time.
+- **The print button does nothing:** Open the teacher dashboard in Chrome, Edge, or Safari, open **View submissions**, and select **Print this candidate** or **Print all or save PDF** again.
 
 ## Demo safety
 
-This demo uses the weak teacher login `admin` / `admin`. Students use a class code and choose a name; there is no PIN or identity check. Classroom traffic uses unencrypted HTTP.
+This demonstration uses the weak teacher login `admin` / `admin`. Students use a class code and choose a name; there is no PIN or identity check. Classroom traffic uses unencrypted HTTP.
 
-Use only fake candidates, approved practice material, and a trusted private network. DigitalDP is not the official IB Digital Examination System and is not affiliated with or endorsed by the International Baccalaureate.
+Use fake candidates, approved practice material, and a trusted private network only. DigitalDP is not the official IB Digital Examination System and is not affiliated with or endorsed by the International Baccalaureate.

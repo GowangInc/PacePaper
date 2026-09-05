@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  canPersistCandidateTiming,
   chooseCountdownSession,
   configFromSession,
   countdownPhase,
@@ -11,6 +12,13 @@ import {
 } from "./countdown-model.js";
 
 describe("second-screen countdown", () => {
+  test("only allows a simple ready exam to receive candidate timing changes", () => {
+    expect(canPersistCandidateTiming({ status: "draft" })).toBeTrue();
+    expect(canPersistCandidateTiming({ status: "draft", phases: [{ id: "one" }] })).toBeFalse();
+    expect(canPersistCandidateTiming({ status: "live" })).toBeFalse();
+    expect(canPersistCandidateTiming(null)).toBeFalse();
+  });
+
   const config = { startAt: 1_000_000, readingTimeMinutes: 5, durationMinutes: 90 };
 
   test("moves from scheduled start through reading, writing and time up", () => {
@@ -104,15 +112,23 @@ describe("second-screen countdown", () => {
       status: "live",
       startedAt: 12_345,
       endedAt: null,
+      readingTimeMinutes: 0.2,
+      durationMinutes: 90,
     });
     expect(started).toMatchObject({
       sessionStatus: "live",
       title: "Adjusted room title",
       startAt: 12_345,
-      readingTimeMinutes: 10,
-      durationMinutes: 80,
+      readingTimeMinutes: 0.2,
+      durationMinutes: 90,
     });
-    expect(countdownPhase(started, 12_345)).toMatchObject({ phase: "reading", remainingMs: 600_000 });
+    expect(countdownPhase(started, 12_345)).toMatchObject({ phase: "reading", remainingMs: 12_000 });
+    const ready = synchronizeLinkedCountdown(adjustedDraft, { id: "session-1", status: "draft", readingTimeMinutes: 0.2, durationMinutes: 90 });
+    expect(ready.readingTimeMinutes).toBe(0.2);
+    const phases = [{ id: "work-1", kind: "work", durationMinutes: 3 }, { id: "break", kind: "break", durationMinutes: 1 }, { id: "work-2", kind: "work", durationMinutes: 3 }];
+    expect(synchronizeLinkedCountdown({ ...adjustedDraft, phases: undefined, durationMinutes: 8 }, {
+      id: "session-1", status: "live", startedAt: 12_345, readingTimeMinutes: 0, durationMinutes: 7, phases,
+    })).toMatchObject({ phases, durationMinutes: 7 });
   });
 
   test("names writing as the next phase before a zero-reading exam", () => {
@@ -144,6 +160,27 @@ describe("second-screen countdown", () => {
       startAt: 5_000,
       readingTimeMinutes: 5,
       durationMinutes: 120,
+      phases: undefined,
+    });
+  });
+
+  test("shows each saved timed section and break on the room clock", () => {
+    const phases = [
+      { id: "one", label: "Section I", kind: "work", durationMinutes: 60, tools: ["No calculator"] },
+      { id: "break", label: "Monitored break", kind: "break", durationMinutes: 10, tools: [] },
+      { id: "two", label: "Section II", kind: "work", durationMinutes: 90, tools: ["Calculator permitted"] },
+    ];
+    const phased = { ...config, readingTimeMinutes: 0, durationMinutes: 160, phases };
+    expect(countdownPhase(phased, phased.startAt + 65 * 60_000)).toMatchObject({
+      phase: "break",
+      phaseId: "break",
+      label: "Monitored break",
+      nextLabel: "Section II",
+    });
+    expect(countdownPhase(phased, phased.startAt + 70 * 60_000)).toMatchObject({
+      phase: "writing",
+      phaseId: "two",
+      tools: ["Calculator permitted"],
     });
   });
 

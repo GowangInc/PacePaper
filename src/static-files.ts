@@ -2,6 +2,8 @@ const PAGE_FILES: Readonly<Record<string, string>> = {
   "/": "public/index.html",
   "/admin": "public/index.html",
   "/clock": "public/index.html",
+  "/guide": "USER_GUIDE.html",
+  "/mock-guides": "docs/mock-marking/index.html",
   "/student": "public/index.html",
   "/presentation": "public/presentation.html",
 };
@@ -27,3 +29,12 @@ export function isStudentStaticPath(pathname: string): boolean {
     || pathname === "/tokens.css"
     || publicAssetPath(pathname) !== null;
 }
+
+export function guideStylesheetSource(html: string): string | null {
+  const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/gu)];
+  if (styles.length !== 1) return null;
+  const stylesheet = styles[0]?.[1];
+  if (stylesheet === undefined) return null;
+  return `'sha256-${createHash("sha256").update(stylesheet).digest("base64")}'`;
+}
+import { createHash } from "node:crypto";
