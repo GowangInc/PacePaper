@@ -379,7 +379,10 @@ jobs:
             try {
               const unpack = join(smokeRoot, "unpack");
               mkdirSync(unpack);
-              execFileSync("tar", ["-xf", join(assets, archiveName), "-C", unpack]);
+              // Git Bash's tar treats a Windows drive letter as a remote host.
+              const tarCommand = process.platform === "win32"
+                ? join(process.env.SystemRoot, "System32", "tar.exe") : "tar";
+              execFileSync(tarCommand, ["-xf", join(assets, archiveName), "-C", unpack]);
               const packageDirectory = join(unpack, packageName);
               app = spawn(join(packageDirectory, platform === "windows-x64" ? "DigitalDP.exe" : "DigitalDP"), [], {
                 cwd: smokeRoot,
