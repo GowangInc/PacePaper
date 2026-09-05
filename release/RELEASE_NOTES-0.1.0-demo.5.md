@@ -15,7 +15,9 @@ Before replacing an older app, finish all exams, stop DigitalDP, and back up its
 
 The source safety pass completed 280 automated tests with 10,456 assertions and no failures, TypeScript checking, and browser failure-path checks for clock synchronization, stale timing edits, AP phases, attachment draft recovery, interrupted response saving, and End exam confirmation. The historical sections below record earlier checkpoints, not claims that old downloads contain these fixes. Platform build results are recorded separately on the GitHub release and workflow run.
 
-The final source check, including explicit platform-selection tests, passed **284 tests with 10,467 assertions**, TypeScript checking, and the staged whitespace check. Native Windows and Linux startup/API checks are required before publishing the draft; macOS signing remains mandatory whenever a Mac target is selected.
+The pre-CI source check, including explicit platform-selection tests, passed **284 tests with 10,467 assertions**, TypeScript checking, and the staged whitespace check. Native Windows and Linux startup/API checks are required before publishing the draft; macOS signing remains mandatory whenever a Mac target is selected.
+
+The first Linux CI run exposed a UI-test mock whose missing exports had been hidden by the local test order. No assets were produced by that run. Completing the mock contract and adding eight isolated order regressions brought the suite to **292 passing tests with 10,475 assertions**, with TypeScript passing. This correction changes tests, not application behavior.
 
 ## What to review
 

@@ -5,6 +5,8 @@ mock.module("/app.js", () => ({
   announce() {},
   api() {},
   connectSocket() {},
+  formatTime(value) { return String(value); },
+  humanSubject(value) { return value; },
   setView() {},
 }));
 

@@ -1,13 +1,16 @@
 import { describe, expect, mock, test } from "bun:test";
 
 const appMocks = { api: () => undefined, connectSocket: () => undefined, setView: () => undefined };
-mock.module("/app.js", () => ({
+const appModuleMock = {
   ApiError: class ApiError extends Error {},
   announce() {},
   api: (...args) => appMocks.api(...args),
   connectSocket: (...args) => appMocks.connectSocket(...args),
+  formatTime(value) { return String(value); },
+  humanSubject(value) { return value; },
   setView: (...args) => appMocks.setView(...args),
-}));
+};
+mock.module("/app.js", () => appModuleMock);
 
 const { parseStudentSessionList, shouldResetStudentSelection, studentSessionState, renderStudent } = await import("./student.js");
 const source = await Bun.file(new URL("./student.js", import.meta.url)).text();
@@ -32,6 +35,9 @@ const session = (overrides = {}) => ({
 
 // Exercise the real render/event paths with the small DOM surface they use; no browser dependency.
 async function withStudentView(run) {
+  // Bun shares module mocks across test files; reselect this fixture's callbacks
+  // when a render test runs, even if another suite registered its own mock last.
+  mock.module("/app.js", () => appModuleMock);
   const previousDocument = globalThis.document;
   const previousCSS = globalThis.CSS;
   const previousSetInterval = globalThis.setInterval;
