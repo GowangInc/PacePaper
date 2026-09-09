@@ -1439,6 +1439,39 @@ legend {
   color: var(--color-ink-muted);
 }
 
+.focus-live-details summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  list-style: none;
+}
+
+.focus-live-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.focus-live-details summary::before {
+  content: "▸";
+  color: var(--color-ink-muted);
+  transition: transform 0.15s;
+}
+
+.focus-live-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.focus-live-events {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.focus-live-events li[data-kind="focus_lost"] {
+  color: var(--color-danger, #b42318);
+}
+
 .focus-integrity {
   margin-bottom: var(--space-3);
   border: var(--rule-thin) solid var(--color-rule);

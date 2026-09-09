@@ -455,6 +455,9 @@ function renderLiveFocusList(live) {
     const item = document.createElement("li");
     item.className = "focus-live-row";
     item.dataset.away = String(student.currentlyAway);
+    const details = document.createElement("details");
+    details.className = "focus-live-details";
+    const summaryEl = document.createElement("summary");
     const name = document.createElement("strong");
     name.textContent = student.studentName;
     const code = document.createElement("code");
@@ -465,7 +468,18 @@ function renderLiveFocusList(live) {
     status.textContent = student.currentlyAway
       ? `away now · ${student.lostCount} loss${student.lostCount === 1 ? "" : "es"} · last ${last}`
       : `${student.lostCount} focus loss${student.lostCount === 1 ? "" : "es"} · last ${last}`;
-    item.append(name, code, status);
+    summaryEl.append(name, code, status);
+    details.append(summaryEl);
+    const events = document.createElement("ol");
+    events.className = "focus-live-events";
+    for (const event of student.events ?? []) {
+      const entry = document.createElement("li");
+      entry.dataset.kind = event.kind;
+      entry.textContent = `${new Date(event.at).toLocaleTimeString()} — ${event.kind === "focus_lost" ? "left the exam window" : "returned"}`;
+      events.append(entry);
+    }
+    details.append(events);
+    item.append(details);
     list.append(item);
   }
 }
@@ -485,12 +499,13 @@ async function refreshLiveFocus(state) {
       for (const event of result.events ?? []) {
         let summary = byStudent.get(event.studentId);
         if (!summary) {
-          summary = { studentId: event.studentId, studentName: event.studentName, candidateCode: event.candidateCode, lostCount: 0, currentlyAway: false, lastEventAt: null };
+          summary = { studentId: event.studentId, studentName: event.studentName, candidateCode: event.candidateCode, lostCount: 0, currentlyAway: false, lastEventAt: null, events: [] };
           byStudent.set(event.studentId, summary);
         }
         if (event.kind === "focus_lost") { summary.lostCount += 1; summary.currentlyAway = true; }
         else summary.currentlyAway = false;
         summary.lastEventAt = event.at;
+        summary.events.push({ kind: event.kind, at: event.at });
       }
       return { ...session, focus: [...byStudent.values()] };
     } catch {
