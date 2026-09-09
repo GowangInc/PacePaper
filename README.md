@@ -1,16 +1,12 @@
 # PacePaper
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/gowanginc) [![Donate via PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=nicholasjgowan%40gmail.com&currency_code=USD&item_name=Support%20PacePaper&no_shipping=1)
+
+PacePaper stays free for classrooms. If it saves you an afternoon of exam-prep admin, the beans are appreciated — every cup goes straight to the developer. ☕
+
 PacePaper is a local-network workspace for supervised examination practice and candidate familiarisation. Teachers prepare papers and classes, students complete timed practice sessions in a focused browser workspace, and teachers review the saved responses afterwards. Its provider-neutral profile system currently supplies researched practice starters and original demonstrations for IB DP, Cambridge IGCSE, Pearson Edexcel International GCSE, and selected AP formats in the same application.
 
 PacePaper is an independent school-practice tool. It is not an official examination-delivery system, is not affiliated with or endorsed by the International Baccalaureate, Cambridge University Press & Assessment, Pearson, College Board, ACT, or any other awarding body, and should not be used to deliver live high-stakes examinations.
-
-## Buy PacePaper a coffee ☕
-
-PacePaper is free for classrooms — no accounts, no cloud, no licence fees. If it saved you from an afternoon of spreadsheet-based exam prep (or bought you peace of mind on results day), a coffee-sized thank-you keeps the motivation going. Every cup goes to a real teacher's PayPal.
-
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=flat-square&logo=paypal&logoColor=003087&labelColor=ffffff&color=FFDD00)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=bjmoney%40gmail.com&currency_code=USD&item_name=Support%20PacePaper&no_shipping=1)
-
-Lattes fund the next feature; flat whites fund the bug fixes. Espresso shots fund the docs. 🫘 → ☕ → 🚀
 
 ## Try PacePaper in two minutes
 
