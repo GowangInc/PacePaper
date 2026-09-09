@@ -167,6 +167,43 @@ export function mountExam(state, { onSubmitted }) {
   window.addEventListener("blur", handleFocusLost, { signal });
   window.addEventListener("focus", handleFocusGained, { signal });
 
+  // Full-screen encouragement. Browsers require a user gesture, so offer a
+  // one-click control on the exam screen and re-offer if full screen exits.
+  // SEB and managed-kiosk environments already run full screen; the request is
+  // a harmless no-op there. An explicit dismissal is remembered for the sitting.
+  const fsRoot = document.documentElement;
+  const fsRequest = fsRoot.requestFullscreen ? () => fsRoot.requestFullscreen() : fsRoot.webkitRequestFullscreen ? () => fsRoot.webkitRequestFullscreen() : null;
+  const fsChangeEvent = fsRoot.requestFullscreen ? "fullscreenchange" : fsRoot.webkitRequestFullscreen ? "webkitfullscreenchange" : null;
+  if (fsRequest && fsChangeEvent) {
+    const nudge = document.createElement("div");
+    nudge.className = "fullscreen-nudge";
+    nudge.setAttribute("role", "group");
+    nudge.setAttribute("aria-label", "Full screen");
+    nudge.hidden = true;
+    const text = document.createElement("p");
+    text.textContent = "Take this exam full screen.";
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "primary-action";
+    go.textContent = "Full screen";
+    const dismiss = document.createElement("button");
+    dismiss.type = "button";
+    dismiss.className = "fullscreen-nudge-dismiss";
+    dismiss.setAttribute("aria-label", "Dismiss full-screen suggestion");
+    dismiss.textContent = "×";
+    nudge.append(text, go, dismiss);
+    const dismissedKey = `digitaldp:fullscreen-dismissed:${sessionId}`;
+    const isFullScreen = () => Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+    const refreshNudge = () => { nudge.hidden = isFullScreen() || sessionStorage.getItem(dismissedKey) === "1"; };
+    go.addEventListener("click", () => { Promise.resolve(fsRequest()).catch(() => {}); }, { signal });
+    dismiss.addEventListener("click", () => { sessionStorage.setItem(dismissedKey, "1"); refreshNudge(); }, { signal });
+    document.addEventListener(fsChangeEvent, refreshNudge, { signal });
+    window.addEventListener("resize", refreshNudge, { signal });
+    refreshNudge();
+    document.body.append(nudge);
+    signal.addEventListener("abort", () => nudge.remove(), { once: true });
+  }
+
   function finalSubmissionAvailable() {
     return Boolean(activePhase?.responseAllowed && activePhase.canSubmit);
   }

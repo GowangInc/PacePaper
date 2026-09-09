@@ -3987,3 +3987,37 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
   font-weight: 600;
   text-align: start;
 }
+
+/* Full-screen suggestion shown on the candidate exam screen. */
+.fullscreen-nudge {
+  position: fixed;
+  inset-block-end: 0.9rem;
+  inset-inline-end: 0.9rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: min(26rem, calc(100vw - 1.8rem));
+  padding: 0.55rem 0.7rem;
+  background: var(--color-surface);
+  border: 0.05rem solid var(--color-rule-strong);
+  border-radius: var(--radius-sm, 0.35rem);
+  box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 0.18);
+}
+.fullscreen-nudge[hidden] { display: none; }
+.fullscreen-nudge p { margin: 0; font-size: 0.9em; font-weight: 600; }
+.fullscreen-nudge .primary-action { margin-inline-start: auto; white-space: nowrap; }
+.fullscreen-nudge-dismiss {
+  border: none;
+  background: none;
+  color: var(--color-ink-muted);
+  font-size: 1.1em;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  cursor: pointer;
+}
+.fullscreen-nudge-dismiss:hover { color: var(--color-ink); }
+
+@media print {
+  .fullscreen-nudge { display: none !important; }
+}
