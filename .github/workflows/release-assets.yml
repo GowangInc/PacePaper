@@ -86,7 +86,7 @@ jobs:
           set -euo pipefail
           package_version="$(bun -e 'const p = await Bun.file("package.json").json(); process.stdout.write(p.version)')"
           test "$package_version" = "$VERSION"
-          sample_count="$(bun -e 'import { COURSE_SAMPLE_PAPERS } from "./examples/sample-source/index.ts"; process.stdout.write(String(COURSE_SAMPLE_PAPERS.length))')"
+          sample_count="$(bun -e 'import { RELEASE_SAMPLE_PAPER } from "./examples/release-sample.ts"; process.stdout.write(String([RELEASE_SAMPLE_PAPER].length))')"
           echo "sample_count=$sample_count" >> "$GITHUB_OUTPUT"
 
       - name: Type-check
@@ -423,7 +423,7 @@ jobs:
               const stateResponse = await fetch(`${origin}/api/admin/state`, { headers: auth });
               assert.equal(stateResponse.status, 200);
               const state = await stateResponse.json();
-              assert.equal(state.papers.length, expectedSamples, "Every bundled mock must be seeded");
+              assert.equal(state.papers.length, expectedSamples, "Every bundled release example must be seeded");
               assert.equal(state.classes.length, 0, "Release must not include classroom data");
               assert.equal(state.students.length, 0);
               assert.equal(state.sessions.length, 0);
@@ -442,7 +442,7 @@ jobs:
                 assert.equal((await fetch(`${origin}${path}`)).status, 404, `${path} is not public`);
               }
               assert.equal((await fetch(`${origin}/mock-guides`, { headers: auth })).status, 200);
-              console.log(`${platform}: native startup, ${expectedSamples} mocks, teacher login, embedded assets, and private-route checks passed`);
+              console.log(`${platform}: native startup, ${expectedSamples} release example(s), teacher login, embedded assets, and private-route checks passed`);
             } catch (error) {
               console.error(logs);
               throw error;
