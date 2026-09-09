@@ -4,7 +4,7 @@
 
 PacePaper stays free for classrooms. If it saves you an afternoon of exam-prep admin, the beans are appreciated — every cup goes straight to the developer. ☕
 
-PacePaper is a local-network workspace for supervised examination practice and candidate familiarisation. Teachers prepare papers and classes, students complete timed practice sessions in a focused browser workspace, and teachers review the saved responses afterwards. Its provider-neutral profile system currently supplies researched practice starters and original demonstrations for IB DP, Cambridge IGCSE, Pearson Edexcel International GCSE, and selected AP formats in the same application.
+PacePaper is a local-network workspace for supervised examination practice and candidate familiarisation. Teachers prepare papers and classes, students complete timed practice sessions in a focused browser workspace, and teachers review the saved responses afterwards. Its provider-neutral profile system currently supplies researched practice starters and original demonstrations for IB DP, IB MYP eAssessment, Cambridge IGCSE, Pearson Edexcel International GCSE, and selected AP formats in the same application.
 
 PacePaper is an independent school-practice tool. It is not an official examination-delivery system, is not affiliated with or endorsed by the International Baccalaureate, Cambridge University Press & Assessment, Pearson, College Board, ACT, or any other awarding body, and should not be used to deliver live high-stakes examinations.
 
@@ -56,6 +56,11 @@ In reading time the paper opens with its texts and questions visible; response a
 
 In writing time the response area opens under each question, and answers autosave as the student types.
 
+![PacePaper focus alert](docs/user-guide/screenshots/focus-alert.png)
+
+If a candidate leaves the exam window, the teacher dashboard raises a focus alert immediately and records it in the sitting's audit trail. Right-click menus are suppressed on PacePaper controls during an exam.
+
+
 ## Using PacePaper with a class
 
 1. **Prepare.** Sign in on the teacher computer and choose **Settings** to set a password you will remember.
@@ -76,7 +81,8 @@ Notes for teachers:
 
 - Teacher sign-in on this computer: a fresh installation uses `admin` / `admin`, and the password can be changed from **Settings** (it is saved with your data and survives restarts; teacher sessions clear on each launch)
 - Classes, class-code/name sign-in, candidate codes, individual extra time, CSV class-list import/export, and reversible roster archiving
-- Exam-format-first Paper Builder with provider-specific terminology and tuned starters for IB DP, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and school-custom practice
+- Exam-format-first Paper Builder with provider-specific terminology and tuned starters for IB DP, IB MYP eAssessment, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and school-custom practice
+- Video and YouTube stimulus material: paste a video link as a shared paper material or attach one to an individual question; candidates see an embedded player (YouTube plays via youtube-nocookie; direct https video URLs stream inline)
 - Live, independently scrollable paper preview while a teacher edits
 - One-file PacePaper paper export and re-import, including explicitly authorized attachments
 - PDF, image, text, and controlled-play audio resources, including media attached to individual questions; students receive exactly two complete plays per recording, with no pause or restart once a play begins
@@ -90,6 +96,7 @@ Notes for teachers:
 - Rich-text, short-answer, single-choice, and expandable digital-ink responses with blank, ruled, or square-grid pages, Draw/Eraser tools, and Undo/Redo
 - Page context menus suppressed on PacePaper interface controls while normal clicks, keyboard controls, and text selection remain available
 - Event-driven teacher status updates that preserve active form controls, plus printable/PDF candidate submission review
+- Focus-loss notifications: when a candidate leaves the exam window, the teacher dashboard raises a live alert naming the student and keeps a per-sitting audit trail (best-effort — a crash or disconnect can prevent an event)
 - Teacher-only worked marking guides for all 15 full-length mocks, accessible from **Mock marking guides** in the teacher sidebar
 - Branded native application icons for macOS and Windows, plus Linux and browser icon assets
 - Teacher **Settings** section: change the saved teacher password (current password required; all devices sign out afterwards)
