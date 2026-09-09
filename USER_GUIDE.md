@@ -2,7 +2,7 @@
 
 This step-by-step guide covers the current DigitalDP classroom demo. DigitalDP runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.
 
-DigitalDP is for **practice and candidate familiarisation only**. It does not deliver an official examination. Version 0.1.0-demo.5 includes 52 original papers: 34 IB-oriented examples, 15 full-length non-IB mocks, and three short AP walkthroughs. An older app download does not update itself; use the guide supplied with your version.
+DigitalDP is for **practice and candidate familiarisation only**. It does not deliver an official examination. Version 0.1.0-demo.6 includes one original IB-aligned example: English B Paper 2 Reading. An older app download does not update itself; use the guide supplied with your version.
 
 ## The four parts of the teacher dashboard
 
@@ -19,7 +19,7 @@ A **paper** is reusable exam content. A **session** is one sitting of that paper
 
 Select **User guide** in the teacher sidebar to open these instructions in another tab. The guide also works offline from the HTML file supplied with the app.
 
-Select **Mock marking guides** for the worked answers to the 15 full-length mocks. These are for teachers only; do not share them with students.
+The included example has its own teacher-authored markscheme. Keep marking materials separate from candidate copies.
 
 ## Quick classroom checklist
 
@@ -140,17 +140,11 @@ Add or edit every candidate before selecting **Start exam**. DigitalDP creates t
 
 ## Step 4 — Choose or create the paper
 
-Select **Paper library**, the final dashboard section. The current app source includes 52 original papers:
+Select **Paper library**, the final dashboard section. A fresh 0.1.0-demo.6 standalone installation includes one original IB-aligned example:
 
-- 34 IB-oriented examples.
-- Four full-length Cambridge IGCSE Mathematics 0580 mocks: Papers 1 and 3 Core, and Papers 2 and 4 Extended, in the 2025–2027 format.
-- Eight full-length Pearson Edexcel International GCSE Mathematics A mocks: linear Papers 1F, 2F, 1H, and 2H, plus modular Units 1 and 2 at Foundation and Higher tiers.
-- Three full-length AP mocks: English Language, Biology, and Calculus AB, in the May 2027 format.
-- Three short AP walkthroughs for trying section changes and breaks.
+- **English B Paper 2 Reading** — a teacher-authored formative reading paper for SL and HL familiarisation.
 
-These cover 23 course entries, not every course or paper in Paper Builder. They appear automatically when using the current source app launcher. Check your download's release notes if an older standalone app shows a different library.
-
-An installation with past sessions may also show papers labelled **earlier demo version**. Choose the current version for a new session; the earlier one remains available with its previous work.
+You can build or import other papers for your own approved practice materials. An installation with past sessions may also show papers labelled **earlier demo version**. Choose the current version for a new session; the earlier one remains available with its previous work.
 
 ### Use an included example
 

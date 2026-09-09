@@ -2,9 +2,9 @@
 
 This folder receives the shareable DigitalDP bundles made by `bun run release:build`.
 
-Bundles built from the current source are self-contained: they include the DigitalDP executable and all browser interface files. Teachers do not need Bun, Node.js, or source code. Students need only a browser and a connection to the teacher's computer; an Internet connection is not needed during use. The current builder excludes existing databases, teacher papers, submissions, and protected reference resources, and includes the 52 original DigitalDP paper definitions for the local library: 34 IB-oriented examples, 15 full-length non-IB mocks, and three AP walkthroughs.
+Bundles built from the current source are self-contained: they include the DigitalDP executable and all browser interface files. Teachers do not need Bun, Node.js, or source code. Students need only a browser and a connection to the teacher's computer; an Internet connection is not needed during use. The current builder excludes existing databases, teacher papers, submissions, and protected reference resources. A fresh 0.1.0-demo.6 release installs one original IB-aligned English B Paper 2 Reading familiarisation example.
 
-Version **0.1.0-demo.5** targets Windows x64 and Linux x64. There is no Mac application in this release: Apple signing and notarization credentials are not configured. Mac users can run the source as described below. A previously downloaded app retains its own code and examples; check the release notes supplied with that download.
+Version **0.1.0-demo.6** targets Windows x64 and Linux x64. There is no Mac application in this release: Apple signing and notarization credentials are not configured. Mac users can run the source as described below. A previously downloaded app retains its own code and examples; check the release notes supplied with that download.
 
 Linked clocks follow the saved exam timeline across windows. Unsupported live/ended and multi-section timing edits are disabled, not display-only. Ready-session edits reject stale writes. The [fix report](../resources/research/2026-09-05-ux-safety-fixes.md) records browser and automated checks; the bundled release notes identify the platform and verification limits.
 
@@ -12,7 +12,7 @@ Start with `USER-GUIDE.html`, included beside the app or executable in each bund
 
 ## Choose the correct download
 
-- macOS — run the source for now; no Mac archive is included in demo.5
+- macOS — run the source for now; no Mac archive is included in demo.6
 - `DigitalDP-*-windows-x64.zip` — most Windows PCs
 - `DigitalDP-*-linux-x64.tar.gz` — 64-bit Linux PCs using glibc
 - `DigitalDP-*-User-Guide.html` — illustrated, browser-friendly guide
@@ -23,9 +23,9 @@ The macOS application and Windows executable use the DigitalDP application icon.
 
 Extract the entire archive before starting it. Do not run an executable from inside the archive.
 
-On macOS, double-click `DigitalDP.app`. Use only a release whose notes say the Mac app is notarized; the earlier `0.1.0-demo.3` and `0.1.0-demo.4` Mac downloads are superseded and can be rejected as damaged. On Windows, double-click `DigitalDP.exe`. On Linux, make `DigitalDP` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting DigitalDP.
+On Windows, double-click `DigitalDP.exe`. On Linux, make `DigitalDP` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting DigitalDP. A future macOS download must be notarized before use.
 
-The current source is labelled `0.1.0-demo.5`, with exam-system profiles, timed AP sections, and the 52-paper library. See `RELEASE_NOTES-0.1.0-demo.5.md` for the dated review record. Later source edits require a new build and verification; existing downloads are unchanged.
+The current source is labelled `0.1.0-demo.6`, with one English B Paper 2 Reading familiarisation example. See `RELEASE_NOTES-0.1.0-demo.6.md` for the dated review record. Later source edits require a new build and verification; existing downloads are unchanged.
 
 The release builder will not create a Mac archive without Developer ID signing and successful Apple notarization. Windows may still show a SmartScreen warning while the demo lacks an established publisher reputation.
 
@@ -41,10 +41,8 @@ For source development, `bun run samples:build` regenerates manifests, ignored p
 - The teacher login remains `admin` / `admin` and is reset on each app start, as requested for the demo.
 - It is for familiarisation only. Do not use it with real student data, high-stakes assessment, or copyrighted papers without school approval.
 - The bundle contains no IB or user-supplied reference papers. Add only materials you are permitted to use.
-- The 15 full-length mocks comprise four Cambridge Mathematics 0580 components/tiers (2025–2027 format), eight Pearson Mathematics A linear/modular components/tiers, and three AP courses (May 2027). The 52-paper library covers 23 course entries, not every course or component available in Paper Builder.
-- Full-length means a complete original question workload, not official endorsement, calibrated difficulty, or official grade boundaries. Subject teachers must review the content and marking. The three AP walkthroughs deliberately shorten timing and workload.
-- **Mock marking guides** in the teacher sidebar opens the teacher-sign-in-protected `/mock-guides` page. The source's generated offline copy is `docs/mock-marking/index.html`. Keep those worked answers private from students; exported `.digitaldp-paper` files contain no marking guide.
-- AP raw totals are not AP scores. Matching guides explain weighted practice calculations without official 1–5 conversions. DigitalDP does not automatically mark responses.
+- The bundled example is an original English B Paper 2 Reading familiarisation paper. Build or import other materials only when you are permitted to use them.
+- The included teacher-authored markscheme is for teachers only; keep it separate from candidate copies. DigitalDP does not automatically mark responses.
 
 ## Keeping work safe
 
