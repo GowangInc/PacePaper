@@ -2,7 +2,7 @@
 
 This step-by-step guide covers the current PacePaper classroom demo. PacePaper runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.
 
-PacePaper is for **practice and candidate familiarisation only**. It does not deliver an official examination. Version 0.1.0-demo.6 includes one original IB-aligned example: English B Paper 2 Reading. An older app download does not update itself; use the guide supplied with your version.
+PacePaper is for **practice and candidate familiarisation only**. It does not deliver an official examination. A fresh installation starts with one preloaded **Sample paper** that has no subject, level, or IB branding, so you can try the whole exam workflow before building your own. An older app download does not update itself; use the guide supplied with your version.
 
 ## The four parts of the teacher dashboard
 
@@ -142,9 +142,9 @@ Add or edit every candidate before selecting **Start exam**. PacePaper creates t
 
 ## Step 4 — Choose or create the paper
 
-Select **Paper library**, the final dashboard section. A fresh 0.1.0-demo.6 standalone installation includes one original IB-aligned example:
+Select **Paper library**, the final dashboard section. A fresh standalone installation includes one preloaded **Sample paper**:
 
-- **English B Paper 2 Reading** — a teacher-authored formative reading paper for SL and HL familiarisation.
+- **Sample paper** — three original texts with short-answer and multiple-choice questions across a reading period, showing the main question styles and the student reader experience. It carries no subject, level, or IB branding.
 
 You can build or import other papers for your own approved practice materials. An installation with past sessions may also show papers labelled **earlier demo version**. Choose the current version for a new session; the earlier one remains available with its previous work.
 
