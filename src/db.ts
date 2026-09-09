@@ -793,6 +793,46 @@ export function listStudentFocusEvents(sessionId: string): StudentFocusEventRow[
   `).all({ sessionId });
 }
 
+export type StudentFocusSummary = {
+  studentId: string;
+  studentName: string;
+  candidateCode: string;
+  lostCount: number;
+  currentlyAway: boolean;
+  lastEventAt: number | null;
+  events: { kind: "focus_lost" | "focus_gained"; at: number }[];
+};
+
+/** Per-student running focus log for a session, for the live teacher dashboard. */
+export function listSessionFocusByStudent(sessionId: string): StudentFocusSummary[] {
+  const rows = listStudentFocusEvents(sessionId);
+  const byStudent = new Map<string, StudentFocusSummary>();
+  for (const row of rows) {
+    let summary = byStudent.get(row.studentId);
+    if (!summary) {
+      summary = {
+        studentId: row.studentId,
+        studentName: row.studentName,
+        candidateCode: row.candidateCode,
+        lostCount: 0,
+        currentlyAway: false,
+        lastEventAt: null,
+        events: [],
+      };
+      byStudent.set(row.studentId, summary);
+    }
+    if (row.kind === "focus_lost") {
+      summary.lostCount += 1;
+      summary.currentlyAway = true;
+    } else {
+      summary.currentlyAway = false;
+    }
+    summary.lastEventAt = row.at;
+    summary.events.push({ kind: row.kind, at: row.at });
+  }
+  return [...byStudent.values()].sort((a, b) => a.studentName.localeCompare(b.studentName));
+}
+
 export function listExamSessions(archived = false): ExamSessionRow[] {
   const onlineCutoff = Date.now() - 20_000;
   return db.query<ExamSessionRow, { onlineCutoff: number; archived: number }>(`

@@ -425,6 +425,7 @@ function printSubmissions(responseId = null) {
   }
 }
 
+
 function renderState(state) {
   currentState = state;
   updateStudentConnection(state.network);
@@ -436,6 +437,67 @@ function renderState(state) {
   document.querySelector("#overview-students").textContent = String(state.students.length);
   document.querySelector("#overview-papers").textContent = String(state.papers.length);
   document.querySelector("#overview-live").textContent = String(live);
+  refreshLiveFocus(state);
+}
+function renderLiveFocusList(live) {
+  const section = document.querySelector("#focus-live");
+  if (!section) return;
+  const list = document.querySelector("#focus-live-list");
+  const rows = [];
+  for (const session of live) {
+    for (const student of session.focus ?? []) {
+      rows.push({ session, student });
+    }
+  }
+  section.hidden = rows.length === 0;
+  list.replaceChildren();
+  for (const { session, student } of rows) {
+    const item = document.createElement("li");
+    item.className = "focus-live-row";
+    item.dataset.away = String(student.currentlyAway);
+    const name = document.createElement("strong");
+    name.textContent = student.studentName;
+    const code = document.createElement("code");
+    code.textContent = student.candidateCode;
+    const status = document.createElement("span");
+    status.className = "focus-live-status";
+    const last = student.lastEventAt ? new Date(student.lastEventAt).toLocaleTimeString() : "—";
+    status.textContent = student.currentlyAway
+      ? `away now · ${student.lostCount} loss${student.lostCount === 1 ? "" : "es"} · last ${last}`
+      : `${student.lostCount} focus loss${student.lostCount === 1 ? "" : "es"} · last ${last}`;
+    item.append(name, code, status);
+    list.append(item);
+  }
+}
+
+async function refreshLiveFocus(state) {
+  const section = document.querySelector("#focus-live");
+  if (!section) return;
+  const live = (state?.sessions ?? []).filter((session) => session.status === "live");
+  if (live.length === 0) {
+    section.hidden = true;
+    return;
+  }
+  const withFocus = await Promise.all(live.map(async (session) => {
+    try {
+      const result = await api(`/api/admin/sessions/${session.id}/focus-events`);
+      const byStudent = new Map();
+      for (const event of result.events ?? []) {
+        let summary = byStudent.get(event.studentId);
+        if (!summary) {
+          summary = { studentId: event.studentId, studentName: event.studentName, candidateCode: event.candidateCode, lostCount: 0, currentlyAway: false, lastEventAt: null };
+          byStudent.set(event.studentId, summary);
+        }
+        if (event.kind === "focus_lost") { summary.lostCount += 1; summary.currentlyAway = true; }
+        else summary.currentlyAway = false;
+        summary.lastEventAt = event.at;
+      }
+      return { ...session, focus: [...byStudent.values()] };
+    } catch {
+      return { ...session, focus: [] };
+    }
+  }));
+  renderLiveFocusList(withFocus);
 }
 
 function updateStudentConnection(network) {
@@ -890,6 +952,10 @@ async function renderDashboard() {
               <p>Previous responses stay saved. Restore a sitting to make it available to students again.</p>
               <ul id="archived-session-list" class="session-list"></ul>
             </details>
+            <section id="focus-live" class="focus-live" aria-labelledby="focus-live-title" hidden>
+              <div class="section-heading"><div><h3 id="focus-live-title">Focus alerts</h3><p id="focus-live-context">Live — updates as candidates leave or return to the exam window.</p></div></div>
+              <ul id="focus-live-list" class="focus-live-list"></ul>
+            </section>
           </div>
           <form id="session-form" class="utility-form" method="post">
             <fieldset><legend>Set up an exam</legend>
