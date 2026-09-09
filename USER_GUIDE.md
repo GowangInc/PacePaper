@@ -419,7 +419,7 @@ For listening audio, select **Start first listen** only when ready and let it pl
 - **An exam is missing:** Confirm that the teacher selected **Set up exam**. Ask the student to return to **Choose your examination**.
 - **A student is stuck on Connecting or Reconnecting:** Keep the page open. Confirm that PacePaper is running and both devices are still on the same network.
 - **The clock is counting the wrong session:** Choose the exam from the clock's session list, or reopen the clock from the correct session row.
-- **Clock timing cannot be edited:** Only a ready exam with a simple reading/writing schedule supports timing edits. Live exams and fixed-section papers use the saved schedule. Read Step 6; changing display details never changes student time.
+- **Clock timing cannot be edited:** Simple reading/writing papers support timing edits while the exam is ready or live — a live save moves candidate deadlines immediately. Fixed-section papers and ended exams use the saved schedule. Read Step 6; changing display details never changes student time.
 - **The print button does nothing:** Open the teacher dashboard in Chrome, Edge, or Safari, open **View submissions**, and select **Print this candidate** or **Print all or save PDF** again.
 
 ## Demo safety

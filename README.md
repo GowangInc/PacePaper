@@ -81,7 +81,7 @@ Notes for teachers:
 - One-file PacePaper paper export and re-import, including explicitly authorized attachments
 - PDF, image, text, and controlled-play audio resources, including media attached to individual questions; students receive exactly two complete plays per recording, with no pause or restart once a play begins
 - Legacy reading-then-writing timing plus multi-section phase plans with locked reading periods, fixed monitored breaks, no-return section boundaries, phase-specific tool rules, and extra time applied to the final work phase
-- Second-screen countdown with fullscreen mode and authoritative linked timing; live timing edits are deliberately unavailable
+- Second-screen countdown with fullscreen mode and authoritative linked timing; simple-exam reading and writing minutes can be corrected from the clock while the exam is ready or live (fixed-section and ended exams stay read-only)
 - Editable student-name roster on the second-screen clock, without changing student accounts or authoritative timers
 - Visible student sign-in address with a copy action on both the teacher dashboard and projected clock
 - Timed sessions with autosave, local unsaved-work recovery, and automatic deadline submission
