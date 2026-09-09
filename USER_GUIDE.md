@@ -94,6 +94,8 @@ DigitalDP starts in **This computer only** mode every time it opens.
 
 Do this test before students begin. `localhost` and `127.0.0.1` work only on the teacher computer.
 
+The **Student sign-in** address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows `127.0.0.1` or `localhost`. If classroom sharing is off, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.
+
 The teacher and students must be on a network that allows their devices to communicate. Guest Wi-Fi, different school networks, or network isolation may block access.
 
 Classroom sharing cannot be changed while any examination is live. Do not quit or restart DigitalDP during an exam.
@@ -248,11 +250,11 @@ You may set up several sessions in advance. Different classes can take different
 5. Edit the displayed student names if needed.
 6. Confirm that the student sign-in address is visible.
 
-For a **Ready to start** paper with one reading period and one writing period, changing **Reading minutes** or **Writing minutes** and selecting **Save exam timing and update display** saves the configured minutes for that sitting. For example, `0.1` reading minutes is six seconds. Set this before students join and check the saved confirmation and the session's timing on the teacher dashboard.
+For a simple paper with one reading period and one writing period (no fixed timed sections), changing **Reading minutes** or **Writing minutes** and selecting **Save exam timing and update display** saves the configured minutes for that sitting. For example, `0.1` reading minutes is six seconds. You can make this change while the exam is ready or after it has started: saving during a live exam moves the reading/writing boundary and the deadline immediately for every candidate, which is the fastest way to correct a mistaken duration. Check the saved confirmation and the session's timing on the teacher dashboard.
 
-The display title, details and student-name list stay local to that clock window. Linked clocks always follow the saved exam start, duration and sections, including changes saved in another window. The start date is read-only; **Start exam** on the teacher dashboard controls the start.
+The display title, details and student-name list stay local to that clock window. Linked clocks always follow the saved exam start, duration and sections, including changes saved in another window. The start date is read-only; **Start exam** on the teacher dashboard controls the start. An exam that has ended can no longer change its saved timing.
 
-**Live timing corrections are not supported.** Once an exam starts, or if it has fixed timed sections, the clock's timing fields are disabled. It cannot show a different duration from the saved student schedule. Use an included accelerated AP walkthrough for a short demonstration. Candidate-specific extra time remains separate from the standard room clock.
+**Fixed timed sections stay read-only.** If the paper uses a fixed multi-phase schedule of sections and breaks, the clock's timing fields are disabled; use the Paper Builder to prepare a paper with a different schedule. Candidate-specific extra time remains separate from the standard room clock.
 
 If another window changes the timing while you are editing, saving shows a conflict message. Select **Reload exam defaults**, review the updated times, then make your change again. A temporary **Custom countdown** is separate from student exams and is not saved after refresh.
 
