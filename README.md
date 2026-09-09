@@ -16,6 +16,46 @@ On first launch you sign in with the default teacher login **`admin` / `admin`**
 
 Two plain-language documents ship beside the app and are linked from the teacher dashboard: the illustrated **User guide** (click *User guide* in the sidebar) walks through every classroom task, and the *Mock marking guides* link opens worked marking notes for the included practice mocks.
 
+## See PacePaper in action
+
+The same workflow on a fresh copy — what the teacher sees first, then what a candidate sees on their own device.
+
+![PacePaper teacher sign-in](docs/user-guide/screenshots/teacher-sign-in.png)
+
+Sign in on the teacher computer with the default demo login.
+
+![PacePaper paper library](docs/user-guide/screenshots/papers.png)
+
+The Paper library already holds one preloaded Sample paper, ready to open — plus the builder and import for your own papers.
+
+![PacePaper classes and students](docs/user-guide/screenshots/classes.png)
+
+Classes keep rosters, candidate codes, and extra time together; this sample class has two students.
+
+![PacePaper live session monitor](docs/user-guide/screenshots/session.png)
+
+Start the exam from Sessions and watch it live: who is online, how many have submitted, and the reading and writing time.
+
+![PacePaper student sign-in](docs/user-guide/screenshots/student-sign-in.png)
+
+On their own device, a student enters the class code, then chooses their name.
+
+![PacePaper student chooses exam](docs/user-guide/screenshots/student-choose-exam.png)
+
+The student confirms the paper the teacher prepared and joins its waiting room.
+
+![PacePaper student waiting room](docs/user-guide/screenshots/student-waiting.png)
+
+Until the teacher starts the exam, the waiting room shows the student is connected and ready.
+
+![PacePaper paper during reading time](docs/user-guide/screenshots/student-exam.png)
+
+In reading time the paper opens with its texts and questions visible; response areas stay locked until writing begins.
+
+![PacePaper paper during writing time](docs/user-guide/screenshots/student-writing.png)
+
+In writing time the response area opens under each question, and answers autosave as the student types.
+
 ## Using PacePaper with a class
 
 1. **Prepare.** Sign in on the teacher computer and choose **Settings** to set a password you will remember.
@@ -50,7 +90,6 @@ Notes for teachers:
 - Rich-text, short-answer, single-choice, and expandable digital-ink responses with blank, ruled, or square-grid pages, Draw/Eraser tools, and Undo/Redo
 - Page context menus suppressed on PacePaper interface controls while normal clicks, keyboard controls, and text selection remain available
 - Event-driven teacher status updates that preserve active form controls, plus printable/PDF candidate submission review
-- A 52-paper original development library: 34 IB-oriented examples, 15 full-length non-IB mocks, and three short AP walkthroughs. Standalone releases package only the preloaded generic Sample paper.
 - Teacher-only worked marking guides for all 15 full-length mocks, accessible from **Mock marking guides** in the teacher sidebar
 - Branded native application icons for macOS and Windows, plus Linux and browser icon assets
 - Teacher **Settings** section: change the saved teacher password (current password required; all devices sign out afterwards)

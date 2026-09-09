@@ -19,7 +19,7 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
       path: "docs/user-guide/screenshots/overview.png",
       alt: "PacePaper teacher dashboard Overview showing the student sign-in address and classroom-sharing controls.",
       caption: "Overview shows the student address, classroom-sharing choice, and current class, paper, and session totals.",
-      width: 1280,
+      width: 1440,
       height: 900,
     },
   ],
@@ -28,7 +28,7 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
       path: "docs/user-guide/screenshots/classes.png",
       alt: "PacePaper Classes area showing a class roster, candidate codes, extra time, and student management controls.",
       caption: "Classes keeps the roster, candidate codes, extra-time allowances, and add, edit, or remove controls together.",
-      width: 1280,
+      width: 1440,
       height: 900,
     },
   ],
@@ -51,9 +51,9 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
   "Step 5 — Set up the exam session": [
     {
       path: "docs/user-guide/screenshots/session.png",
-      alt: "PacePaper Sessions area showing an exam sitting, its clock control, and the class, exam-system, and paper selectors.",
+      alt: "PacePaper Sessions area showing the live Sample paper sitting with submitted and online counts and its clock link.",
       caption: "Sessions first narrows papers by exam system, then assigns a reusable paper to a class for a specific sitting.",
-      width: 1280,
+      width: 1440,
       height: 900,
     },
   ],
@@ -69,23 +69,23 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
   "Step 7 — Ask students to join": [
     {
       path: "docs/user-guide/screenshots/student-sign-in.png",
-      alt: "PacePaper candidate sign-in showing a class code and a loaded student-name list.",
+      alt: "PacePaper candidate sign-in with the class code field and the name dropdown ready to load names.",
       caption: "Students enter the class code, load the roster, and choose their own name.",
-      width: 1280,
+      width: 1440,
       height: 900,
     },
     {
       path: "docs/user-guide/screenshots/student-choose-exam.png",
-      alt: "PacePaper candidate page showing an available AP Biology practice examination and its Join waiting room button.",
+      alt: "PacePaper candidate page showing the Sample paper available to enter.",
       caption: "After signing in, each student chooses the requested examination and joins its waiting room.",
-      width: 1280,
+      width: 1440,
       height: 900,
     },
   ],
   "Step 8 — Start and monitor the exam": [
     {
       path: "docs/user-guide/screenshots/student-exam.png",
-      alt: "PacePaper English B reading view showing Text A, tabs for Texts B and C, visible questions, and locked response areas during reading time.",
+      alt: "PacePaper reading view showing Text A, tabs for Texts B and C, visible questions, and locked response areas during reading time.",
       caption: "During reading time, students can switch between all texts and read the questions and answer choices. Response areas stay locked until writing time begins.",
       width: 1440,
       height: 900,
