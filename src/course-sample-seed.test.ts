@@ -147,8 +147,8 @@ describe("safe bundled-demo migration", () => {
   `));
 
   test("seeds all courses without conflating tiers, components or AP walkthroughs", () => runScenario(`
-    assert.equal(seed().created, COURSE_SAMPLE_PAPERS.length);
-    assert.equal(seed().unchanged, COURSE_SAMPLE_PAPERS.length);
+    assert.equal(seed(COURSE_SAMPLE_PAPERS).created, COURSE_SAMPLE_PAPERS.length);
+    assert.equal(seed(COURSE_SAMPLE_PAPERS).unchanged, COURSE_SAMPLE_PAPERS.length);
     assert.equal(count(), COURSE_SAMPLE_PAPERS.length);
     assert.throws(() => seed([next, next]), /unique course, level and component/);
     assert.equal(count(), COURSE_SAMPLE_PAPERS.length);

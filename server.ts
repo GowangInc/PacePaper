@@ -22,6 +22,7 @@ import {
   incrementAudioPlay,
   importClassRosters,
   listClasses,
+  listStudentFocusEvents,
   listExamSessions,
   listPaperAssets,
   listPapers,
@@ -32,6 +33,7 @@ import {
   restoreExamSession,
   restoreStudent,
   saveAndSubmitResponse,
+  recordStudentFocusEvent,
   saveResponse,
   setupRequired,
   startExamSession,
@@ -799,6 +801,17 @@ async function handleApi(
     publish(server, "admin", "admin-state");
     return json({ id: sessionId, status: "draft", readingTimeMinutes, durationMinutes });
   }
+  const focusMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/focus-events$/);
+  if (focusMatch && method === "GET") {
+    requireRole(request, "admin");
+    const sessionId = focusMatch[1] as string;
+    // Match any session, active or archived — not just archived ones.
+    const exists = listExamSessions().some((session) => session.id === sessionId)
+      || listExamSessions(true).some((session) => session.id === sessionId);
+    if (!exists) throw new HttpError("Exam session not found", 404);
+    return json({ sessionId, events: listStudentFocusEvents(sessionId) });
+  }
+
 
   const responsesMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/responses$/);
   if (responsesMatch && method === "GET") {
@@ -1055,6 +1068,24 @@ async function handleApi(
     return json(audioPlayback.complete(playToken, identity));
   }
 
+  if (path === "/api/student/focus-event" && method === "POST") {
+    const actor = requireRole(request, "student");
+    const body = await jsonBody(request);
+    const sessionId = requiredText(body.sessionId, "Session", 64);
+    const kind = requiredText(body.kind, "Focus event", 32);
+    if (kind !== "focus_lost" && kind !== "focus_gained") {
+      throw new HttpError("Unknown focus event", 400);
+    }
+    // Only a live, not-yet-submitted exam owned by this student records an event.
+    const exam = getStudentExam(actor.actorId, sessionId);
+    if (!exam || exam.sessionStatus !== "live" || exam.submittedAt !== null) {
+      throw new HttpError("Exam is not in progress", 409);
+    }
+    recordStudentFocusEvent(sessionId, actor.actorId, kind);
+    publish(server, "admin", "admin-state");
+    return json({ ok: true }, 201);
+  }
+
   const assetMatch = path.match(/^\/api\/assets\/([a-f0-9-]+)\/([a-z0-9_-]+)$/);
   if (assetMatch && (method === "GET" || method === "HEAD")) {
     const actor = authFromRequest(request);
@@ -1134,6 +1165,15 @@ const server = Bun.serve<SocketData>({
           throw new HttpError("Teacher access is only available on this computer", 403);
         }
         return await handleApi(request, activeServer, url.pathname, localRequest);
+      }
+      if (url.pathname === "/") {
+        // Loading the bare IP:port takes students straight to candidate sign-in.
+        // Teachers use the /admin link instead.
+        const response = new Response(null, {
+          status: 302,
+          headers: { Location: "/student", "Cache-Control": "no-cache" },
+        });
+        return responseWithSecurity(response);
       }
       if (!localRequest && !isStudentStaticPath(url.pathname)) {
         throw new HttpError("Teacher access is only available on this computer", 403);

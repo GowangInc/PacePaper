@@ -139,6 +139,10 @@ async function start() {
   } else if (path === "/student") {
     const { renderStudent } = await import("/student.js");
     await renderStudent(bootstrap);
+  } else if (path === "/") {
+    // Students land here from the shared IP:port — send them straight to sign-in.
+    location.replace("/student");
+    return;
   } else {
     landing();
   }

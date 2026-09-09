@@ -13,7 +13,7 @@ describe("desktop release runtime", () => {
   test("seeds bundled examples after choosing the release database and before starting the server", async () => {
     const source = await Bun.file(new URL("../release-app.ts", import.meta.url)).text();
     const configure = source.indexOf("configureReleaseDatabase();");
-    const seed = source.indexOf("seedCourseSamplePapers()");
+    const seed = source.indexOf("seedCourseSamplePapers([");
     const server = source.indexOf('await import("./server.ts")');
     expect(configure).toBeGreaterThanOrEqual(0);
     expect(seed).toBeGreaterThan(configure);

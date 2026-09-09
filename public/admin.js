@@ -354,8 +354,40 @@ function renderSubmissions(data) {
   document.querySelector("#submissions-dialog").showModal();
 }
 
+function renderFocusEvents(events) {
+  const section = document.createElement("section");
+  section.className = "focus-integrity";
+  const heading = copy("h3", "", "Focus integrity");
+  const note = copy("p", "focus-integrity-note",
+    events.length === 0
+      ? "No focus-loss events were received. Focus reporting is best-effort — a disconnect or crash can prevent an event from arriving, so treat this as an audit signal, not proof of compliance."
+      : `${events.filter((event) => event.kind === "focus_lost").length} focus-loss event${events.filter((event) => event.kind === "focus_lost").length === 1 ? "" : "s"} received. Best-effort signal — a disconnect or crash can prevent an event from arriving.`);
+  section.append(heading, note);
+  if (events.length > 0) {
+    const list = document.createElement("ul");
+    list.className = "focus-integrity-list";
+    for (const event of events) {
+      const item = document.createElement("li");
+      item.dataset.kind = event.kind;
+      item.textContent = `${new Date(event.at).toLocaleTimeString()} — ${event.studentName} (${event.candidateCode}) ${event.kind === "focus_lost" ? "left the exam window" : "returned"}`;
+      list.append(item);
+    }
+    section.append(list);
+  }
+  return section;
+}
+
 async function openSubmissions(sessionId) {
-  renderSubmissions(await api(`/api/admin/sessions/${sessionId}/responses`));
+  const slot = document.querySelector("#focus-integrity-slot");
+  // Responses are the point of this dialog; focus telemetry must never block them.
+  const responses = await api(`/api/admin/sessions/${sessionId}/responses`);
+  renderSubmissions(responses);
+  try {
+    const focus = await api(`/api/admin/sessions/${sessionId}/focus-events`);
+    slot.replaceChildren(renderFocusEvents(focus.events));
+  } catch {
+    slot.replaceChildren();
+  }
 }
 
 function printSubmissions(responseId = null) {
@@ -895,6 +927,7 @@ async function renderDashboard() {
     <dialog id="submissions-dialog" class="exam-dialog submissions-dialog">
       <form method="dialog">
         <header><p class="eyebrow">Completed papers</p><h2 id="submissions-title">Candidate responses</h2><p id="submissions-context"></p><p>Open a candidate to review their complete paper. Use your browser's print dialog to print one candidate or save a single class PDF.</p></header>
+        <div id="focus-integrity-slot"></div>
         <div id="submission-list" class="submission-list"></div>
         <footer><button id="print-submissions" type="button">Print or save PDF</button><button value="close">Close</button></footer>
       </form>

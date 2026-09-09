@@ -1402,6 +1402,37 @@ legend {
   max-height: 94dvh;
 }
 
+.focus-integrity {
+  margin-bottom: var(--space-3);
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-paper);
+}
+
+.focus-integrity h3 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.focus-integrity-note {
+  margin: 0;
+}
+
+.focus-integrity-list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.focus-integrity-list li[data-kind="focus_lost"] {
+  color: var(--color-danger, #b42318);
+}
+
 .submission-list {
   display: grid;
   gap: var(--space-3);

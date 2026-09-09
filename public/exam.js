@@ -144,6 +144,28 @@ export function mountExam(state, { onSubmitted }) {
     return !activePhase?.responseAllowed;
   }
 
+  // Report when the candidate leaves the exam window so the teacher sees it live.
+  let focusLost = false;
+  function reportFocus(kind) {
+    api("/api/student/focus-event", { method: "POST", body: { sessionId, kind } })
+      .catch(() => { /* Reporting is best-effort; never interrupt the exam over it. */ });
+  }
+  function handleFocusLost() {
+    if (focusLost) return;
+    focusLost = true;
+    reportFocus("focus_lost");
+  }
+  function handleFocusGained() {
+    if (!focusLost) return;
+    focusLost = false;
+    reportFocus("focus_gained");
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") handleFocusLost(); else handleFocusGained();
+  }, { signal });
+  window.addEventListener("blur", handleFocusLost, { signal });
+  window.addEventListener("focus", handleFocusGained, { signal });
+
   function finalSubmissionAvailable() {
     return Boolean(activePhase?.responseAllowed && activePhase.canSubmit);
   }

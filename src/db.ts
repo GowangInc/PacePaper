@@ -759,6 +759,40 @@ export function endExamSession(sessionId: string): void {
   end();
 }
 
+export type StudentFocusEventRow = {
+  id: string;
+  sessionId: string;
+  studentId: string;
+  studentName: string;
+  candidateCode: string;
+  kind: "focus_lost" | "focus_gained";
+  at: number;
+};
+
+export function recordStudentFocusEvent(sessionId: string, studentId: string, kind: "focus_lost" | "focus_gained"): void {
+  // Only a live session produces meaningful integrity events.
+  const live = db.query<{ status: ExamStatus }, { sessionId: string }>(
+    "SELECT status FROM exam_sessions WHERE id = $sessionId",
+  ).get({ sessionId });
+  if (live?.status !== "live") return;
+  db.query(`
+    INSERT INTO student_focus_events (id, session_id, student_id, kind, at)
+    VALUES ($id, $sessionId, $studentId, $kind, $at)
+  `).run({ id: crypto.randomUUID(), sessionId, studentId, kind, at: Date.now() });
+}
+
+export function listStudentFocusEvents(sessionId: string): StudentFocusEventRow[] {
+  return db.query<StudentFocusEventRow, { sessionId: string }>(`
+    SELECT events.id, events.session_id AS sessionId, events.student_id AS studentId,
+           students.name AS studentName, students.candidate_code AS candidateCode,
+           events.kind, events.at
+      FROM student_focus_events AS events
+      JOIN students ON students.id = events.student_id
+     WHERE events.session_id = $sessionId
+     ORDER BY events.at ASC
+  `).all({ sessionId });
+}
+
 export function listExamSessions(archived = false): ExamSessionRow[] {
   const onlineCutoff = Date.now() - 20_000;
   return db.query<ExamSessionRow, { onlineCutoff: number; archived: number }>(`

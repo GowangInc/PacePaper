@@ -97,6 +97,15 @@ export function initializeDatabaseSchema(db: Database): void {
       created_at INTEGER NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS student_focus_events (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL REFERENCES exam_sessions(id) ON DELETE CASCADE,
+      student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL CHECK(kind IN ('focus_lost', 'focus_gained')),
+      at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS student_focus_events_session ON student_focus_events(session_id);
     CREATE INDEX IF NOT EXISTS auth_sessions_expiry ON auth_sessions(expires_at);
     CREATE INDEX IF NOT EXISTS students_class ON students(class_id);
     CREATE INDEX IF NOT EXISTS responses_session ON responses(session_id);

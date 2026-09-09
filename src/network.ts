@@ -104,6 +104,7 @@ const LAN_STUDENT_API_METHODS: Readonly<Record<string, ReadonlySet<string>>> = {
   "/api/student/audio-play": new Set(["POST"]),
   "/api/student/audio-play/start": new Set(["POST"]),
   "/api/student/audio-play/complete": new Set(["POST"]),
+  "/api/student/focus-event": new Set(["POST"]),
 };
 
 export function isLanStudentApiRequest(pathname: string, method: string): boolean {

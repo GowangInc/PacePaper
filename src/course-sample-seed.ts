@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { COURSE_SAMPLE_PAPERS } from "../examples/sample-source/index.ts";
+// No COURSE_SAMPLE_PAPERS import here: callers pass the manifests explicitly, so a
+// release that imports this seeder does not transitively embed the full sample set.
 import { KNOWN_COURSE_SAMPLE_FINGERPRINTS } from "./course-sample-fingerprints.ts";
 import { createPaper, db, replaceUnusedPaper } from "./db.ts";
 import type { PaperManifest } from "./papers.ts";
@@ -85,7 +86,7 @@ function recordSeed(paperId: string, key: string, manifest: PaperManifest): void
 }
 
 /** Upgrade only recognized, unedited demos; session-linked paper contents are immutable. */
-export function seedCourseSamplePapers(manifests: readonly PaperManifest[] = COURSE_SAMPLE_PAPERS): CourseSampleSeedResult {
+export function seedCourseSamplePapers(manifests: readonly PaperManifest[]): CourseSampleSeedResult {
   const reconcile = db.transaction(() => {
     // Kept with the seeder because importing/using ordinary teacher papers does not need this ledger.
     db.exec(`CREATE TABLE IF NOT EXISTS course_sample_seed_receipts (
