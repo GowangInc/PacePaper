@@ -6,7 +6,7 @@ bead counts for 32px and 16px so the mark stays structured at small sizes.
 from PIL import Image, ImageDraw
 import os
 
-ROOT = "/Users/nicholas/Insync/nicholasjgowan@gmail.com/Google Drive/toys/DigitalDP"
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 NAVY = (23, 32, 51)
 PAPER = (241, 231, 208)
 INK = (23, 32, 51)
@@ -50,7 +50,7 @@ def render(P, beads, bead_scale, stroke):
 
 
 def full_art(P):
-    master = Image.open(os.path.join(os.path.expanduser("~"), "Sync/shared/pictures/pacepaper-icon-candidates/linework/pacepaper-linework-B3-beatarc-1024.png"))
+    master = Image.open(os.path.join(ROOT, "assets", "app-icon-master.png"))
     return master.resize((P, P), Image.LANCZOS)
 
 
@@ -68,7 +68,7 @@ for px_, fn in sizes.items():
     print("public", name)
 
 # assets master (1024), icns, ico
-master = Image.open(os.path.join(os.path.expanduser("~"), "Sync/shared/pictures/pacepaper-icon-candidates/linework/pacepaper-linework-B3-beatarc-1024.png"))
+master = full_art(1024)
 master.save(os.path.join(ROOT, "assets", "app-icon-master.png"))
 print("assets app-icon-master.png")
 

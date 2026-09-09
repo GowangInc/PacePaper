@@ -15,4 +15,4 @@ The artwork is deterministic geometry, rendered with Pillow at 4× supersampling
 
 ## History
 
-The previous DigitalDP-era icon (glossy 3D navy sheet with a D-form) shipped through demo.7. A copy of its master and derived formats is archived under `~/Sync/shared/pictures/pacepaper-icon-candidates/digitaldp-demo7-icon-backup/`; the git history also retains the originals.
+The previous DigitalDP-era icon (glossy 3D navy sheet with a D-form) shipped through demo.7. Its master and derived formats are preserved in this repository's git history (the pre-rebrand `assets/` tree), with an additional local backup copy kept on the author's machine for reference.

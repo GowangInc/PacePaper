@@ -40,3 +40,10 @@ research/qa/**/pdfs/
 research/qa/**/videos/
 research/qa/**/*.csv
 assets/AppIcon.iconset/
+
+# Private/copyrighted reference collections stay local (never tracked or shipped).
+resources/private/
+resources/**/PAST_PAPERS_*
+resources/**/past-papers-*.csv
+resources/**/SHA256SUMS
+resources/ib/PAST_PAPERS_2022_2026_INDEX.md

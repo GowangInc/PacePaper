@@ -2,6 +2,8 @@
 
 This directory stores retained project references, grouped by provenance and subject rather than by application feature.
 
+Protected and copyrighted reference collections (the `resources/private/` past-paper archive and the per-subject mirror inventories, SHA lists, and indexes under `resources/ib/`) are kept local-only: they are excluded from Git and never ship in releases. Only original practice material and provenance/citation documents are tracked.
+
 ```text
 resources/
   exam-systems/

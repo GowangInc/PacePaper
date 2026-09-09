@@ -4,9 +4,33 @@ PacePaper is a local-network workspace for supervised examination practice and c
 
 PacePaper is an independent school-practice tool. It is not an official examination-delivery system, is not affiliated with or endorsed by the International Baccalaureate, Cambridge University Press & Assessment, Pearson, College Board, ACT, or any other awarding body, and should not be used to deliver live high-stakes examinations.
 
+## Try PacePaper in two minutes
+
+**Download the latest demo** for Windows or Linux from the [releases page](https://github.com/GowangInc/PacePaper/releases). Extract the archive, open `PacePaper.exe` (Windows) or `PacePaper` (Linux), and your browser opens the teacher dashboard automatically. There is nothing to install — no Bun, no server setup, no internet connection required. Mac users can run the current source with `Start PacePaper.command` after installing [Bun](https://bun.sh/).
+
+On first launch you sign in with the default teacher login **`admin` / `admin`** (change it any time from the **Settings** section), and the Paper library already contains one preloaded **Sample paper** with no subject or IB branding. Open it, start a session, and you can try the whole workflow immediately — classes, timed phases, the candidate view, autosave, focus alerts, and printing — without creating anything first.
+
+Two plain-language documents ship beside the app and are linked from the teacher dashboard: the illustrated **User guide** (click *User guide* in the sidebar) walks through every classroom task, and the *Mock marking guides* link opens worked marking notes for the included practice mocks.
+
+## Using PacePaper with a class
+
+1. **Prepare.** Sign in on the teacher computer and choose **Settings** to set a password you will remember.
+2. **Add your class.** In **Classes and students**, create a class and add candidates (or import a CSV class list). Students see their own name at sign-in.
+3. **Choose a paper.** The preloaded **Sample paper** demonstrates the app. For real practice, build a paper in the **Paper library** with the guided builder (it follows the format of your chosen exam system) or import a prepared PacePaper paper file.
+4. **Set up an exam.** In **Sessions**, choose the class and paper. Students open the **Student sign-in** address on their own devices, enter the class code, and choose their name. Turn on **Classroom sharing** on the teacher dashboard and apply the detected address so their browsers can connect.
+5. **Run the exam.** Click **Start exam** when candidates are ready. The exam clock, per-candidate progress, and **Focus alerts** (candidates leaving the window) are on the dashboard; open the **examination clock** on a second screen to project the countdown. Responses autosave, and the exam submits automatically at the deadline.
+6. **Review.** Open a session's submissions to read, print, or save each candidate's complete paper as a PDF.
+
+Notes for teachers:
+
+- **All data stays on the teacher computer** in the per-user application-data folder (the exact location is in the User guide). Nothing is uploaded. Back up that folder after each sitting — the guide shows how.
+- **Students need only a browser** and a connection to the same network; no app, account, or internet access is needed during the exam.
+- **Change the look per device.** Teachers and students each have a **Light/Dark** toggle (teacher: top-right of the dashboard; student: their pages), and each person's choice is remembered on their own device.
+- PacePaper is for **practice and familiarisation** — never for live official examinations — and the bundled materials are original practice content, not official papers.
+
 ## Current capabilities
 
-- Temporary prototype teacher sign-in (`admin` / `admin`, reset on every startup)
+- Teacher sign-in on this computer: a fresh installation uses `admin` / `admin`, and the password can be changed from **Settings** (it is saved with your data and survives restarts; teacher sessions clear on each launch)
 - Classes, class-code/name sign-in, candidate codes, individual extra time, CSV class-list import/export, and reversible roster archiving
 - Exam-format-first Paper Builder with provider-specific terminology and tuned starters for IB DP, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and school-custom practice
 - Live, independently scrollable paper preview while a teacher edits
@@ -25,9 +49,11 @@ PacePaper is an independent school-practice tool. It is not an official examinat
 - A 52-paper original development library: 34 IB-oriented examples, 15 full-length non-IB mocks, and three short AP walkthroughs. Standalone releases package only the preloaded generic Sample paper.
 - Teacher-only worked marking guides for all 15 full-length mocks, accessible from **Mock marking guides** in the teacher sidebar
 - Branded native application icons for macOS and Windows, plus Linux and browser icon assets
+- Teacher **Settings** section: change the saved teacher password (current password required; all devices sign out afterwards)
+- Light and dark appearance, chosen independently for the teacher dashboard and the student pages and remembered per device
 - Illustrated offline user guide accessible from the teacher sidebar
 
-## Run locally
+## For developers — run from source
 
 PacePaper requires [Bun](https://bun.sh/).
 
@@ -48,9 +74,9 @@ bun test
 bun run dev
 ```
 
-The development server listens on `127.0.0.1:9148` by default. `public/index.html` is the application shell, not a standalone page: start the server and use `http://127.0.0.1:9148/` instead of opening the file with a `file://` URL. In the current demo build, every startup sets the sole teacher account to `admin` / `admin` and invalidates old teacher sessions; open `http://127.0.0.1:9148/admin` to sign in. Use the same address consistently in that browser.
+The development server listens on `127.0.0.1:9148` by default. `public/index.html` is the application shell, not a standalone page: start the server and use `http://127.0.0.1:9148/` instead of opening the file with a `file://` URL. A fresh installation signs in with `admin` / `admin`; the password then persists and can be changed from dashboard **Settings** (teacher sessions are cleared on each launch). Open `http://127.0.0.1:9148/admin` to sign in. Use the same address consistently in that browser.
 
-## Standalone desktop release
+## For developers — build the desktop releases
 
 The release builder produces shareable, self-contained macOS, Windows, and Linux bundles. They use the normal browser for the existing teacher dashboard and printing workflow; Bun, Node.js, the source checkout, and `public/` folder are not required on the recipient computer.
 
@@ -86,7 +112,7 @@ The current release builder keeps data outside the replaceable executable, in th
 
 For a supervised LAN demo in a packaged release, sign in as the teacher, open **Classroom sharing** on the dashboard, select a detected private IPv4 address, and choose **Apply classroom sharing**. The displayed student sign-in address updates on both the dashboard and examination clock. Choose **This computer only** to stop sharing. The saved interface choice is retained beside the local database, but sharing starts disabled after each launch; it must be deliberately enabled for that session. Sharing cannot be changed while an examination is live.
 
-> **Prototype security warning:** Classroom sharing uses ordinary HTTP, so class codes and responses are not encrypted in transit. This demo intentionally has no student PIN: anyone with a class code can choose a name from that class's roster. Use fake candidates and non-sensitive practice content only. `admin` / `admin` is intentionally weak, has no password-change flow, and is restricted to loopback; real student data requires HTTPS, stronger teacher authentication, student identity checks, and school approval.
+> **Prototype security warning:** Classroom sharing uses ordinary HTTP, so class codes and responses are not encrypted in transit. This demo intentionally has no student PIN: anyone with a class code can choose a name from that class's roster. Use fake candidates and non-sensitive practice content only. The default `admin` / `admin` is weak and restricted to loopback; change it from **Settings** before use, and remember that real student data requires HTTPS, stronger teacher authentication, student identity checks, and school approval.
 
 ### Source/development network configuration
 
@@ -172,3 +198,7 @@ bun test
 ```
 
 Before a classroom pilot, also test the complete teacher and student journey on the actual managed browsers or Safe Exam Browser configuration, including reconnects, simultaneous candidates, printing, backup recovery, and stylus input where used.
+
+## License and support
+
+PacePaper is open source under the [MIT License](LICENSE). The PacePaper name and icon artwork are not part of the MIT grant (see the notice in the LICENSE file). This is an independent project with no affiliation to any awarding body; it is provided for school practice and familiarisation.
