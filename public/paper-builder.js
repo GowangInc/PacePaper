@@ -333,6 +333,7 @@ function questionFrom(template, number = 1) {
     inkBackground: template.inkBackground ?? "square-grid",
     sectionId: template.sectionId,
     mediaFiles: [],
+    videoUrl: "",
   };
 }
 
@@ -438,9 +439,11 @@ export function paperPreviewData(form, questions) {
   if (!selection) return null;
   const { system, course, level, paper } = selection;
   const allowedMaterials = new Set(paper.materials);
+  const videoUrl = allowedMaterials.has("video") ? form.querySelector("#builder-video-url").value.trim() : "";
   const sharedResources = [
     ...(allowedMaterials.has("pdf") ? [...form.querySelector("#builder-pdf").files].map(previewFile) : []),
     ...(allowedMaterials.has("audio") ? [...form.querySelector("#builder-audio").files].map(previewFile) : []),
+    ...(videoUrl ? [{ kind: "video", url: videoUrl, name: "Video stimulus", label: "Video stimulus" }] : []),
   ];
   return {
     title: form.querySelector("#builder-title").value.trim(),
@@ -474,6 +477,7 @@ export function paperPreviewData(form, questions) {
       inkBackground: question.inkBackground,
       sectionId: question.sectionId,
       media: question.mediaFiles.map(previewFile),
+      ...(question.videoUrl ? { videoResources: [{ kind: "video", url: question.videoUrl }] } : {}),
     })),
   };
 }
@@ -489,6 +493,8 @@ export function packageData(form, questions) {
   const pdfFiles = allowedMaterials.has("pdf") ? [...form.querySelector("#builder-pdf").files] : [];
   const audioFiles = allowedMaterials.has("audio") ? [...form.querySelector("#builder-audio").files] : [];
   const sourceText = allowedMaterials.has("text") ? form.querySelector("#builder-source-text").value.trim() : "";
+  const videoUrl = allowedMaterials.has("video") ? form.querySelector("#builder-video-url").value.trim() : "";
+  if (videoUrl && !/^https?:\/\//iu.test(videoUrl)) throw new Error("The video link must start with https:// or http://.");
   const questionMedia = questions.flatMap((question) => question.mediaFiles);
   const files = [...pdfFiles, ...audioFiles, ...questionMedia];
   uniqueFiles(files);
@@ -516,6 +522,7 @@ export function packageData(form, questions) {
       maxPlays: AUDIO_PLAY_LIMIT,
     });
   });
+  if (videoUrl) resources.push({ key: "video-1", label: "Video stimulus", kind: "video", url: videoUrl });
   const sharedResourceKeys = resources.map((resource) => resource.key);
   const manifestQuestions = questions.map((question, index) => {
     const resourceKeys = [...sharedResourceKeys];
@@ -532,6 +539,12 @@ export function packageData(form, questions) {
       });
       resourceKeys.push(key);
     });
+    if (question.videoUrl) {
+      if (!/^https?:\/\//iu.test(question.videoUrl)) throw new Error(`${question.label.trim() || `Question ${index + 1}`} video link must start with https:// or http://.`);
+      const key = `q${index + 1}-video-1`;
+      resources.push({ key, label: `${question.label.trim() || `Question ${index + 1}`} video 1`, kind: "video", url: question.videoUrl });
+      resourceKeys.push(key);
+    }
     const item = {
       id: `q${index + 1}`,
       label: question.label.trim() || `Question ${index + 1}`,
@@ -674,6 +687,10 @@ export function mountPaperBuilder(container, onSubmit) {
                 <small>Select one or more recordings. You can instead attach a recording to a specific question below.</small>
                 <p class="form-help"><strong>Student playback:</strong> Each recording can be listened to completely twice. Once a play begins, it runs to the end and cannot be paused or restarted.</p>
               </div>
+              <div class="builder-material" data-material="video">
+                <label for="builder-video-url">Video or YouTube link <small>optional</small></label><input id="builder-video-url" type="url" inputmode="url" placeholder="https://youtu.be/…">
+                <small>Paste a YouTube link or a direct https video URL. Videos stream from the internet at exam time unless hosted on your own network.</small>
+              </div>
             </fieldset>
 
             <fieldset class="builder-step">
@@ -773,6 +790,7 @@ export function mountPaperBuilder(container, onSubmit) {
     form.querySelector("#builder-pdf").value = "";
     form.querySelector("#builder-source-text").value = "";
     form.querySelector("#builder-audio").value = "";
+    form.querySelector("#builder-video-url").value = "";
   }
 
   function populateLevels() {
@@ -890,6 +908,13 @@ export function mountPaperBuilder(container, onSubmit) {
         media.focus();
       });
       updateMediaStatus();
+      const videoLabel = field("label", { for: `${prefix}-video` }, "Question video or YouTube link (optional)");
+      const videoInput = field("input", { id: `${prefix}-video`, type: "url", inputmode: "url", placeholder: "https://youtu.be/…" });
+      videoInput.value = question.videoUrl;
+      const videoHelp = field("small", { className: "form-help" }, "Paste a YouTube link or a direct https video URL. Videos stream from the internet at exam time unless hosted on your own network.");
+      videoInput.addEventListener("input", () => {
+        question.videoUrl = videoInput.value.trim();
+      });
       labelInput.addEventListener("input", () => {
         question.label = labelInput.value;
         legend.textContent = `${labelInput.value || `Question ${index + 1}`} and entry area`;
@@ -919,6 +944,9 @@ export function mountPaperBuilder(container, onSubmit) {
         media,
         mediaStatus,
         clearMedia,
+        videoLabel,
+        videoInput,
+        videoHelp,
         typeLabel,
         type,
         responseFields(question, prefix),

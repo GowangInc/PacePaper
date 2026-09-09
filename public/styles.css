@@ -3957,3 +3957,33 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 .waiting-header { gap: 0.75rem; }
 .waiting-actions { margin-inline-start: auto; }
 .exam-tools .theme-toggle { align-self: center; }
+
+.resource-video {
+  max-width: 100%;
+}
+
+.resource-viewer .resource-video iframe {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  border: 0.05rem solid var(--color-ink-muted);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.resource-viewer .resource-video video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 0.05rem solid var(--color-ink-muted);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.resource-video-caption {
+  padding-block: 0.35rem;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-align: start;
+}

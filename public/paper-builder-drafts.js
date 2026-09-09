@@ -1,9 +1,9 @@
 const PICKERS = ["builder-system", "builder-session", "builder-subject", "builder-level", "builder-paper"];
-const DETAILS = ["builder-title", "builder-paper-label", "builder-reading-time", "builder-duration", "builder-maximum-marks", "builder-instructions", "builder-source-text"];
+const DETAILS = ["builder-title", "builder-paper-label", "builder-reading-time", "builder-duration", "builder-maximum-marks", "builder-instructions", "builder-source-text", "builder-video-url"];
 const FILES = ["builder-pdf", "builder-audio"];
 
 export function captureBuilderDraft(form, questions) {
-  const values = Object.fromEntries([...PICKERS, ...DETAILS].map((id) => [id, form.querySelector(`#${id}`).value]));
+  const values = Object.fromEntries([...PICKERS, ...DETAILS].map((id) => [id, form.querySelector(`#${id}`)?.value ?? ""]));
   return { id: PICKERS.map((id) => values[id]).join("|"), values, updatedAt: Date.now(),
     questions: structuredClone(questions),
     files: Object.fromEntries(FILES.map((id) => [id, [...form.querySelector(`#${id}`).files]])) };
@@ -99,7 +99,7 @@ export function mountBuilderDrafts(form, questions, restoreSelection, renderQues
       if (!await record()) return;
       draftId = draft.id;
       restoreSelection(draft.values);
-      for (const id of DETAILS) form.querySelector(`#${id}`).value = draft.values[id];
+      for (const id of DETAILS) { const field = form.querySelector(`#${id}`); if (field) field.value = draft.values[id] ?? ""; }
       for (const id of FILES) {
         const transfer = new DataTransfer();
         for (const file of draft.files[id]) transfer.items.add(file);

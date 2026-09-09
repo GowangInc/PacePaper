@@ -11,10 +11,11 @@ const IB_SUBJECTS = new Set([
 ]);
 const SYSTEM_ORDER = new Map([
   ["IB Diploma Programme", 0],
-  ["Cambridge IGCSE", 1],
-  ["Pearson Edexcel International GCSE", 2],
-  ["Advanced Placement", 3],
-  ["Advanced Placement (AP)", 3],
+  ["IB MYP eAssessment", 1],
+  ["Cambridge IGCSE", 2],
+  ["Pearson Edexcel International GCSE", 3],
+  ["Advanced Placement", 4],
+  ["Advanced Placement (AP)", 4],
   ["School/custom", 99],
 ]);
 

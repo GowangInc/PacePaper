@@ -776,6 +776,33 @@ export function mountExam(state, { onSubmitted }) {
     updateFlagTool();
   }
 
+  function isYouTubeUrl(url) {
+    return youtubeEmbedUrl(url) !== null;
+  }
+
+  function youtubeEmbedUrl(url) {
+    if (typeof url !== "string") return null;
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return null;
+    }
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+    const host = parsed.hostname.replace(/^www\./, "");
+    const path = parsed.pathname;
+    let id = null;
+    if ((host === "youtube.com" || host === "m.youtube.com") && path === "/watch") {
+      id = parsed.searchParams.get("v");
+    } else if (host === "youtu.be") {
+      id = path.split("/")[1] || null;
+    } else if ((host === "youtube.com" || host === "m.youtube.com") && (path.startsWith("/shorts/") || path.startsWith("/embed/"))) {
+      id = path.split("/")[2] || null;
+    }
+    if (!id || !/^[\w-]+$/.test(id)) return null;
+    return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`;
+  }
+
   function renderResource() {
     const viewer = document.querySelector("#resource-viewer");
     if (activePhase?.kind === "break") {
@@ -811,6 +838,30 @@ export function mountExam(state, { onSubmitted }) {
       frame.src = resource.url;
       frame.title = resource.label;
       viewer.append(frame);
+    } else if (resource.kind === "video") {
+      const embed = youtubeEmbedUrl(resource.url);
+      const wrap = document.createElement("div");
+      wrap.className = "resource-video";
+      if (embed) {
+        const frame = document.createElement("iframe");
+        frame.src = embed;
+        frame.title = resource.label || "Video";
+        frame.allowFullscreen = true;
+        frame.referrerPolicy = "strict-origin-when-cross-origin";
+        wrap.append(frame);
+      } else {
+        const media = document.createElement("video");
+        media.controls = true;
+        media.preload = "metadata";
+        media.src = resource.url;
+        media.title = resource.label || "Video";
+        wrap.append(media);
+      }
+      const caption = document.createElement("p");
+      caption.className = "resource-video-caption";
+      caption.textContent = resource.label || "Video";
+      wrap.append(caption);
+      viewer.append(wrap);
     }
     document.querySelectorAll("#resource-tabs button").forEach((item) => {
       item.setAttribute("aria-current", item.dataset.resourceKey === activeResourceKey ? "page" : "false");

@@ -12,14 +12,14 @@ Start with `USER-GUIDE.html`, included beside the app or executable in each bund
 
 ## Choose the correct download
 
-- macOS — run the source for now; no Mac archive is included in demo.6
+- macOS — run the source for now; no Mac archive is included in demo.8
 - `PacePaper-*-windows-x64.zip` — most Windows PCs
 - `PacePaper-*-linux-x64.tar.gz` — 64-bit Linux PCs using glibc
 - `PacePaper-*-User-Guide.html` — illustrated, browser-friendly guide
 - `PacePaper-*-User-Guide.txt` — the same full guide included inside each platform archive
 - `PacePaper-*-Release-Notes.txt` — review focus, important limitations, and verification evidence
 
-The macOS application and Windows executable use the PacePaper application icon. The Linux archive includes `PacePaper.png` for launchers or desktop shortcuts.
+The Windows executable uses the PacePaper application icon. The Linux archive includes `PacePaper.png` for launchers or desktop shortcuts.
 
 Extract the entire archive before starting it. Do not run an executable from inside the archive.
 
@@ -38,7 +38,7 @@ For source development, `bun run samples:build` regenerates manifests, ignored p
 ## Demo boundaries
 
 - It is fully offline: no telemetry, account registration, activation, or licence call is made.
-- The teacher login remains `admin` / `admin` and is reset on each app start, as requested for the demo.
+- A fresh installation starts with teacher login `admin` / `admin`. Change the password in **Settings**; the saved password persists across restarts.
 - It is for familiarisation only. Do not use it with real student data, high-stakes assessment, or copyrighted papers without school approval.
 - The bundle contains no IB or user-supplied reference papers. Add only materials you are permitted to use.
 - The bundled example is the generic **Sample paper** (no subject, level, or IB branding) used to demonstrate the app. Build or import other materials only when you are permitted to use them.
@@ -68,6 +68,6 @@ Choose **This computer only** and apply the change to turn sharing off. The sele
 
 The standalone package does not use `HOST` or `DIGITALDP_LAN_ORIGIN`; those are developer-only source-checkout controls described in the root README. Classroom sharing uses ordinary HTTP, so use only approved non-sensitive demo material on a trusted private school network.
 
-## Future licensing
+## Licensing
 
-Licensing is intentionally deferred. The release has no network licensing code or hidden service dependency. A later entitlement layer must be external to the SQLite data and paper/import format, so an unavailable licence service can never strand teacher work.
+PacePaper is distributed under the MIT License. This release has no network licensing or entitlement service, and none is planned for the data format: any later entitlement layer must stay external to the SQLite data and paper/import format, so an unavailable licence service can never strand teacher work.

@@ -139,6 +139,50 @@ describe("paper manifests", () => {
     );
   });
 
+  test("accepts video resources with http(s) urls", () => {
+    const video = { key: "clip-a", label: "Clip A", kind: "video", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" };
+    const paper = {
+      ...manifest,
+      resources: [video],
+      questions: [{ ...manifest.questions[0], resourceKeys: ["clip-a"] }],
+    };
+    expect(parseManifest(paper).resources[0]?.url).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(parseManifest({
+      ...paper,
+      resources: [{ ...video, url: "https://youtu.be/dQw4w9WgXcQ" }],
+    }).resources[0]?.url).toBe("https://youtu.be/dQw4w9WgXcQ");
+    expect(parseManifest({
+      ...paper,
+      resources: [{ ...video, url: "https://example.com/clip.mp4" }],
+    }).resources[0]?.url).toBe("https://example.com/clip.mp4");
+  });
+
+  test("rejects video resources without http(s) urls", () => {
+    const video = { key: "clip-a", label: "Clip A", kind: "video", url: "https://youtu.be/dQw4w9WgXcQ" };
+    expect(() => parseManifest({ ...manifest, resources: [{ ...video, url: "javascript:alert(1)" }] })).toThrow("resources[0].url");
+    expect(() => parseManifest({ ...manifest, resources: [{ ...video, url: "data:text/html,blocked" }] })).toThrow("resources[0].url");
+    const { url: _, ...missingUrl } = video;
+    expect(() => parseManifest({ ...manifest, resources: [missingUrl] })).toThrow("resources[0].url");
+  });
+
+  test("requires video resource labels like every other kind", () => {
+    const { label: _, ...unlabeled } = { key: "clip-a", label: "Clip A", kind: "video", url: "https://youtu.be/dQw4w9WgXcQ" };
+    expect(parseManifest({
+      ...manifest,
+      resources: [{ key: "clip-a", label: "Clip A", kind: "video", url: "https://youtu.be/dQw4w9WgXcQ" }],
+      questions: [{ ...manifest.questions[0], resourceKeys: ["clip-a"] }],
+    }).resources[0]).toMatchObject({ kind: "video", label: "Clip A" });
+    expect(() => parseManifest({ ...manifest, resources: [unlabeled] })).toThrow("resources[0].label");
+  });
+
+  test("parses a minimal paper containing exactly one video resource", () => {
+    expect(parseManifest({
+      ...manifest,
+      resources: [{ key: "clip-a", label: "Clip A", kind: "video", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }],
+      questions: [{ ...manifest.questions[0], resourceKeys: ["clip-a"] }],
+    }).resources[0]).toMatchObject({ key: "clip-a", kind: "video", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
+  });
+
   test("accepts a configured handwritten-working response", () => {
     expect(parseManifest({
       ...manifest,

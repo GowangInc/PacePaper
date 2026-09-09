@@ -46,16 +46,20 @@ PacePaper is a portable app, not an installer. Extract the complete download bef
 
 | Computer | Download | Open |
 | --- | --- | --- |
-| Apple-silicon or Intel Mac | No Mac app in demo.5; use the source option below | `Start PacePaper.command` |
+| Apple-silicon or Intel Mac | Use the source option below | `Start PacePaper.command` |
 | Windows x64 | `windows-x64.zip` | `PacePaper.exe` |
 | Linux x64 | `linux-x64.tar.gz` | `PacePaper` |
 
-The demo.5 portable downloads are for Windows and Linux. A new Mac app is on hold until it can be signed and notarized by Apple. For a Mac, follow **Run from a source checkout** below, with IT help for the one-time setup.
+Download the latest release bundle for Windows or Linux from the project's releases page. There is no Mac app bundle; on a Mac, install Bun and follow **Run from a source checkout** below, with IT help for the one-time setup.
 
 1. Open PacePaper once on the teacher computer.
 2. Leave the application running for the whole lesson.
 3. Wait for the teacher dashboard to open in the normal browser.
 4. Sign in with username `admin` and password `admin`.
+
+Change the password any time in **Settings** — the current password is required, the new one must be at least 10 characters, changing it signs every teacher device out, and it persists with your data.
+
+The teacher dashboard and the candidate screens offer a **Light/Dark** theme toggle (teacher topbar; student waiting-room and exam toolbars). Teacher and student choices are remembered separately per device, and both start on the system setting.
 
 The local address usually looks like `http://127.0.0.1:9148/admin`. It may use a port from `9148` to `9158` if another program is already using the first one.
 
@@ -76,8 +80,6 @@ On a Mac:
 On Windows or Linux, open a terminal in the project folder and run `bun run start:app`. Keep the terminal open and press Control-C there when finished. This also works on a Mac.
 
 Use the page that opens automatically. This launcher includes the example library and the **Classroom sharing** controls described below.
-
-Use only a Mac release whose notes say it is notarized. Earlier `0.1.0-demo.3` and `0.1.0-demo.4` Mac downloads are superseded and may be rejected as damaged.
 
 ## Step 2 — Let students connect
 
@@ -148,14 +150,11 @@ Select **Paper library**, the final dashboard section. A fresh standalone instal
 
 You can build or import other papers for your own approved practice materials. An installation with past sessions may also show papers labelled **earlier demo version**. Choose the current version for a new session; the earlier one remains available with its previous work.
 
-### Use an included example
+### Use an included paper
 
-1. In **Paper library**, choose an **Exam system** to narrow the list, or leave **All exam systems** selected.
-2. Use **Find a paper** to search by subject, paper number, level, or title.
-3. Read the full paper title and paper number.
-4. Confirm the displayed level or tier, such as **SL**, **HL**, **Core**, **Extended**, **Foundation**, **Higher**, or **AP**.
-5. For a full-length mock, open **Mock marking guides** and review the guide with the matching paper title and tier.
-6. Use that paper when setting up the session in Step 5.
+The only paper a fresh installation includes is the **Sample paper** above. For approved practice material, build a paper in the Paper Builder below, or import a prepared PacePaper paper file.
+
+If your installation also shows development example papers and marking guides — a source checkout may seed them — choose an **Exam system** to narrow the list, use **Find a paper**, read the full title, paper number, and level or tier, then open **Mock marking guides** for the worked notes matching that example. Use the chosen paper when setting up the session in Step 5.
 
 Read the label in each title before using an example:
 
@@ -169,7 +168,7 @@ Full-length does not mean official or difficulty-calibrated. No awarding body ha
 ### Build a new paper
 
 1. Find **Paper Builder** in the Paper library area.
-2. Under **Choose the exact exam format**, select the **Exam system**.
+2. Under **Choose the exact exam format**, select the **Exam system**. The builder currently offers IB Diploma Programme, IB MYP eAssessment, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and a school-custom practice option.
 3. Select the assessment session or profile year.
 4. Select the course, syllabus, or qualification.
 5. Select the level or tier when the chosen system uses one.
@@ -202,7 +201,7 @@ The AP profiles target **May 2027** and remain visibly marked **Adapted practice
 
 - Add paper-wide PDFs, source text, or listening audio under **Details and student materials**.
 - When building your own paper, attach any reference document required by the selected preset, such as a mathematics formula sheet or the AP Biology equations and formulas sheet.
-- The included full mathematics mocks supply independently typeset formula facts. For every included paper, read **Before you start** and supply any further permitted calculator, equipment, or materials listed there.
+- For any paper you use — including a development example, when present — read **Before you start** and supply any further permitted calculator, equipment, or materials listed there.
 - Add an image, PDF, or audio file to an individual question when only that question needs it.
 - Enter the complete question wording in **Question or prompt**. Attached PDF pages are not copied into the printed candidate response automatically.
 - Images appear with the response when printed. PDFs and audio are listed as companion material.
@@ -237,7 +236,7 @@ Select **Sessions**.
 
 Setting up a session does not start its clock. It only makes the exam available for that class to choose and wait for.
 
-One question card may contain several parts. Choose a **full-length mock** for a complete non-IB question workload, or a **walkthrough** for a short AP demonstration. Check the questions and timing before students join.
+One question card may contain several parts. Check the questions, timing, and marks before students join.
 
 You may set up several sessions in advance. Different classes can take different exams at the same time. One class can have only one live session at a time.
 
@@ -292,6 +291,8 @@ Ask students to confirm that the correct paper title appears in their waiting ro
 9. During working time, monitor the **online** and **submitted** counts.
 10. Let candidates with extra time continue until their individual time ends.
 
+While an exam runs, the dashboard shows live **Focus** alerts when a candidate leaves the exam window, and the session keeps a per-session audit list; alerts are best-effort, so a crash or disconnect can prevent an event.
+
 If a student's page says **Reconnecting**, keep the page open. Check that PacePaper is still running and that both devices remain on the same network.
 
 Students normally finish by selecting **Submit** or **Submit examination**, checking their response summary, and selecting **Submit now**. Submission is final. PacePaper submits automatically when a student's time expires.
@@ -322,29 +323,28 @@ Use a normal browser such as Chrome, Edge, or Safari. An in-app browser may igno
 
 PacePaper currently collects, reviews, and prints responses. It does not mark or grade them.
 
-### Mark an included full-length mock
+### Mark a development example paper
+
+If your installation includes development example papers with marking guides — a source checkout may seed them — the **Mock marking guides** link in the teacher sidebar opens their worked notes:
 
 1. Select **Mock marking guides** in the teacher sidebar.
 2. Choose the guide matching the paper title, component, and tier.
 3. Compare each saved answer with its worked solution and point allocation.
 4. Apply your subject team's judgement to alternative valid answers.
 
-For AP papers, follow the guide's weighted practice calculation. The raw total shown on a paper is not an AP score, and the guides do not convert results into official 1–5 grades.
+For AP examples, follow the guide's weighted practice calculation. The raw total shown on a paper is not an AP score, and the guides do not convert results into official 1–5 grades.
 
 The guides require teacher sign-in when opened through the app. A source checkout also has an offline index at `docs/mock-marking/index.html`. Keep those answer-containing files private; do not send them to students. The exported `.digitaldp-paper` contains no teacher marking guide.
 
-### Review the timed AP walkthroughs
+### Rehearse the exam phases
 
-Use these short included papers when demonstrating the phase engine:
+To demonstrate the phase engine, use any sectioned paper you have built or imported:
 
-1. Choose an AP paper whose title ends in **walkthrough**.
-2. Set up a session with a small demo class.
-3. Open its clock on a second screen.
-4. Join as a demo student in another browser.
-5. Start the exam and watch each one-minute or short phase change.
-6. Confirm that working sections accept only their own questions, the break hides examination content, calculator rules change where applicable, and only the final work section offers final submission.
-
-The walkthroughs deliberately compress the timing and workload. Each of these three AP courses also has a **full-length mock** with a complete original question set and the researched section durations. Choose that paper for a full practice sitting, after reviewing its questions and teacher marking guide.
+1. Set up a session with a small demo class.
+2. Open its clock on a second screen.
+3. Join as a demo student in another browser.
+4. Start the exam and watch each phase change.
+5. Confirm that working sections accept only their own questions, the break hides examination content, calculator rules change where applicable, and only the final work section offers final submission.
 
 ## After the exam
 
@@ -424,6 +424,6 @@ For listening audio, select **Start first listen** only when ready and let it pl
 
 ## Demo safety
 
-This demonstration uses the weak teacher login `admin` / `admin`. Students use a class code and choose a name; there is no PIN or identity check. Classroom traffic uses unencrypted HTTP.
+A fresh installation uses the default teacher login `admin` / `admin`; change it in **Settings** before real use. Students use a class code and choose a name; there is no PIN or identity check. Classroom traffic uses unencrypted HTTP.
 
 Use fake candidates, approved practice material, and a trusted private network only. PacePaper is not the official IB Digital Examination System and is not affiliated with or endorsed by the International Baccalaureate.

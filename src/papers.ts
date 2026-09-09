@@ -4,7 +4,7 @@ import { parseInkSettings, type InkSettings } from "./ink.ts";
 export const LEVELS = ["SL", "HL", "SL/HL"] as const;
 export const PAPER_MODES = ["essay", "reading", "listening"] as const;
 export const QUESTION_TYPES = ["essay", "short", "single-choice", "ink"] as const;
-export const RESOURCE_KINDS = ["text", "document", "image", "audio"] as const;
+export const RESOURCE_KINDS = ["text", "document", "image", "audio", "video"] as const;
 export const AUDIO_PLAY_LIMIT = 2;
 export const SOURCE_CLASSIFICATIONS = [
   "teacher-authored",
@@ -39,6 +39,7 @@ export interface PaperResource {
   kind: ResourceKind;
   file?: string;
   text?: string;
+  url?: string;
   maxPlays?: number;
 }
 
@@ -209,6 +210,18 @@ function parseResource(value: unknown, index: number): PaperResource {
 
   if (kind === "text") {
     resource.text = text(source.text, `resources[${index}].text`, 100_000);
+  } else if (kind === "video") {
+    const url = text(source.url, `resources[${index}].url`, 2_000);
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new Error(`resources[${index}].url must be an http(s) URL`);
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new Error(`resources[${index}].url must be an http(s) URL`);
+    }
+    resource.url = url;
   } else {
     const filename = text(source.file, `resources[${index}].file`, 128);
     if (!FILE_NAME.test(filename)) throw new Error(`resources[${index}].file has an invalid name`);

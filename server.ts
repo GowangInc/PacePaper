@@ -480,7 +480,7 @@ function publicManifest(manifest: PaperManifest, paperId: string, sessionId: str
       file: undefined,
       url: resource.file && resource.kind !== "audio"
         ? `/api/assets/${paperId}/${resource.key}?session=${encodeURIComponent(sessionId)}`
-        : undefined,
+        : resource.url,
     })),
   };
 }
@@ -867,7 +867,7 @@ async function handleApi(
       resources: manifest.resources.map((resource) => ({
         ...resource,
         file: undefined,
-        url: resource.file ? `/api/assets/${results.paperId}/${resource.key}` : undefined,
+        url: resource.file ? `/api/assets/${results.paperId}/${resource.key}` : resource.url,
       })),
       questions: manifest.questions.map(({ id, label, prompt, type, options, ink, resourceKeys, marks }) => ({
         id,

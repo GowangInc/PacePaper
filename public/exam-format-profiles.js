@@ -236,6 +236,7 @@ const SCHOOL_CUSTOM = {
       responseTypes: ["essay", "short", "single-choice", "ink"],
       deliveryFormat: "School custom",
       fidelity: "school-custom",
+      materials: ["pdf", "text", "video"],
       toolSummary: "Teacher-defined timing, questions, resources and response areas",
       instructions: "Answer the questions using the response areas provided.",
       guidance: "Set the timing, instructions, marks, resources and response areas required by your school practice task.",
@@ -248,12 +249,37 @@ const SCHOOL_CUSTOM = {
       subjectWeightPercent: undefined,
       deliveryFormat: "School custom",
       fidelity: "school-custom",
+      materials: ["pdf", "text", "video"],
       toolSummary: "Teacher-defined working paper · digital canvas",
       instructions: "Answer every question and show your working where required.",
       guidance: "Set the timing and calculator/material rules, then add each original question with an appropriate typed or digital-ink response area.",
     }),
   ],
 };
+
+function mypOnScreenPaper() {
+  return formatPaper("on-screen", "On-screen eAssessment practice", ["On-screen"], {
+    sessions: ["may", "november", "custom"],
+    duration: 90,
+    fidelity: "adapted",
+    deliveryFormat: "On-screen eAssessment practice",
+    toolSummary: "On-screen tasks · typed responses · source text and video stimuli",
+    instructions: "Read the on-screen material and answer every task.",
+    guidance: "Build original on-screen tasks. Paste a YouTube or direct video link or enter source text as stimuli, then add typed response areas.",
+    materials: ["text", "video"],
+    responseTypes: ["essay", "short", "single-choice"],
+    question: { type: "short", prompt: "Enter your task question." },
+  });
+}
+
+const MYP_COURSES = [
+  { value: "myp-language-and-literature", label: "Language and literature", papers: [mypOnScreenPaper()] },
+  { value: "myp-language-acquisition", label: "Language acquisition", papers: [mypOnScreenPaper()] },
+  { value: "myp-individuals-and-societies", label: "Individuals and societies", papers: [mypOnScreenPaper()] },
+  { value: "myp-sciences", label: "Sciences", papers: [mypOnScreenPaper()] },
+  { value: "myp-mathematics", label: "Mathematics", papers: [mypOnScreenPaper()] },
+  { value: "myp-interdisciplinary", label: "Interdisciplinary", papers: [mypOnScreenPaper()] },
+];
 
 export function createExamSystems(ibCourses) {
   return [
@@ -273,6 +299,22 @@ export function createExamSystems(ibCourses) {
         { value: "custom", label: "Custom or another session" },
       ],
       courses: ibCourses,
+    },
+    {
+      value: "ib-myp",
+      label: "IB MYP eAssessment",
+      qualificationLabel: "IB MYP eAssessment",
+      description: "On-screen practice format for IB MYP eAssessment subject groups. Build your own tasks; PacePaper does not yet verify MYP paper structures.",
+      courseLabel: "Subject group",
+      levelLabel: "Level",
+      paperLabel: "Paper",
+      levelOrder: ["On-screen"],
+      sessions: [
+        { value: "may", label: "May session" },
+        { value: "november", label: "November session" },
+        { value: "custom", label: "Custom or another session" },
+      ],
+      courses: MYP_COURSES,
     },
     {
       value: "cambridge-igcse",
