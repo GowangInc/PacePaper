@@ -185,11 +185,13 @@ function updateTimingEditMode(session) {
   document.querySelector("#clock-start-help").hidden = !session;
   submit.textContent = persists ? "Save exam timing and update display" : session ? "Update display details" : "Apply to display";
   note.innerHTML = persists
-    ? "<strong>Linked ready exam.</strong> Save reading and writing times for this sitting. The clock starts only when the teacher starts the exam. Title, details and names affect this display only."
+    ? session.status === "live"
+      ? "<strong>Linked live exam.</strong> Saving new reading or writing times changes the running exam immediately; student deadlines move too. Title, details and names affect this display only."
+      : "<strong>Linked ready exam.</strong> Save reading and writing times for this sitting. The clock starts only when the teacher starts the exam. Title, details and names affect this display only."
     : session?.phases?.length
       ? "<strong>Linked phase plan.</strong> This clock follows the saved sections and breaks. Timing changes are not supported here; use the Paper Builder to prepare a different paper. Title, details and names remain editable."
       : session
-        ? "<strong>Linked exam timing is read-only.</strong> This clock follows the saved student schedule. Live timing corrections are not supported. Title, details and names remain editable; individual extra time is tracked separately."
+        ? "<strong>Linked exam has ended.</strong> Its saved timing can no longer change. Title, details and names remain editable; individual extra time is tracked separately."
         : "<strong>Standalone display.</strong> No student exam is connected. This custom countdown runs only in this window and is not saved after refresh.";
 }
 
@@ -293,7 +295,7 @@ function loadSelectedDefaults() {
   history.replaceState(null, "", url);
   setStatus(session
     ? canPersistCandidateTiming(session)
-      ? "Ready exam timings loaded. Applying new reading or writing times will save them for candidates."
+      ? `${statusLabel(session.status)} exam timings loaded. Applying new reading or writing times will save them for candidates.`
       : `${statusLabel(session.status)} exam timings loaded. Linked timing is read-only; display details remain editable.`
     : "Custom countdown loaded.", "success");
 }
@@ -358,6 +360,12 @@ function updateStudentConnection(network) {
     studentConnectionOrigin = new URL(network.studentUrl).origin;
   } catch {
     return;
+  }
+  const note = document.querySelector("[data-student-connection-note]");
+  if (note) {
+    const sharingOff = network.managed === true && network.address === null;
+    note.hidden = !sharingOff;
+    if (sharingOff) note.textContent = "Classroom sharing is off. Turn it on in the teacher dashboard before students on other devices can connect.";
   }
   if (document.querySelector("[data-student-connection-link]")) {
     mountStudentConnection(document, { origin: studentConnectionOrigin });
@@ -572,6 +580,7 @@ function renderClockShell() {
                 <button data-copy-student-connection type="button" aria-describedby="clock-student-connect-status">Copy URL</button>
               </div>
               <p id="clock-student-connect-status" class="clock-student-connect__status" data-copy-student-connection-status role="status" aria-live="polite" aria-atomic="true" hidden></p>
+              <p class="clock-student-connect__note" data-student-connection-note role="status" hidden></p>
             </section>
             <section class="clock-student-list" aria-labelledby="clock-student-list-title">
               <h3 id="clock-student-list-title">Students</h3>

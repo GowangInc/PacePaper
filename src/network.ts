@@ -115,6 +115,20 @@ export function isLanStudentApiRequest(pathname: string, method: string): boolea
   return LAN_STUDENT_API_METHODS[pathname]?.has(normalizedMethod) ?? false;
 }
 
-export function studentOriginFor(requestUrl: URL, lanOrigin: string | null): string {
-  return lanOrigin ?? requestUrl.origin;
+/**
+ * The origin students should open: the classroom-sharing origin when active,
+ * otherwise this machine's first private LAN address. Never a loopback host
+ * when a real interface exists, because student devices cannot reach 127.0.0.1.
+ */
+export function studentJoinOrigin({
+  lanOrigin,
+  port,
+  addresses,
+}: {
+  lanOrigin: string | null;
+  port: number;
+  addresses: readonly string[];
+}): string {
+  if (lanOrigin) return lanOrigin;
+  return `http://${addresses[0] ?? "127.0.0.1"}:${port}`;
 }

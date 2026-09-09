@@ -6,7 +6,7 @@ import {
   isLoopbackAddress,
   isPrivateIpv4Address,
   parseLanOrigin,
-  studentOriginFor,
+  studentJoinOrigin,
 } from "./network.ts";
 
 describe("DigitalDP network policy", () => {
@@ -84,9 +84,12 @@ describe("DigitalDP network policy", () => {
     expect(isLanStudentApiRequest("/api/assets/abc-123/audio_1", "POST")).toBeFalse();
   });
 
-  test("advertises the configured student origin to a loopback teacher", () => {
-    expect(studentOriginFor(new URL("http://localhost:9148/admin"), "http://10.80.20.178:9148"))
+  test("always advertises an origin student devices can reach", () => {
+    expect(studentJoinOrigin({ lanOrigin: "http://10.80.20.178:9148", port: 9148, addresses: [] }))
       .toBe("http://10.80.20.178:9148");
-    expect(studentOriginFor(new URL("http://127.0.0.1:9148/admin"), null)).toBe("http://127.0.0.1:9148");
+    expect(studentJoinOrigin({ lanOrigin: null, port: 9148, addresses: ["192.168.1.20", "10.0.0.5"] }))
+      .toBe("http://192.168.1.20:9148");
+    expect(studentJoinOrigin({ lanOrigin: null, port: 9149, addresses: [] }))
+      .toBe("http://127.0.0.1:9149");
   });
 });

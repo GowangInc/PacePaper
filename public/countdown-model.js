@@ -127,7 +127,7 @@ export function countdownPhase(config, now) {
 }
 
 export function canPersistCandidateTiming(session) {
-  return Boolean(session?.status === "draft" && !session.phases?.length);
+  return Boolean((session?.status === "draft" || session?.status === "live") && !session.phases?.length);
 }
 
 export function formatCountdown(milliseconds) {

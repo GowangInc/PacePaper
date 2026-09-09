@@ -39,7 +39,7 @@ import {
   startExamSession,
   submitResponse,
   touchStudent,
-  updateDraftExamSessionTiming,
+  updateExamSessionTiming,
   updateStudent,
   type ResponsePayload,
   type Role,
@@ -69,7 +69,7 @@ import {
   isExpectedRequestAuthority,
   isLanStudentApiRequest,
   isLoopbackAddress,
-  studentOriginFor,
+  studentJoinOrigin,
 } from "./src/network.ts";
 import {
   ClassroomNetworkState,
@@ -414,6 +414,8 @@ function listAdminExamSessions(archived = false) {
   }));
 }
 
+const privateLanAddresses = () => listLocalPrivateIpv4Interfaces().map(({ address }) => address);
+
 function classroomNetworkApiState() {
   const snapshot = classroomNetwork.snapshot();
   const liveExam = listAdminExamSessions().some((session) => session.status === "live");
@@ -426,7 +428,7 @@ function classroomNetworkApiState() {
     // The saved preference remains private in the runtime state until selected.
     address: snapshot.lanOrigin === null ? null : snapshot.selectedAddress,
     selectedAddress: snapshot.selectedAddress,
-    studentUrl: `${network.lanOrigin ?? `http://127.0.0.1:${port}`}/student`,
+    studentUrl: `${studentJoinOrigin({ lanOrigin: network.lanOrigin, port, addresses: privateLanAddresses() })}/student`,
     liveExam,
   };
 }
@@ -553,7 +555,7 @@ async function handleApi(
     return json({
       setupRequired: localRequest && setupRequired(),
       role,
-      studentOrigin: studentOriginFor(new URL(request.url), network.lanOrigin),
+      studentOrigin: studentJoinOrigin({ lanOrigin: network.lanOrigin, port, addresses: privateLanAddresses() }),
     });
   }
 
@@ -793,13 +795,13 @@ async function handleApi(
       throw new HttpError("A test reading-time override is active. Restart without DIGITALDP_TEST_READING_SECONDS before changing exam timing", 409);
     }
     try {
-      updateDraftExamSessionTiming(sessionId, readingTimeMinutes, durationMinutes, expected);
+      updateExamSessionTiming(sessionId, readingTimeMinutes, durationMinutes, expected);
     } catch (error) {
       throw new HttpError(error instanceof Error ? error.message : "Exam timing could not be changed", 409);
     }
     publish(server, `class:${session.classId}`, "exam-list-changed");
     publish(server, "admin", "admin-state");
-    return json({ id: sessionId, status: "draft", readingTimeMinutes, durationMinutes });
+    return json({ id: sessionId, status: session.status, readingTimeMinutes, durationMinutes });
   }
   const focusMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/focus-events$/);
   if (focusMatch && method === "GET") {

@@ -325,7 +325,7 @@ describe("student examination selection", () => {
     ]);
   });
 
-  test("saves decimal reading time on a ready exam and freezes it when the exam starts", () => {
+  test("saves decimal reading time on a ready exam and applies live corrections", () => {
     const schoolClass = database.createClass("Timing Override", "TIMING-OVERRIDE");
     const student = database.createStudent({
       classId: schoolClass.id,
@@ -337,7 +337,7 @@ describe("student examination selection", () => {
     const paper = database.createPaper({ manifest: paperManifest, assets: [] });
     const sessionId = database.createExamSession(schoolClass.id, paper.id);
 
-    database.updateDraftExamSessionTiming(sessionId, 0.1, 12);
+    database.updateExamSessionTiming(sessionId, 0.1, 12);
     expect(database.listExamSessions().find(({ id }) => id === sessionId)).toMatchObject({
       readingTimeMinutes: 0.1,
       durationMinutes: 12,
@@ -347,18 +347,25 @@ describe("student examination selection", () => {
       readingTimeMinutes: 0.1,
       durationMinutes: 12,
     });
-    database.updateDraftExamSessionTiming(sessionId, 0.2, 12, { readingTimeMinutes: 0.1, durationMinutes: 12 });
-    expect(() => database.updateDraftExamSessionTiming(sessionId, 5, 30, { readingTimeMinutes: 0.1, durationMinutes: 12 }))
+    database.updateExamSessionTiming(sessionId, 0.2, 12, { readingTimeMinutes: 0.1, durationMinutes: 12 });
+    expect(() => database.updateExamSessionTiming(sessionId, 5, 30, { readingTimeMinutes: 0.1, durationMinutes: 12 }))
       .toThrow("another window");
     expect(database.listExamSessions().find(({ id }) => id === sessionId)?.readingTimeMinutes).toBe(0.2);
-    database.updateDraftExamSessionTiming(sessionId, 0.1, 12, { readingTimeMinutes: 0.2, durationMinutes: 12 });
+    database.updateExamSessionTiming(sessionId, 0.1, 12, { readingTimeMinutes: 0.2, durationMinutes: 12 });
 
     database.startExamSession(sessionId);
     expect(database.getStudentExam(student.id, sessionId)).toMatchObject({
       readingTimeMinutes: 0.1,
       durationMinutes: 12,
     });
-    expect(() => database.updateDraftExamSessionTiming(sessionId, 5, 30)).toThrow("Only a ready exam");
+    database.updateExamSessionTiming(sessionId, 5, 30);
+    expect(database.listExamSessions().find(({ id }) => id === sessionId)).toMatchObject({
+      readingTimeMinutes: 5,
+      durationMinutes: 30,
+      status: "live",
+    });
+    database.endExamSession(sessionId);
+    expect(() => database.updateExamSessionTiming(sessionId, 2, 15)).toThrow("Only a ready or running exam");
   });
 
   test("reads and atomically enforces the fixed two-play audio limit", async () => {

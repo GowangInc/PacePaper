@@ -24,6 +24,9 @@ let presenceTimer;
 let currentState;
 let studentConnectionOrigin;
 let classroomNetworkControls;
+const seenFocusEventIds = new Set();
+// Focus events older than the dashboard page load are history, not alerts.
+const adminOpenedAt = Date.now();
 
 function authFrame(title, description, fields, actionLabel) {
   setView(`
@@ -484,6 +487,42 @@ function renderLiveFocusList(live) {
   }
 }
 
+function focusToastContainer() {
+  let container = document.querySelector(".focus-toasts");
+  if (!container) {
+    container = document.createElement("div");
+    container.className = "focus-toasts";
+    container.setAttribute("aria-label", "Focus alerts");
+    document.body.append(container);
+  }
+  return container;
+}
+
+function showFocusToast(event) {
+  const toast = document.createElement("div");
+  toast.className = "focus-toast";
+  toast.setAttribute("role", "alert");
+  const label = document.createElement("p");
+  label.textContent = `${new Date(event.at).toLocaleTimeString()} — ${event.studentName} (${event.candidateCode}) left the exam window`;
+  const dismiss = document.createElement("button");
+  dismiss.type = "button";
+  dismiss.setAttribute("aria-label", "Dismiss notification");
+  dismiss.textContent = "Dismiss";
+  const container = focusToastContainer();
+  const close = () => {
+    toast.remove();
+    if (container.childElementCount === 0) container.remove();
+  };
+  dismiss.addEventListener("click", close);
+  toast.append(label, dismiss);
+  container.append(toast);
+  while (container.childElementCount > 4) container.firstElementChild?.remove();
+  setTimeout(() => {
+    toast.remove();
+    if (container.childElementCount === 0) container.remove();
+  }, 10_000);
+}
+
 async function refreshLiveFocus(state) {
   const section = document.querySelector("#focus-live");
   if (!section) return;
@@ -492,11 +531,16 @@ async function refreshLiveFocus(state) {
     section.hidden = true;
     return;
   }
+  const newFocusLosses = [];
   const withFocus = await Promise.all(live.map(async (session) => {
     try {
       const result = await api(`/api/admin/sessions/${session.id}/focus-events`);
       const byStudent = new Map();
       for (const event of result.events ?? []) {
+        // Events that arrived after this dashboard opened (and were not yet
+        // announced) raise a notification; the history before page load stays silent.
+        if (event.kind === "focus_lost" && event.at >= adminOpenedAt && !seenFocusEventIds.has(event.id)) newFocusLosses.push(event);
+        seenFocusEventIds.add(event.id);
         let summary = byStudent.get(event.studentId);
         if (!summary) {
           summary = { studentId: event.studentId, studentName: event.studentName, candidateCode: event.candidateCode, lostCount: 0, currentlyAway: false, lastEventAt: null, events: [] };
@@ -513,6 +557,7 @@ async function refreshLiveFocus(state) {
     }
   }));
   renderLiveFocusList(withFocus);
+  for (const event of newFocusLosses) showFocusToast(event);
 }
 
 function updateStudentConnection(network) {
@@ -861,7 +906,7 @@ async function renderDashboard() {
             <div>
               <strong id="student-connection-title">Student sign-in</strong>
               <a data-student-connection-link href="/student" target="_blank" rel="noopener">/student</a>
-              <small>Students on this computer can use the local address. Turn on classroom sharing below for other devices.</small>
+              <small>This is the address students open on their own devices. Turn on classroom sharing below to allow connections.</small>
             </div>
             <div class="session-actions">
               <button data-copy-student-connection type="button" aria-describedby="student-connection-copy-status">Copy URL</button>

@@ -310,6 +310,12 @@ body.countdown-page {
   color: #fda4af;
 }
 
+.clock-student-connect__note {
+  margin: 0.65rem 0 0;
+  color: #fcd34d;
+  font-size: 0.875rem;
+}
+
 .clock-student-list {
   width: min(100%, 65rem);
   margin: clamp(1rem, 2vh, 1.75rem) auto 0;

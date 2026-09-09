@@ -687,7 +687,7 @@ export function createExamSession(classId: string, paperId: string): string {
   return id;
 }
 
-export function updateDraftExamSessionTiming(sessionId: string, readingTimeMinutes: number, durationMinutes: number,
+export function updateExamSessionTiming(sessionId: string, readingTimeMinutes: number, durationMinutes: number,
   expected?: { readingTimeMinutes: number; durationMinutes: number }): void {
   if (!Number.isFinite(readingTimeMinutes) || readingTimeMinutes < 0 || readingTimeMinutes > 60) {
     throw new Error("Reading time must be between 0 and 60 minutes");
@@ -707,10 +707,10 @@ export function updateDraftExamSessionTiming(sessionId: string, readingTimeMinut
        SET reading_time_minutes_override = $readingTimeMinutes,
            duration_minutes_override = $durationMinutes
      WHERE id = $sessionId
-       AND status = 'draft'
+       AND status IN ('draft', 'live')
        AND archived_at IS NULL
   `).run({ sessionId, readingTimeMinutes, durationMinutes });
-  if (changed.changes !== 1) throw new Error("Only a ready exam can have its timing changed");
+  if (changed.changes !== 1) throw new Error("Only a ready or running exam can have its timing changed");
   });
   update();
 }

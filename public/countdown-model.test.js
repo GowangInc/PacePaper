@@ -12,10 +12,12 @@ import {
 } from "./countdown-model.js";
 
 describe("second-screen countdown", () => {
-  test("only allows a simple ready exam to receive candidate timing changes", () => {
+  test("allows simple ready and live exams to receive candidate timing changes", () => {
     expect(canPersistCandidateTiming({ status: "draft" })).toBeTrue();
     expect(canPersistCandidateTiming({ status: "draft", phases: [{ id: "one" }] })).toBeFalse();
-    expect(canPersistCandidateTiming({ status: "live" })).toBeFalse();
+    expect(canPersistCandidateTiming({ status: "live" })).toBeTrue();
+    expect(canPersistCandidateTiming({ status: "live", phases: [{ id: "one" }] })).toBeFalse();
+    expect(canPersistCandidateTiming({ status: "ended" })).toBeFalse();
     expect(canPersistCandidateTiming(null)).toBeFalse();
   });
 
