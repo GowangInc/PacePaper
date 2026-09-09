@@ -4,6 +4,14 @@ PacePaper is a local-network workspace for supervised examination practice and c
 
 PacePaper is an independent school-practice tool. It is not an official examination-delivery system, is not affiliated with or endorsed by the International Baccalaureate, Cambridge University Press & Assessment, Pearson, College Board, ACT, or any other awarding body, and should not be used to deliver live high-stakes examinations.
 
+## Buy PacePaper a coffee ☕
+
+PacePaper is free for classrooms — no accounts, no cloud, no licence fees. If it saved you from an afternoon of spreadsheet-based exam prep (or bought you peace of mind on results day), a coffee-sized thank-you keeps the motivation going. Every cup goes to a real teacher's PayPal.
+
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=flat-square&logo=paypal&logoColor=003087&labelColor=ffffff&color=FFDD00)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=bjmoney%40gmail.com&currency_code=USD&item_name=Support%20PacePaper&no_shipping=1)
+
+Lattes fund the next feature; flat whites fund the bug fixes. Espresso shots fund the docs. 🫘 → ☕ → 🚀
+
 ## Try PacePaper in two minutes
 
 **Download the latest demo** for Windows or Linux from the [releases page](https://github.com/GowangInc/PacePaper/releases). Extract the archive, open `PacePaper.exe` (Windows) or `PacePaper` (Linux), and your browser opens the teacher dashboard automatically. There is nothing to install — no Bun, no server setup, no internet connection required. Mac users can run the current source with `Start PacePaper.command` after installing [Bun](https://bun.sh/).
