@@ -17,7 +17,7 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
   "Step 2 — Let students connect": [
     {
       path: "docs/user-guide/screenshots/overview.png",
-      alt: "DigitalDP teacher dashboard Overview showing the student sign-in address and classroom-sharing controls.",
+      alt: "PacePaper teacher dashboard Overview showing the student sign-in address and classroom-sharing controls.",
       caption: "Overview shows the student address, classroom-sharing choice, and current class, paper, and session totals.",
       width: 1280,
       height: 900,
@@ -26,7 +26,7 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
   "Step 3 — Prepare the class": [
     {
       path: "docs/user-guide/screenshots/classes.png",
-      alt: "DigitalDP Classes area showing a class roster, candidate codes, extra time, and student management controls.",
+      alt: "PacePaper Classes area showing a class roster, candidate codes, extra time, and student management controls.",
       caption: "Classes keeps the roster, candidate codes, extra-time allowances, and add, edit, or remove controls together.",
       width: 1280,
       height: 900,
@@ -42,7 +42,7 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
     },
     {
       path: "docs/user-guide/screenshots/paper-builder.png",
-      alt: "DigitalDP Paper library area showing the example-paper library and exam-format choices in Paper Builder.",
+      alt: "PacePaper Paper library area showing the example-paper library and exam-format choices in Paper Builder.",
       caption: "Paper library combines the included practice papers with an exam-aware Paper Builder and live preview.",
       width: 1280,
       height: 900,
@@ -51,7 +51,7 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
   "Step 5 — Set up the exam session": [
     {
       path: "docs/user-guide/screenshots/session.png",
-      alt: "DigitalDP Sessions area showing an exam sitting, its clock control, and the class, exam-system, and paper selectors.",
+      alt: "PacePaper Sessions area showing an exam sitting, its clock control, and the class, exam-system, and paper selectors.",
       caption: "Sessions first narrows papers by exam system, then assigns a reusable paper to a class for a specific sitting.",
       width: 1280,
       height: 900,
@@ -69,14 +69,14 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
   "Step 7 — Ask students to join": [
     {
       path: "docs/user-guide/screenshots/student-sign-in.png",
-      alt: "DigitalDP candidate sign-in showing a class code and a loaded student-name list.",
+      alt: "PacePaper candidate sign-in showing a class code and a loaded student-name list.",
       caption: "Students enter the class code, load the roster, and choose their own name.",
       width: 1280,
       height: 900,
     },
     {
       path: "docs/user-guide/screenshots/student-choose-exam.png",
-      alt: "DigitalDP candidate page showing an available AP Biology practice examination and its Join waiting room button.",
+      alt: "PacePaper candidate page showing an available AP Biology practice examination and its Join waiting room button.",
       caption: "After signing in, each student chooses the requested examination and joins its waiting room.",
       width: 1280,
       height: 900,
@@ -85,7 +85,7 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
   "Step 8 — Start and monitor the exam": [
     {
       path: "docs/user-guide/screenshots/student-exam.png",
-      alt: "DigitalDP English B reading view showing Text A, tabs for Texts B and C, visible questions, and locked response areas during reading time.",
+      alt: "PacePaper English B reading view showing Text A, tabs for Texts B and C, visible questions, and locked response areas during reading time.",
       caption: "During reading time, students can switch between all texts and read the questions and answer choices. Response areas stay locked until writing time begins.",
       width: 1440,
       height: 900,
@@ -155,9 +155,9 @@ export function renderUserGuideHtml(): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Straightforward, illustrated instructions for running a DigitalDP classroom practice examination.">
+  <meta name="description" content="Straightforward, illustrated instructions for running a PacePaper classroom practice examination.">
   <link rel="icon" href="${icon}">
-  <title>DigitalDP teacher guide</title>
+  <title>PacePaper teacher guide</title>
   <style>
     :root {
       color-scheme: light;
@@ -376,7 +376,7 @@ export function renderUserGuideHtml(): string {
   <header class="site-header">
     <div class="site-header__inner">
       <img src="${icon}" width="52" height="52" alt="">
-      <div><strong>DigitalDP</strong><span>Illustrated teacher guide</span></div>
+      <div><strong>PacePaper</strong><span>Illustrated teacher guide</span></div>
     </div>
   </header>
   <div class="layout">

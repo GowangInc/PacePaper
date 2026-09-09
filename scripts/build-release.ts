@@ -52,10 +52,10 @@ const releaseDirectory = join(root, "release");
 const packageMetadata = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as PackageMetadata;
 const version = packageMetadata.version;
 const userGuideSource = join(root, "USER_GUIDE.md");
-const userGuideAssetName = `DigitalDP-${version}-User-Guide.txt`;
-const userGuideHtmlAssetName = `DigitalDP-${version}-User-Guide.html`;
+const userGuideAssetName = `PacePaper-${version}-User-Guide.txt`;
+const userGuideHtmlAssetName = `PacePaper-${version}-User-Guide.html`;
 const releaseNotesSource = join(releaseDirectory, `RELEASE_NOTES-${version}.md`);
-const releaseNotesAssetName = `DigitalDP-${version}-Release-Notes.txt`;
+const releaseNotesAssetName = `PacePaper-${version}-Release-Notes.txt`;
 const appIconPng = join(root, "assets", "app-icon-master.png");
 const appIconIcns = join(root, "assets", "app-icon.icns");
 const appIconIco = join(root, "assets", "app-icon.ico");
@@ -76,18 +76,18 @@ const macUniversalArchitectures: readonly MacUniversalArchitecture[] = [
 
 const macUniversalTarget = {
   archiveExtension: ".zip" as const,
-  binaryName: "DigitalDP",
+  binaryName: "PacePaper",
   id: "macos-universal",
 };
 
 const targets: readonly ReleaseTarget[] = [
-  { id: "windows-x64", target: "bun-windows-x64-baseline", binaryName: "DigitalDP.exe", archiveExtension: ".zip" },
-  { id: "linux-x64", target: "bun-linux-x64-baseline", binaryName: "DigitalDP", archiveExtension: ".tar.gz" },
+  { id: "windows-x64", target: "bun-windows-x64-baseline", binaryName: "PacePaper.exe", archiveExtension: ".zip" },
+  { id: "linux-x64", target: "bun-linux-x64-baseline", binaryName: "PacePaper", archiveExtension: ".tar.gz" },
 ];
 
 const retiredArchiveNames = [
-  `DigitalDP-${version}-macos-arm64.zip`,
-  `DigitalDP-${version}-macos-x64.zip`,
+  `PacePaper-${version}-macos-arm64.zip`,
+  `PacePaper-${version}-macos-x64.zip`,
 ];
 
 function run(command: string[], cwd: string): void {
@@ -101,12 +101,12 @@ function macInfoPlist(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleDisplayName</key><string>DigitalDP</string>
-  <key>CFBundleExecutable</key><string>DigitalDP</string>
+  <key>CFBundleDisplayName</key><string>PacePaper</string>
+  <key>CFBundleExecutable</key><string>PacePaper</string>
   <key>CFBundleIdentifier</key><string>org.digitaldp.demo</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
-  <key>CFBundleName</key><string>DigitalDP</string>
+  <key>CFBundleName</key><string>PacePaper</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>${macShortVersion}</string>
   <key>CFBundleVersion</key><string>${macBuildVersion}</string>
@@ -163,8 +163,8 @@ async function compileExecutable(target: Bun.Build.CompileTarget, outputPath: st
           outfile: outputPath,
           windows: {
             icon: appIconIco,
-            title: "DigitalDP",
-            publisher: "DigitalDP",
+            title: "PacePaper",
+            publisher: "PacePaper",
             description: "Local digital examination familiarisation",
           },
         }
@@ -192,7 +192,7 @@ function archiveNotarizedMacPackage(packageDirectory: string, stagingRoot: strin
 }
 
 function prepareMacApp(packageDirectory: string): MacAppPaths {
-  const appDirectory = join(packageDirectory, "DigitalDP.app");
+  const appDirectory = join(packageDirectory, "PacePaper.app");
   const contentsDirectory = join(appDirectory, "Contents");
   const macOsDirectory = join(contentsDirectory, "MacOS");
   const resourcesDirectory = join(contentsDirectory, "Resources");
@@ -207,7 +207,7 @@ async function buildMacUniversal(stagingRoot: string): Promise<Archive> {
   if (process.platform !== "darwin") throw new Error("A macOS host with lipo is required to build the macos-universal archive");
   const distribution = macDistributionConfig();
 
-  const packageName = `DigitalDP-${version}-${macUniversalTarget.id}`;
+  const packageName = `PacePaper-${version}-${macUniversalTarget.id}`;
   const packageDirectory = join(stagingRoot, packageName);
   mkdirSync(packageDirectory, { recursive: true });
 
@@ -249,7 +249,7 @@ function signAndNotarizeMacApp(
   ], root);
   run(["codesign", "--verify", "--deep", "--strict", "--all-architectures", appDirectory], root);
 
-  const submissionArchive = join(stagingRoot, "DigitalDP-notarization.zip");
+  const submissionArchive = join(stagingRoot, "PacePaper-notarization.zip");
   archiveNotarizedMacDirectory(appDirectory, submissionArchive);
   run([
     "xcrun",
@@ -267,13 +267,13 @@ function signAndNotarizeMacApp(
 }
 
 async function buildTarget(target: ReleaseTarget, stagingRoot: string): Promise<Archive> {
-  const packageName = `DigitalDP-${version}-${target.id}`;
+  const packageName = `PacePaper-${version}-${target.id}`;
   const packageDirectory = join(stagingRoot, packageName);
   mkdirSync(packageDirectory, { recursive: true });
 
   const binaryPath = join(packageDirectory, target.binaryName);
   await compileExecutable(target.target, binaryPath, target.id);
-  if (target.id.startsWith("linux-")) copyFileSync(appIconPng, join(packageDirectory, "DigitalDP.png"));
+  if (target.id.startsWith("linux-")) copyFileSync(appIconPng, join(packageDirectory, "PacePaper.png"));
 
   copyReleaseDocumentation(packageDirectory);
   return archivePackage(packageDirectory, target.archiveExtension, stagingRoot);

@@ -9,7 +9,7 @@ import {
   studentJoinOrigin,
 } from "./network.ts";
 
-describe("DigitalDP network policy", () => {
+describe("PacePaper network policy", () => {
   test("keeps loopback as the default and enables LAN only with an exact private origin", () => {
     expect(demoNetworkConfig({ port: 9148 })).toEqual({ bindHostname: "127.0.0.1", lanOrigin: null });
     expect(demoNetworkConfig({ port: 9148, lanOrigin: "http://10.80.20.178:9148" })).toEqual({

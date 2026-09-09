@@ -178,62 +178,62 @@ jobs:
         run: |
           set -euo pipefail
           files=(
-            "release/DigitalDP-${VERSION}-windows-x64.zip"
-            "release/DigitalDP-${VERSION}-linux-x64.tar.gz"
-            "release/DigitalDP-${VERSION}-User-Guide.html"
-            "release/DigitalDP-${VERSION}-User-Guide.txt"
-            "release/DigitalDP-${VERSION}-Release-Notes.txt"
+            "release/PacePaper-${VERSION}-windows-x64.zip"
+            "release/PacePaper-${VERSION}-linux-x64.tar.gz"
+            "release/PacePaper-${VERSION}-User-Guide.html"
+            "release/PacePaper-${VERSION}-User-Guide.txt"
+            "release/PacePaper-${VERSION}-Release-Notes.txt"
             "release/SHA256SUMS.txt"
           )
           if [[ "$INCLUDE_MACOS" = "true" ]]; then
-            files+=("release/DigitalDP-${VERSION}-macos-universal.zip")
+            files+=("release/PacePaper-${VERSION}-macos-universal.zip")
           else
-            test ! -e "release/DigitalDP-${VERSION}-macos-universal.zip"
+            test ! -e "release/PacePaper-${VERSION}-macos-universal.zip"
           fi
           for file in "${files[@]}"; do
             test -s "$file"
           done
           test "$(wc -l < release/SHA256SUMS.txt | tr -d ' ')" = "$((${#files[@]} - 1))"
           (cd release && shasum -a 256 -c SHA256SUMS.txt)
-          unzip -tq "release/DigitalDP-${VERSION}-windows-x64.zip"
-          tar -tzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" >/dev/null
+          unzip -tq "release/PacePaper-${VERSION}-windows-x64.zip"
+          tar -tzf "release/PacePaper-${VERSION}-linux-x64.tar.gz" >/dev/null
           if [[ "$INCLUDE_MACOS" = "true" ]]; then
-            unzip -tq "release/DigitalDP-${VERSION}-macos-universal.zip"
+            unzip -tq "release/PacePaper-${VERSION}-macos-universal.zip"
             extracted_mac="$RUNNER_TEMP/digitaldp-mac-verification"
             mkdir -p "$extracted_mac"
-            ditto -x -k "release/DigitalDP-${VERSION}-macos-universal.zip" "$extracted_mac"
-            app="$extracted_mac/DigitalDP-${VERSION}-macos-universal/DigitalDP.app"
+            ditto -x -k "release/PacePaper-${VERSION}-macos-universal.zip" "$extracted_mac"
+            app="$extracted_mac/PacePaper-${VERSION}-macos-universal/PacePaper.app"
             codesign --verify --deep --strict --all-architectures "$app"
             xcrun stapler validate -v "$app"
             spctl --assess --type execute --verbose=4 "$app"
-            cmp USER_GUIDE.md "$extracted_mac/DigitalDP-${VERSION}-macos-universal/USER-GUIDE.txt"
-            cmp USER_GUIDE.html "$extracted_mac/DigitalDP-${VERSION}-macos-universal/USER-GUIDE.html"
-            cmp "release/RELEASE_NOTES-${VERSION}.md" "$extracted_mac/DigitalDP-${VERSION}-macos-universal/RELEASE-NOTES.txt"
+            cmp USER_GUIDE.md "$extracted_mac/PacePaper-${VERSION}-macos-universal/USER-GUIDE.txt"
+            cmp USER_GUIDE.html "$extracted_mac/PacePaper-${VERSION}-macos-universal/USER-GUIDE.html"
+            cmp "release/RELEASE_NOTES-${VERSION}.md" "$extracted_mac/PacePaper-${VERSION}-macos-universal/RELEASE-NOTES.txt"
           fi
-          cmp USER_GUIDE.html "release/DigitalDP-${VERSION}-User-Guide.html"
-          cmp USER_GUIDE.md "release/DigitalDP-${VERSION}-User-Guide.txt"
-          cmp "release/RELEASE_NOTES-${VERSION}.md" "release/DigitalDP-${VERSION}-Release-Notes.txt"
-          unzip -p "release/DigitalDP-${VERSION}-windows-x64.zip" "DigitalDP-${VERSION}-windows-x64/USER-GUIDE.txt" | cmp USER_GUIDE.md -
-          tar -xOzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" "DigitalDP-${VERSION}-linux-x64/USER-GUIDE.txt" | cmp USER_GUIDE.md -
-          unzip -p "release/DigitalDP-${VERSION}-windows-x64.zip" "DigitalDP-${VERSION}-windows-x64/USER-GUIDE.html" | cmp USER_GUIDE.html -
-          tar -xOzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" "DigitalDP-${VERSION}-linux-x64/USER-GUIDE.html" | cmp USER_GUIDE.html -
-          unzip -p "release/DigitalDP-${VERSION}-windows-x64.zip" "DigitalDP-${VERSION}-windows-x64/RELEASE-NOTES.txt" | cmp "release/RELEASE_NOTES-${VERSION}.md" -
-          tar -xOzf "release/DigitalDP-${VERSION}-linux-x64.tar.gz" "DigitalDP-${VERSION}-linux-x64/RELEASE-NOTES.txt" | cmp "release/RELEASE_NOTES-${VERSION}.md" -
+          cmp USER_GUIDE.html "release/PacePaper-${VERSION}-User-Guide.html"
+          cmp USER_GUIDE.md "release/PacePaper-${VERSION}-User-Guide.txt"
+          cmp "release/RELEASE_NOTES-${VERSION}.md" "release/PacePaper-${VERSION}-Release-Notes.txt"
+          unzip -p "release/PacePaper-${VERSION}-windows-x64.zip" "PacePaper-${VERSION}-windows-x64/USER-GUIDE.txt" | cmp USER_GUIDE.md -
+          tar -xOzf "release/PacePaper-${VERSION}-linux-x64.tar.gz" "PacePaper-${VERSION}-linux-x64/USER-GUIDE.txt" | cmp USER_GUIDE.md -
+          unzip -p "release/PacePaper-${VERSION}-windows-x64.zip" "PacePaper-${VERSION}-windows-x64/USER-GUIDE.html" | cmp USER_GUIDE.html -
+          tar -xOzf "release/PacePaper-${VERSION}-linux-x64.tar.gz" "PacePaper-${VERSION}-linux-x64/USER-GUIDE.html" | cmp USER_GUIDE.html -
+          unzip -p "release/PacePaper-${VERSION}-windows-x64.zip" "PacePaper-${VERSION}-windows-x64/RELEASE-NOTES.txt" | cmp "release/RELEASE_NOTES-${VERSION}.md" -
+          tar -xOzf "release/PacePaper-${VERSION}-linux-x64.tar.gz" "PacePaper-${VERSION}-linux-x64/RELEASE-NOTES.txt" | cmp "release/RELEASE_NOTES-${VERSION}.md" -
 
       - name: Preserve assets as workflow artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: DigitalDP-${{ steps.meta.outputs.version }}-release-assets
+          name: PacePaper-${{ steps.meta.outputs.version }}-release-assets
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
           path: |
-            release/DigitalDP-${{ steps.meta.outputs.version }}-macos-universal.zip
-            release/DigitalDP-${{ steps.meta.outputs.version }}-windows-x64.zip
-            release/DigitalDP-${{ steps.meta.outputs.version }}-linux-x64.tar.gz
-            release/DigitalDP-${{ steps.meta.outputs.version }}-User-Guide.html
-            release/DigitalDP-${{ steps.meta.outputs.version }}-User-Guide.txt
-            release/DigitalDP-${{ steps.meta.outputs.version }}-Release-Notes.txt
+            release/PacePaper-${{ steps.meta.outputs.version }}-macos-universal.zip
+            release/PacePaper-${{ steps.meta.outputs.version }}-windows-x64.zip
+            release/PacePaper-${{ steps.meta.outputs.version }}-linux-x64.tar.gz
+            release/PacePaper-${{ steps.meta.outputs.version }}-User-Guide.html
+            release/PacePaper-${{ steps.meta.outputs.version }}-User-Guide.txt
+            release/PacePaper-${{ steps.meta.outputs.version }}-Release-Notes.txt
             release/SHA256SUMS.txt
 
       - name: Upload bundles to the existing draft
@@ -243,14 +243,14 @@ jobs:
         run: |
           set -euo pipefail
           files=(
-            "release/DigitalDP-${VERSION}-windows-x64.zip"
-            "release/DigitalDP-${VERSION}-linux-x64.tar.gz"
-            "release/DigitalDP-${VERSION}-User-Guide.html"
-            "release/DigitalDP-${VERSION}-User-Guide.txt"
-            "release/DigitalDP-${VERSION}-Release-Notes.txt"
+            "release/PacePaper-${VERSION}-windows-x64.zip"
+            "release/PacePaper-${VERSION}-linux-x64.tar.gz"
+            "release/PacePaper-${VERSION}-User-Guide.html"
+            "release/PacePaper-${VERSION}-User-Guide.txt"
+            "release/PacePaper-${VERSION}-Release-Notes.txt"
           )
           if [[ "$INCLUDE_MACOS" = "true" ]]; then
-            files+=("release/DigitalDP-${VERSION}-macos-universal.zip")
+            files+=("release/PacePaper-${VERSION}-macos-universal.zip")
           fi
           gh release upload "$RELEASE_TAG" "${files[@]}" \
             --repo "$GITHUB_REPOSITORY" \
@@ -280,14 +280,14 @@ jobs:
           const tag = process.env.RELEASE_TAG;
           const release = JSON.parse(readFileSync(process.env.RELEASE_JSON, "utf8"));
           const expected = [
-            `DigitalDP-${version}-windows-x64.zip`,
-            `DigitalDP-${version}-linux-x64.tar.gz`,
-            `DigitalDP-${version}-User-Guide.html`,
-            `DigitalDP-${version}-User-Guide.txt`,
-            `DigitalDP-${version}-Release-Notes.txt`,
+            `PacePaper-${version}-windows-x64.zip`,
+            `PacePaper-${version}-linux-x64.tar.gz`,
+            `PacePaper-${version}-User-Guide.html`,
+            `PacePaper-${version}-User-Guide.txt`,
+            `PacePaper-${version}-Release-Notes.txt`,
             "SHA256SUMS.txt",
           ];
-          if (process.env.INCLUDE_MACOS === "true") expected.push(`DigitalDP-${version}-macos-universal.zip`);
+          if (process.env.INCLUDE_MACOS === "true") expected.push(`PacePaper-${version}-macos-universal.zip`);
 
           if (!release.isDraft) throw new Error("Release is no longer a draft");
           if (!release.isPrerelease) throw new Error("Release is no longer marked as a prerelease");
@@ -345,7 +345,7 @@ jobs:
           set -euo pipefail
           gh run download "$GITHUB_RUN_ID" \
             --repo "$GITHUB_REPOSITORY" \
-            --name "DigitalDP-${VERSION}-release-assets" \
+            --name "PacePaper-${VERSION}-release-assets" \
             --dir "$RUNNER_TEMP/digitaldp-assets"
 
       - name: Verify native startup, seeded papers, and embedded pages
@@ -366,7 +366,7 @@ jobs:
             const expectedSamples = Number(process.env.EXPECTED_SAMPLES);
             assert.ok(Number.isInteger(expectedSamples) && expectedSamples > 0);
             const assets = join(process.env.RUNNER_TEMP, "digitaldp-assets");
-            const packageName = `DigitalDP-${version}-${platform}`;
+            const packageName = `PacePaper-${version}-${platform}`;
             const archiveName = `${packageName}${platform === "windows-x64" ? ".zip" : ".tar.gz"}`;
             const checksums = new Map(readFileSync(join(assets, "SHA256SUMS.txt"), "utf8")
               .trim().split("\n").map((line) => line.split("  ").reverse()));
@@ -384,7 +384,7 @@ jobs:
                 ? join(process.env.SystemRoot, "System32", "tar.exe") : "tar";
               execFileSync(tarCommand, ["-xf", join(assets, archiveName), "-C", unpack]);
               const packageDirectory = join(unpack, packageName);
-              app = spawn(join(packageDirectory, platform === "windows-x64" ? "DigitalDP.exe" : "DigitalDP"), [], {
+              app = spawn(join(packageDirectory, platform === "windows-x64" ? "PacePaper.exe" : "PacePaper"), [], {
                 cwd: smokeRoot,
                 env: { ...process.env, PORT: "19148", DIGITALDP_DATA_DIR: join(smokeRoot, "data"), DIGITALDP_OPEN_BROWSER: "0" },
                 stdio: ["ignore", "pipe", "pipe"],

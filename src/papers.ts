@@ -528,24 +528,24 @@ function base64Bytes(value: unknown, label: string): Uint8Array {
 }
 
 async function parsePortablePaper(file: File): Promise<ImportedPaper> {
-  if (file.size === 0) throw new Error("Choose a DigitalDP paper file");
+  if (file.size === 0) throw new Error("Choose a PacePaper paper file");
   if (file.size > MAX_PORTABLE_FILE_BYTES) throw new Error("Portable paper exceeds 70 MB");
   let decoded: Uint8Array;
   try {
     decoded = await gunzipBytes(new Uint8Array(await file.arrayBuffer()));
   } catch {
-    throw new Error("DigitalDP paper file is damaged or has an unsupported format");
+    throw new Error("PacePaper paper file is damaged or has an unsupported format");
   }
 
   let source: Record<string, unknown>;
   try {
     source = record(JSON.parse(new TextDecoder().decode(decoded)) as unknown, "portable paper");
   } catch (error) {
-    if (error instanceof SyntaxError) throw new Error("DigitalDP paper file is not valid JSON");
+    if (error instanceof SyntaxError) throw new Error("PacePaper paper file is not valid JSON");
     throw error;
   }
   if (source.format !== PORTABLE_FORMAT || source.version !== 1) {
-    throw new Error("DigitalDP paper file has an unsupported version");
+    throw new Error("PacePaper paper file has an unsupported version");
   }
   if (!Array.isArray(source.assets) || source.assets.length > 30) {
     throw new Error("Portable paper assets must contain at most 30 items");
@@ -625,7 +625,7 @@ export async function parsePaperUpload(form: FormData): Promise<ImportedPaper> {
   if (format === "quick") return parseQuickPaperUpload(form);
   if (format === "portable") {
     const portable = form.get("portablePaper");
-    if (!(portable instanceof File)) throw new Error("Choose a DigitalDP paper file");
+    if (!(portable instanceof File)) throw new Error("Choose a PacePaper paper file");
     return parsePortablePaper(portable);
   }
   if (format === "package") {

@@ -16,5 +16,5 @@ export function releasePlatforms(arguments_: readonly string[]): readonly Releas
 }
 
 export function releaseArchiveName(version: string, platform: ReleasePlatform): string {
-  return `DigitalDP-${version}-${platform}${platform === "linux-x64" ? ".tar.gz" : ".zip"}`;
+  return `PacePaper-${version}-${platform}${platform === "linux-x64" ? ".tar.gz" : ".zip"}`;
 }

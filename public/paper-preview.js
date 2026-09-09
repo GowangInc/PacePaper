@@ -109,8 +109,8 @@ export function createPaperPreview(container) {
     const header = node("header", "paper-preview-document-header");
     header.append(
       node("p", "paper-preview-kicker", model.examSystem
-        ? `DigitalDP · ${model.examSystem} practice preview`
-        : "DigitalDP · practice paper preview"),
+        ? `PacePaper · ${model.examSystem} practice preview`
+        : "PacePaper · practice paper preview"),
       node("h4", "", model.title || "Untitled practice paper"),
       node("p", "paper-preview-subject", [model.subject, model.level, model.paper].filter(Boolean).join(" · ")),
     );

@@ -12,13 +12,13 @@ describe("macOS distribution configuration", () => {
 
   test("requires notarization credentials", () => {
     expect(() => macDistributionConfig({
-      DIGITALDP_MAC_SIGN_IDENTITY: "Developer ID Application: DigitalDP (TEAMID)",
+      DIGITALDP_MAC_SIGN_IDENTITY: "Developer ID Application: PacePaper (TEAMID)",
     })).toThrow("DIGITALDP_MAC_NOTARY_PROFILE");
   });
 
   test("adds a custom keychain only when configured", () => {
     const local = macDistributionConfig({
-      DIGITALDP_MAC_SIGN_IDENTITY: "Developer ID Application: DigitalDP (TEAMID)",
+      DIGITALDP_MAC_SIGN_IDENTITY: "Developer ID Application: PacePaper (TEAMID)",
       DIGITALDP_MAC_NOTARY_PROFILE: "digitaldp",
     });
     expect(notaryAuthenticationArguments(local)).toEqual(["--keychain-profile", "digitaldp"]);

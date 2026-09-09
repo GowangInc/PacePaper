@@ -1,17 +1,17 @@
 ---
 name: digitaldp-paper-authoring
-description: Convert a teacher's prepared assessment and its source files into a validated DigitalDP paper package.
+description: Convert a teacher's prepared assessment and its source files into a validated PacePaper paper package.
 ---
 
-# DigitalDP Paper Authoring
+# PacePaper Paper Authoring
 
-Upload this `SKILL.md` and the prepared assessment files to an AI authoring tool. It must produce a `paper.json` that DigitalDP can import with the assessment's referenced files. Do not upload `SKILL.md` to DigitalDP.
+Upload this `SKILL.md` and the prepared assessment files to an AI authoring tool. It must produce a `paper.json` that PacePaper can import with the assessment's referenced files. Do not upload `SKILL.md` to PacePaper.
 
 ## Required output
 
 Return exactly one JSON object saved as `paper.json`. Do not invent questions, source text, instructions, timing, answer options, or files. If the assessment is ambiguous, stop and ask the teacher for the missing decision.
 
-Place `paper.json` beside the source files. In DigitalDP's **Structured paper package** importer, select `paper.json` and every referenced asset at the same time.
+Place `paper.json` beside the source files. In PacePaper's **Structured paper package** importer, select `paper.json` and every referenced asset at the same time.
 
 ## Supported package files
 
@@ -30,7 +30,7 @@ Place `paper.json` beside the source files. In DigitalDP's **Structured paper pa
 5. Add one question object for each response required from the candidate. Put only the resource keys used by that question in `resourceKeys`; this is how images, PDFs, text, or audio are scoped to the applicable question.
 6. Use `essay` for a rich-text extended response, `short` for a typed short response, `single-choice` only when the supplied assessment has explicit choices, and `ink` when candidates must draw, graph, annotate, or show handwritten working. A single-choice question needs at least two `options` in the exact teacher order. An ink question needs an `ink` configuration with 1–4 pages, a `blank`, `lined`, or `square-grid` background, and an explicit typed-alternative setting.
 7. Use `selectionMode: "all"` unless the entire assessment requires the candidate to choose exactly one essay question. For that simple choice paper use `selectionMode: "one"`. The current schema does not express mixed compulsory-and-choice sections: create the compulsory questions normally, then use one required question card whose prompt contains that section's alternatives. Do not mark the entire mixed paper as `"one"`.
-8. For listening, set `mode: "listening"` and include at least one audio resource. Set `maxPlays: 2` on every audio resource. This is a fixed DigitalDP rule: each recording has two complete plays, and a play cannot be paused or restarted once it begins.
+8. For listening, set `mode: "listening"` and include at least one audio resource. Set `maxPlays: 2` on every audio resource. This is a fixed PacePaper rule: each recording has two complete plays, and a play cannot be paused or restarted once it begins.
 9. Before returning, validate the checklist below. Output no prose around the JSON.
 
 ## Manifest shape
@@ -121,7 +121,7 @@ Place `paper.json` beside the source files. In DigitalDP's **Structured paper pa
 - `maximumMarks` and `subjectWeightPercent` are optional positive integers for a verified preset. Each question may also carry optional positive integer `marks`; do not invent any of these values.
 - `assessmentSession` and `examProfileId` are included when the teacher or verified exam profile supplies them; do not guess them.
 - `sourceClassification` is exactly `teacher-authored`, `school-authorized`, `official-public-reference`, or `unknown-local-only`; classification records provenance but never grants copying or redistribution rights.
-- `exportAuthorized` is a separate boolean attestation. Set it to `true` only when the paper and every attachment may be copied into a portable DigitalDP export; otherwise use `false`.
+- `exportAuthorized` is a separate boolean attestation. Set it to `true` only when the paper and every attachment may be copied into a portable PacePaper export; otherwise use `false`.
 - There are 0–30 resources and 1–100 questions.
 - Every resource key and question ID matches `^[a-z0-9][a-z0-9_-]{0,63}$` and is unique.
 - Every `resourceKeys` item exists in `resources`.

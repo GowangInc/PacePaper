@@ -10,7 +10,7 @@ function required(environment: Environment, name: string): string {
   const value = environment[name]?.trim();
   if (value) return value;
   throw new Error(
-    `macOS releases require ${name}. DigitalDP will not create another unnotarized Mac download.`,
+    `macOS releases require ${name}. PacePaper will not create another unnotarized Mac download.`,
   );
 }
 

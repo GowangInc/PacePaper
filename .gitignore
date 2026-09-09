@@ -22,10 +22,10 @@ resources/**/*.flac
 !examples/portable/sl-prose-choose-one.digitaldp-paper
 release/*.zip
 release/*.tar.gz
-release/DigitalDP-*/
-release/DigitalDP-*-User-Guide.html
-release/DigitalDP-*-User-Guide.txt
-release/DigitalDP-*-Release-Notes.txt
+release/PacePaper-*/
+release/PacePaper-*-User-Guide.html
+release/PacePaper-*-User-Guide.txt
+release/PacePaper-*-Release-Notes.txt
 release/SHA256SUMS.txt
 research/qa/**/logs/*.cookie
 # Local QA may contain rosters, recovery responses, or browser session data.

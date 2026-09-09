@@ -206,7 +206,7 @@ function renderCandidatePaper(data, response) {
   const header = document.createElement("header");
   header.className = "candidate-paper-header";
   header.append(
-    copy("p", "candidate-paper-kicker", "DigitalDP practice examination · candidate response"),
+    copy("p", "candidate-paper-kicker", "PacePaper practice examination · candidate response"),
     copy("h2", "", data.session.paperTitle),
   );
   const subject = [data.session.subjectLabel, data.session.level, data.session.paper].filter(Boolean).join(" · ");
@@ -882,7 +882,7 @@ async function renderDashboard() {
   setView(`
     <div class="admin-shell">
       <aside class="admin-rail">
-        <a class="admin-brand" href="/"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>DigitalDP</span></a>
+        <a class="admin-brand" href="/"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>PacePaper</span></a>
         <nav aria-label="Dashboard sections">
           <button type="button" data-jump="#overview">Overview</button>
           <button type="button" data-jump="#classes">Classes</button>
@@ -968,8 +968,8 @@ async function renderDashboard() {
             <form id="portable-paper-form" data-paper-form class="utility-form paper-portability" method="post" enctype="multipart/form-data">
               <input name="format" type="hidden" value="portable">
               <fieldset><legend>Import a saved paper</legend>
-                <p class="form-help">A single DigitalDP paper file includes its questions, settings and permitted attachments.</p>
-                <label for="portable-paper">DigitalDP paper file</label><input id="portable-paper" name="portablePaper" type="file" accept=".digitaldp-paper,application/vnd.digitaldp.paper+gzip" required>
+                <p class="form-help">A single PacePaper paper file includes its questions, settings and permitted attachments.</p>
+                <label for="portable-paper">PacePaper paper file</label><input id="portable-paper" name="portablePaper" type="file" accept=".digitaldp-paper,application/vnd.digitaldp.paper+gzip" required>
                 <button type="submit">Import paper</button>
               </fieldset>
             </form>

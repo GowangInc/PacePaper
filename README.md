@@ -1,8 +1,8 @@
-# DigitalDP
+# PacePaper
 
-DigitalDP is a local-network workspace for supervised examination practice and candidate familiarisation. Teachers prepare papers and classes, students complete timed practice sessions in a focused browser workspace, and teachers review the saved responses afterwards. Its provider-neutral profile system currently supplies researched practice starters and original demonstrations for IB DP, Cambridge IGCSE, Pearson Edexcel International GCSE, and selected AP formats in the same application.
+PacePaper is a local-network workspace for supervised examination practice and candidate familiarisation. Teachers prepare papers and classes, students complete timed practice sessions in a focused browser workspace, and teachers review the saved responses afterwards. Its provider-neutral profile system currently supplies researched practice starters and original demonstrations for IB DP, Cambridge IGCSE, Pearson Edexcel International GCSE, and selected AP formats in the same application.
 
-DigitalDP is an independent school-practice tool. It is not an official examination-delivery system, is not affiliated with or endorsed by the International Baccalaureate, Cambridge University Press & Assessment, Pearson, College Board, ACT, or any other awarding body, and should not be used to deliver live high-stakes examinations.
+PacePaper is an independent school-practice tool. It is not an official examination-delivery system, is not affiliated with or endorsed by the International Baccalaureate, Cambridge University Press & Assessment, Pearson, College Board, ACT, or any other awarding body, and should not be used to deliver live high-stakes examinations.
 
 ## Current capabilities
 
@@ -10,7 +10,7 @@ DigitalDP is an independent school-practice tool. It is not an official examinat
 - Classes, class-code/name sign-in, candidate codes, individual extra time, CSV class-list import/export, and reversible roster archiving
 - Exam-format-first Paper Builder with provider-specific terminology and tuned starters for IB DP, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and school-custom practice
 - Live, independently scrollable paper preview while a teacher edits
-- One-file DigitalDP paper export and re-import, including explicitly authorized attachments
+- One-file PacePaper paper export and re-import, including explicitly authorized attachments
 - PDF, image, text, and controlled-play audio resources, including media attached to individual questions; students receive exactly two complete plays per recording, with no pause or restart once a play begins
 - Legacy reading-then-writing timing plus multi-section phase plans with locked reading periods, fixed monitored breaks, no-return section boundaries, phase-specific tool rules, and extra time applied to the final work phase
 - Second-screen countdown with fullscreen mode and authoritative linked timing; live timing edits are deliberately unavailable
@@ -20,7 +20,7 @@ DigitalDP is an independent school-practice tool. It is not an official examinat
 - Student exam selection after sign-in, with per-exam waiting rooms and completed sittings kept separate from new sessions
 - Reversible removal and restoration of classes, students, and exam sittings without deleting saved candidate responses
 - Rich-text, short-answer, single-choice, and expandable digital-ink responses with blank, ruled, or square-grid pages, Draw/Eraser tools, and Undo/Redo
-- Page context menus suppressed on DigitalDP interface controls while normal clicks, keyboard controls, and text selection remain available
+- Page context menus suppressed on PacePaper interface controls while normal clicks, keyboard controls, and text selection remain available
 - Event-driven teacher status updates that preserve active form controls, plus printable/PDF candidate submission review
 - A 52-paper original development library: 34 IB-oriented examples, 15 full-length non-IB mocks, and three short AP walkthroughs. Standalone demo.7 packages only its single English B familiarisation example.
 - Teacher-only worked marking guides for all 15 full-length mocks, accessible from **Mock marking guides** in the teacher sidebar
@@ -29,15 +29,15 @@ DigitalDP is an independent school-practice tool. It is not an official examinat
 
 ## Run locally
 
-DigitalDP requires [Bun](https://bun.sh/).
+PacePaper requires [Bun](https://bun.sh/).
 
-Install Bun and run `bun install` once from the project folder. For the simplest app-style source run on a Mac, double-click `Start DigitalDP.command`. On any supported platform, open a terminal in the project folder and run:
+Install Bun and run `bun install` once from the project folder. For the simplest app-style source run on a Mac, double-click `Start PacePaper.command`. On any supported platform, open a terminal in the project folder and run:
 
 ```sh
 bun run start:app
 ```
 
-This uses the same per-user data folder and classroom-sharing controls as the packaged app, safely adds any missing DigitalDP examples, chooses an available port, and opens the teacher dashboard. Keep the Terminal window open while DigitalDP is running; press Control-C there to stop it.
+This uses the same per-user data folder and classroom-sharing controls as the packaged app, safely adds any missing PacePaper examples, chooses an available port, and opens the teacher dashboard. Keep the Terminal window open while PacePaper is running; press Control-C there to stop it.
 
 For development and tests:
 
@@ -56,9 +56,9 @@ The release builder produces shareable, self-contained macOS, Windows, and Linux
 
 The Mac bundle must be signed with a Developer ID Application certificate and notarized by Apple. The release builder deliberately refuses to create an ad-hoc-signed Mac download, because Gatekeeper can report that download as damaged without offering **Open Anyway**.
 
-**Version 0.1.0-demo.7 is prepared for Windows x64 and Linux x64.** It lets the teacher correct reading and writing minutes from the examination clock even while an exam is live (candidate phase boundaries and deadlines move immediately), always advertises the classroom-network address students should join on the dashboard and clock rather than a loopback `127.0.0.1`, and raises a visible dashboard notification when a candidate leaves the exam window. A new macOS app is withheld because Apple signing/notarization credentials are not configured. Mac users can run the updated source using `Start DigitalDP.command` or `bun run start:app`; do not use the earlier unsupported Mac downloads. Use the [GitHub release page](https://github.com/GowangInc/DigitalDP/releases/tag/v0.1.0-demo.7) for the draft assets and verification status.
+**Version 0.1.0-demo.7 is prepared for Windows x64 and Linux x64.** It lets the teacher correct reading and writing minutes from the examination clock even while an exam is live (candidate phase boundaries and deadlines move immediately), always advertises the classroom-network address students should join on the dashboard and clock rather than a loopback `127.0.0.1`, and raises a visible dashboard notification when a candidate leaves the exam window. A new macOS app is withheld because Apple signing/notarization credentials are not configured. Mac users can run the updated source using `Start PacePaper.command` or `bun run start:app`; do not use the earlier unsupported Mac downloads. Use the [GitHub release page](https://github.com/GowangInc/PacePaper/releases/tag/v0.1.0-demo.7) for the draft assets and verification status.
 
-Once the signing and notarization credentials described below are available, run `bun run release:build`. The generated archives, standalone user guides, and checksums are placed in `release/`. On macOS, use the notarized `macos-universal` archive for both Apple-silicon and Intel Macs; extract the correct platform archive and start its DigitalDP app or executable. The macOS bundle and Windows executable carry the DigitalDP icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the illustrated teacher-facing [`USER_GUIDE.html`](USER_GUIDE.html), its editable [`USER_GUIDE.md`](USER_GUIDE.md) source, and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
+Once the signing and notarization credentials described below are available, run `bun run release:build`. The generated archives, standalone user guides, and checksums are placed in `release/`. On macOS, use the notarized `macos-universal` archive for both Apple-silicon and Intel Macs; extract the correct platform archive and start its PacePaper app or executable. The macOS bundle and Windows executable carry the PacePaper icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the illustrated teacher-facing [`USER_GUIDE.html`](USER_GUIDE.html), its editable [`USER_GUIDE.md`](USER_GUIDE.md) source, and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
 
 ### macOS release credentials
 
@@ -101,9 +101,9 @@ For a supervised LAN demo in a packaged release, sign in as the teacher, open **
 - `DIGITALDP_DB`: SQLite database path; defaults to `data/digitaldp.sqlite`
 - `DIGITALDP_TEST_READING_SECONDS`: optional whole-second reading-time override for local testing; it does not alter saved papers
 
-For packaged releases, `PORT` may be set by an advanced launcher; otherwise DigitalDP chooses the first free port from `9148`–`9158`. `DIGITALDP_DATA_DIR` chooses the release data directory (which otherwise defaults to the platform's per-user application-data location), `DIGITALDP_DB` overrides the exact SQLite path, and `DIGITALDP_OPEN_BROWSER=0` prevents automatic opening of the teacher dashboard.
+For packaged releases, `PORT` may be set by an advanced launcher; otherwise PacePaper chooses the first free port from `9148`–`9158`. `DIGITALDP_DATA_DIR` chooses the release data directory (which otherwise defaults to the platform's per-user application-data location), `DIGITALDP_DB` overrides the exact SQLite path, and `DIGITALDP_OPEN_BROWSER=0` prevents automatic opening of the teacher dashboard.
 
-The `data/` directory is intentionally excluded from Git. Stop DigitalDP and back up its complete data folder before updating or testing recovery. The app launcher and basic development server use different default data locations; see the [user guide](USER_GUIDE.md#back-up-all-classroom-data).
+The `data/` directory is intentionally excluded from Git. Stop PacePaper and back up its complete data folder before updating or testing recovery. The app launcher and basic development server use different default data locations; see the [user guide](USER_GUIDE.md#back-up-all-classroom-data).
 
 Saved papers live in the current installation's SQLite library. Papers made in the internal teacher builder can be downloaded as one `.digitaldp-paper` file and restored through the visible import form on another installation with a new local paper ID. Imported legacy or reference-only packages retain their existing export restrictions.
 
@@ -129,7 +129,7 @@ The wider course library contains 52 original papers under `examples/course-samp
 
 This covers 23 course entries, not every course, tier, or component available in Paper Builder. **Full-length mock** means a complete original question workload with the researched component timing and mark allocation, not an official paper, awarding-body endorsement, calibrated difficulty, or official grade boundaries. The existing **full-format practice** and **format rehearsal** labels on IB-oriented examples retain their separate review limits. Subject teachers should moderate every paper before classroom use.
 
-Select **Mock marking guides** in the teacher sidebar for the worked answers and point allocations for the 15 full-length mocks. The `/mock-guides` route requires teacher sign-in. The generated offline index is `docs/mock-marking/index.html`; keep these answer-containing files away from students. Answers and marking guides are not included in exported `.digitaldp-paper` files. DigitalDP does not automatically mark responses. AP guides include weighted practice calculations: the displayed raw total is not an AP score, and no official 1–5 conversion is supplied.
+Select **Mock marking guides** in the teacher sidebar for the worked answers and point allocations for the 15 full-length mocks. The `/mock-guides` route requires teacher sign-in. The generated offline index is `docs/mock-marking/index.html`; keep these answer-containing files away from students. Answers and marking guides are not included in exported `.digitaldp-paper` files. PacePaper does not automatically mark responses. AP guides include weighted practice calculations: the displayed raw total is not an AP score, and no official 1–5 conversion is supplied.
 
 Run `bun run samples:build` to regenerate the editable manifests, ignored portable files, and teacher marking guides, then `bun run samples:seed` to add or safely upgrade examples in a source-development library. Repeating unchanged input does not duplicate papers; teacher edits and previous sessions are preserved. The app launcher performs the library upgrade automatically. These independent practice materials use integrated response areas; an AP hybrid exam's physical response booklet and the official digital application's break-resume behaviour remain classroom adaptations.
 
@@ -137,7 +137,7 @@ Run `bun run samples:build` to regenerate the editable manifests, ignored portab
 
 Three interactive, non-production teacher front-end concepts are available in [`design/mockups/teacher-frontends/`](design/mockups/teacher-frontends/): a live-exam Control Room, a task-led Teacher Desk, and a three-pane Paper Studio. Open its `index.html` directly to compare the flows. The companion [`student tools and calculator profiles`](research/student-tools-and-calculators.md) note records the recommended paper-controlled tool model.
 
-The researched [`examination-system compatibility plan`](research/exam-system-compatibility.md) defines how DigitalDP can support IB, Cambridge IGCSE, Pearson Edexcel International GCSE, AP, and later systems through versioned practice profiles. The [`official-source register`](resources/exam-systems/SOURCES.md) records the public evidence behind the plan without adding protected exam papers to Git.
+The researched [`examination-system compatibility plan`](research/exam-system-compatibility.md) defines how PacePaper can support IB, Cambridge IGCSE, Pearson Edexcel International GCSE, AP, and later systems through versioned practice profiles. The [`official-source register`](resources/exam-systems/SOURCES.md) records the public evidence behind the plan without adding protected exam papers to Git.
 
 ## Project structure
 

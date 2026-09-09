@@ -30,7 +30,7 @@ export function downloadResponseRecovery(recovery) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `DigitalDP-response-recovery-${recovery.sessionId}.json`;
+  link.download = `PacePaper-response-recovery-${recovery.sessionId}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }

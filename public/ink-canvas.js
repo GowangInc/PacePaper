@@ -307,7 +307,7 @@ function createRecoveryNotice(raw, label) {
   const heading = document.createElement("h4");
   heading.textContent = "Handwritten work needs recovery";
   const copy = document.createElement("p");
-  copy.textContent = "This saved response could not be opened, so DigitalDP has left its original data unchanged. Ask your teacher for help before continuing.";
+  copy.textContent = "This saved response could not be opened, so PacePaper has left its original data unchanged. Ask your teacher for help before continuing.";
   const details = document.createElement("details");
   const summary = document.createElement("summary");
   summary.textContent = "Show recovery data";

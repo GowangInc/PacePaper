@@ -624,7 +624,7 @@ export function mountPaperBuilder(container, onSubmit) {
       <header class="builder-heading">
         <p class="eyebrow">Paper Builder</p>
         <h3>Create a practice paper</h3>
-        <p>Choose the exact exam first. DigitalDP will then show the useful materials, questions and student entry areas.</p>
+        <p>Choose the exact exam first. PacePaper will then show the useful materials, questions and student entry areas.</p>
       </header>
 
       <fieldset class="builder-step builder-exam-picker">
@@ -639,7 +639,7 @@ export function mountPaperBuilder(container, onSubmit) {
           <label for="builder-level"><span id="builder-level-label">Level</span><select id="builder-level" required disabled></select></label>
           <label for="builder-paper"><span id="builder-paper-label-text">Paper</span><select id="builder-paper" required disabled></select></label>
         </div>
-        <p class="form-help">DigitalDP tunes the defaults and available build controls to this selection. Check the current official specification before formal use. Changing format keeps the current paper as a recoverable draft in this browser.</p>
+        <p class="form-help">PacePaper tunes the defaults and available build controls to this selection. Check the current official specification before formal use. Changing format keeps the current paper as a recoverable draft in this browser.</p>
       </fieldset>
 
       <div id="builder-exam-setup" hidden>

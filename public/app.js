@@ -151,7 +151,7 @@ async function start() {
 function renderFatal(error) {
   setView(`
     <section class="fatal-state">
-      <h1>DigitalDP could not start</h1>
+      <h1>PacePaper could not start</h1>
       <p id="fatal-message"></p>
       <button type="button" id="retry">Retry</button>
     </section>

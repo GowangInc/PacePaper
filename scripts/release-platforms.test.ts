@@ -21,9 +21,9 @@ describe("explicit release platforms", () => {
 
   test("names only the supported archive formats", () => {
     expect(RELEASE_PLATFORMS.map((platform) => releaseArchiveName("0.1.0-demo.5", platform))).toEqual([
-      "DigitalDP-0.1.0-demo.5-macos-universal.zip",
-      "DigitalDP-0.1.0-demo.5-windows-x64.zip",
-      "DigitalDP-0.1.0-demo.5-linux-x64.tar.gz",
+      "PacePaper-0.1.0-demo.5-macos-universal.zip",
+      "PacePaper-0.1.0-demo.5-windows-x64.zip",
+      "PacePaper-0.1.0-demo.5-linux-x64.tar.gz",
     ]);
   });
 });

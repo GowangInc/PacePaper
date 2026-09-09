@@ -633,12 +633,12 @@ async function handleApi(
 
   if (path === "/api/admin/class-rosters/template" && method === "GET") {
     requireRole(request, "admin");
-    return csvDownload("DigitalDP-class-list-template.csv", blankClassRosterCsv());
+    return csvDownload("PacePaper-class-list-template.csv", blankClassRosterCsv());
   }
 
   if (path === "/api/admin/class-rosters/export" && method === "GET") {
     requireRole(request, "admin");
-    return csvDownload("DigitalDP-class-lists.csv", encodeClassRosterCsv(listClasses(), listStudents()));
+    return csvDownload("PacePaper-class-lists.csv", encodeClassRosterCsv(listClasses(), listStudents()));
   }
 
   if (path === "/api/admin/class-rosters/import" && method === "POST") {
@@ -1132,7 +1132,7 @@ async function handleApi(
 }
 
 configureDemoAdmin("admin", await Bun.password.hash("admin"));
-console.warn("DigitalDP demo login is admin / admin on this computer only. Existing teacher credentials and teacher sessions are replaced at startup.");
+console.warn("PacePaper demo login is admin / admin on this computer only. Existing teacher credentials and teacher sessions are replaced at startup.");
 if (TEST_READING_SECONDS !== null) {
   console.warn(`DIGITALDP_TEST_READING_SECONDS=${TEST_READING_SECONDS} is active; exam reading time is temporarily overridden without changing saved papers.`);
 }
@@ -1225,6 +1225,6 @@ const server = Bun.serve<SocketData>({
 
 deleteExpiredAuthSessions();
 setInterval(deleteExpiredAuthSessions, 60 * 60 * 1000).unref();
-console.log(`DigitalDP is listening on http://${hostname}:${server.port}`);
+console.log(`PacePaper is listening on http://${hostname}:${server.port}`);
 console.log(`Teacher dashboard: http://localhost:${server.port}/admin`);
 console.log(`Student sign-in: ${network.lanOrigin ?? `http://localhost:${server.port}`}/student`);

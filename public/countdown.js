@@ -68,7 +68,7 @@ function setStatus(message, tone = "info") {
 }
 
 function renderUnavailable(title, message, actionLabel = "Return to teacher dashboard") {
-  document.title = "Examination clock | DigitalDP";
+  document.title = "Examination clock | PacePaper";
   setView(`
     <section class="auth-shell">
       <a class="back-link" href="/admin">← Teacher dashboard</a>
@@ -275,7 +275,7 @@ function applyDisplay(config, customised = false) {
         : config.sessionStatus === "ended"
           ? "Linked exam ended"
           : "Linked · using saved student timings";
-  document.title = `${config.title} clock | DigitalDP`;
+  document.title = `${config.title} clock | PacePaper`;
   updateSchedule(config);
   renderTick();
 }
@@ -569,7 +569,7 @@ function renderClockShell() {
         </aside>
         <section id="clock-display" class="clock-display" data-phase="before-start" aria-labelledby="clock-display-title">
           <div class="clock-display__heading">
-            <p class="clock-brand">DigitalDP examination clock</p>
+            <p class="clock-brand">PacePaper examination clock</p>
             <p id="clock-source-status" class="clock-source-status">Using saved exam timings</p>
             <h2 id="clock-display-title">Examination</h2>
             <p id="clock-display-subtitle" class="clock-display__subtitle"></p>

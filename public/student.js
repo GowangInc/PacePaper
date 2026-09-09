@@ -237,7 +237,7 @@ function renderExamSelection(state) {
   const sessions = parseStudentSessionList(state);
   setView(`
     <section class="waiting-shell exam-selection-shell" data-session-signature="${sessionListSignature(sessions)}">
-      <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>DigitalDP familiarisation</span></header>
+      <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>PacePaper familiarisation</span></header>
       <div class="waiting-content">
         <p class="eyebrow">Signed in</p>
         <h1 id="student-name"></h1>
@@ -313,7 +313,7 @@ function renderWaiting(state) {
   cleanupExam = undefined;
   setView(`
     <section class="waiting-shell" data-session-id="${state.session.id}">
-      <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>DigitalDP familiarisation</span></header>
+      <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>PacePaper familiarisation</span></header>
       <div class="waiting-content">
         <p class="eyebrow">Signed in</p>
         <h1 id="student-name"></h1>

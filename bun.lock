@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "digitaldp",
+      "name": "pacepaper",
       "devDependencies": {
         "@types/bun": "latest",
         "typescript": "latest",

@@ -1,6 +1,6 @@
 {
-  "name": "DigitalDP",
-  "short_name": "DigitalDP",
+  "name": "PacePaper",
+  "short_name": "PacePaper",
   "description": "Local digital examination familiarisation for teachers and students.",
   "start_url": "/admin",
   "display": "standalone",
