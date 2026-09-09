@@ -1,4 +1,8 @@
 import "/context-menu-lock.js";
+import { initTheme, themeRoleForPath } from "./theme.js";
+
+// Apply the saved (or system) appearance before the interface paints.
+initTheme(themeRoleForPath());
 
 export class ApiError extends Error {
   constructor(message, status) {

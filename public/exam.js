@@ -1,4 +1,5 @@
 import { ApiError, announce, api, formatTime, setView } from "/app.js";
+import { themeToggleMarkup } from "./theme.js";
 import { createExamAudioController } from "/exam-audio.js";
 import { phaseAtTime, phaseLockMessage, questionsForPhase, resourcesForExamContext } from "/exam-phase-model.js";
 import { createInkResponse, hasInkResponse } from "/ink-canvas.js";
@@ -249,6 +250,7 @@ export function mountExam(state, { onSubmitted }) {
           </details>
           <button id="timer-tool" class="timer-tool" type="button"></button>
           <label class="language-tool"><span class="visually-hidden">Interface language</span><select aria-label="Interface language"><option>English</option></select></label>
+          ${themeToggleMarkup()}
           <button id="accessibility-tool" type="button" aria-label="Accessibility settings">Accessibility</button>
         </nav>
       </header>

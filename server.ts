@@ -9,10 +9,13 @@ import {
   createExamSession,
   createPaper,
   createStudent,
+  deleteAdminSessions,
   deleteExpiredAuthSessions,
   endExamSession,
   findAdmin,
+  findAdminById,
   findStudentLoginById,
+  updateAdminPasswordHash,
   getAsset,
   getAudioPlayCount,
   getPaper,
@@ -666,6 +669,25 @@ async function handleApi(
     return json(state);
   }
 
+  if (path === "/api/admin/password" && method === "POST") {
+    const actor = requireRole(request, "admin");
+    if (!localRequest) throw new HttpError("Teacher access is only available on this computer", 403);
+    const body = await jsonBody(request);
+    const currentPassword = requiredText(body.currentPassword, "Current password", 200);
+    const newPassword = requiredText(body.newPassword, "New password", 200);
+    if (newPassword.length < 10) throw new HttpError("Use a new password of at least 10 characters", 400);
+    if (newPassword === currentPassword) throw new HttpError("New password must be different from the current password", 400);
+    const admin = findAdminById(actor.actorId);
+    if (!admin || !(await Bun.password.verify(currentPassword, admin.passwordHash))) {
+      throw new HttpError("Current password is incorrect", 403);
+    }
+    updateAdminPasswordHash(admin.id, await Bun.password.hash(newPassword));
+    // The password changed: every existing teacher session is invalidated so
+    // only sign-ins made with the new password remain active.
+    deleteAdminSessions();
+    return json({ ok: true });
+  }
+
   const lifecycleMatch = path.match(/^\/api\/admin\/(students|classes|sessions)\/([a-f0-9-]+)\/(archive|restore)$/);
   if (lifecycleMatch && method === "POST") {
     requireRole(request, "admin");
@@ -1132,7 +1154,7 @@ async function handleApi(
 }
 
 configureDemoAdmin("admin", await Bun.password.hash("admin"));
-console.warn("PacePaper demo login is admin / admin on this computer only. Existing teacher credentials and teacher sessions are replaced at startup.");
+console.warn("A fresh installation signs in with admin / admin. Once a teacher account exists, its password persists across restarts and can be changed from dashboard Settings; teacher sessions are cleared at each launch.");
 if (TEST_READING_SECONDS !== null) {
   console.warn(`DIGITALDP_TEST_READING_SECONDS=${TEST_READING_SECONDS} is active; exam reading time is temporarily overridden without changing saved papers.`);
 }

@@ -34,6 +34,7 @@ import siteWebmanifest from "../public/site.webmanifest" with { type: "file" };
 import studentConnection from "../public/student-connection.js" with { type: "file" };
 import studentWorkspace from "../public/student-workspace.png" with { type: "file" };
 import student from "../public/student.js" with { type: "file" };
+import theme from "../public/theme.js" with { type: "file" };
 import styles from "../public/styles.css" with { type: "file" };
 import teacherDashboard from "../public/teacher-dashboard.png" with { type: "file" };
 import textHighlights from "../public/text-highlights.js" with { type: "file" };
@@ -76,6 +77,7 @@ export default {
   "public/student-connection.js": studentConnection,
   "public/student-workspace.png": studentWorkspace,
   "public/student.js": student,
+  "public/theme.js": theme,
   "public/styles.css": styles,
   "public/teacher-dashboard.png": teacherDashboard,
   "public/text-highlights.js": textHighlights,

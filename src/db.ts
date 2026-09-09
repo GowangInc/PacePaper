@@ -224,7 +224,7 @@ export function createAdmin(username: string, passwordHash: string): AdminRow {
   return { id, username, passwordHash };
 }
 
-export function configureDemoAdmin(username: string, passwordHash: string): AdminRow {
+export function configureDemoAdmin(defaultUsername: string, defaultPasswordHash: string): AdminRow {
   const existing = db.query<AdminRow, []>(`
     SELECT id, username, password_hash AS passwordHash
       FROM admins
@@ -233,16 +233,28 @@ export function configureDemoAdmin(username: string, passwordHash: string): Admi
   `).get();
   if (!existing) {
     db.query("DELETE FROM auth_sessions WHERE role = 'admin'").run();
-    return createAdmin(username, passwordHash);
+    return createAdmin(defaultUsername, defaultPasswordHash);
   }
 
+  // A fresh database gets the default demo login. Once a teacher account
+  // exists, its username and password persist across restarts (the teacher
+  // changes the password from dashboard Settings); stale sessions are
+  // cleared and any accidental extra admin rows are removed.
   db.transaction(() => {
     db.query("DELETE FROM auth_sessions WHERE role = 'admin'").run();
     db.query("DELETE FROM admins WHERE id <> $id").run({ id: existing.id });
-    db.query("UPDATE admins SET username = $username, password_hash = $passwordHash WHERE id = $id")
-      .run({ id: existing.id, username, passwordHash });
   })();
-  return { id: existing.id, username, passwordHash };
+  return existing;
+}
+
+export function findAdminById(id: string): AdminRow | null {
+  return db.query<AdminRow, { id: string }>(
+    "SELECT id, username, password_hash AS passwordHash FROM admins WHERE id = $id",
+  ).get({ id }) ?? null;
+}
+
+export function updateAdminPasswordHash(id: string, passwordHash: string): void {
+  db.query("UPDATE admins SET password_hash = $passwordHash WHERE id = $id").run({ id, passwordHash });
 }
 
 export function findAdmin(username: string): AdminRow | null {
@@ -317,6 +329,10 @@ export function findAuthSession(tokenHash: string): AuthRow | null {
 
 export function deleteAuthSession(tokenHash: string): void {
   db.query("DELETE FROM auth_sessions WHERE token_hash = $tokenHash").run({ tokenHash });
+}
+
+export function deleteAdminSessions(): void {
+  db.query("DELETE FROM auth_sessions WHERE role = 'admin'").run();
 }
 
 export function deleteExpiredAuthSessions(): void {

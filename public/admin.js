@@ -1,4 +1,5 @@
 import { ApiError, announce, api, connectSocket, humanSubject, setView } from "/app.js";
+import { themeToggleMarkup } from "./theme.js";
 import {
   collectionActionPath,
   emptyState,
@@ -85,7 +86,7 @@ function renderSetup() {
 function renderLogin() {
   authFrame(
     "Teacher sign in",
-    "Demo login: admin / admin. Startup replaces existing teacher credentials, so keep this build on this computer.",
+    "A fresh installation signs in with admin / admin. You can change the password later from Settings.",
     `
       <label for="username">Username</label>
       <input id="username" name="username" value="admin" autocomplete="username" maxlength="40" required>
@@ -859,6 +860,34 @@ function bindDashboard() {
     event.preventDefault();
     mutate(event.currentTarget, "/api/admin/sessions");
   });
+
+  const passwordForm = document.querySelector("#password-form");
+  passwordForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(event.currentTarget).entries());
+    const confirmValue = passwordForm.querySelector("#password-confirm").value;
+    const errorSlot = passwordForm.querySelector("#password-error");
+    errorSlot.hidden = true;
+    if (data.newPassword !== confirmValue) {
+      errorSlot.textContent = "The new password entries do not match.";
+      errorSlot.hidden = false;
+      return;
+    }
+    const button = passwordForm.querySelector("button[type=submit]");
+    button.disabled = true;
+    try {
+      await api("/api/admin/password", { method: "POST", body: JSON.stringify({ currentPassword: data.currentPassword, newPassword: data.newPassword }) });
+      // The server invalidated every teacher session, including this one.
+      stopSocket?.();
+      clearInterval(presenceTimer);
+      renderLogin();
+    } catch (error) {
+      errorSlot.textContent = error?.message ?? "Could not change the password.";
+      errorSlot.hidden = false;
+      button.disabled = false;
+    }
+  });
+
   document.querySelector("#session-system").addEventListener("change", () => renderSessionPaperSelectors(currentState.papers));
   document.querySelector("#session-paper").addEventListener("change", () => renderSelectedPaper(currentState.papers));
   document.querySelector("#library-search").addEventListener("input", () => renderPaperLibrary(currentState.papers));
@@ -888,6 +917,7 @@ async function renderDashboard() {
           <button type="button" data-jump="#classes">Classes</button>
           <button type="button" data-jump="#sessions">Sessions</button>
           <button type="button" data-jump="#papers">Paper library</button>
+          <button type="button" data-jump="#settings">Settings</button>
         </nav>
         <a class="quiet-action" href="/guide" target="_blank" rel="noopener">User guide ↗</a>
         <a class="quiet-action" href="/mock-guides" target="_blank" rel="noopener">Mock marking guides ↗</a>
@@ -896,7 +926,7 @@ async function renderDashboard() {
       <div class="admin-main">
         <header class="admin-topbar">
           <div><p class="eyebrow">Teacher dashboard</p><h1>Teacher desk</h1></div>
-          <span class="connection-state" id="connection-state">Connecting</span>
+          <div class="topbar-actions"><span class="connection-state" id="connection-state">Connecting</span>${themeToggleMarkup()}</div>
         </header>
         <p id="global-status" class="status-message sticky-status" role="status" aria-live="polite" hidden></p>
 
@@ -1027,6 +1057,22 @@ async function renderDashboard() {
               <button type="submit">Set up exam</button>
             </fieldset>
           </form>
+        </section>
+
+        <section id="settings" class="admin-section two-column-section">
+          <div>
+            <div class="section-heading"><div><h2>Settings</h2><p>Change the teacher sign-in password for this computer.</p></div></div>
+            <form id="password-form" class="utility-form" method="post">
+              <fieldset><legend>Change teacher password</legend>
+                <p class="form-help">The password is saved with your data and survives restarts. A fresh installation signs in with <strong>admin / admin</strong>; change it before using real student data. Use at least 10 characters. Changing the password signs every device out of the dashboard.</p>
+                <label for="password-current">Current password</label><input id="password-current" name="currentPassword" type="password" required maxlength="200" autocomplete="current-password">
+                <label for="password-new">New password</label><input id="password-new" name="newPassword" type="password" required minlength="10" maxlength="200" autocomplete="new-password">
+                <label for="password-confirm">Repeat new password</label><input id="password-confirm" type="password" required minlength="10" maxlength="200" autocomplete="new-password">
+                <p id="password-error" class="status-message" data-tone="error" role="alert" hidden></p>
+                <button type="submit">Update password</button>
+              </fieldset>
+            </form>
+          </div>
         </section>
       </div>
     </div>

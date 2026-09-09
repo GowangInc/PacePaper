@@ -57,3 +57,55 @@
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
+
+/* Light/dark appearance ------------------------------------------------ */
+/* Token additions used by legacy rules converted in styles.css. */
+:root {
+  --color-warning-ink: #7a4b00;
+  --color-topbar: oklch(99% 0.004 250 / 0.94);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: oklch(20% 0.012 250);
+  --color-surface: oklch(27.5% 0.016 250);
+  --color-surface-muted: oklch(33% 0.016 250);
+  --color-ink: oklch(94% 0.006 250);
+  --color-ink-muted: oklch(74% 0.012 250);
+  --color-rule: oklch(42% 0.014 250);
+  --color-rule-strong: oklch(58% 0.03 250);
+  --color-topbar: oklch(20% 0.012 250 / 0.94);
+  --color-accent: oklch(72% 0.13 250);
+  --color-accent-strong: oklch(82% 0.09 250);
+  --color-accent-soft: oklch(32% 0.05 250);
+  --color-focus: oklch(82% 0.16 70);
+  --color-success: oklch(76% 0.13 155);
+  --color-success-soft: oklch(32% 0.05 155);
+  --color-warning: oklch(80% 0.14 75);
+  --color-warning-soft: oklch(33% 0.05 75);
+  --color-warning-ink: oklch(86% 0.13 80);
+  --color-danger: oklch(74% 0.17 25);
+  --color-danger-soft: oklch(34% 0.06 25);
+  --color-audio: oklch(78% 0.2 350);
+  --color-audio-surface: oklch(19% 0.01 250);
+  --color-audio-track: oklch(40% 0.01 250);
+  --color-inverse: oklch(96% 0.005 250);
+}
+
+/* Printed candidate papers stay light regardless of the on-screen theme. */
+@media print {
+  html, html[data-theme="dark"] {
+    --color-paper: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f1f5f9;
+    --color-ink: #172033;
+    --color-ink-muted: #475569;
+    --color-rule: #cbd5e1;
+    --color-rule-strong: #64748b;
+    --color-danger: #b42318;
+    --color-danger-soft: #fff2f0;
+    --color-warning-ink: #7a4b00;
+    --color-warning-soft: #fff7df;
+    --color-inverse: #ffffff;
+  }
+}
