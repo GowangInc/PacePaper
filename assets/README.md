@@ -1,21 +1,18 @@
-# DigitalDP app icon
+# PacePaper app icon
 
-`app-icon-master.png` is the 1024×1024 source used for all DigitalDP application icons. `app-icon.icns` supplies the macOS application bundle and `app-icon.ico` is embedded in the Windows executable. The browser and installable-web variants are derived into `public/`.
+`assets/app-icon-master.png` is the 1024×1024 source used for all PacePaper application icons. `assets/app-icon.icns` supplies the macOS application bundle and `assets/app-icon.ico` is embedded in the Windows executable. The browser and installable-web variants are derived into `public/` (`app-icon-64.png`, `app-icon-192.png`, `app-icon-512.png`, `apple-touch-icon.png`).
 
-The original image was generated with OpenAI's built-in image-generation tool on 2026-09-03, then resized and converted locally without compositional changes.
+## Design
 
-## Generation prompt
+Flat linework mark: a navy rounded-square tile (`#172033`, the app's brand field) holding an ivory paper sheet, with a bold ink beat-arc rising from an origin square toward four teal beads and a vermilion finish bead. "Pace" is the steady rhythm of beats along the rising arc; the paper keeps the examination identity. Palette: linework ivory `#F1E7D0`, teal `#2E788F`, vermilion `#B83E35`.
 
-```text
-Use case: logo-brand
-Asset type: master application icon for DigitalDP, an offline digital examination and paper-building app for teachers and students
-Primary request: create one distinctive premium app icon combining a digital examination sheet, a subtle folded-paper form, and a precise pen stroke; the central paper geometry should quietly suggest the letters D and P through negative space without depending on readable typography
-Scene/backdrop: self-contained rounded-square icon tile with generous safe margins
-Style/medium: polished modern app icon, crisp vector-like geometry with restrained dimensional depth, tactile but not photorealistic
-Composition/framing: centered, bold silhouette, simple enough to remain legible at 16–32 pixels, balanced negative space
-Lighting/mood: confident, calm, trustworthy, intelligent
-Color palette: deep midnight navy base, luminous cyan-to-teal paper accent, one small warm coral/orange pen-stroke accent, high contrast
-Materials/textures: very subtle soft glass and paper depth, clean edges
-Constraints: square 1:1 master; no words; no small lettering; no numbers; no mockup device; no external background scene; no watermark; no Apple, Microsoft, Linux, or IB logos or trademarks; original design only; keep important artwork away from outer 10 percent for platform masks
-Avoid: generic graduation cap, checkmark, clip art, excessive gradients, busy details, neon gaming aesthetic
-```
+## Generation
+
+The artwork is deterministic geometry, rendered with Pillow at 4× supersampling for crisp edges:
+
+- `assets/icon-source/render-b3-master.py` — renders the 1024 master.
+- `assets/icon-source/derive-all-formats.py` — derives every public and bundled size from the master, with size-tiered simplification (full art ≥ 64 px; three-bead variant at 32 px; two-bead variant at 16 px so the mark stays structured in the smallest slots). It regenerates `assets/app-icon-master.png`, `assets/app-icon.icns` (via `iconutil`), `assets/app-icon.ico`, and the `public/` icons.
+
+## History
+
+The previous DigitalDP-era icon (glossy 3D navy sheet with a D-form) shipped through demo.7. A copy of its master and derived formats is archived under `~/Sync/shared/pictures/pacepaper-icon-candidates/digitaldp-demo7-icon-backup/`; the git history also retains the originals.
