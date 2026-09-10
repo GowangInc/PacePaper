@@ -96,6 +96,7 @@ function textBlock(tag, className, text) {
 }
 
 export function mountExam(state, { onSubmitted }) {
+  document.title = "PacePaper · Exam in progress";
   const paper = state.paper;
   const sessionId = state.session.id;
   const response = state.response;
@@ -1207,6 +1208,7 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   const cleanup = () => {
+    document.title = "PacePaper · Candidate sign-in";
     if (saveState.pending) persistLocal();
     clearTimeout(saveTimer);
     clearInterval(tickTimer);

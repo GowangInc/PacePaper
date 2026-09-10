@@ -273,7 +273,7 @@
 <ol>
 <li>Start PacePaper and sign in as the teacher.</li>
 <li>Check the <strong>Student sign-in</strong> address shown under <strong>Classroom sharing</strong> in <strong>Overview</strong> (PacePaper shares the classroom network by default; choose a different address there if the network changed).</li>
-<li>Copy the <strong>Student sign-in</strong> address and test it on one student device.</li>
+<li>Copy the <strong>Student sign-in</strong> address and test it on one student device. The bare address is enough: opening it goes straight to candidate sign-in.</li>
 <li>In <strong>Classes</strong>, create or import the class and check every student's details.</li>
 <li>In <strong>Paper library</strong>, choose an included example or create/import a paper. Review its questions and materials before the lesson.</li>
 <li>In <strong>Sessions</strong>, choose the class, exam system, and paper, then select <strong>Set up exam</strong>.</li>
@@ -336,7 +336,7 @@
 <li>Confirm that the PacePaper student sign-in page appears.</li>
 </ol>
 <p>Do this test before students begin. <code>localhost</code> and <code>127.0.0.1</code> work only on the teacher computer.</p>
-<p>The <strong>Student sign-in</strong> address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows <code>127.0.0.1</code> or <code>localhost</code>. If classroom sharing is off, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.</p>
+<p>The <strong>Student sign-in</strong> address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows <code>127.0.0.1</code> or <code>localhost</code>, and students can type it without adding <code>/student</code> because the bare address opens candidate sign-in. If classroom sharing is off, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.</p>
 <p>The teacher and students must be on a network that allows their devices to communicate. Guest Wi-Fi, different school networks, or network isolation may block access.</p>
 <p>Classroom sharing cannot be changed while any examination is live. Do not quit or restart PacePaper during an exam.</p>
 <h2 id="step-3-prepare-the-class">Step 3 — Prepare the class</h2><figure class="guide-shot">

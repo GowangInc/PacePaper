@@ -135,12 +135,14 @@ const path = location.pathname.replace(/\/$/, "") || "/";
 async function start() {
   const bootstrap = await api("/api/bootstrap");
   if (path === "/admin") {
+    document.title = "PacePaper · Teacher dashboard";
     const { renderAdmin } = await import("/admin.js");
     await renderAdmin(bootstrap);
   } else if (path === "/clock") {
     const { renderCountdown } = await import("/countdown.js");
     await renderCountdown(bootstrap);
   } else if (path === "/student") {
+    document.title = "PacePaper · Candidate sign-in";
     const { renderStudent } = await import("/student.js");
     await renderStudent(bootstrap);
   } else if (path === "/") {

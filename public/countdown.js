@@ -68,7 +68,7 @@ function setStatus(message, tone = "info") {
 }
 
 function renderUnavailable(title, message, actionLabel = "Return to teacher dashboard") {
-  document.title = "Examination clock | PacePaper";
+  document.title = "PacePaper · Exam clock";
   setView(`
     <section class="auth-shell">
       <a class="back-link" href="/admin">← Teacher dashboard</a>
@@ -275,7 +275,7 @@ function applyDisplay(config, customised = false) {
         : config.sessionStatus === "ended"
           ? "Linked exam ended"
           : "Linked · using saved student timings";
-  document.title = `${config.title} clock | PacePaper`;
+  document.title = `PacePaper · ${config.title} clock`;
   updateSchedule(config);
   renderTick();
 }
@@ -576,7 +576,7 @@ function renderClockShell() {
             <section class="clock-student-connect" aria-labelledby="clock-student-connect-title">
               <h3 id="clock-student-connect-title">Students connect at</h3>
               <div class="clock-student-connect__body">
-                <a class="clock-student-url" data-student-connection-link href="/student" target="_blank" rel="noopener">/student</a>
+                <a class="clock-student-url" data-student-connection-link href="/" target="_blank" rel="noopener">PacePaper</a>
                 <button data-copy-student-connection type="button" aria-describedby="clock-student-connect-status">Copy URL</button>
               </div>
               <p id="clock-student-connect-status" class="clock-student-connect__status" data-copy-student-connection-status role="status" aria-live="polite" aria-atomic="true" hidden></p>

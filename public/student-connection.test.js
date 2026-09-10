@@ -18,8 +18,8 @@ describe("student connection details", () => {
   });
 
   test("builds the student address from the active HTTP origin", () => {
-    expect(studentConnectionUrl("http://127.0.0.1:9148")).toBe("http://127.0.0.1:9148/student");
-    expect(studentConnectionUrl("https://exam.school.test:9443/admin")).toBe("https://exam.school.test:9443/student");
+    expect(studentConnectionUrl("http://127.0.0.1:9148")).toBe("http://127.0.0.1:9148");
+    expect(studentConnectionUrl("https://exam.school.test:9443/admin")).toBe("https://exam.school.test:9443");
     expect(() => studentConnectionUrl("file:///tmp/index.html")).toThrow(TypeError);
   });
 
@@ -81,7 +81,7 @@ describe("student connection details", () => {
       clipboard: { writeText: async () => {} },
       documentRef: null,
     });
-    expect(url).toBe("http://192.168.1.10:9148/student");
+    expect(url).toBe("http://192.168.1.10:9148");
     expect(link).toMatchObject({ href: url, textContent: url });
     await listeners.click();
     expect(status).toMatchObject({

@@ -27,7 +27,7 @@ Follow this order for a complete practice exam:
 
 1. Start PacePaper and sign in as the teacher.
 2. Check the **Student sign-in** address shown under **Classroom sharing** in **Overview** (PacePaper shares the classroom network by default; choose a different address there if the network changed).
-3. Copy the **Student sign-in** address and test it on one student device.
+3. Copy the **Student sign-in** address and test it on one student device. The bare address is enough: opening it goes straight to candidate sign-in.
 4. In **Classes**, create or import the class and check every student's details.
 5. In **Paper library**, choose an included example or create/import a paper. Review its questions and materials before the lesson.
 6. In **Sessions**, choose the class, exam system, and paper, then select **Set up exam**.
@@ -96,7 +96,7 @@ PacePaper shares the classroom network from launch, using the address it saved l
 
 Do this test before students begin. `localhost` and `127.0.0.1` work only on the teacher computer.
 
-The **Student sign-in** address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows `127.0.0.1` or `localhost`. If classroom sharing is off, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.
+The **Student sign-in** address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows `127.0.0.1` or `localhost`, and students can type it without adding `/student` because the bare address opens candidate sign-in. If classroom sharing is off, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.
 
 The teacher and students must be on a network that allows their devices to communicate. Guest Wi-Fi, different school networks, or network isolation may block access.
 

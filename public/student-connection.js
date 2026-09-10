@@ -1,9 +1,13 @@
+/**
+ * The address students type. The bare origin is enough: loading it redirects to
+ * candidate sign-in, which keeps the projected address short and easy to read.
+ */
 export function studentConnectionUrl(origin) {
   const base = new URL(String(origin));
   if (base.protocol !== "http:" && base.protocol !== "https:") {
     throw new TypeError("Student connections require an HTTP or HTTPS origin");
   }
-  return new URL("/student", base.origin).href;
+  return base.origin;
 }
 
 export async function copyStudentConnection(text, {

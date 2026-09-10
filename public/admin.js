@@ -934,7 +934,7 @@ async function renderDashboard() {
           <section class="session-row" aria-labelledby="student-connection-title">
             <div>
               <strong id="student-connection-title">Student sign-in</strong>
-              <a data-student-connection-link href="/student" target="_blank" rel="noopener">/student</a>
+              <a data-student-connection-link href="/" target="_blank" rel="noopener">PacePaper</a>
               <small>This is the address students open on their own devices. Turn on classroom sharing below to allow connections.</small>
             </div>
             <div class="session-actions">
