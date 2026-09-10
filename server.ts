@@ -79,6 +79,7 @@ import {
   listLocalPrivateIpv4Interfaces,
   loadSelectedClassroomAddress,
   persistSelectedClassroomAddress,
+  restoreClassroomSharingAtStartup,
 } from "./src/classroom-network.ts";
 import { guideStylesheetSource, isStudentStaticPath, staticFilePath } from "./src/static-files.ts";
 import { staticAssetPath } from "./src/static-assets.ts";
@@ -125,10 +126,15 @@ const classroomNetwork = new ClassroomNetworkState({
   port,
   selectedAddress: managedDatabasePath ? loadSelectedClassroomAddress(managedDatabasePath) : null,
 });
+if (managedClassroomNetwork && managedDatabasePath) {
+  restoreClassroomSharingAtStartup(classroomNetwork, { databasePath: managedDatabasePath });
+}
 let network = demoNetworkConfig({
   port,
   bindHostname: managedClassroomNetwork ? "0.0.0.0" : process.env.HOST,
-  lanOrigin: managedClassroomNetwork ? undefined : process.env.DIGITALDP_LAN_ORIGIN,
+  lanOrigin: managedClassroomNetwork
+    ? (classroomNetwork.snapshot().lanOrigin ?? undefined)
+    : process.env.DIGITALDP_LAN_ORIGIN,
   allowInactiveLanBinding: managedClassroomNetwork,
 });
 const hostname = network.bindHostname;

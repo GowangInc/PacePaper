@@ -9,6 +9,7 @@ import {
   listLocalPrivateIpv4Interfaces,
   loadSelectedClassroomAddress,
   persistSelectedClassroomAddress,
+  restoreClassroomSharingAtStartup,
 } from "./classroom-network.ts";
 
 const temporaryDirectory = mkdtempSync(join(tmpdir(), "digitaldp-classroom-network-test-"));
@@ -76,5 +77,44 @@ describe("managed classroom network sharing", () => {
     expect(state.snapshot()).toEqual({ managed: false, selectedAddress: null, lanOrigin: null });
     expect(classroomLanOrigin("10.20.30.40", 80)).toBe("http://10.20.30.40");
     expect(() => classroomLanOrigin("10.20.30.40", 0)).toThrow("port from 1 to 65535");
+  });
+
+  test("restores the saved classroom address as the active origin at startup", () => {
+    const state = new ClassroomNetworkState({ managed: true, port: 9148, selectedAddress: "192.168.50.20" });
+    expect(restoreClassroomSharingAtStartup(state, {
+      databasePath: join(temporaryDirectory, "restored.sqlite"),
+      available: localAddresses,
+    })).toEqual({
+      managed: true,
+      selectedAddress: "192.168.50.20",
+      lanOrigin: "http://192.168.50.20:9148",
+    });
+  });
+
+  test("chooses and saves the first private LAN address when none is stored", () => {
+    const databasePath = join(temporaryDirectory, "first-run.sqlite");
+    const state = new ClassroomNetworkState({ managed: true, port: 9148 });
+    expect(restoreClassroomSharingAtStartup(state, { databasePath, available: localAddresses })).toEqual({
+      managed: true,
+      selectedAddress: "10.20.30.40",
+      lanOrigin: "http://10.20.30.40:9148",
+    });
+    expect(loadSelectedClassroomAddress(databasePath, localAddresses)).toBe("10.20.30.40");
+  });
+
+  test("stays local-only without a private LAN address or a managed release", () => {
+    const databasePath = join(temporaryDirectory, "local-only.sqlite");
+    const managed = new ClassroomNetworkState({ managed: true, port: 9148 });
+    expect(restoreClassroomSharingAtStartup(managed, { databasePath, available: [] })).toEqual({
+      managed: true,
+      selectedAddress: null,
+      lanOrigin: null,
+    });
+    const development = new ClassroomNetworkState({ managed: false, port: 9148 });
+    expect(restoreClassroomSharingAtStartup(development, { databasePath, available: localAddresses })).toEqual({
+      managed: false,
+      selectedAddress: null,
+      lanOrigin: null,
+    });
   });
 });

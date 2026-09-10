@@ -148,9 +148,9 @@ export function classroomLanOrigin(address: string, port: number): string {
 }
 
 /**
- * Runtime-only LAN state for a packaged release. It starts disabled, so an
- * address loaded from disk remains a preference until a teacher explicitly
- * enables sharing for the current class session.
+ * Runtime-only LAN state for a packaged release. An address on disk is only a
+ * preference: sharing becomes active when the launcher restores it at startup
+ * or a teacher changes it from the dashboard.
  */
 export class ClassroomNetworkState {
   readonly #managed: boolean;
@@ -188,4 +188,26 @@ export class ClassroomNetworkState {
     this.#lanOrigin = null;
     return this.snapshot();
   }
+}
+
+/**
+ * LAN-first startup for the packaged app: students on their own devices are the
+ * expected case, so sharing is active from launch. The saved address is reused
+ * while it is still assigned; otherwise the machine's first private LAN address
+ * is chosen and saved. Unmanaged runs and machines without a private LAN
+ * address stay local-only.
+ */
+export function restoreClassroomSharingAtStartup(
+  state: ClassroomNetworkState,
+  {
+    databasePath,
+    available = listLocalPrivateIpv4Interfaces(),
+  }: { databasePath: string; available?: readonly LocalPrivateIpv4Interface[] },
+): ClassroomNetworkSnapshot {
+  const snapshot = state.snapshot();
+  if (!snapshot.managed) return snapshot;
+  const address = snapshot.selectedAddress ?? available[0]?.address ?? null;
+  if (address === null) return snapshot;
+  if (snapshot.selectedAddress === null) persistSelectedClassroomAddress(databasePath, address, available);
+  return state.enable(address, available);
 }

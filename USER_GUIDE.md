@@ -26,7 +26,7 @@ The included example has its own teacher-authored markscheme. Keep marking mater
 Follow this order for a complete practice exam:
 
 1. Start PacePaper and sign in as the teacher.
-2. In **Overview**, turn on **Classroom sharing**.
+2. Check the **Student sign-in** address shown under **Classroom sharing** in **Overview** (PacePaper shares the classroom network by default; choose a different address there if the network changed).
 3. Copy the **Student sign-in** address and test it on one student device.
 4. In **Classes**, create or import the class and check every student's details.
 5. In **Paper library**, choose an included example or create/import a paper. Review its questions, materials, and matching marking guide before the lesson.
@@ -83,11 +83,11 @@ Use the page that opens automatically. This launcher includes the example librar
 
 ## Step 2 — Let students connect
 
-PacePaper starts in **This computer only** mode every time it opens.
+PacePaper shares the classroom network from launch, using the address it saved last time (the first private network address is chosen and saved on a new installation).
 
 1. Select **Overview**.
 2. Find **Classroom sharing**.
-3. Choose the private network used by the teacher and student devices.
+3. Check the private network used by the teacher and student devices, and choose another detected address if needed.
 4. Select **Apply classroom sharing**.
 5. Find the **Student sign-in** address.
 6. Select **Copy URL**.
