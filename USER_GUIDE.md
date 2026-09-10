@@ -10,7 +10,7 @@ Use the left-hand menu to move between these areas:
 
 | Area | What it is for |
 | --- | --- |
-| **Overview** | Turn classroom sharing on, copy the student address, and check that PacePaper is connected. |
+| **Overview** | Confirm classroom sharing is on, copy the student address, and check that PacePaper is connected. |
 | **Classes** | Create classes, add students, import class lists, and set extra time. |
 | **Sessions** | Give a paper to a class, open its clock, start the exam, and review submissions. |
 | **Paper library** | Choose an included example, build a paper, or import a saved paper. |
