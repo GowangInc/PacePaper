@@ -117,4 +117,12 @@ describe("managed classroom network sharing", () => {
       lanOrigin: null,
     });
   });
+
+  test("lets the teacher stop startup sharing for the current session", () => {
+    const databasePath = join(temporaryDirectory, "session-off.sqlite");
+    const state = new ClassroomNetworkState({ managed: true, port: 9148 });
+    restoreClassroomSharingAtStartup(state, { databasePath, available: localAddresses });
+    expect(state.disable()).toEqual({ managed: true, selectedAddress: "10.20.30.40", lanOrigin: null });
+    expect(state.snapshot().lanOrigin).toBeNull();
+  });
 });
