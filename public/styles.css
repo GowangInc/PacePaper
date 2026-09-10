@@ -2095,6 +2095,35 @@ legend {
   font-size: var(--text-sm);
 }
 
+/* A teacher's rehearsal tab: the candidate shell plus one banner row above the phase banner. */
+.exam-shell[data-preview="true"] {
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "exam-topbar"
+    "preview-banner"
+    "reading-banner"
+    "exam-workspace"
+    "exam-footer";
+}
+
+.preview-banner {
+  grid-area: preview-banner;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  border-bottom: var(--rule-thin) solid var(--exam-accent);
+  background: color-mix(in srgb, var(--exam-accent) 12%, var(--exam-surface));
+  padding: var(--space-2) var(--space-4);
+  color: var(--exam-ink);
+  font-size: var(--text-sm);
+}
+
+.preview-banner strong {
+  color: var(--exam-accent);
+}
+
 .reading-banner[hidden] {
   display: none;
 }

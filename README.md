@@ -26,7 +26,11 @@ Sign in on the teacher computer with the default demo login.
 
 ![PacePaper paper library](docs/user-guide/screenshots/papers.png)
 
-The Paper library already holds one preloaded Sample paper, ready to open — plus the builder and import for your own papers.
+The Paper library already holds one preloaded Sample paper, ready to open — plus the builder and import for your own papers. **Preview as student** opens any paper in the candidate interface.
+
+![PacePaper candidate preview](docs/user-guide/screenshots/candidate-preview.png)
+
+A candidate preview: the real student interface for the chosen paper, with nothing recorded.
 
 ![PacePaper classes and students](docs/user-guide/screenshots/classes.png)
 
@@ -84,6 +88,7 @@ Notes for teachers:
 - Exam-format-first Paper Builder with provider-specific terminology and tuned starters for IB DP, IB MYP eAssessment, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and school-custom practice
 - Video and YouTube stimulus material: paste a video link as a shared paper material or attach one to an individual question; candidates see an embedded player (YouTube plays via youtube-nocookie; direct https video URLs stream inline)
 - Full-screen suggestion on the candidate exam screen: one click enters browser full screen, the suggestion returns if full screen exits, and an explicit dismissal is remembered for the sitting (no-op in SEB or managed-kiosk full screen)
+- Rehearse a paper as a student before a lesson: **Preview as student** in the Paper library opens the real candidate interface in a new tab, with the paper's own timings, phases, locked sections, and audio — and records nothing at all (no class, session, response, or counted audio listen)
 - Live, independently scrollable paper preview while a teacher edits
 - One-file PacePaper paper export and re-import, including explicitly authorized attachments
 - PDF, image, text, and controlled-play audio resources, including media attached to individual questions; students receive exactly two complete plays per recording, with no pause or restart once a play begins
@@ -132,7 +137,7 @@ The release builder produces shareable, self-contained macOS, Windows, and Linux
 
 The Mac bundle must be signed with a Developer ID Application certificate and notarized by Apple. The release builder deliberately refuses to create an ad-hoc-signed Mac download, because Gatekeeper can report that download as damaged without offering **Open Anyway**.
 
-**Version 0.1.0-demo.11 is prepared for Windows x64 and Linux x64** — the classroom address is now chosen from a real network adapter instead of a container or virtual adapter, so a machine running Docker, Hyper-V, or WSL advertises the interface that student devices can actually reach. It keeps demo.10's classroom sharing active from launch, demo.9's teacher **Settings** area, independent **light/dark themes**, the **IB MYP eAssessment** exam system, **video and YouTube stimulus material**, and the candidate **full-screen** suggestion, plus the demo-era strengths: live reading/writing timing corrections from the examination clock, focus alerts when a candidate leaves the exam window, and one generic **Sample paper** so a fresh install is usable immediately. A macOS app remains withheld for signing/notarization reasons; see [release notes](release/RELEASE_NOTES-0.1.0-demo.11.md).
+**Version 0.1.0-demo.12 is prepared for Windows x64 and Linux x64** — a teacher can now rehearse any paper as a student: **Preview as student** in the Paper library opens the real candidate interface with the paper's own timings, phases, locked sections, and audio, and records nothing. It keeps demo.11's classroom address chosen from a real network adapter rather than a container or virtual adapter, so a machine running Docker, Hyper-V, or WSL advertises the interface that student devices can actually reach. It keeps demo.10's classroom sharing active from launch, demo.9's teacher **Settings** area, independent **light/dark themes**, the **IB MYP eAssessment** exam system, **video and YouTube stimulus material**, and the candidate **full-screen** suggestion, plus the demo-era strengths: live reading/writing timing corrections from the examination clock, focus alerts when a candidate leaves the exam window, and one generic **Sample paper** so a fresh install is usable immediately. A macOS app remains withheld for signing/notarization reasons; see [release notes](release/RELEASE_NOTES-0.1.0-demo.11.md).
 
 Once the signing and notarization credentials described below are available, run `bun run release:build`. The generated archives, standalone user guides, and checksums are placed in `release/`. On macOS, use the notarized `macos-universal` archive for both Apple-silicon and Intel Macs; extract the correct platform archive and start its PacePaper app or executable. The macOS bundle and Windows executable carry the PacePaper icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the illustrated teacher-facing [`USER_GUIDE.html`](USER_GUIDE.html), its editable [`USER_GUIDE.md`](USER_GUIDE.md) source, and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
 
@@ -189,7 +194,7 @@ Open the room clock from the specific session for a projector or second screen. 
 
 Linked clocks follow authoritative timing across windows, independently of decorative titles and names. Timing saves reject stale edits from another window. For a simple paper, reading and writing minutes can be corrected from the clock while the exam is ready or live: a live save moves candidate phase boundaries and deadlines immediately, which is the fastest recovery when a sitting must be extended. Ended exams and fixed timed sections remain read-only. Mounted student views refresh their server timeline without replacing editors. Check the student view before a classroom trial.
 
-Each published build is summarised in its release notes; see the [current release notes](release/RELEASE_NOTES-0.1.0-demo.11.md) for what ships and the verification limits.
+Each published build is summarised in its release notes; see the [current release notes](release/RELEASE_NOTES-0.1.0-demo.12.md) for what ships and the verification limits.
 
 Teacher-facing **Remove** actions archive records instead of permanently deleting them. Removed students cannot sign in, removed classes are unavailable for new sittings, and removed sittings disappear from the active exam list; all remain available under the corresponding **Removed** disclosure for restoration. Existing submissions stay retained and printable. Live sittings cannot be removed, classes with a live sitting must be ended first, and a student with unfinished live work cannot be removed until that response is submitted or the sitting ends.
 

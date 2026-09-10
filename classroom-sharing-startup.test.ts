@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { Database } from "bun:sqlite";
 import { listLocalPrivateIpv4Interfaces } from "./src/classroom-network.ts";
 
 // Classroom devices are the expected case, so a packaged launch must serve the
@@ -82,6 +83,56 @@ describe.skipIf(lanAddress === null)("packaged launch classroom sharing", () => 
         await stopServer(restarted.server);
       }
     } finally {
+      rmSync(dataDirectory, { recursive: true, force: true });
+    }
+  }, 60_000);
+});
+
+// A teacher rehearsing a paper opens the candidate interface from the dashboard.
+// The preview must tell that teacher nothing is recorded, and the server must not
+// create any sitting for it.
+describe("candidate preview", () => {
+  test("gives a signed-in teacher the candidate state without recording anything", async () => {
+    const dataDirectory = mkdtempSync(join(tmpdir(), "pacepaper-preview-test-"));
+    const unknownPaper = "00000000-0000-0000-0000-000000000000";
+    const { server } = await startServer(dataDirectory);
+    try {
+      expect((await fetch(`${origin}/api/admin/papers/${unknownPaper}/preview`)).status).toBe(401);
+
+      const login = await fetch(`${origin}/api/login/admin`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "admin", password: "admin" }),
+      });
+      expect(login.status).toBe(200);
+      const cookie = login.headers.getSetCookie?.()[0]?.split(";")[0] ?? "";
+      const headers = { cookie };
+
+      expect((await fetch(`${origin}/api/admin/papers/${unknownPaper}/preview`, { headers })).status).toBe(404);
+
+      const state = await (await fetch(`${origin}/api/admin/state`, { headers })).json();
+      const paper = state.papers[0];
+      expect(paper).toBeDefined();
+
+      const preview = await (await fetch(`${origin}/api/admin/papers/${paper.id}/preview`, { headers })).json();
+      expect(preview.preview).toBe(true);
+      expect(preview.status).toBe("live");
+      expect(preview.paper.title).toBe(paper.title);
+      expect(preview.paper.questions.length).toBeGreaterThan(0);
+      expect(preview.session.timeline.length).toBeGreaterThan(0);
+      expect(preview.response.id).toBeNull();
+      expect(preview.response.answers).toEqual({});
+      expect(preview.response.submittedAt).toBeNull();
+    } finally {
+      await stopServer(server);
+    }
+
+    const database = new Database(join(dataDirectory, "digitaldp.sqlite"));
+    try {
+      expect(database.query("SELECT COUNT(*) AS count FROM exam_sessions").get()).toEqual({ count: 0 });
+      expect(database.query("SELECT COUNT(*) AS count FROM responses").get()).toEqual({ count: 0 });
+    } finally {
+      database.close();
       rmSync(dataDirectory, { recursive: true, force: true });
     }
   }, 60_000);

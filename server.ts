@@ -142,6 +142,7 @@ const RESPONSE_BODY_BYTES = 12_000_000;
 const DEADLINE_GRACE_MS = 5_000;
 const PHASE_BOUNDARY_GRACE_MS = 5_000;
 const CLASS_ROSTER_BYTES = 1_000_000;
+const PREVIEW_SESSION_ID = "preview";
 const audioPlayback = new AudioPlaybackTickets();
 
 function parseTestReadingSeconds(raw: string | undefined): number | null {
@@ -491,6 +492,47 @@ function publicManifest(manifest: PaperManifest, paperId: string, sessionId: str
   };
 }
 
+/**
+ * The candidate state for a paper a teacher wants to rehearse. It is built from
+ * the paper alone: no class, no candidate, no stored response. The frontend runs
+ * it with preview mode on, so nothing a teacher types in a preview is ever sent.
+ */
+function previewExamState(paper: NonNullable<ReturnType<typeof getPaper>>) {
+  const startedAt = Date.now();
+  const timing = timingFor({
+    startedAt,
+    durationMinutes: paper.row.durationMinutes,
+    readingTimeMinutes: paper.manifest.readingTimeMinutes,
+    extraMinutes: 0,
+    manifestJson: paper.row.manifestJson,
+  });
+  return {
+    status: "live",
+    preview: true,
+    student: { name: "Candidate preview", extraMinutes: 0 },
+    session: {
+      id: PREVIEW_SESSION_ID,
+      startedAt,
+      readingEndsAt: timing.readingEndsAt,
+      deadline: timing.deadline,
+      phase: publicPhase(phaseForResponse(timing, startedAt)),
+      timeline: timing.timeline.map(publicPhase),
+    },
+    paper: { ...publicManifest(paper.manifest, paper.row.id, PREVIEW_SESSION_ID), id: paper.row.id },
+    response: {
+      id: null,
+      selectedQuestionId: null,
+      answers: {},
+      flags: [],
+      audioPlays: {},
+      notepad: "",
+      updatedAt: startedAt,
+      submittedAt: null,
+    },
+    serverTime: startedAt,
+  };
+}
+
 async function validatedResponse(body: Record<string, unknown>, manifest: PaperManifest): Promise<SavedResponseInput> {
   const sessionId = requiredText(body.sessionId, "Session", 64);
   const selectedQuestionId = body.selectedQuestionId === null || body.selectedQuestionId === undefined
@@ -787,6 +829,14 @@ async function handleApi(
         "Content-Type": "application/vnd.digitaldp.paper+gzip",
       },
     }));
+  }
+
+  const paperPreviewMatch = path.match(/^\/api\/admin\/papers\/([a-f0-9-]+)\/preview$/);
+  if (paperPreviewMatch && method === "GET") {
+    requireRole(request, "admin");
+    const stored = getPaper(paperPreviewMatch[1] as string);
+    if (!stored) throw new HttpError("Paper not found", 404);
+    return json(previewExamState(stored));
   }
 
   if (path === "/api/admin/sessions" && method === "POST") {

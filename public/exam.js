@@ -95,8 +95,12 @@ function textBlock(tag, className, text) {
   return element;
 }
 
-export function mountExam(state, { onSubmitted }) {
-  document.title = "PacePaper · Exam in progress";
+export function mountExam(state, { onSubmitted, preview = false }) {
+  // A teacher rehearsing a paper: the real candidate interface, but nothing is
+  // recorded. Every path that would reach a student endpoint checks this first.
+  const previewMode = preview === true;
+  const previewTitle = "PacePaper · Candidate preview";
+  document.title = previewMode ? previewTitle : "PacePaper · Exam in progress";
   const paper = state.paper;
   const sessionId = state.session.id;
   const response = state.response;
@@ -149,6 +153,7 @@ export function mountExam(state, { onSubmitted }) {
   // Report when the candidate leaves the exam window so the teacher sees it live.
   let focusLost = false;
   function reportFocus(kind) {
+    if (previewMode) return;
     api("/api/student/focus-event", { method: "POST", body: { sessionId, kind } })
       .catch(() => { /* Reporting is best-effort; never interrupt the exam over it. */ });
   }
@@ -293,6 +298,8 @@ export function mountExam(state, { onSubmitted }) {
         </nav>
       </header>
 
+      ${previewMode ? `<div class="preview-banner" role="status"><strong>Candidate preview</strong><span>This is the student interface for this paper. Nothing is saved, submitted, or counted, and the timer runs only for you.</span></div>` : ""}
+
       <div id="phase-banner" class="reading-banner phase-banner" role="status" aria-live="polite" hidden>
         <strong id="phase-banner-title">Reading time</strong>
         <span id="phase-banner-copy">Review the materials and questions. Student entry areas will unlock automatically.</span>
@@ -346,6 +353,7 @@ export function mountExam(state, { onSubmitted }) {
   `);
 
   const shell = document.querySelector(".exam-shell");
+  if (previewMode) shell.dataset.preview = "true";
   shell.dataset.sessionId = sessionId;
   shell.dataset.mode = paper.mode;
   shell.dataset.split = "50";
@@ -360,12 +368,25 @@ export function mountExam(state, { onSubmitted }) {
   highlighter.decorate(document.querySelector("#instructions-copy"), "paper:instructions", paper.instructions);
   const notepad = document.querySelector("#notepad");
   notepad.value = draft.notepad;
+  // Preview audio has no server ticket: play the resource itself, without counting listens.
+  const previewAudioApi = (path, options = {}) => {
+    if (!path.startsWith("/api/student/audio-play")) return api(path, options);
+    if (path.endsWith("/start")) return Promise.resolve({ plays: 1 });
+    const resourceKey = options.body?.resourceKey;
+    const resource = paper.resources.find((item) => item.key === resourceKey);
+    return Promise.resolve({
+      plays: 0,
+      playToken: "preview",
+      url: resource?.url ?? `/api/assets/${paper.id}/${resourceKey}`,
+    });
+  };
+
   const audioController = createExamAudioController({
     sessionId,
     draftAudioPlays: draft.audioPlays,
     shell,
     signal,
-    api,
+    api: previewMode ? previewAudioApi : api,
     announce,
     formatTime,
     isLocked: responseLocked,
@@ -442,6 +463,11 @@ export function mountExam(state, { onSubmitted }) {
 
   function showSaveState() {
     if (!shell.isConnected) return;
+    if (previewMode) {
+      setSaveStatus("Preview · responses are not saved");
+      document.querySelector("#save-recovery-actions").hidden = true;
+      return;
+    }
     const status = saveState.status();
     setSaveStatus(status.message, status.tone);
     document.querySelector("#save-recovery-actions").hidden = !saveState.pending;
@@ -458,6 +484,10 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   async function saveNow() {
+    if (previewMode) {
+      dirty = false;
+      return;
+    }
     if (saving) return saving;
     if (!dirty || submitting || responseLocked()) return;
     dirty = false;
@@ -966,6 +996,10 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   function openSubmitDialog() {
+    if (previewMode) {
+      setSaveStatus("Preview · nothing is submitted");
+      return;
+    }
     if (!finalSubmissionAvailable()) {
       announce("Final submission opens in the last work section.", "error");
       return;
@@ -982,6 +1016,10 @@ export function mountExam(state, { onSubmitted }) {
   }
 
   async function submit(auto = false) {
+    if (previewMode) {
+      setSaveStatus("Preview · nothing is submitted");
+      return;
+    }
     if (submitting || (!auto && audioController.isBusy())) return;
     if (auto && audioController.isBusy()) audioController.stopForDeadline();
     submitting = true;
@@ -1202,13 +1240,15 @@ export function mountExam(state, { onSubmitted }) {
     writeLocalItem(instructionKey, "seen");
     document.querySelector("#instructions-dialog").showModal();
   }
-  if (dirty && !responseLocked()) {
+  // A preview must never claim to be saving: say so from the first paint.
+  if (previewMode) showSaveState();
+  else if (dirty && !responseLocked()) {
     showSaveState();
     saveTimer = setTimeout(saveNow, 1_200);
   }
 
   const cleanup = () => {
-    document.title = "PacePaper · Candidate sign-in";
+    document.title = previewMode ? previewTitle : "PacePaper · Candidate sign-in";
     if (saveState.pending) persistLocal();
     clearTimeout(saveTimer);
     clearInterval(tickTimer);

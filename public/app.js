@@ -142,6 +142,28 @@ async function start() {
     const { renderCountdown } = await import("/countdown.js");
     await renderCountdown(bootstrap);
   } else if (path === "/student") {
+    const previewPaperId = new URLSearchParams(location.search).get("preview");
+    if (previewPaperId) {
+      // Opened from the dashboard: rehearse this paper as a candidate.
+      document.title = "PacePaper · Candidate preview";
+      let state;
+      try {
+        state = await api(`/api/admin/papers/${encodeURIComponent(previewPaperId)}/preview`);
+      } catch {
+        // The preview link only works for a signed-in teacher, as on the dashboard.
+        setView(`
+          <section class="fatal-state">
+            <h1>Teacher sign-in needed</h1>
+            <p>A candidate preview opens from the teacher dashboard. Sign in there, then choose Preview as student again.</p>
+            <p><a class="quiet-action" href="/admin">Go to the teacher dashboard</a></p>
+          </section>
+        `);
+        return;
+      }
+      const { mountExam } = await import("/exam.js");
+      mountExam(state, { preview: true });
+      return;
+    }
     document.title = "PacePaper · Candidate sign-in";
     const { renderStudent } = await import("/student.js");
     await renderStudent(bootstrap);

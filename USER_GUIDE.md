@@ -13,7 +13,7 @@ Use the left-hand menu to move between these areas:
 | **Overview** | Confirm classroom sharing is on, copy the student address, and check that PacePaper is connected. |
 | **Classes** | Create classes, add students, import class lists, and set extra time. |
 | **Sessions** | Give a paper to a class, open its clock, start the exam, and review submissions. |
-| **Paper library** | Choose an included example, build a paper, or import a saved paper. |
+| **Paper library** | Choose an included example, build a paper, import a saved paper, or preview one as a student. |
 
 A **paper** is reusable exam content. A **session** is one sitting of that paper with one class. You can use the same paper again without rebuilding it.
 
@@ -29,7 +29,7 @@ Follow this order for a complete practice exam:
 2. Check the **Student sign-in** address shown under **Classroom sharing** in **Overview** (PacePaper shares the classroom network by default; choose a different address there if the network changed).
 3. Copy the **Student sign-in** address and test it on one student device. The bare address is enough: opening it goes straight to candidate sign-in.
 4. In **Classes**, create or import the class and check every student's details.
-5. In **Paper library**, choose an included example or create/import a paper. Review its questions and materials before the lesson.
+5. In **Paper library**, choose an included example or create/import a paper. Use **Preview as student** to see exactly what candidates will see before the lesson.
 6. In **Sessions**, choose the class, exam system, and paper, then select **Set up exam**.
 7. Open that session's clock on the second screen.
 8. Ask students to sign in, select the exam, and wait.
@@ -209,6 +209,17 @@ The AP profiles target **May 2027** and remain visibly marked **Adapted practice
 - For a canvas question, choose its starting page count and default background: **Blank**, **Ruled**, or **Square grid**.
 - Students can draw, erase, undo, redo, add pages, and change the background. PacePaper warns them before changing the teacher's default.
 
+### Preview a paper as a student
+
+Before a lesson, check what candidates will actually see rather than reading the paper's settings:
+
+1. Open **Paper library**.
+2. Find the paper and select **Preview as student**. The candidate interface opens in a new tab.
+3. Work through the paper as a candidate would: change question, use the tools, play the audio, and print nothing.
+4. Close the tab when you have seen enough.
+
+The preview uses the real candidate interface with the paper's own timings, so reading time, phase changes, and locked sections behave exactly as they will in the sitting. Nothing is recorded: answers are not saved, final submission does nothing, audio listens are not counted, and no class, session, or response is created. Clearing a preview sitting therefore needs no cleanup. The preview belongs to your teacher session, so it opens only while you are signed in to the dashboard.
+
 ### Export or import a paper
 
 To move a teacher-created paper to another PacePaper installation:
@@ -332,6 +343,8 @@ To demonstrate the phase engine, use any sectioned paper you have built or impor
 3. Join as a demo student in another browser.
 4. Start the exam and watch each phase change.
 5. Confirm that working sections accept only their own questions, the break hides examination content, calculator rules change where applicable, and only the final work section offers final submission.
+
+Before assembling a demo class, **Preview as student** from **Paper library** shows the same interface, the phase order, and the paper's timings without creating a class, a student, or a stored response.
 
 ## After the exam
 

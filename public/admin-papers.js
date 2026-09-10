@@ -35,6 +35,12 @@ export function renderPaperLibrary(papers) {
     const actions = document.createElement("div");
     actions.className = "paper-list-actions";
     actions.append(text("small", paperTiming(paper)));
+    const preview = text("a", "Preview as student", "quiet-action compact");
+    preview.href = `/student?preview=${encodeURIComponent(paper.id)}`;
+    preview.target = "_blank";
+    preview.rel = "noopener";
+    preview.setAttribute("aria-label", `Preview ${paper.title} as a student`);
+    actions.append(preview);
     if (["teacher-authored", "school-authorized"].includes(paper.sourceClassification) && paper.exportAuthorized) {
       const link = text("a", "Export", "quiet-action compact");
       link.href = `/api/admin/papers/${paper.id}/export`;
