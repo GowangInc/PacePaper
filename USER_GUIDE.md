@@ -19,7 +19,7 @@ A **paper** is reusable exam content. A **session** is one sitting of that paper
 
 Select **User guide** in the teacher sidebar to open these instructions in another tab. The guide also works offline from the HTML file supplied with the app.
 
-The included example has its own teacher-authored markscheme. Keep marking materials separate from candidate copies.
+Marking stays with the teacher: a packaged installation includes no worked answers and no marking guides, and candidate copies never carry them.
 
 ## Quick classroom checklist
 
