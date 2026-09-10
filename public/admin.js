@@ -920,7 +920,6 @@ async function renderDashboard() {
           <button type="button" data-jump="#settings">Settings</button>
         </nav>
         <a class="quiet-action" href="/guide" target="_blank" rel="noopener">User guide ↗</a>
-        <a class="quiet-action" href="/mock-guides" target="_blank" rel="noopener">Mock marking guides ↗</a>
         <button id="logout" class="quiet-action" type="button">Sign out</button>
       </aside>
       <div class="admin-main">

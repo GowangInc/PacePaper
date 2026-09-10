@@ -435,13 +435,11 @@ jobs:
               const guide = await fetch(`${origin}/guide`);
               assert.equal(guide.status, 200);
               assert.equal(await guide.text(), readFileSync(join(packageDirectory, "USER-GUIDE.html"), "utf8"));
-              for (const path of ["/api/admin/state", "/mock-guides"]) {
-                assert.equal((await fetch(`${origin}${path}`)).status, 401, `${path} requires teacher authentication`);
-              }
+              assert.equal((await fetch(`${origin}/api/admin/state`)).status, 401, "/api/admin/state requires teacher authentication");
+
               for (const path of ["/data/digitaldp.sqlite", "/resources/private/", "/examples/sample-source/index.ts"]) {
                 assert.equal((await fetch(`${origin}${path}`)).status, 404, `${path} is not public`);
               }
-              assert.equal((await fetch(`${origin}/mock-guides`, { headers: auth })).status, 200);
               console.log(`${platform}: native startup, ${expectedSamples} release example(s), teacher login, embedded assets, and private-route checks passed`);
             } catch (error) {
               console.error(logs);

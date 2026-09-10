@@ -3,7 +3,6 @@ const PAGE_FILES: Readonly<Record<string, string>> = {
   "/admin": "public/index.html",
   "/clock": "public/index.html",
   "/guide": "USER_GUIDE.html",
-  "/mock-guides": "docs/mock-marking/index.html",
   "/student": "public/index.html",
   "/presentation": "public/presentation.html",
 };

@@ -14,7 +14,7 @@ PacePaper is an independent school-practice tool. It is not an official examinat
 
 On first launch you sign in with the default teacher login **`admin` / `admin`** (change it any time from the **Settings** section), and the Paper library already contains one preloaded **Sample paper** with no subject or IB branding. Open it, start a session, and you can try the whole workflow immediately — classes, timed phases, the candidate view, autosave, focus alerts, and printing — without creating anything first.
 
-Two plain-language documents ship beside the app and are linked from the teacher dashboard: the illustrated **User guide** (click *User guide* in the sidebar) walks through every classroom task, and the *Mock marking guides* link opens worked marking notes for the included practice mocks.
+One plain-language document ships beside the app and is linked from the teacher dashboard: the illustrated **User guide** (click *User guide* in the sidebar) walks through every classroom task.
 
 ## See PacePaper in action
 
@@ -98,7 +98,6 @@ Notes for teachers:
 - Page context menus suppressed on PacePaper interface controls while normal clicks, keyboard controls, and text selection remain available
 - Event-driven teacher status updates that preserve active form controls, plus printable/PDF candidate submission review
 - Focus-loss notifications: when a candidate leaves the exam window, the teacher dashboard raises a live alert naming the student and keeps a per-sitting audit trail (best-effort — a crash or disconnect can prevent an event)
-- Teacher-only worked marking guides for all 15 full-length mocks, accessible from **Mock marking guides** in the teacher sidebar
 - Branded native application icons for macOS and Windows, plus Linux and browser icon assets
 - Teacher **Settings** section: change the saved teacher password (current password required; all devices sign out afterwards)
 - Light and dark appearance, chosen independently for the teacher dashboard and the student pages and remembered per device
@@ -197,9 +196,9 @@ Teacher-facing **Remove** actions archive records instead of permanently deletin
 Four original demonstrations are ready to import from `examples/portable/`, with editable manifests, simulated candidate work, and teacher assessments under `examples/papers/`. These four audited bundles are the only `.digitaldp-paper` files allowlisted for Git; all other portable bundles are ignored. See `examples/README.md` for the exact coverage and rebuild commands.
 
 
-Select **Mock marking guides** in the teacher sidebar for the worked answers and point allocations for the development library's full-length mocks. The `/mock-guides` route requires teacher sign-in. The generated offline index is `docs/mock-marking/index.html`; keep these answer-containing files away from students. Answers and marking guides are not included in exported `.digitaldp-paper` files. PacePaper does not automatically mark responses. AP guides include weighted practice calculations: the displayed raw total is not an AP score, and no official 1–5 conversion is supplied.
+PacePaper does not automatically mark or grade responses; teachers review and mark submitted candidate work themselves. Subject teachers should moderate every paper and its marking before classroom use.
 
-Run `bun run samples:build` to regenerate the editable manifests, ignored portable files, and teacher marking guides, then `bun run samples:seed` to add or safely upgrade examples in a source-development library. Repeating unchanged input does not duplicate papers; teacher edits and previous sessions are preserved. The app launcher performs the library upgrade automatically. These independent practice materials use integrated response areas; an AP hybrid exam's physical response booklet and the official digital application's break-resume behaviour remain classroom adaptations.
+Run `bun run samples:build` to regenerate the editable manifests and ignored portable files, then `bun run samples:seed` to add or safely upgrade examples in a source-development library. Repeating unchanged input does not duplicate papers; teacher edits and previous sessions are preserved. The app launcher performs the library upgrade automatically. These independent practice materials use integrated response areas; an AP hybrid exam's physical response booklet and the official digital application's break-resume behaviour remain classroom adaptations.
 
 ## Interface explorations
 
@@ -214,7 +213,6 @@ public/           Browser interface
 assets/           Master and native application icons
 src/              Validation, authentication, paper model, and SQLite access
 examples/         Original sample manifests, portable bundles, and seed/build tools
-docs/mock-marking/ Generated teacher-only full-mock answers and marking guides
 design/           Additive interface mockups and design explorations
 paper-authoring/  Structured paper-package authoring guidance
 release/          Standalone release guide and generated shareable bundles

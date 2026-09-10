@@ -8,8 +8,6 @@ describe("static application files", () => {
   test("resolves app pages and safe root assets without exposing test modules", () => {
     expect(staticFilePath("/student")).toBe("public/index.html");
     expect(staticFilePath("/guide")).toBe("USER_GUIDE.html");
-    expect(staticFilePath("/mock-guides")).toBe("docs/mock-marking/index.html");
-    expect(staticFilePath("/docs/mock-marking/index.html")).toBeNull();
     expect(staticFilePath("/exam-audio.js")).toBe("public/exam-audio.js");
     expect(staticFilePath("/styles.css")).toBe("public/styles.css");
     expect(staticFilePath("/app-icon-192.png")).toBe("public/app-icon-192.png");

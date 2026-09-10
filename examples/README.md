@@ -4,9 +4,9 @@ These four packages are entirely original PacePaper demonstration material. They
 
 A wider original course library used for development and library seeding lives under `course-samples/`; see each course folder's own notes. Subject teachers should moderate every paper before classroom use.
 
-Run `bun run samples:build` to regenerate the editable manifests, ignored portable bundles, and marking guides. Run `bun run samples:seed` to add or safely upgrade examples in a source-development teacher library; teacher edits and earlier session versions are preserved, and unchanged input does not add duplicates. `bun run start:app` and builds made from the current source perform this library upgrade automatically. A downloaded app contains the examples from its own build.
+Run `bun run samples:build` to regenerate the editable manifests and ignored portable bundles. Run `bun run samples:seed` to add or safely upgrade examples in a source-development teacher library; teacher edits and earlier session versions are preserved, and unchanged input does not add duplicates. `bun run start:app` and builds made from the current source perform this library upgrade automatically. A downloaded app contains the examples from its own build.
 
-The teacher sidebar's **Mock marking guides** link opens the sign-in-protected `/mock-guides` page. Its offline version is `docs/mock-marking/index.html`. These guides contain worked answers and point allocations for every full-mock question; keep them separate from student materials. Exported `.digitaldp-paper` files do not contain these answers. AP guides explain weighted practice calculations, not an official AP score conversion. Subject teachers should moderate papers and marking before use.
+Exported `.digitaldp-paper` files contain the paper only: no answers or marking notes are included. Subject teachers should moderate papers and prepare their own marking before use.
 
 ## Sample set
 

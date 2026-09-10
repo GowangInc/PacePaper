@@ -8,10 +8,11 @@ Classroom sharing is active from launch, so student devices join on the first tr
 - **The advertised address is the accepted address.** Previously the dashboard displayed a private-network student address while the server rejected every non-loopback request until sharing was enabled, so students saw `{"error":"Misdirected request"}`. The address shown on the dashboard, the address printed at startup, and the address the server accepts now come from one value.
 - **Teachers still control sharing.** The **Classroom sharing** panel switches to another detected address or to **This computer only** for the current sitting; the panel can no longer be changed while an examination is live.
 - **Documentation corrected.** The README and the illustrated user guide no longer describe the old "starts in This computer only every launch" behaviour; both now describe sharing at launch and what the panel is for.
+- **Worked marking guides removed.** The teacher-facing **Mock marking guides** pages are gone: the sidebar link, the `/mock-guides` route, and the generated `docs/mock-marking/index.html` index. Practice papers ship without answers or point allocations, since teachers are expected to know the tasks they set. Paper files never contained these notes, so existing papers and exports are unaffected; the app still does not mark or grade responses.
 
 ## Verification
 
-- 305 automated tests across 45 files pass; TypeScript checking is clean.
+- 303 automated tests across 44 files pass; TypeScript checking is clean.
 - A startup check boots the packaged app and asserts, before any teacher action, that the student address reported at launch is served with HTTP 200 over the private network address, that the dashboard advertises that same address, and that a restart with the saved address serves it again. It also asserts a teacher can still switch sharing off for the sitting.
 - The same flow was verified manually on a real private network address, including the student join API answering normally (rather than being refused) from a non-loopback client.
 - Linux native startup smoke is run on the published tarball (see the release page); a Windows native smoke is still not possible from this fleet — the Windows bundle is exercised through the shared code path only.

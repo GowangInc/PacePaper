@@ -10,7 +10,7 @@ describe("compiled static assets", () => {
       .filter((file) => !file.includes(".test."))
       .map((file) => publicAssetPath(`/${file}`))
       .filter((file): file is string => file !== null);
-    const pageFiles = ["/", "/admin", "/clock", "/guide", "/mock-guides", "/student", "/presentation", "/tokens.css", "/paper-authoring/SKILL.md"]
+    const pageFiles = ["/", "/admin", "/clock", "/guide", "/student", "/presentation", "/tokens.css", "/paper-authoring/SKILL.md"]
       .map((pathname) => staticFilePath(pathname))
       .filter((file): file is string => file !== null);
 

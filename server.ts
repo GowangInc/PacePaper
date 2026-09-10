@@ -1210,14 +1210,13 @@ const server = Bun.serve<SocketData>({
       }
       const sourcePath = staticFilePath(url.pathname);
       if (!sourcePath || request.method !== "GET") throw new HttpError("Page not found", 404);
-      if (url.pathname === "/mock-guides") requireRole(request, "admin");
       const filePath = staticAssetPath(sourcePath) ?? sourcePath;
       const file = Bun.file(filePath);
       if (!(await file.exists())) throw new HttpError("Page not found", 404);
-      if (sourcePath === "USER_GUIDE.html" || sourcePath === "docs/mock-marking/index.html") {
+      if (sourcePath === "USER_GUIDE.html") {
         const html = await file.text();
         const response = responseWithSecurity(new Response(html, {
-          headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": url.pathname === "/mock-guides" ? "private, no-store" : "no-cache" },
+          headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" },
         }));
         const styleSource = guideStylesheetSource(html);
         if (styleSource) response.headers.set("Content-Security-Policy",

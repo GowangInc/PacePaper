@@ -41,7 +41,6 @@ import textHighlights from "../public/text-highlights.js" with { type: "file" };
 import paperAuthoringGuide from "../paper-authoring/SKILL.md" with { type: "file" };
 import tokens from "../tokens.css" with { type: "file" };
 import userGuide from "../USER_GUIDE.html" with { type: "file" };
-import mockGuides from "../docs/mock-marking/index.html" with { type: "file" };
 
 export default {
   "public/admin-end-exam.js": adminEndExam,
@@ -84,5 +83,4 @@ export default {
   "paper-authoring/SKILL.md": paperAuthoringGuide,
   "tokens.css": tokens,
   "USER_GUIDE.html": userGuide,
-  "docs/mock-marking/index.html": mockGuides,
 };

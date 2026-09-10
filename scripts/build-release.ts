@@ -16,7 +16,6 @@ import {
   type MacDistributionConfig,
 } from "./macos-distribution.ts";
 import { buildUserGuide, userGuideHtmlPath } from "./build-user-guide.ts";
-import { buildMockGuides } from "./build-mock-guides.ts";
 import { RELEASE_PLATFORMS, releaseArchiveName, releasePlatforms, type ReleasePlatform } from "./release-platforms.ts";
 
 interface PackageMetadata {
@@ -280,7 +279,6 @@ async function buildTarget(target: ReleaseTarget, stagingRoot: string): Promise<
 }
 
 buildUserGuide();
-buildMockGuides();
 mkdirSync(releaseDirectory, { recursive: true });
 const stagingRoot = mkdtempSync(join(tmpdir(), "digitaldp-release-"));
 

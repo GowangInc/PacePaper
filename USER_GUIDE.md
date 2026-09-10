@@ -29,7 +29,7 @@ Follow this order for a complete practice exam:
 2. Check the **Student sign-in** address shown under **Classroom sharing** in **Overview** (PacePaper shares the classroom network by default; choose a different address there if the network changed).
 3. Copy the **Student sign-in** address and test it on one student device.
 4. In **Classes**, create or import the class and check every student's details.
-5. In **Paper library**, choose an included example or create/import a paper. Review its questions, materials, and matching marking guide before the lesson.
+5. In **Paper library**, choose an included example or create/import a paper. Review its questions and materials before the lesson.
 6. In **Sessions**, choose the class, exam system, and paper, then select **Set up exam**.
 7. Open that session's clock on the second screen.
 8. Ask students to sign in, select the exam, and wait.
@@ -154,11 +154,11 @@ You can build or import other papers for your own approved practice materials. A
 
 The only paper a fresh installation includes is the **Sample paper** above. For approved practice material, build a paper in the Paper Builder below, or import a prepared PacePaper paper file.
 
-If your installation also shows development example papers and marking guides — a source checkout may seed them — choose an **Exam system** to narrow the list, use **Find a paper**, read the full title, paper number, and level or tier, then open **Mock marking guides** for the worked notes matching that example. Use the chosen paper when setting up the session in Step 5.
+If your installation also shows development example papers — a source checkout may seed them — choose an **Exam system** to narrow the list, use **Find a paper**, and read the full title, paper number, and level or tier. Use the chosen paper when setting up the session in Step 5.
 
 Read the label in each title before using an example:
 
-- **Full-length mock** provides a complete original question workload with the researched timing and mark allocation. Review the questions and worked marking guide before use.
+- **Full-length mock** provides a complete original question workload with the researched timing and mark allocation. Review the questions before use.
 - **Full-format practice** identifies an IB-oriented example following the researched paper structure, timing, and allocated marks. The questions still need a subject teacher's review for suitability and difficulty.
 - **Format rehearsal** demonstrates the type of paper and still needs subject-language review.
 - **Walkthrough** uses short timings to demonstrate section changes, breaks, and submission in a few minutes.
@@ -220,7 +220,7 @@ To move a teacher-created paper to another PacePaper installation:
 5. Select **Import paper**.
 6. Confirm that it appears in the Paper library.
 
-The paper file contains its questions, settings, and permitted attachments. It does not contain classes, students, exam sessions, responses, or the teacher-only mock marking guide.
+The paper file contains its questions, settings, and permitted attachments. It does not contain classes, students, exam sessions, or responses.
 
 ## Step 5 — Set up the exam session
 
@@ -322,19 +322,6 @@ The printable record includes questions, typed responses, canvas pages, inline i
 Use a normal browser such as Chrome, Edge, or Safari. An in-app browser may ignore the print button.
 
 PacePaper currently collects, reviews, and prints responses. It does not mark or grade them.
-
-### Mark a development example paper
-
-If your installation includes development example papers with marking guides — a source checkout may seed them — the **Mock marking guides** link in the teacher sidebar opens their worked notes:
-
-1. Select **Mock marking guides** in the teacher sidebar.
-2. Choose the guide matching the paper title, component, and tier.
-3. Compare each saved answer with its worked solution and point allocation.
-4. Apply your subject team's judgement to alternative valid answers.
-
-For AP examples, follow the guide's weighted practice calculation. The raw total shown on a paper is not an AP score, and the guides do not convert results into official 1–5 grades.
-
-The guides require teacher sign-in when opened through the app. A source checkout also has an offline index at `docs/mock-marking/index.html`. Keep those answer-containing files private; do not send them to students. The exported `.digitaldp-paper` contains no teacher marking guide.
 
 ### Rehearse the exam phases
 
