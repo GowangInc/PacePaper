@@ -6,7 +6,7 @@ Watch candidate work live during a sitting.
 
 - **Watch work.** While a sitting is live, its session row on the dashboard offers **Watch work**. The teacher picks a candidate and reads their paper as it is being written: current answers, choice selections, drawing pages, flags, and the candidate's notepad — read-only, in the same layout used for reviewing a finished paper.
 - **It follows the candidate.** The view refreshes as candidates save, so progress is visible without walking the room or making anyone stop. Each candidate row shows their candidate code, how many questions they have answered, and when they last saved.
-- **Candidates are told.** The candidate sign-in screen and the waiting room both state that the teacher can see their work during a sitting, and that this covers only what they type in PacePaper. There is no hidden monitoring, and nothing on the candidate's screen changes while a teacher is watching.
+- **Candidates are told.** The candidate sign-in screen and the waiting room both state that the teacher can see their work during a sitting — answers, drawings, notes, and flagged questions — and that this covers PacePaper only, not the rest of their computer. There is no hidden monitoring, and nothing on the candidate's screen changes while a teacher is watching.
 - **Read-only, and only the teacher.** Watching cannot change a candidate's paper, cannot submit, and is not visible to the candidate. It reuses the existing teacher-only response endpoint; no new student endpoint, no new storage, and no schema change.
 - **Everything from 0.1.0-demo.12 remains:** the candidate rehearsal preview, the classroom address chosen from a physical network adapter, the descriptive per-view tab titles, and the single generic Sample paper.
 
