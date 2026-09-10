@@ -4050,3 +4050,69 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 @media print {
   .fullscreen-nudge { display: none !important; }
 }
+
+.supervision-notice {
+  border-left: var(--rule-thick, 3px) solid var(--color-accent, currentColor);
+  background: var(--color-surface-muted, transparent);
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  color: var(--color-text-muted, inherit);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.live-work-dialog .live-work-layout {
+  display: grid;
+  grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr);
+  gap: var(--space-4, 1rem);
+  min-height: 24rem;
+  max-height: 70vh;
+}
+
+.live-work-dialog .live-work-note {
+  color: var(--color-text-muted, inherit);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.live-work-list {
+  display: flex;
+  max-height: 70vh;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.live-work-candidate {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: var(--rule-thin, 1px) solid var(--color-rule, currentColor);
+  background: none;
+  padding: var(--space-2, 0.5rem);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.live-work-candidate[data-selected="true"] {
+  border-color: var(--color-accent, currentColor);
+  background: var(--color-surface-muted, transparent);
+}
+
+.live-work-candidate-meta {
+  color: var(--color-text-muted, inherit);
+  font-size: var(--text-xs, 0.75rem);
+}
+
+.live-work-detail {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 60rem) {
+  .live-work-dialog .live-work-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

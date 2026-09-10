@@ -361,6 +361,7 @@ export function sessionActionModel(session, archived = false) {
     if (session.status === "ended") actions.push("responses");
     return actions;
   }
+  if (session.status === "live") actions.push("watch");
   if (session.status !== "ended") actions.push("clock", session.status === "draft" ? "start" : "end");
   if (session.status !== "draft") actions.push("responses");
   if (session.status !== "live") actions.push("archive");
@@ -401,6 +402,14 @@ function renderSessionActions(documentRoot, session, actions, archived) {
       lifecycle.className = action === "start" ? "primary-action compact" : "danger-action compact";
       lifecycle.textContent = action === "start" ? "Start exam" : "End exam";
       container.append(lifecycle);
+    } else if (action === "watch") {
+      const watch = documentRoot.createElement("button");
+      watch.type = "button";
+      watch.dataset.liveWork = session.id;
+      watch.className = "primary-action compact";
+      watch.textContent = "Watch work";
+      watch.setAttribute("aria-label", `Watch candidate work live for ${label}`);
+      container.append(watch);
     } else if (action === "responses") {
       container.append(responseButton(documentRoot, session));
     } else {

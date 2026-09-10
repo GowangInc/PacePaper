@@ -23,7 +23,7 @@ mock.module("/admin-collections.js", () => ({
   syncOptions() {},
   updatePresence() {},
 }));
-mock.module("/ink-canvas.js", () => ({ renderInkSubmission() {} }));
+mock.module("/ink-canvas.js", () => ({ hasInkResponse() { return false; }, renderInkSubmission() {} }));
 mock.module("/admin-network.js", () => ({ mountAdminNetwork() {} }));
 mock.module("/admin-papers.js", () => ({ renderPaperLibrary() {}, renderSelectedPaper() {}, renderSessionPaperSelectors() {} }));
 mock.module("/class-rosters.js", () => ({ mountClassRosterTransfer() {} }));

@@ -12,7 +12,7 @@ Use the left-hand menu to move between these areas:
 | --- | --- |
 | **Overview** | Confirm classroom sharing is on, copy the student address, and check that PacePaper is connected. |
 | **Classes** | Create classes, add students, import class lists, and set extra time. |
-| **Sessions** | Give a paper to a class, open its clock, start the exam, and review submissions. |
+| **Sessions** | Give a paper to a class, open its clock, start the exam, watch candidate work live, and review submissions. |
 | **Paper library** | Choose an included example, build a paper, import a saved paper, or preview one as a student. |
 
 A **paper** is reusable exam content. A **session** is one sitting of that paper with one class. You can use the same paper again without rebuilding it.
@@ -287,6 +287,8 @@ Ask each student to:
 7. Select **Join waiting room**.
 8. Check the paper title and wait for the teacher.
 
+Their sign-in screen and waiting room both state that the teacher can see their work during the sitting: answers, drawings, notes, and flagged questions, within PacePaper only.
+
 Ask students to confirm that the correct paper title appears in their waiting room. In **Classes**, connected students should show as **online**.
 
 ## Step 8 — Start and monitor the exam
@@ -300,6 +302,24 @@ Ask students to confirm that the correct paper title appears in their waiting ro
 7. On a reading paper, confirm that students can still open every text, read every question, and inspect every answer option. Reading time locks entry, not inspection.
 8. At a section boundary, confirm that the previous section disappears and the next section's questions and tool rule appear.
 9. During working time, monitor the **online** and **submitted** counts.
+
+### Watch candidate work as it is written
+
+While a sitting is live, each session row offers **Watch work**:
+
+1. Select **Watch work** on the live session.
+2. Choose a candidate from the list on the left. Each row shows their candidate code, how many questions they have answered, and when they last saved.
+3. Read their paper on the right: current answers, choice selections, drawing pages, and their notepad.
+4. Leave the window open. It refreshes as candidates save, so you can see progress without walking the room.
+
+What this shows and what it does not:
+
+- It shows what each candidate has **saved**. The candidate screen saves about a second after typing stops, so the very latest keystrokes can lag briefly.
+- A candidate whose browser is closed, offline, or crashed simply stops updating; the view keeps the last saved work and its timestamp.
+- It shows only PacePaper. It cannot see other tabs, other applications, or the candidate's screen.
+- It is read-only. Nothing you open changes a candidate's paper, and nothing appears on their screen while you watch.
+
+Candidates are told at sign-in, and again in their waiting room, that their teacher can see their work during a sitting.
 10. Let candidates with extra time continue until their individual time ends.
 
 While an exam runs, the dashboard shows live **Focus** alerts when a candidate leaves the exam window, and the session keeps a per-session audit list; alerts are best-effort, so a crash or disconnect can prevent an event.

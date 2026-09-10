@@ -12,7 +12,7 @@ import {
   updatePresence,
 } from "/admin-collections.js";
 import { renderPaperLibrary, renderSelectedPaper, renderSessionPaperSelectors } from "/admin-papers.js";
-import { renderInkSubmission } from "/ink-canvas.js";
+import { hasInkResponse, renderInkSubmission } from "/ink-canvas.js";
 import { mountAdminNetwork } from "/admin-network.js";
 import { mountClassRosterTransfer } from "/class-rosters.js";
 import { mountPaperBuilder } from "/paper-builder.js";
@@ -394,6 +394,101 @@ async function openSubmissions(sessionId) {
   }
 }
 
+// Live supervision: the same read-only paper the review dialog renders, refreshed
+// whenever a candidate saves. Nothing here is sent to the candidate's browser.
+let liveWork = null;
+
+function liveWorkSignature(results) {
+  return JSON.stringify(results.responses.map((response) => [
+    response.responseId, response.updatedAt, response.submittedAt, response.notepad, response.answers, response.selectedQuestionId,
+  ]));
+}
+
+/** Mirrors the review renderer's idea of an answer: blank ink is not an answer. */
+function answeredCount(questions, answers) {
+  return questions.filter((question) => {
+    const value = answers?.[question.id];
+    if (typeof value !== "string" || !value.length) return false;
+    if (question.type === "ink") return question.ink ? hasInkResponse(value, question.ink) : false;
+    return value.trim().length > 0;
+  }).length;
+}
+
+function renderLiveWorkList() {
+  const results = liveWork.results;
+  const questions = results.questions ?? [];
+  const list = document.querySelector("#live-work-list");
+  list.replaceChildren();
+  const questionCount = questions.length;
+  if (results.responses.length === 0) {
+    emptyState(list, "No candidate has joined this sitting yet.");
+    return;
+  }
+  for (const response of results.responses) {
+    const answered = answeredCount(questions, response.answers);
+    const item = document.createElement("li");
+    const button = copy("button", "live-work-candidate", response.studentName);
+    button.type = "button";
+    button.dataset.liveWorkResponse = response.responseId;
+    button.setAttribute("aria-pressed", String(response.responseId === liveWork?.selectedId));
+    button.dataset.selected = String(response.responseId === liveWork?.selectedId);
+    const meta = copy("span", "live-work-candidate-meta", [
+      response.candidateCode,
+      `${answered} of ${questionCount} answered`,
+      response.submittedAt ? `submitted ${new Date(response.submittedAt).toLocaleTimeString()}` : `saved ${new Date(response.updatedAt).toLocaleTimeString()}`,
+    ].join(" · "));
+    button.append(meta);
+    item.append(button);
+    list.append(item);
+  }
+}
+
+function renderLiveWorkDetail() {
+  const results = liveWork.results;
+  const detail = document.querySelector("#live-work-detail");
+  const scroll = detail.scrollTop;
+  detail.replaceChildren();
+  const response = results.responses.find((item) => item.responseId === liveWork?.selectedId) ?? results.responses[0] ?? null;
+  liveWork.selectedId = response?.responseId ?? null;
+  if (!response) {
+    emptyState(detail, "Candidate work appears here once a candidate saves an answer.");
+    return;
+  }
+  detail.append(renderCandidatePaper(results, response));
+  detail.scrollTop = scroll;
+}
+
+function renderLiveWork() {
+  const results = liveWork.results;
+  document.querySelector("#live-work-title").textContent = results.session.paperTitle;
+  document.querySelector("#live-work-context").textContent = [
+    `${results.session.className} · ${results.responses.length} candidate${results.responses.length === 1 ? "" : "s"} joined`,
+    "Live — updates as they save",
+  ].join(" · ");
+  renderLiveWorkList();
+  renderLiveWorkDetail();
+}
+
+async function openLiveWork(sessionId) {
+  const results = await api(`/api/admin/sessions/${sessionId}/responses`);
+  liveWork = { sessionId, selectedId: null, signature: liveWorkSignature(results), results };
+  renderLiveWork();
+  document.querySelector("#live-work-dialog").showModal();
+}
+
+/** Refreshes an open live view without disturbing the reader: same candidate, same scroll. */
+async function refreshLiveWork() {
+  if (!liveWork) return;
+  const dialog = document.querySelector("#live-work-dialog");
+  if (!dialog?.open) return;
+  const results = await api(`/api/admin/sessions/${liveWork.sessionId}/responses`);
+  const signature = liveWorkSignature(results);
+  if (signature === liveWork.signature) return;
+  liveWork.signature = signature;
+  liveWork.results = results;
+  renderLiveWork();
+}
+
 function printSubmissions(responseId = null) {
   const list = document.querySelector("#submission-list");
   const records = [...list.querySelectorAll(".submission-record")];
@@ -723,14 +818,36 @@ function bindCollectionController() {
   let pendingArchive = null;
   let archiveTrigger = null;
 
+  document.querySelector("#live-work-dialog").addEventListener("close", () => { liveWork = null; });
+
+  document.querySelector("#live-work-list").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-live-work-response]");
+    if (!button || !liveWork) return;
+    liveWork.selectedId = button.dataset.liveWorkResponse;
+    renderLiveWorkList();
+    renderLiveWorkDetail();
+  });
+
   root.addEventListener("click", async (event) => {
     const button = event.target.closest(
-      "button[data-edit-student], button[data-session-action], button[data-responses], button[data-collection-action]",
+      "button[data-edit-student], button[data-session-action], button[data-live-work], button[data-responses], button[data-collection-action]",
     );
     if (!button || button.disabled) return;
 
     if (button.dataset.editStudent) {
       openStudentEditor(button.dataset.editStudent);
+      return;
+    }
+    if (button.dataset.liveWork) {
+      button.disabled = true;
+      try {
+        announce("");
+        await openLiveWork(button.dataset.liveWork);
+      } catch (error) {
+        announce(error instanceof Error ? error.message : "Could not load candidate work", "error");
+      } finally {
+        button.disabled = false;
+      }
       return;
     }
     if (button.dataset.responses) {
@@ -1095,6 +1212,21 @@ async function renderDashboard() {
         <footer><button type="button" data-cancel-archive>Cancel</button><button id="confirm-archive" class="danger-action" type="submit" value="confirm">Remove</button></footer>
       </form>
     </dialog>
+    <dialog id="live-work-dialog" class="exam-dialog live-work-dialog">
+      <form method="dialog">
+        <header>
+          <p class="eyebrow">Live supervision</p>
+          <h2 id="live-work-title">Work in progress</h2>
+          <p id="live-work-context"></p>
+          <p class="live-work-note">Answers appear as candidates save them, about a second after they type. Candidates are told at sign-in that you can see their work during the sitting.</p>
+        </header>
+        <div class="live-work-layout">
+          <ul id="live-work-list" class="live-work-list"></ul>
+          <div id="live-work-detail" class="live-work-detail"></div>
+        </div>
+        <footer><button value="close">Close</button></footer>
+      </form>
+    </dialog>
     <dialog id="submissions-dialog" class="exam-dialog submissions-dialog">
       <form method="dialog">
         <header><p class="eyebrow">Completed papers</p><h2 id="submissions-title">Candidate responses</h2><p id="submissions-context"></p><p>Open a candidate to review their complete paper. Use your browser's print dialog to print one candidate or save a single class PDF.</p></header>
@@ -1129,6 +1261,7 @@ async function renderDashboard() {
       indicator.dataset.connected = "false";
     } else if (event.type === "admin-state") {
       refreshState(true);
+      refreshLiveWork().catch(() => { /* A failed refresh leaves the last view in place. */ });
     }
   });
   clearInterval(presenceTimer);

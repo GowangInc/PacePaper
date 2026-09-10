@@ -4,7 +4,7 @@ This folder receives the shareable PacePaper bundles made by `bun run release:bu
 
 Bundles built from the current source are self-contained: they include the PacePaper executable and all browser interface files. Teachers do not need Bun, Node.js, or source code. Students need only a browser and a connection to the teacher's computer; an Internet connection is not needed during use. The current builder excludes existing databases, teacher papers, submissions, and protected reference resources. A fresh release installs one generic **Sample paper** with no subject, level, or IB branding, so new users can try the exam workflow immediately.
 
-Version **0.1.0-demo.12** targets Windows x64 and Linux x64, under the PacePaper name. There is no Mac application in this release: Apple signing and notarization credentials are not configured. Mac users can run the source as described below. A previously downloaded app retains its own code and examples; check the release notes supplied with that download.
+Version **0.1.0-demo.13** targets Windows x64 and Linux x64, under the PacePaper name. There is no Mac application in this release: Apple signing and notarization credentials are not configured. Mac users can run the source as described below. A previously downloaded app retains its own code and examples; check the release notes supplied with that download.
 
 Reading and writing minutes can be corrected from the examination clock while a simple exam is ready or live; a live save moves candidate phase boundaries and deadlines immediately. Ended exams and fixed multi-phase (sectioned) schedules keep their timing read-only. The dashboard and clock always show the classroom-network address students open — never a loopback address — and the dashboard raises a notification when a candidate leaves the exam window. Ready and live timing saves reject stale writes from another window. The bundled release notes identify the platform and verification limits.
 
@@ -12,7 +12,7 @@ Start with `USER-GUIDE.html`, included beside the app or executable in each bund
 
 ## Choose the correct download
 
-- macOS — run the source for now; no Mac archive is included in demo.12
+- macOS — run the source for now; no Mac archive is included in demo.13
 - `PacePaper-*-windows-x64.zip` — most Windows PCs
 - `PacePaper-*-linux-x64.tar.gz` — 64-bit Linux PCs using glibc
 - `PacePaper-*-User-Guide.html` — illustrated, browser-friendly guide
@@ -25,7 +25,7 @@ Extract the entire archive before starting it. Do not run an executable from ins
 
 On Windows, double-click `PacePaper.exe`. On Linux, make `PacePaper` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting PacePaper. A future macOS download must be notarized before use.
 
-The current source is labelled `0.1.0-demo.12`, and a fresh release installs the generic **Sample paper** described above. See `RELEASE_NOTES-0.1.0-demo.12.md` for the dated review record. Later source edits require a new build and verification; existing downloads are unchanged.
+The current source is labelled `0.1.0-demo.13`, and a fresh release installs the generic **Sample paper** described above. See `RELEASE_NOTES-0.1.0-demo.13.md` for the dated review record. Later source edits require a new build and verification; existing downloads are unchanged.
 
 The release builder will not create a Mac archive without Developer ID signing and successful Apple notarization. Windows may still show a SmartScreen warning while the demo lacks an established publisher reputation.
 

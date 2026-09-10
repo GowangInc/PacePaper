@@ -84,6 +84,7 @@ function authFrame() {
         <p class="eyebrow">Candidate sign in</p>
         <h1>Find your examination</h1>
         <p>Enter the class code provided by your teacher, then choose your name.</p>
+        <p class="supervision-notice">Your teacher can see your work during a sitting: your answers, drawings, notes, and flagged questions. This covers only PacePaper — nothing else on your computer.</p>
         <form id="student-login" method="post">
           <label for="class-code">Class code</label>
           <input id="class-code" name="classCode" autocomplete="organization" maxlength="24" required>
@@ -322,6 +323,7 @@ function renderWaiting(state) {
         <h2>Waiting for your teacher</h2>
         <p id="waiting-paper"></p>
         <p>This examination will open here when the teacher starts it.</p>
+        <p class="supervision-notice">Your teacher can see your work during a sitting: your answers, drawings, notes, and flagged questions. This covers only PacePaper — nothing else on your computer.</p>
         <p class="connection-state" id="connection-state">Connecting</p>
         <button id="choose-exam" class="quiet-action" type="button">Choose a different exam</button>
         <button id="logout" class="quiet-action" type="button">Sign out</button>

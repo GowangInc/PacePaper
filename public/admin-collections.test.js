@@ -195,7 +195,7 @@ describe("teacher dashboard collections", () => {
   });
 
   test("never offers removal for a live sitting and retains ended submissions", () => {
-    expect(sessionActionModel(session({ status: "live" }))).toEqual(["clock", "end", "responses"]);
+    expect(sessionActionModel(session({ status: "live" }))).toEqual(["watch", "clock", "end", "responses"]);
     expect(sessionActionModel(session({ status: "ended" }))).toEqual(["responses", "archive"]);
     expect(sessionActionModel(session({ status: "ended" }), true)).toEqual(["restore", "responses"]);
     expect(classHasLiveSession([session({ status: "live" })], "class-1")).toBe(true);
