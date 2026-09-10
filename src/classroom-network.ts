@@ -68,9 +68,22 @@ function assertSelectedLocalAddress(address: string, available: readonly LocalPr
   return address;
 }
 
+// Container, virtualisation, bridge, and tunnel adapters: Linux docker0/br-*/virbr0,
+// Windows Hyper-V and "vEthernet (WSL)", macOS bridge/utun/awdl. They are rarely
+// reachable from a student device, so they are listed after physical interfaces.
+// ponytail: name-based heuristic; a teacher who needs one of these selects it in
+// the dashboard, which lists every detected address.
+const VIRTUAL_INTERFACE = /^(br-|bridge|docker|podman|veth|virbr|vmnet|vboxnet|utun|tun|tap|wg|cni|flannel|zt|hyper-v|vethernet|l4t|anpi|llw|awdl|ap\d)/iu;
+
+function interfaceRank(interfaceName: string): number {
+  return VIRTUAL_INTERFACE.test(interfaceName.trim().toLowerCase()) ? 1 : 0;
+}
+
 /**
  * Returns a deterministic, UI-ready list. Loopback, link-local, public, and
- * virtual addresses outside RFC1918 ranges are deliberately excluded.
+ * virtual addresses outside RFC1918 ranges are deliberately excluded. Physical
+ * interfaces come first, because the first entry is the default classroom
+ * address when a teacher has not chosen one.
  */
 export function listLocalPrivateIpv4Interfaces(
   interfaces: NetworkInterfaceMap = networkInterfaces(),
@@ -83,7 +96,9 @@ export function listLocalPrivateIpv4Interfaces(
     }
   }
   return candidates.sort((left, right) => (
-    left.interfaceName.localeCompare(right.interfaceName) || left.address.localeCompare(right.address)
+    interfaceRank(left.interfaceName) - interfaceRank(right.interfaceName)
+    || left.interfaceName.localeCompare(right.interfaceName)
+    || left.address.localeCompare(right.address)
   ));
 }
 

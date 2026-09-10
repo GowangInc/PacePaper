@@ -36,6 +36,18 @@ describe("managed classroom network sharing", () => {
     })).toEqual([...localAddresses]);
   });
 
+  test("offers physical interfaces before container, bridge, and tunnel adapters", () => {
+    const listed = listLocalPrivateIpv4Interfaces({
+      docker0: [{ address: "172.18.0.1", family: "IPv4", internal: false }],
+      "br-1a2b3c": [{ address: "172.19.0.1", family: "IPv4", internal: false }],
+      eth0: [{ address: "192.168.9.5", family: "IPv4", internal: false }],
+      utun3: [{ address: "10.9.9.9", family: "IPv4", internal: false }],
+    });
+    // Bridges are still selectable, but never the default classroom address.
+    expect(listed[0]).toEqual({ interfaceName: "eth0", address: "192.168.9.5" });
+    expect(listed.slice(1).map((entry) => entry.interfaceName)).toEqual(["br-1a2b3c", "docker0", "utun3"]);
+  });
+
   test("persists only a current local address beside the configured database", () => {
     const databasePath = join(temporaryDirectory, "exam-data.sqlite");
     expect(persistSelectedClassroomAddress(databasePath, "192.168.50.20", localAddresses)).toBe("192.168.50.20");
@@ -88,6 +100,22 @@ describe("managed classroom network sharing", () => {
       managed: true,
       selectedAddress: "192.168.50.20",
       lanOrigin: "http://192.168.50.20:9148",
+    });
+  });
+
+  test("chooses the physical interface rather than a container bridge when none is stored", () => {
+    const databasePath = join(temporaryDirectory, "bridge-first-run.sqlite");
+    const state = new ClassroomNetworkState({ managed: true, port: 9148 });
+    expect(restoreClassroomSharingAtStartup(state, {
+      databasePath,
+      available: listLocalPrivateIpv4Interfaces({
+        docker0: [{ address: "172.18.0.1", family: "IPv4", internal: false }],
+        en0: [{ address: "192.168.9.5", family: "IPv4", internal: false }],
+      }),
+    })).toEqual({
+      managed: true,
+      selectedAddress: "192.168.9.5",
+      lanOrigin: "http://192.168.9.5:9148",
     });
   });
 
