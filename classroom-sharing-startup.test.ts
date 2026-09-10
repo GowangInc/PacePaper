@@ -27,14 +27,21 @@ async function startServer(dataDirectory: string): Promise<{ server: Bun.Subproc
     stdout: "pipe",
     stderr: "ignore",
   });
-  const decoder = new TextDecoder();
-  let output = "";
-  for await (const chunk of server.stdout as ReadableStream<Uint8Array>) {
-    output += decoder.decode(chunk, { stream: true });
-    const line = output.split("\n").find((entry) => entry.startsWith("Student sign-in: "));
-    if (line) return { server, signInUrl: line.slice("Student sign-in: ".length).trim() };
+  try {
+    const decoder = new TextDecoder();
+    let output = "";
+    for await (const chunk of server.stdout as ReadableStream<Uint8Array>) {
+      output += decoder.decode(chunk, { stream: true });
+      const line = output.split("\n").find((entry) => entry.startsWith("Student sign-in: "));
+      if (line) return { server, signInUrl: line.slice("Student sign-in: ".length).trim() };
+    }
+    throw new Error(`PacePaper exited before reporting a student sign-in address:\n${output}`);
+  } catch (error) {
+    // Never leave a live child behind when startup fails or the test times out.
+    server.kill();
+    await server.exited;
+    throw error;
   }
-  throw new Error(`PacePaper exited before reporting a student sign-in address:\n${output}`);
 }
 
 async function stopServer(server: Bun.Subprocess): Promise<void> {
