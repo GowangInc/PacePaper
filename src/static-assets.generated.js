@@ -27,6 +27,7 @@ import index from "../public/index.html" with { type: "file" };
 import paperBuilder from "../public/paper-builder.js" with { type: "file" };
 import paperBuilderDom from "../public/paper-builder-dom.js" with { type: "file" };
 import paperPreview from "../public/paper-preview.js" with { type: "file" };
+import previewAudio from "../public/preview-audio.js" with { type: "file" };
 import presentationCss from "../public/presentation.css" with { type: "file" };
 import presentation from "../public/presentation.html" with { type: "file" };
 import resourceText from "../public/resource-text.js" with { type: "file" };
@@ -69,6 +70,7 @@ export default {
   "public/paper-builder.js": paperBuilder,
   "public/paper-builder-dom.js": paperBuilderDom,
   "public/paper-preview.js": paperPreview,
+  "public/preview-audio.js": previewAudio,
   "public/presentation.css": presentationCss,
   "public/presentation.html": presentation,
   "public/resource-text.js": resourceText,

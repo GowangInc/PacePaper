@@ -5,6 +5,7 @@ import { phaseAtTime, phaseLockMessage, questionsForPhase, resourcesForExamConte
 import { createInkResponse, hasInkResponse } from "/ink-canvas.js";
 import { createTextHighlighter } from "/text-highlights.js";
 import { renderResourceText } from "./resource-text.js";
+import { createPreviewAudioApi } from "./preview-audio.js";
 import { createResponseSaveState, downloadResponseRecovery } from "./response-save-state.js";
 
 const RICH_TAGS = new Set([
@@ -298,7 +299,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
         </nav>
       </header>
 
-      ${previewMode ? `<div class="preview-banner" role="status"><strong>Candidate preview</strong><span>This is the student interface for this paper. Nothing is saved, submitted, or counted, and the timer runs only for you.</span></div>` : ""}
+      ${previewMode ? `<div class="preview-banner" role="status"><strong>Candidate preview</strong><span>This is the student interface for this paper. Nothing is saved or submitted and no candidate is affected; the clock and listen limits apply to this tab only.</span></div>` : ""}
 
       <div id="phase-banner" class="reading-banner phase-banner" role="status" aria-live="polite" hidden>
         <strong id="phase-banner-title">Reading time</strong>
@@ -368,18 +369,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   highlighter.decorate(document.querySelector("#instructions-copy"), "paper:instructions", paper.instructions);
   const notepad = document.querySelector("#notepad");
   notepad.value = draft.notepad;
-  // Preview audio has no server ticket: play the resource itself, without counting listens.
-  const previewAudioApi = (path, options = {}) => {
-    if (!path.startsWith("/api/student/audio-play")) return api(path, options);
-    if (path.endsWith("/start")) return Promise.resolve({ plays: 1 });
-    const resourceKey = options.body?.resourceKey;
-    const resource = paper.resources.find((item) => item.key === resourceKey);
-    return Promise.resolve({
-      plays: 0,
-      playToken: "preview",
-      url: resource?.url ?? `/api/assets/${paper.id}/${resourceKey}`,
-    });
-  };
+  const previewAudioApi = createPreviewAudioApi({ resources: paper.resources, paperId: paper.id, fallbackApi: api });
 
   const audioController = createExamAudioController({
     sessionId,
