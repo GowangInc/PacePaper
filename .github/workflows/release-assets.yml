@@ -7,7 +7,7 @@ on:
       tag:
         description: Existing draft release tag
         required: true
-        default: v0.1.0-demo.5
+        default: v0.1.0-demo.14
         type: string
       include_macos:
         description: Include macOS (requires Developer ID signing and Apple notarization secrets)

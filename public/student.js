@@ -497,6 +497,7 @@ function renderSubmitted(state) {
 async function renderExam(state) {
   clearInterval(pollTimer);
   stopExam();
+  const { mountExam } = await import("./exam.js");
   cleanupExam = mountExam(state, { onSubmitted: loadState });
   pollTimer = setInterval(loadState, 30_000);
 }

@@ -58,6 +58,166 @@ describe("database schema migration", () => {
     expect(sessionColumns.find(({ name }) => name === "duration_minutes_override")).toMatchObject({ notnull: 0 });
     expect(sessionColumns.find(({ name }) => name === "reading_time_minutes_override")).toMatchObject({ notnull: 0 });
   });
+
+  test("quarantines duplicate legacy sign-in names without losing their records", () => {
+    const legacy = new Database(":memory:", { create: true, strict: true });
+    try {
+      legacy.exec(`
+        CREATE TABLE classes (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT NOT NULL UNIQUE COLLATE NOCASE, created_at INTEGER NOT NULL
+        );
+        CREATE TABLE students (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          candidate_code TEXT NOT NULL COLLATE NOCASE,
+          pin_hash TEXT NOT NULL,
+          extra_minutes INTEGER NOT NULL DEFAULT 0,
+          last_seen_at INTEGER,
+          created_at INTEGER NOT NULL,
+          UNIQUE(class_id, candidate_code)
+        );
+        INSERT INTO classes (id, name, code, created_at) VALUES
+          ('class-first', 'Year 12', 'first', 1),
+          ('class-second', ' year 12 ', 'second', 2);
+        INSERT INTO students (id, class_id, name, candidate_code, pin_hash, created_at) VALUES
+          ('student-first', 'class-first', 'Ada', 'first', 'hash', 1),
+          ('student-second', 'class-first', ' ADA ', 'second', 'hash', 2);
+      `);
+
+      initializeDatabaseSchema(legacy);
+
+      expect(legacy.query<{ id: string; nameKey: string; archivedAt: number | null }, []>(
+        "SELECT id, name_key AS nameKey, archived_at AS archivedAt FROM classes ORDER BY id",
+      ).all()).toEqual([
+        { id: "class-first", nameKey: "year 12", archivedAt: null },
+        { id: "class-second", nameKey: "year 12", archivedAt: expect.any(Number) },
+      ]);
+      expect(legacy.query<{ id: string; nameKey: string; archivedAt: number | null }, []>(
+        "SELECT id, name_key AS nameKey, archived_at AS archivedAt FROM students ORDER BY id",
+      ).all()).toEqual([
+        { id: "student-first", nameKey: "ada", archivedAt: null },
+        { id: "student-second", nameKey: "ada", archivedAt: expect.any(Number) },
+      ]);
+      expect(() => legacy.query("UPDATE classes SET archived_at = NULL WHERE id = 'class-second'").run()).toThrow();
+      expect(() => legacy.query("UPDATE students SET archived_at = NULL WHERE id = 'student-second'").run()).toThrow();
+    } finally {
+      legacy.close();
+    }
+  });
+
+  test("keeps a live duplicate roster identity instead of archiving it", () => {
+    const legacy = new Database(":memory:", { create: true, strict: true });
+    try {
+      legacy.exec(`
+        CREATE TABLE classes (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT NOT NULL UNIQUE COLLATE NOCASE, created_at INTEGER NOT NULL
+        );
+        CREATE TABLE students (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          candidate_code TEXT NOT NULL COLLATE NOCASE,
+          pin_hash TEXT NOT NULL,
+          extra_minutes INTEGER NOT NULL DEFAULT 0,
+          last_seen_at INTEGER,
+          created_at INTEGER NOT NULL,
+          UNIQUE(class_id, candidate_code)
+        );
+        CREATE TABLE papers (id TEXT PRIMARY KEY);
+        CREATE TABLE exam_sessions (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE RESTRICT,
+          paper_id TEXT NOT NULL REFERENCES papers(id) ON DELETE RESTRICT,
+          status TEXT NOT NULL CHECK(status IN ('draft', 'live', 'ended')),
+          started_at INTEGER,
+          ended_at INTEGER,
+          created_at INTEGER NOT NULL
+        );
+        CREATE TABLE responses (
+          id TEXT PRIMARY KEY,
+          session_id TEXT NOT NULL REFERENCES exam_sessions(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE
+        );
+        INSERT INTO classes (id, name, code, created_at) VALUES
+          ('class-old', 'Year 12', 'old', 1),
+          ('class-live', ' year 12 ', 'live', 2);
+        INSERT INTO papers (id) VALUES ('paper');
+        INSERT INTO students (id, class_id, name, candidate_code, pin_hash, created_at) VALUES
+          ('student-old', 'class-live', 'Ada', 'old', 'hash', 1),
+          ('student-live', 'class-live', ' ADA ', 'live', 'hash', 2);
+        INSERT INTO exam_sessions (id, class_id, paper_id, status, created_at)
+          VALUES ('session', 'class-live', 'paper', 'live', 3);
+        INSERT INTO responses (id, session_id, student_id)
+          VALUES ('response', 'session', 'student-live');
+      `);
+
+      initializeDatabaseSchema(legacy);
+
+      expect(legacy.query<{ id: string; archivedAt: number | null }, []>(
+        "SELECT id, archived_at AS archivedAt FROM classes ORDER BY id",
+      ).all()).toEqual([
+        { id: "class-live", archivedAt: null },
+        { id: "class-old", archivedAt: expect.any(Number) },
+      ]);
+      expect(legacy.query<{ id: string; archivedAt: number | null }, []>(
+        "SELECT id, archived_at AS archivedAt FROM students ORDER BY id",
+      ).all()).toEqual([
+        { id: "student-live", archivedAt: null },
+        { id: "student-old", archivedAt: expect.any(Number) },
+      ]);
+      expect(legacy.query<{ status: string }, []>(
+        "SELECT status FROM exam_sessions WHERE id = 'session'",
+      ).get()).toEqual({ status: "live" });
+    } finally {
+      legacy.close();
+    }
+  });
+
+  test("refuses an ambiguous duplicate live class migration", () => {
+    const legacy = new Database(":memory:", { create: true, strict: true });
+    try {
+      legacy.exec(`
+        CREATE TABLE classes (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT NOT NULL UNIQUE COLLATE NOCASE, created_at INTEGER NOT NULL
+        );
+        CREATE TABLE students (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          candidate_code TEXT NOT NULL COLLATE NOCASE,
+          pin_hash TEXT NOT NULL,
+          extra_minutes INTEGER NOT NULL DEFAULT 0,
+          last_seen_at INTEGER,
+          created_at INTEGER NOT NULL,
+          UNIQUE(class_id, candidate_code)
+        );
+        CREATE TABLE papers (id TEXT PRIMARY KEY);
+        CREATE TABLE exam_sessions (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE RESTRICT,
+          paper_id TEXT NOT NULL REFERENCES papers(id) ON DELETE RESTRICT,
+          status TEXT NOT NULL CHECK(status IN ('draft', 'live', 'ended')),
+          started_at INTEGER,
+          ended_at INTEGER,
+          created_at INTEGER NOT NULL
+        );
+        INSERT INTO classes (id, name, code, created_at) VALUES
+          ('class-one', 'Year 12', 'one', 1),
+          ('class-two', ' year 12 ', 'two', 2);
+        INSERT INTO papers (id) VALUES ('paper');
+        INSERT INTO exam_sessions (id, class_id, paper_id, status, created_at) VALUES
+          ('session-one', 'class-one', 'paper', 'live', 3),
+          ('session-two', 'class-two', 'paper', 'live', 4);
+      `);
+
+      expect(() => initializeDatabaseSchema(legacy)).toThrow(
+        "Cannot safely upgrade duplicate class names while more than one has a live examination",
+      );
+    } finally {
+      legacy.close();
+    }
+  });
 });
 
 describe("student roster and account lookup", () => {
@@ -153,6 +313,31 @@ describe("class-list imports", () => {
     }])).toMatchObject({ classesUnchanged: 1, studentsUnchanged: 2 });
   });
 
+
+  test("updates an active roster when an older removed roster has the same names", () => {
+    const removedClass = database.createClass("Import collision");
+    database.createStudent({ classId: removedClass.id, name: "Student collision", extraMinutes: 0 });
+    database.archiveClass(removedClass.id);
+    const activeClass = database.createClass("Import collision");
+    const activeStudent = database.createStudent({
+      classId: activeClass.id,
+      name: "Student collision",
+      extraMinutes: 0,
+    });
+
+    expect(database.importClassRosters([{
+      name: "Import collision",
+      students: [{ name: "Student collision", extraMinutes: 15 }],
+    }])).toEqual({
+      classesCreated: 0,
+      classesUpdated: 0,
+      classesUnchanged: 1,
+      studentsCreated: 0,
+      studentsUpdated: 1,
+      studentsUnchanged: 0,
+    });
+    expect(database.getStudent(activeStudent.id)).toMatchObject({ extraMinutes: 15 });
+  });
   test("rejects removed names and rolls back the entire file", () => {
     const schoolClass = database.createClass("Archived Import");
     const removedStudent = database.createStudent({
@@ -399,6 +584,29 @@ describe("reversible class, student, and exam lifecycle", () => {
     expect(database.listStudents()).toContainEqual(expect.objectContaining({ id: student.id, archivedAt: null }));
   });
 
+
+  test("allows an active replacement after removal but rejects restoring duplicate names", () => {
+    const removedClass = database.createClass("Restore collision");
+    database.archiveClass(removedClass.id);
+    database.createClass("Restore collision");
+    expect(() => database.restoreClass(removedClass.id)).toThrow("another active class has the same name");
+
+    const schoolClass = database.createClass("Student restore collision");
+    const removedStudent = database.createStudent({
+      classId: schoolClass.id,
+      name: "Restore student",
+      extraMinutes: 0,
+    });
+    database.archiveStudent(removedStudent.id);
+    const activeStudent = database.createStudent({
+      classId: schoolClass.id,
+      name: "Restore student",
+      extraMinutes: 0,
+    });
+    expect(() => database.restoreStudent(removedStudent.id)).toThrow("active class member has the same name");
+    expect(database.findStudentLogin("Student restore collision", "Restore student"))
+      .toMatchObject({ id: activeStudent.id });
+  });
   test("keeps child archive flags while an archived class gates access and creation", () => {
     const schoolClass = database.createClass("Class Lifecycle");
     const activeStudent = database.createStudent({

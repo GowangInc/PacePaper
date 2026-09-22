@@ -366,7 +366,7 @@ function renderSubmissions(data) {
 }
 
 /** One saved moment of a candidate's paper: answers only, in the paper's question order. */
-function renderRevisionAnswers(data, revision) {
+export function renderRevisionAnswers(data, revision) {
   const answers = document.createElement("div");
   answers.className = "submission-answers";
   for (const [index, question] of data.questions.entries()) {
@@ -379,11 +379,19 @@ function renderRevisionAnswers(data, revision) {
       title.append(copy("span", "candidate-question-selection", "Flagged"));
     }
     heading.append(copy("span", "candidate-question-number", String(index + 1).padStart(2, "0")), title);
-    item.append(
-      heading,
-      copy("p", "submission-prompt", question.prompt),
-      renderSubmissionAnswer(question, revision.answers?.[question.id] ?? ""),
-    );
+    item.append(heading, copy("p", "submission-prompt", question.prompt));
+    if (
+      data.session.selectionMode === "one" &&
+      data.session.mode === "essay" &&
+      revision.selectedQuestionId &&
+      question.id !== revision.selectedQuestionId
+    ) {
+      const notSelected = copy("div", "submission-answer candidate-question-not-selected", "Not selected by candidate");
+      notSelected.dataset.answerType = "not-selected";
+      item.append(notSelected);
+    } else {
+      item.append(renderSubmissionAnswer(question, revision.answers?.[question.id] ?? ""));
+    }
     answers.append(item);
   }
   return answers;

@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { RELEASE_SAMPLE_PAPER } from "../examples/release-sample.ts";
+
 import {
   archiveDialogCopy,
   classHasLiveSession,
@@ -155,6 +157,22 @@ describe("teacher dashboard collections", () => {
       "psychology-paper-3",
     ]);
     expect(papers[0].id).toBe("psychology-paper-3");
+  });
+
+  test("lists the bundled release sample under its generic practice system", () => {
+    const paper = {
+      id: "release-sample",
+      ...RELEASE_SAMPLE_PAPER,
+      examSystemLabel: RELEASE_SAMPLE_PAPER.examFormat?.systemLabel,
+    };
+
+    expect(RELEASE_SAMPLE_PAPER.examFormat).toMatchObject({
+      systemLabel: "Practice sample",
+      fidelity: "school-custom",
+    });
+    expect(paperSystemOptions([paper])).toEqual([{ value: "Practice sample", label: "Practice sample" }]);
+    expect(paperOptionsForSystem([paper], "Practice sample"))
+      .toEqual([{ value: "release-sample", label: "Sample paper · Demo" }]);
   });
 
   test("filters exam setup papers behind an explicit exam-system choice", () => {

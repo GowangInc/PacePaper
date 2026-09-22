@@ -396,9 +396,12 @@ export const importClassRosters = db.transaction((rosters: ClassRosterInput[]): 
     const existingClass = db.query<ClassRow, { nameKey: string }>(`
       SELECT id, name, created_at AS createdAt, archived_at AS archivedAt
         FROM classes
-       WHERE name_key = $nameKey
+       WHERE name_key = $nameKey AND archived_at IS NULL
     `).get({ nameKey });
-    if (existingClass?.archivedAt !== null && existingClass?.archivedAt !== undefined) {
+    const removedClass = !existingClass && db.query(
+      "SELECT 1 FROM classes WHERE name_key = $nameKey AND archived_at IS NOT NULL",
+    ).get({ nameKey });
+    if (removedClass) {
       throw new Error(`Class ${roster.name} belongs to a removed class. Restore it before importing`);
     }
 
@@ -423,13 +426,16 @@ export const importClassRosters = db.transaction((rosters: ClassRosterInput[]): 
         id: string;
         name: string;
         extraMinutes: number;
-        archivedAt: number | null;
       }, { classId: string; nameKey: string }>(`
-        SELECT id, name, extra_minutes AS extraMinutes, archived_at AS archivedAt
+        SELECT id, name, extra_minutes AS extraMinutes
           FROM students
-         WHERE class_id = $classId AND name_key = $nameKey
+         WHERE class_id = $classId AND name_key = $nameKey AND archived_at IS NULL
       `).get({ classId, nameKey: studentNameKey });
-      if (existingStudent?.archivedAt !== null && existingStudent?.archivedAt !== undefined) {
+      const removedStudent = !existingStudent && db.query(`
+        SELECT 1 FROM students
+         WHERE class_id = $classId AND name_key = $nameKey AND archived_at IS NOT NULL
+      `).get({ classId, nameKey: studentNameKey });
+      if (removedStudent) {
         throw new Error(`Student ${student.name} belongs to a removed class member. Restore them before importing`);
       }
 
@@ -891,6 +897,32 @@ function requireActiveClass(classId: string, child: "student" | "exam session"):
   if (!active) throw new Error(`Restore the class first before restoring this ${child}`);
 }
 
+function assertRestorableClassName(classId: string): void {
+  const duplicate = db.query(`
+    SELECT 1
+      FROM classes AS restored
+      JOIN classes AS active ON active.name_key = restored.name_key
+     WHERE restored.id = $classId
+       AND active.id <> restored.id
+       AND active.archived_at IS NULL
+  `).get({ classId });
+  if (duplicate) throw new Error("Cannot restore this class while another active class has the same name");
+}
+
+function assertRestorableStudentName(studentId: string): void {
+  const duplicate = db.query(`
+    SELECT 1
+      FROM students AS restored
+      JOIN students AS active
+        ON active.class_id = restored.class_id
+       AND active.name_key = restored.name_key
+     WHERE restored.id = $studentId
+       AND active.id <> restored.id
+       AND active.archived_at IS NULL
+  `).get({ studentId });
+  if (duplicate) throw new Error("Cannot restore this student while an active class member has the same name");
+}
+
 export const archiveStudent = db.transaction((studentId: string): LifecycleResult => {
   const row = lifecycleRow("students", studentId, "Student");
   if (row.archivedAt === null) {
@@ -912,7 +944,10 @@ export const archiveStudent = db.transaction((studentId: string): LifecycleResul
 export const restoreStudent = db.transaction((studentId: string): LifecycleResult => {
   const row = lifecycleRow("students", studentId, "Student");
   requireActiveClass(row.classId, "student");
-  if (row.archivedAt !== null) setArchivedAt("students", studentId, null);
+  if (row.archivedAt !== null) {
+    assertRestorableStudentName(studentId);
+    setArchivedAt("students", studentId, null);
+  }
   return { ...row, archivedAt: null };
 });
 
@@ -932,7 +967,10 @@ export const archiveClass = db.transaction((classId: string): LifecycleResult =>
 
 export const restoreClass = db.transaction((classId: string): LifecycleResult => {
   const row = lifecycleRow("classes", classId, "Class");
-  if (row.archivedAt !== null) setArchivedAt("classes", classId, null);
+  if (row.archivedAt !== null) {
+    assertRestorableClassName(classId);
+    setArchivedAt("classes", classId, null);
+  }
   return { ...row, archivedAt: null };
 });
 

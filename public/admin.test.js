@@ -30,9 +30,25 @@ mock.module("/class-rosters.js", () => ({ mountClassRosterTransfer() {} }));
 mock.module("/paper-builder.js", () => ({ mountPaperBuilder() {} }));
 mock.module("/student-connection.js", () => ({ mountStudentConnection() {} }));
 
-await import("./admin.js");
+const { renderRevisionAnswers } = await import("./admin.js");
 const source = await Bun.file(new URL("./admin.js", import.meta.url)).text();
 const styles = await Bun.file(new URL("./styles.css", import.meta.url)).text();
+
+class FakeElement {
+  constructor(tagName) {
+    this.tagName = tagName;
+    this.children = [];
+    this.classList = { add() {} };
+    this.dataset = {};
+    this.textContent = "";
+  }
+
+  append(...children) {
+    this.children.push(...children);
+  }
+
+  setAttribute() {}
+}
 
 describe("teacher dashboard presentation", () => {
   test("does not poll and rebuild the dashboard every five seconds", () => {
@@ -85,6 +101,29 @@ describe("teacher dashboard presentation", () => {
     expect(source).toContain("appendCandidateNotepad(paper, response.notepad)");
     expect(styles).toContain(".candidate-paper-notepad p {\n  margin: 0;\n  line-height: 1.55;\n  overflow-wrap: anywhere;\n  white-space: pre-wrap;");
     expect(styles).toContain(".candidate-paper-notepad h3 {\n    margin-bottom: 1.5mm;\n    font-size: 10pt;\n    break-after: avoid-page;");
+  });
+
+  test("hides unselected essay answers in answer history", () => {
+    const originalDocument = globalThis.document;
+    globalThis.document = { createElement: (tagName) => new FakeElement(tagName) };
+    try {
+      const answers = renderRevisionAnswers({
+        session: { selectionMode: "one", mode: "essay" },
+        questions: [
+          { id: "draft", label: "Prompt 1", prompt: "Draft prompt", type: "essay" },
+          { id: "selected", label: "Prompt 2", prompt: "Selected prompt", type: "essay" },
+        ],
+      }, {
+        answers: { draft: "<p>Unselected draft</p>", selected: "<p>Submitted answer</p>" },
+        selectedQuestionId: "selected",
+      });
+
+      expect(answers.children[0].children[2].textContent).toBe("Not selected by candidate");
+      expect(answers.children[0].children[2].dataset.answerType).toBe("not-selected");
+      expect(answers.children[1].children[2].innerHTML).toBe("<p>Submitted answer</p>");
+    } finally {
+      globalThis.document = originalDocument;
+    }
   });
 
   test("stacks paper-library rows on narrow teacher screens", () => {

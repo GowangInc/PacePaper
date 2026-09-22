@@ -160,34 +160,67 @@ export function initializeDatabaseSchema(db: Database): DatabaseSchema {
     schema.legacyStudentPinHash = studentColumns.includes("pin_hash");
     if (!studentColumns.includes("name_key")) db.run("ALTER TABLE students ADD COLUMN name_key TEXT");
 
-    const classNames = new Map<string, string>();
-    for (const schoolClass of db.query<{ id: string; name: string }, []>("SELECT id, name FROM classes").all()) {
+    // Archived records may reuse a display name. Only live name-only sign-ins
+    // need unique identities, so later legacy collisions move to Removed.
+    db.run("DROP INDEX IF EXISTS classes_name_key");
+    db.run("DROP INDEX IF EXISTS students_class_name_key");
+    const migrationArchivedAt = Date.now();
+    const classNames = new Set<string>();
+    for (const schoolClass of db.query<{ id: string; name: string; archivedAt: number | null; live: number }, []>(`
+      SELECT id, name, archived_at AS archivedAt,
+             EXISTS(SELECT 1 FROM exam_sessions WHERE class_id = classes.id AND status = 'live') AS live
+        FROM classes
+       ORDER BY CASE WHEN archived_at IS NULL THEN 0 ELSE 1 END,
+                EXISTS(SELECT 1 FROM exam_sessions WHERE class_id = classes.id AND status = 'live') DESC,
+                created_at, id
+    `).all()) {
       const key = identityKey(schoolClass.name);
-      if (!key) throw new Error(`Cannot migrate class ${schoolClass.id}: its name is blank`);
-      const duplicate = classNames.get(key);
-      if (duplicate) {
-        throw new Error(`Cannot migrate classes ${duplicate} and ${schoolClass.id}: their names are indistinguishable at student sign-in`);
+      const duplicate = schoolClass.archivedAt === null && (!key || classNames.has(key));
+      if (duplicate && schoolClass.live) {
+        throw new Error("Cannot safely upgrade duplicate class names while more than one has a live examination");
       }
-      classNames.set(key, schoolClass.id);
-      db.query("UPDATE classes SET name_key = $key WHERE id = $id").run({ key, id: schoolClass.id });
+      db.query("UPDATE classes SET name_key = $key, archived_at = $archivedAt WHERE id = $id").run({
+        id: schoolClass.id,
+        key,
+        archivedAt: duplicate ? migrationArchivedAt : schoolClass.archivedAt,
+      });
+      if (!duplicate && schoolClass.archivedAt === null) classNames.add(key);
     }
-    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS classes_name_key ON classes(name_key)");
+    db.run("CREATE UNIQUE INDEX IF NOT EXISTS active_classes_name_key ON classes(name_key) WHERE archived_at IS NULL");
 
-    const studentNames = new Map<string, string>();
-    for (const student of db.query<{ id: string; classId: string; name: string }, []>(
-      "SELECT id, class_id AS classId, name FROM students",
-    ).all()) {
+    const studentNames = new Set<string>();
+    for (const student of db.query<{ id: string; classId: string; name: string; archivedAt: number | null; live: number }, []>(`
+      SELECT id, class_id AS classId, name, archived_at AS archivedAt,
+             EXISTS(
+               SELECT 1
+                 FROM responses
+                 JOIN exam_sessions ON exam_sessions.id = responses.session_id
+                WHERE responses.student_id = students.id AND exam_sessions.status = 'live'
+             ) AS live
+        FROM students
+       ORDER BY CASE WHEN archived_at IS NULL THEN 0 ELSE 1 END,
+                EXISTS(
+                  SELECT 1
+                    FROM responses
+                    JOIN exam_sessions ON exam_sessions.id = responses.session_id
+                   WHERE responses.student_id = students.id AND exam_sessions.status = 'live'
+                ) DESC,
+                created_at, id
+    `).all()) {
       const key = identityKey(student.name);
-      if (!key) throw new Error(`Cannot migrate student ${student.id}: their name is blank`);
       const identity = `${student.classId}\u0000${key}`;
-      const duplicate = studentNames.get(identity);
-      if (duplicate) {
-        throw new Error(`Cannot migrate students ${duplicate} and ${student.id}: their names are indistinguishable at student sign-in`);
+      const duplicate = student.archivedAt === null && (!key || studentNames.has(identity));
+      if (duplicate && student.live) {
+        throw new Error("Cannot safely upgrade duplicate student names while more than one has a live examination");
       }
-      studentNames.set(identity, student.id);
-      db.query("UPDATE students SET name_key = $key WHERE id = $id").run({ key, id: student.id });
+      db.query("UPDATE students SET name_key = $key, archived_at = $archivedAt WHERE id = $id").run({
+        id: student.id,
+        key,
+        archivedAt: duplicate ? migrationArchivedAt : student.archivedAt,
+      });
+      if (!duplicate && student.archivedAt === null) studentNames.add(identity);
     }
-    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS students_class_name_key ON students(class_id, name_key)");
+    db.run("CREATE UNIQUE INDEX IF NOT EXISTS active_students_class_name_key ON students(class_id, name_key) WHERE archived_at IS NULL");
   });
   migrate();
   return schema;

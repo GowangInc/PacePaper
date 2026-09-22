@@ -590,17 +590,18 @@
 <ol>
 <li>Finish every live exam.</li>
 <li>Quit PacePaper completely.</li>
-<li>Copy the entire PacePaper data folder to approved secure storage.</li>
+<li>Copy the entire data folder to approved secure storage.</li>
 </ol>
-<p>Default data folders:</p>
+<p>Default data folders (the folder name remains <code>DigitalDP</code> so existing release data keeps working):</p>
 <ul>
-<li>Mac: <code>~/Library/Application Support/PacePaper/</code></li>
-<li>Windows: <code>%LOCALAPPDATA%\PacePaper\</code></li>
-<li>Linux: <code>~/.local/share/PacePaper/</code></li>
+<li>Mac: <code>~/Library/Application Support/DigitalDP/</code></li>
+<li>Windows: <code>%LOCALAPPDATA%\DigitalDP\</code></li>
+<li>Linux: <code>~/.local/share/DigitalDP/</code></li>
 </ul>
 <p>On a Mac, choose <strong>Go → Go to Folder</strong> in Finder and paste the path above. On Windows, press Windows-R and paste its path. On Linux, paste the path into the file manager's location bar. If IT set a custom data folder, use that folder instead.</p>
 <p>These locations apply to the standalone app and <code>bun run start:app</code>. The basic development commands <code>bun run start</code> and <code>bun run dev</code> instead use the project's <code>data/</code> folder unless configured otherwise.</p>
 <p>Back up the data folder before replacing PacePaper with a newer version. Class-list CSV files move rosters; <code>.digitaldp-paper</code> files move individual papers. Only a complete data-folder backup also keeps the sessions and student responses.</p>
+<p>If an older data folder contains class names or student names within a class that are indistinguishable at sign-in, PacePaper keeps the record tied to a live sitting; otherwise it keeps the earlier active record and moves later duplicates into <strong>Removed</strong>. If matching records both have live work, PacePaper stops before changing the database. Finish those sittings before upgrading. Review that section after the first upgraded start. Rename the active class or student before restoring a duplicate.</p>
 <h3 id="restore-a-backup">Restore a backup</h3>
 <ol>
 <li>Stop PacePaper completely.</li>

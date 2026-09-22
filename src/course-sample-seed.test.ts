@@ -35,6 +35,7 @@ function runScenario(body: string): void {
     import * as database from ${JSON.stringify(join(import.meta.dir, "db.ts"))};
     import { seedCourseSamplePapers as seed } from ${JSON.stringify(join(import.meta.dir, "course-sample-seed.ts"))};
     import { COURSE_SAMPLE_PAPERS } from ${JSON.stringify(join(import.meta.dir, "../examples/sample-source/index.ts"))};
+    import { RELEASE_SAMPLE_PAPER } from ${JSON.stringify(join(import.meta.dir, "../examples/release-sample.ts"))};
     const legacy = ${JSON.stringify(legacy)};
     const next = JSON.parse(JSON.stringify(COURSE_SAMPLE_PAPERS.find(paper => paper.subject === "english-b" && paper.level === "SL")));
     const create = manifest => database.createPaper({ manifest, assets: [] }).id;
@@ -146,6 +147,18 @@ describe("safe bundled-demo migration", () => {
     assert.equal(count(), 2);
   `));
 
+
+  test("upgrades the unedited generic release sample in place", () => runScenario(`
+    const releaseSample = JSON.parse(JSON.stringify(RELEASE_SAMPLE_PAPER));
+    const previousReleaseSample = structuredClone(releaseSample);
+    delete previousReleaseSample.examFormat;
+    const id = create(previousReleaseSample);
+    assert.equal(seed([previousReleaseSample]).unchanged, 1);
+    assert.equal(seed([releaseSample]).updated, 1);
+    assert.equal(count(), 1);
+    assert.deepEqual(JSON.parse(read(id).manifest_json), releaseSample);
+    assert.equal(seed([releaseSample]).unchanged, 1);
+  `));
   test("seeds all courses without conflating tiers, components or AP walkthroughs", () => runScenario(`
     assert.equal(seed(COURSE_SAMPLE_PAPERS).created, COURSE_SAMPLE_PAPERS.length);
     assert.equal(seed(COURSE_SAMPLE_PAPERS).unchanged, COURSE_SAMPLE_PAPERS.length);

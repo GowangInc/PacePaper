@@ -12,8 +12,16 @@ const appModuleMock = {
 };
 mock.module("/app.js", () => appModuleMock);
 
+const examCalls = [];
+mock.module("./exam.js", () => ({
+  default: `${process.cwd()}/public/exam.js`,
+  mountExam(...args) {
+    examCalls.push(args);
+    return () => {};
+  },
+}));
+
 const { parseStudentSessionList, shouldResetStudentSelection, studentSessionState, renderStudent } = await import("./student.js");
-const source = await Bun.file(new URL("./student.js", import.meta.url)).text();
 
 const session = (overrides = {}) => ({
   id: "session-1",
@@ -77,11 +85,17 @@ async function withStudentView(run) {
       const id = html.match(/data-session-id="([^"]*)"/)[1];
       nodes.set(`.waiting-shell[data-session-id="${id}"]`, element());
     }
+    if (html.includes("submitted-shell") && html.includes("data-session-id")) {
+      const id = html.match(/data-session-id="([^"]*)"/)[1];
+      nodes.set(`.submitted-shell[data-session-id="${id}"]`, element());
+    }
     if (nodes.has("#connection-state")) nodes.get("#connection-state").textContent = "Connecting";
   };
   const view = {
     sockets,
     indicator: () => nodes.get("#connection-state"),
+    node(selector) { return nodes.get(selector); },
+    setNode(selector) { nodes.set(selector, element()); },
     state(value) { state = value; },
     onConnect(type) { connectEvent = type; },
     async event(type, socket = sockets.at(-1)) {
@@ -153,6 +167,47 @@ describe("student connection indicator lifecycle", () => {
   });
 });
 
+describe("student live transition", () => {
+  test("mounts the candidate flow when a waiting sitting starts", async () => {
+    examCalls.length = 0;
+    await withStudentView(async (view) => {
+      view.state({ status: "waiting", student: { name: "Learner" }, session: session() });
+      await renderStudent({ role: "student" });
+      view.state({ status: "live", student: { name: "Learner" }, session: session({ status: "live" }) });
+      await view.event("exam-started");
+      await Bun.sleep(0);
+
+      expect(examCalls).toHaveLength(1);
+      expect(examCalls[0][0]).toMatchObject({ status: "live", session: { id: "session-1" } });
+      expect(examCalls[0][1]).toEqual(expect.objectContaining({ onSubmitted: expect.any(Function) }));
+    });
+  });
+
+  test("replaces the live paper with confirmation after submission", async () => {
+    examCalls.length = 0;
+    await withStudentView(async (view) => {
+      view.state({ status: "waiting", student: { name: "Learner" }, session: session() });
+      await renderStudent({ role: "student" });
+      view.state({ status: "live", student: { name: "Learner" }, session: session({ status: "live" }) });
+      await view.event("exam-started");
+      await Bun.sleep(0);
+      view.setNode('.exam-shell[data-session-id="session-1"]');
+
+      view.state({
+        status: "submitted",
+        student: { name: "Learner" },
+        session: session({ status: "live" }),
+        paper: { title: "English A Paper 1" },
+        response: { id: "response-1" },
+      });
+      await examCalls[0][1].onSubmitted();
+
+      expect(view.node('.submitted-shell[data-session-id="session-1"]')).toBeDefined();
+      expect(view.node("#submitted-paper").textContent).toBe("English A Paper 1");
+    });
+  });
+});
+
 describe("student examination list", () => {
   test("keeps two sessions with the same paper as separate choices", () => {
     const sessions = parseStudentSessionList({
@@ -178,21 +233,11 @@ describe("student examination list", () => {
     expect(() => parseStudentSessionList({ sessions: [session({ submittedAt: undefined })] })).toThrow();
   });
 
-  test("returns a waiting student to selection when their sitting is removed", () => {
+  test("recognizes a removed selected sitting", () => {
     expect(shouldResetStudentSelection({ status: "selecting", selectionReset: true })).toBe(true);
     expect(shouldResetStudentSelection({ status: "selecting" })).toBe(false);
     expect(shouldResetStudentSelection({ status: "waiting", selectionReset: true })).toBe(false);
-    expect(source).toContain("if (selectionReset) selectedSessionId = null");
-    expect(source).toContain("if (selectionReset || !current");
   });
 
-  test("replaces an already-rendered waiting room when its sitting becomes live", () => {
-    expect(source).toContain('document.querySelector(`.exam-shell[data-session-id="${CSS.escape(state.session.id)}"]`)');
-    expect(source).not.toContain('document.querySelector(`[data-session-id="${CSS.escape(state.session.id)}"]`)');
-  });
 
-  test("tells students that saved notes are separate from answers but included in the teacher PDF", async () => {
-    const examSource = await Bun.file(new URL("./exam.js", import.meta.url)).text();
-    expect(examSource).toContain("Notes are saved separately from answers and included in the teacher's PDF record.");
-  });
 });

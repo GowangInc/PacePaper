@@ -384,19 +384,21 @@ Class-list and paper exports are not complete backups.
 
 1. Finish every live exam.
 2. Quit PacePaper completely.
-3. Copy the entire PacePaper data folder to approved secure storage.
+3. Copy the entire data folder to approved secure storage.
 
-Default data folders:
+Default data folders (the folder name remains `DigitalDP` so existing release data keeps working):
 
-- Mac: `~/Library/Application Support/PacePaper/`
-- Windows: `%LOCALAPPDATA%\PacePaper\`
-- Linux: `~/.local/share/PacePaper/`
+- Mac: `~/Library/Application Support/DigitalDP/`
+- Windows: `%LOCALAPPDATA%\DigitalDP\`
+- Linux: `~/.local/share/DigitalDP/`
 
 On a Mac, choose **Go → Go to Folder** in Finder and paste the path above. On Windows, press Windows-R and paste its path. On Linux, paste the path into the file manager's location bar. If IT set a custom data folder, use that folder instead.
 
 These locations apply to the standalone app and `bun run start:app`. The basic development commands `bun run start` and `bun run dev` instead use the project's `data/` folder unless configured otherwise.
 
 Back up the data folder before replacing PacePaper with a newer version. Class-list CSV files move rosters; `.digitaldp-paper` files move individual papers. Only a complete data-folder backup also keeps the sessions and student responses.
+
+If an older data folder contains class names or student names within a class that are indistinguishable at sign-in, PacePaper keeps the record tied to a live sitting; otherwise it keeps the earlier active record and moves later duplicates into **Removed**. If matching records both have live work, PacePaper stops before changing the database. Finish those sittings before upgrading. Review that section after the first upgraded start. Rename the active class or student before restoring a duplicate.
 
 ### Restore a backup
 

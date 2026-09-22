@@ -13,5 +13,14 @@ export const RELEASE_SAMPLE_PAPER: PaperManifest = {
   subjectLabel: "Sample",
   level: "Demo",
   paper: "Paper",
+  examFormat: {
+    systemId: "pacepaper-sample",
+    systemLabel: "Practice sample",
+    qualificationLabel: "Generic practice",
+    deliveryMode: "Digital practice",
+    fidelity: "school-custom",
+    profileVersion: "release-v1",
+    rulesSummary: "A generic original paper for trying PacePaper.",
+  },
 };
 export type { PaperManifest };
