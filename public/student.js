@@ -1,5 +1,7 @@
 import { ApiError, announce, api, connectSocket, setView } from "/app.js";
 import { themeToggleMarkup } from "./theme.js";
+import { renderInkSubmission } from "./ink-canvas.js";
+import { renderResourceText } from "./resource-text.js";
 
 let stopSocket;
 import { downloadResponseRecovery } from "./response-save-state.js";
@@ -27,19 +29,11 @@ function stopLiveConnection() {
   connectionState = "connecting";
 }
 
-export function parseStudentRoster(result) {
-  if (!Array.isArray(result?.students)
-    || !result.students.every((student) => typeof student?.id === "string" && typeof student?.name === "string")) {
-    throw new TypeError("The class list was not in the expected format");
-  }
-  return result.students;
-}
-
 export function buildStudentLoginPayload(entries) {
   const values = Object.fromEntries(entries);
   return {
-    classCode: values.classCode,
-    studentId: values.studentId,
+    className: values.className,
+    studentName: values.studentName,
   };
 }
 
@@ -81,19 +75,15 @@ function authFrame() {
       <a class="back-link" href="/">← Workspaces</a>
       <div class="auth-panel">
         <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
-        <p class="eyebrow">Candidate sign in</p>
+        <p class="eyebrow">Student sign in</p>
         <h1>Find your examination</h1>
-        <p>Enter the class code provided by your teacher, then choose your name.</p>
+        <p>Enter your class name and your own name.</p>
         <p class="supervision-notice">Your teacher can see your work during a sitting: your answers, drawings, notes, and flagged questions. This covers only PacePaper — nothing else on your computer.</p>
         <form id="student-login" method="post">
-          <label for="class-code">Class code</label>
-          <input id="class-code" name="classCode" autocomplete="organization" maxlength="24" required>
-          <button id="load-students" class="quiet-action" type="button" aria-controls="student-id">Load names</button>
-          <label for="student-id">Your name</label>
-          <p id="roster-status" class="status-message" role="status" aria-live="polite" aria-atomic="true">Enter your class code, then load the names for your class.</p>
-          <select id="student-id" name="studentId" aria-describedby="roster-status" required disabled>
-            <option value="">Load names for your class first</option>
-          </select>
+          <label for="class-name">Class name</label>
+          <input id="class-name" name="className" autocomplete="organization" maxlength="100" required>
+          <label for="student-name-input">Your name</label>
+          <input id="student-name-input" name="studentName" autocomplete="name" maxlength="100" required>
           <button class="primary-action" type="submit">Continue</button>
         </form>
         <p id="global-status" class="status-message" role="status" aria-live="polite" hidden></p>
@@ -102,105 +92,8 @@ function authFrame() {
   `);
 
   const form = document.querySelector("#student-login");
-  const classCode = form.querySelector("#class-code");
-  const studentSelect = form.querySelector("#student-id");
-  const loadStudents = form.querySelector("#load-students");
-  const rosterStatus = form.querySelector("#roster-status");
-  let loadedClassCode = "";
-  let rosterController;
-
-  function setRosterStatus(message, tone = "info") {
-    rosterStatus.textContent = message;
-    rosterStatus.dataset.tone = tone;
-  }
-
-  function setRosterOptions(prompt, students = []) {
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = prompt;
-    studentSelect.replaceChildren(placeholder);
-    for (const student of students) {
-      const option = document.createElement("option");
-      option.value = student.id;
-      option.textContent = student.name;
-      studentSelect.append(option);
-    }
-  }
-
-  function clearRoster(message = "Enter your class code, then load the names for your class.") {
-    loadedClassCode = "";
-    studentSelect.disabled = true;
-    setRosterOptions("Load names for your class first");
-    loadStudents.disabled = false;
-    loadStudents.textContent = "Load names";
-    setRosterStatus(message);
-  }
-
-  classCode.addEventListener("input", () => {
-    rosterController?.abort();
-    rosterController = undefined;
-    clearRoster("Class code changed. Load the names for this class.");
-  });
-
-  loadStudents.addEventListener("click", async () => {
-    if (!classCode.reportValidity()) return;
-
-    const requestedClassCode = classCode.value.trim();
-    rosterController?.abort();
-    const controller = new AbortController();
-    rosterController = controller;
-    loadedClassCode = "";
-    studentSelect.disabled = true;
-    setRosterOptions("Loading names…");
-    loadStudents.disabled = true;
-    loadStudents.textContent = "Loading names…";
-    setRosterStatus("Loading the names for this class…");
-
-    try {
-      const result = await api("/api/student/roster", {
-        method: "POST",
-        body: { classCode: requestedClassCode },
-        signal: controller.signal,
-      });
-      if (rosterController !== controller) return;
-      const students = parseStudentRoster(result);
-
-      loadStudents.textContent = "Refresh names";
-      if (students.length === 0) {
-        setRosterOptions("No students found");
-        setRosterStatus("No student names were found for that class. Check the class code or ask your teacher.", "error");
-        return;
-      }
-
-      setRosterOptions("Choose your name", students);
-      loadedClassCode = requestedClassCode;
-      studentSelect.disabled = false;
-      setRosterStatus(`${students.length} student name${students.length === 1 ? "" : "s"} loaded. Choose your name.`);
-    } catch (error) {
-      if (error?.name === "AbortError" || rosterController !== controller) return;
-      setRosterOptions("Names unavailable");
-      loadStudents.textContent = "Load names";
-      setRosterStatus(
-        error instanceof ApiError
-          ? `Names could not be loaded: ${error.message}`
-          : "Names could not be loaded. Check the class code and connection, then try again.",
-        "error",
-      );
-    } finally {
-      if (rosterController === controller) {
-        rosterController = undefined;
-        loadStudents.disabled = false;
-      }
-    }
-  });
-
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (studentSelect.disabled || loadedClassCode !== classCode.value.trim()) {
-      setRosterStatus("Load the names for this class before continuing.", "error");
-      loadStudents.focus();
-      return;
-    }
     const submit = form.querySelector("button[type=submit]");
     submit.disabled = true;
     announce("Signing in…");
@@ -217,8 +110,15 @@ function authFrame() {
   });
 }
 
-async function logout() {
+function stopExam() {
+  const recovery = cleanupExam?.pendingRecovery?.();
   cleanupExam?.();
+  cleanupExam = undefined;
+  return recovery;
+}
+
+async function logout() {
+  stopExam();
   stopLiveConnection();
   clearInterval(pollTimer);
   selectedSessionId = null;
@@ -227,15 +127,13 @@ async function logout() {
 }
 
 function chooseAnotherExam() {
-  cleanupExam?.();
-  cleanupExam = undefined;
+  stopExam();
   selectedSessionId = null;
   loadState();
 }
 
 function renderExamSelection(state) {
-  cleanupExam?.();
-  cleanupExam = undefined;
+  const recovery = stopExam();
   const sessions = parseStudentSessionList(state);
   setView(`
     <section class="waiting-shell exam-selection-shell" data-session-signature="${sessionListSignature(sessions)}">
@@ -244,7 +142,7 @@ function renderExamSelection(state) {
         <p class="eyebrow">Signed in</p>
         <h1 id="student-name"></h1>
         <h2>Choose your examination</h2>
-        <p>Select the examination your teacher has asked you to take. A prepared examination will hold you in its waiting room until the teacher starts it.</p>
+        <p>Select the examination your teacher has asked you to take. Earlier submitted assessments appear below and are visible only to you.</p>
         <ul id="student-session-list" class="session-list"></ul>
         <p class="connection-state" id="connection-state">Connecting</p>
         <button id="logout" class="quiet-action" type="button">Sign out</button>
@@ -254,6 +152,7 @@ function renderExamSelection(state) {
   `);
   renderConnectionState();
   document.querySelector("#student-name").textContent = state.student.name;
+  const mayLeave = attachRecoveryWarning(recovery, document.querySelector("#student-name"));
   const list = document.querySelector("#student-session-list");
   if (sessions.length === 0) {
     const empty = document.createElement("li");
@@ -280,10 +179,20 @@ function renderExamSelection(state) {
     item.append(details);
 
     if (session.status === "ended") {
-      const ended = document.createElement("span");
-      ended.className = "session-counts";
-      ended.textContent = studentSessionState(session);
-      item.append(ended);
+      if (session.submittedAt !== null) {
+        const view = document.createElement("button");
+        view.type = "button";
+        view.className = "quiet-action compact";
+        view.dataset.selectSession = session.id;
+        view.textContent = "View assessment";
+        view.setAttribute("aria-label", `View assessment: ${session.paperTitle}`);
+        item.append(view);
+      } else {
+        const ended = document.createElement("span");
+        ended.className = "session-counts";
+        ended.textContent = studentSessionState(session);
+        item.append(ended);
+      }
     } else {
       const select = document.createElement("button");
       select.type = "button";
@@ -301,18 +210,17 @@ function renderExamSelection(state) {
   }
   list.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-select-session]");
-    if (!button) return;
+    if (!button || !mayLeave()) return;
     selectedSessionId = button.dataset.selectSession;
     loadState();
   });
-  document.querySelector("#logout").addEventListener("click", logout);
+  document.querySelector("#logout").addEventListener("click", () => { if (mayLeave()) logout(); });
   clearInterval(pollTimer);
   pollTimer = setInterval(loadState, 5_000);
 }
 
 function renderWaiting(state) {
-  cleanupExam?.();
-  cleanupExam = undefined;
+  const recovery = stopExam();
   setView(`
     <section class="waiting-shell" data-session-id="${state.session.id}">
       <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>PacePaper familiarisation</span><span class="waiting-actions">${themeToggleMarkup()}</span></header>
@@ -334,16 +242,224 @@ function renderWaiting(state) {
   renderConnectionState();
   document.querySelector("#student-name").textContent = state.student.name;
   document.querySelector("#waiting-paper").textContent = state.session.paperTitle;
-  document.querySelector("#choose-exam").addEventListener("click", chooseAnotherExam);
-  document.querySelector("#logout").addEventListener("click", logout);
+  const mayLeave = attachRecoveryWarning(recovery, document.querySelector("#waiting-paper"));
+  document.querySelector("#choose-exam").addEventListener("click", () => { if (mayLeave()) chooseAnotherExam(); });
+  document.querySelector("#logout").addEventListener("click", () => { if (mayLeave()) logout(); });
   clearInterval(pollTimer);
   pollTimer = setInterval(loadState, 5_000);
 }
+function attachRecoveryWarning(recovery, anchor) {
+  if (!recovery) return () => true;
+  let downloaded = false;
+  const warning = document.createElement("p");
+  warning.setAttribute("role", "alert");
+  warning.textContent = "Some changes in this page were not confirmed saved before the exam ended. Keep this page open, download a recovery copy and tell your teacher. The saved response may contain only earlier work.";
+  const download = document.createElement("button");
+  download.type = "button";
+  download.textContent = "Download recovery copy";
+  download.addEventListener("click", () => {
+    downloadResponseRecovery(recovery);
+    downloaded = true;
+  });
+  anchor.after(warning, download);
+  const warnBeforeLeaving = (event) => {
+    if (!downloaded) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  };
+  window.addEventListener("beforeunload", warnBeforeLeaving);
+  const cleanup = () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  cleanup.pendingRecovery = () => downloaded ? undefined : recovery;
+  cleanupExam = cleanup;
+  return () => downloaded || confirm("Leave without downloading the unsent work? Keep this page open to download a recovery copy for your teacher.");
+}
+function renderHistoryResources(resources) {
+  if (!Array.isArray(resources) || resources.length === 0) return null;
+  const section = document.createElement("section");
+  section.className = "submission-resources candidate-paper-resources";
+  const heading = document.createElement("h4");
+  heading.textContent = "Assessment materials";
+  section.append(heading);
+  for (const resource of resources) {
+    const item = document.createElement("figure");
+    item.className = "submission-resource";
+    item.dataset.kind = resource.kind;
+    if (resource.kind === "text") {
+      const text = document.createElement("blockquote");
+      text.className = "submission-resource-text";
+      renderResourceText(text, resource.text, { label: resource.label });
+      item.append(text);
+    } else if (resource.kind === "image" && resource.url) {
+      const image = document.createElement("img");
+      image.src = resource.url;
+      image.alt = resource.label;
+      image.loading = "lazy";
+      item.append(image);
+    } else if (resource.kind === "document" && resource.url) {
+      const frame = document.createElement("iframe");
+      frame.src = resource.url;
+      frame.title = resource.label;
+      frame.loading = "lazy";
+      item.append(frame);
+    } else if (resource.kind === "video" && resource.url) {
+      const link = document.createElement("a");
+      link.className = "quiet-action compact";
+      link.href = resource.url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "Open video material";
+      item.append(link);
+    } else {
+      const note = document.createElement("p");
+      note.className = "submission-resource-reference";
+      note.textContent = resource.kind === "audio"
+        ? "Audio playback is available only during the original sitting."
+        : "This material is not available in the history view.";
+      item.append(note);
+    }
+    const caption = document.createElement("figcaption");
+    caption.textContent = resource.label;
+    item.append(caption);
+    section.append(item);
+  }
+  return section;
+}
+
+function renderHistory(state) {
+  const recovery = stopExam();
+  const paper = state.paper;
+  const response = state.response;
+  setView(`
+    <section class="history-shell" data-session-id="${state.session.id}">
+      <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>PacePaper familiarisation</span><span class="waiting-actions">${themeToggleMarkup()}</span></header>
+      <div class="history-content">
+        <p class="eyebrow">Previous assessment</p>
+        <h1 id="history-title"></h1>
+        <p class="history-readonly">Read-only review of your saved response. Only your own assessments are available here.</p>
+        <div id="history-paper" class="candidate-paper"></div>
+        <button id="choose-exam" class="primary-action" type="button">Back to assessments</button>
+        <button id="logout" class="quiet-action" type="button">Sign out</button>
+      </div>
+      <p id="global-status" class="status-message" role="status" aria-live="polite" hidden></p>
+    </section>
+  `);
+  const mayLeave = attachRecoveryWarning(recovery, document.querySelector("#history-title"));
+
+  const paperView = document.querySelector("#history-paper");
+  document.querySelector("#history-title").textContent = paper.title;
+  const header = document.createElement("header");
+  header.className = "candidate-paper-header";
+  header.append(
+    Object.assign(document.createElement("p"), { className: "candidate-paper-kicker", textContent: "PacePaper practice examination · your response" }),
+    Object.assign(document.createElement("h2"), { textContent: paper.title }),
+  );
+  const subject = [paper.subjectLabel, paper.level, paper.paper].filter(Boolean).join(" · ");
+  if (subject) header.append(Object.assign(document.createElement("p"), { className: "candidate-paper-subject", textContent: subject }));
+  const metadata = document.createElement("dl");
+  metadata.className = "candidate-paper-metadata";
+  const addMetadata = (label, value, className = "") => {
+    const item = document.createElement("div");
+    if (className) item.className = className;
+    item.append(
+      Object.assign(document.createElement("dt"), { textContent: label }),
+      Object.assign(document.createElement("dd"), { textContent: value }),
+    );
+    metadata.append(item);
+  };
+  addMetadata("Candidate", state.student.name, "candidate-paper-identity");
+  addMetadata("Paper", paper.paper || "Practice paper", "candidate-paper-code");
+  addMetadata("Status", response.submittedAt === null ? "Ended without submission" : "Submitted", "candidate-paper-submission-state");
+  header.append(metadata);
+  paperView.append(header);
+  const resources = renderHistoryResources(paper.resources);
+  if (resources) paperView.append(resources);
+
+  if (paper.instructions) {
+    const instructions = document.createElement("section");
+    instructions.className = "candidate-paper-instructions";
+    instructions.append(
+      Object.assign(document.createElement("h3"), { textContent: "Instructions" }),
+      Object.assign(document.createElement("p"), { textContent: paper.instructions }),
+    );
+    paperView.append(instructions);
+  }
+
+  const answers = document.createElement("div");
+  answers.className = "submission-answers";
+  for (const [index, question] of paper.questions.entries()) {
+    const item = document.createElement("article");
+    item.className = "candidate-question";
+    const heading = document.createElement("header");
+    heading.className = "candidate-question-heading";
+    heading.append(
+      Object.assign(document.createElement("span"), { className: "candidate-question-number", textContent: String(index + 1).padStart(2, "0") }),
+      Object.assign(document.createElement("h3"), { textContent: question.label }),
+    );
+    if (question.marks) heading.append(Object.assign(document.createElement("span"), { className: "candidate-question-marks", textContent: `[${question.marks}]` }));
+    item.append(heading, Object.assign(document.createElement("p"), { className: "submission-prompt", textContent: question.prompt }));
+    if (question.options?.length) {
+      const options = document.createElement("ol");
+      options.className = "candidate-question-options";
+      options.type = "A";
+      options.setAttribute("aria-label", "Answer choices");
+      for (const option of question.options) {
+        const choice = document.createElement("li");
+        choice.textContent = option;
+        options.append(choice);
+      }
+      item.append(options);
+    }
+    if (response.flags?.includes(question.id)) {
+      const flagged = document.createElement("span");
+      flagged.className = "candidate-question-selection";
+      flagged.textContent = "Flagged";
+      heading.append(flagged);
+    }
+    const answer = response.answers?.[question.id] ?? "";
+    if (paper.selectionMode === "one" && question.type === "essay" && response.selectedQuestionId && question.id !== response.selectedQuestionId) {
+      const notSelected = document.createElement("div");
+      notSelected.className = "submission-answer candidate-question-not-selected";
+      notSelected.textContent = "Not selected by candidate";
+      item.append(notSelected);
+    } else if (question.type === "ink" && question.ink && answer) {
+      item.append(renderInkSubmission(answer, question.ink));
+    } else {
+      const content = document.createElement("div");
+      content.className = "submission-answer";
+      if (!answer) {
+        content.textContent = "No response recorded";
+      } else if (question.type === "essay") {
+        content.innerHTML = answer;
+      } else {
+        content.textContent = answer;
+      }
+      item.append(content);
+    }
+    answers.append(item);
+  }
+  paperView.append(answers);
+  if (typeof response.notepad === "string" && response.notepad.trim()) {
+    const notepad = document.createElement("section");
+    notepad.className = "candidate-paper-notepad";
+    notepad.append(
+      Object.assign(document.createElement("h3"), { textContent: "Candidate notepad" }),
+      Object.assign(document.createElement("p"), { textContent: response.notepad }),
+    );
+    paperView.append(notepad);
+  }
+  const footer = document.createElement("footer");
+  footer.className = "candidate-paper-footer";
+  footer.textContent = "End of your assessment";
+  paperView.append(footer);
+  document.querySelector("#choose-exam").addEventListener("click", () => { if (mayLeave()) chooseAnotherExam(); });
+  document.querySelector("#logout").addEventListener("click", () => { if (mayLeave()) logout(); });
+  clearInterval(pollTimer);
+  pollTimer = setInterval(loadState, 15_000);
+}
 
 function renderSubmitted(state) {
-  const recovery = cleanupExam?.pendingRecovery?.();
-  cleanupExam?.();
-  cleanupExam = undefined;
+  const recovery = stopExam();
   const responseId = typeof state.response?.id === "string" ? state.response.id : null;
   const localKeys = [
     !recovery && responseId && `digitaldp:draft:${responseId}`,
@@ -371,20 +487,7 @@ function renderSubmitted(state) {
     </section>
   `);
   document.querySelector("#submitted-paper").textContent = state.paper.title;
-  let downloaded = false;
-  if (recovery) {
-    const warning = document.createElement("p");
-    warning.setAttribute("role", "alert");
-    warning.textContent = "Some changes in this page were not confirmed saved before the exam ended. Keep this page open, download a recovery copy and tell your teacher. The submitted paper may contain only earlier work.";
-    const download = document.createElement("button");
-    download.type = "button"; download.textContent = "Download recovery copy";
-    download.addEventListener("click", () => { downloadResponseRecovery(recovery); downloaded = true; });
-    document.querySelector("#submitted-paper").after(warning, download);
-    const warnBeforeLeaving = (event) => { if (!downloaded) { event.preventDefault(); event.returnValue = ""; } };
-    window.addEventListener("beforeunload", warnBeforeLeaving);
-    cleanupExam = () => window.removeEventListener("beforeunload", warnBeforeLeaving);
-  }
-  const mayLeave = () => !recovery || downloaded || confirm("Leave without downloading the unsent work? Keep this page open to download a recovery copy for your teacher.");
+  const mayLeave = attachRecoveryWarning(recovery, document.querySelector("#submitted-paper"));
   document.querySelector("#choose-exam").addEventListener("click", () => { if (mayLeave()) chooseAnotherExam(); });
   document.querySelector("#logout").addEventListener("click", () => { if (mayLeave()) logout(); });
   clearInterval(pollTimer);
@@ -393,8 +496,7 @@ function renderSubmitted(state) {
 
 async function renderExam(state) {
   clearInterval(pollTimer);
-  const { mountExam } = await import("/exam.js");
-  cleanupExam?.();
+  stopExam();
   cleanupExam = mountExam(state, { onSubmitted: loadState });
   pollTimer = setInterval(loadState, 30_000);
 }
@@ -415,6 +517,8 @@ async function loadState() {
       if (selectionReset || !current || current.dataset.sessionSignature !== sessionListSignature(sessions)) renderExamSelection(state);
     } else if (state.status === "waiting") {
       if (!document.querySelector(`.waiting-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) renderWaiting(state);
+    } else if (state.status === "history") {
+      if (!document.querySelector(`.history-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) renderHistory(state);
     } else if (state.status === "submitted") {
       if (!document.querySelector(`.submitted-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) renderSubmitted(state);
     } else if (!document.querySelector(`.exam-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) {
@@ -424,7 +528,7 @@ async function loadState() {
     }
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
-      cleanupExam?.();
+      stopExam();
       stopLiveConnection();
       clearInterval(pollTimer);
       authFrame();

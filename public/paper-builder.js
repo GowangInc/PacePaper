@@ -40,7 +40,7 @@ const RESPONSE_PATTERNS = {
     selectionMode: "all",
     instructions: "Answer every question. Show your working where required.",
     materials: ["pdf", "text"],
-    question: { type: "ink", prompt: "Show your working and final answer.", inkPages: 1, inkBackground: "square-grid" },
+    question: { type: "ink", prompt: "Show your working and final answer.", inkPages: 1, inkBackground: "lined" },
   },
   multipleChoice: {
     mode: "reading",
@@ -314,7 +314,7 @@ const RESPONSE_TYPE_LABELS = {
   essay: "Long typed response",
   short: "Short typed response",
   "single-choice": "Multiple-choice",
-  ink: "Digital working canvas",
+  ink: "Handwritten and typed response",
 };
 
 let nextQuestionId = 1;
@@ -330,7 +330,7 @@ function questionFrom(template, number = 1) {
     wordCountMin: template.wordCountMin ?? "",
     wordCountMax: template.wordCountMax ?? "",
     inkPages: template.inkPages ?? 1,
-    inkBackground: template.inkBackground ?? "square-grid",
+    inkBackground: template.inkBackground ?? "lined",
     sectionId: template.sectionId,
     mediaFiles: [],
     videoUrl: "",
@@ -422,6 +422,27 @@ function previewFile(file) {
       ? "audio"
       : "image";
   return { name: file.name, kind, file, ...(kind === "audio" ? { maxPlays: AUDIO_PLAY_LIMIT } : {}) };
+}
+
+const PASTED_IMAGE_EXTENSIONS = new Map([
+  ["image/png", "png"],
+  ["image/jpeg", "jpg"],
+  ["image/webp", "webp"],
+]);
+
+export function clipboardImageFiles(clipboard) {
+  const itemFiles = Array.from(clipboard?.items ?? [])
+    .flatMap((item) => item.kind === "file" ? [item.getAsFile()].filter(Boolean) : []);
+  return itemFiles.length ? itemFiles : [...(clipboard?.files ?? [])];
+}
+
+export function pastedQuestionImages(files) {
+ return [...files].flatMap((file, index) => {
+ const extension = PASTED_IMAGE_EXTENSIONS.get(file.type);
+ return extension
+ ? [new File([file], `pasted-image-${crypto.randomUUID()}-${index + 1}.${extension}`, { type: file.type, lastModified: Date.now() })]
+ : [];
+ });
 }
 
 function effectivePhases(selection, form) {
@@ -884,22 +905,45 @@ export function mountPaperBuilder(container, onSubmit) {
           : "application/pdf,.pdf,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp",
         multiple: "",
       });
-      const mediaStatus = field("small", { className: "builder-media-status" });
+      const mediaStatus = field("small", { id: `${prefix}-media-status`, className: "builder-media-status" });
+      const pasteMedia = field("button", {
+        type: "button",
+        className: "quiet-action compact",
+        "aria-describedby": `${prefix}-media-status`,
+      }, "Paste image");
       const clearMedia = field("button", { type: "button", className: "quiet-action compact" }, "Clear question media");
-      function updateMediaStatus() {
-        mediaStatus.textContent = question.mediaFiles.length
+      function updateMediaStatus(message) {
+        mediaStatus.textContent = message ?? (question.mediaFiles.length
           ? `Attached to this question: ${question.mediaFiles.map((file) => file.name).join(", ")}`
-          : "Shown only with this question. Images also print inline.";
+          : "Shown only with this question. Images also print inline.");
         clearMedia.hidden = question.mediaFiles.length === 0;
       }
-      if (question.mediaFiles.length && typeof DataTransfer === "function") {
+      function syncMediaInput() {
+        if (typeof DataTransfer !== "function") return;
         const transfer = new DataTransfer();
         question.mediaFiles.forEach((file) => transfer.items.add(file));
         media.files = transfer.files;
       }
+      syncMediaInput();
       media.addEventListener("change", () => {
         question.mediaFiles = [...media.files];
         updateMediaStatus();
+      });
+      pasteMedia.addEventListener("click", () => {
+        updateMediaStatus("Press ⌘V or Ctrl+V to paste an image from the clipboard.");
+      });
+      pasteMedia.addEventListener("paste", (event) => {
+        const images = pastedQuestionImages(clipboardImageFiles(event.clipboardData));
+        if (images.length === 0) {
+          updateMediaStatus("The clipboard does not contain a PNG, JPEG, or WebP image.");
+          return;
+        }
+        event.preventDefault();
+        question.mediaFiles.push(...images);
+        syncMediaInput();
+        updateMediaStatus(`Added ${images.length} pasted image${images.length === 1 ? "" : "s"}.`);
+        updatePreview();
+        void drafts.record();
       });
       clearMedia.addEventListener("click", () => {
         question.mediaFiles = [];
@@ -942,6 +986,7 @@ export function mountPaperBuilder(container, onSubmit) {
         ...sectionControls,
         mediaLabel,
         media,
+        pasteMedia,
         mediaStatus,
         clearMedia,
         videoLabel,

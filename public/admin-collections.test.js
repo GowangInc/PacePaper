@@ -103,8 +103,8 @@ describe("teacher dashboard collections", () => {
   });
 
   test("labels class names and preserves stable dropdown selections", () => {
-    expect(formatClassLabel({ name: "DP2 English", code: "ENG-12" })).toBe("DP2 English · login code ENG-12");
-    expect(formatClassLabel({ name: "1234", code: "1234" })).toBe("1234 · login code");
+    expect(formatClassLabel({ name: "DP2 English" })).toBe("DP2 English");
+    expect(formatClassLabel({ name: "1234" })).toBe("1234");
     const select = new FakeElement("select", new FakeDocument());
     select.children = [
       Object.assign(new FakeElement("option", select.ownerDocument), { value: "", textContent: "Choose paper" }),

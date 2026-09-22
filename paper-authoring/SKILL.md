@@ -28,7 +28,7 @@ Place `paper.json` beside the source files. In PacePaper's **Structured paper pa
 3. Use a text resource only when the source text is supplied as extractable text and must appear directly in the resource pane. Otherwise retain the teacher's source as a PDF, image, or audio file.
 4. Add one resource object for each candidate-visible source. Its `key` is a lowercase identifier such as `text-a`, `source-1`, or `audio-1`.
 5. Add one question object for each response required from the candidate. Put only the resource keys used by that question in `resourceKeys`; this is how images, PDFs, text, or audio are scoped to the applicable question.
-6. Use `essay` for a rich-text extended response, `short` for a typed short response, `single-choice` only when the supplied assessment has explicit choices, and `ink` when candidates must draw, graph, annotate, or show handwritten working. A single-choice question needs at least two `options` in the exact teacher order. An ink question needs an `ink` configuration with 1–4 pages, a `blank`, `lined`, or `square-grid` background, and an explicit typed-alternative setting.
+6. Use `essay` for a rich-text extended response, `short` for a typed short response, `single-choice` only when the supplied assessment has explicit choices, and `ink` when candidates must draw, graph, annotate, or show handwritten working. A single-choice question needs at least two `options` in the exact teacher order. Every ink question gives students both a canvas and a typed response area; use the `lined` canvas background unless the task needs another option.
 7. Use `selectionMode: "all"` unless the entire assessment requires the candidate to choose exactly one essay question. For that simple choice paper use `selectionMode: "one"`. The current schema does not express mixed compulsory-and-choice sections: create the compulsory questions normally, then use one required question card whose prompt contains that section's alternatives. Do not mark the entire mixed paper as `"one"`.
 8. For listening, set `mode: "listening"` and include at least one audio resource. Set `maxPlays: 2` on every audio resource. This is a fixed PacePaper rule: each recording has two complete plays, and a play cannot be paused or restarted once it begins.
 9. Before returning, validate the checklist below. Output no prose around the JSON.
@@ -93,8 +93,7 @@ Place `paper.json` beside the source files. In PacePaper's **Structured paper pa
       "resourceKeys": ["text-a"],
       "ink": {
         "pages": 2,
-        "background": "square-grid",
-        "allowTypedAlternative": true
+        "background": "lined"
       }
     }
   ]
@@ -130,6 +129,6 @@ Place `paper.json` beside the source files. In PacePaper's **Structured paper pa
 - Every supplied asset is referenced exactly once; no extra files are uploaded.
 - A `single-choice` question has 2–12 explicit options.
 - Every listening paper has at least one audio resource, and every audio resource either omits `maxPlays` or sets it to exactly `2`.
-- An `ink` question has 1–4 pages and a `blank`, `lined`, or `square-grid` background. Keep `allowTypedAlternative: true` unless an approved accommodation policy says otherwise.
+- An `ink` question has 1–4 pages and a `blank`, `lined`, or `square-grid` background. Use `lined` unless the task requires another background. Every ink question includes both a handwriting canvas and a typed response area.
 - Word limits are positive integers no greater than 10,000, with minimum no greater than maximum.
 - All teacher-provided wording is preserved. No answer key, markscheme, examiner notes, or hidden instructions appear in `paper.json`.

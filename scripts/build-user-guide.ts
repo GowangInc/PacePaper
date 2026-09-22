@@ -26,8 +26,8 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
   "Step 3 — Prepare the class": [
     {
       path: "docs/user-guide/screenshots/classes.png",
-      alt: "PacePaper Classes area showing a class roster, candidate codes, extra time, and student management controls.",
-      caption: "Classes keeps the roster, candidate codes, extra-time allowances, and add, edit, or remove controls together.",
+      alt: "PacePaper Classes area showing a class roster, extra time, and student management controls.",
+      caption: "Classes keep the roster, extra-time allowances, and add, edit, or remove controls together.",
       width: 1440,
       height: 900,
     },
@@ -67,13 +67,6 @@ const figuresByHeading: Readonly<Record<string, readonly GuideFigure[]>> = {
     },
   ],
   "Step 7 — Ask students to join": [
-    {
-      path: "docs/user-guide/screenshots/student-sign-in.png",
-      alt: "PacePaper candidate sign-in with the class code field and the name dropdown ready to load names.",
-      caption: "Students enter the class code, load the roster, and choose their own name.",
-      width: 1440,
-      height: 900,
-    },
     {
       path: "docs/user-guide/screenshots/student-choose-exam.png",
       alt: "PacePaper candidate page showing the Sample paper available to enter.",

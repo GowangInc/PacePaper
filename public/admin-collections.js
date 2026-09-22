@@ -27,11 +27,7 @@ function option(select, value, label) {
 }
 
 export function formatClassLabel(schoolClass) {
-  const name = schoolClass.name.trim();
-  const code = schoolClass.code.trim();
-  return name.localeCompare(code, undefined, { sensitivity: "accent" }) === 0
-    ? `${name} · login code`
-    : `${name} · login code ${code}`;
+  return schoolClass.name.trim();
 }
 
 export function formatPaperOptionLabel(paper) {
@@ -209,7 +205,7 @@ function renderActiveClasses(partitions, container) {
         const item = documentRoot.createElement("li");
         const summary = documentRoot.createElement("span");
         const identity = documentRoot.createElement("strong");
-        identity.textContent = `${student.name} · ${student.candidateCode}`;
+        identity.textContent = student.name;
         const metadata = documentRoot.createElement("small");
         const online = student.lastSeenAt && Date.now() - student.lastSeenAt < 20_000;
         metadata.dataset.studentPresence = student.id;
@@ -285,7 +281,7 @@ function renderArchivedRoster(partitions, container) {
       const item = documentRoot.createElement("li");
       const identity = documentRoot.createElement("span");
       const className = classes.get(student.classId)?.name ?? "Class unavailable";
-      identity.textContent = `${student.name} · ${student.candidateCode} · ${className}`;
+      identity.textContent = `${student.name} · ${className}`;
       item.append(identity, lifecycleButton(documentRoot, {
         action: "restore",
         collection: "students",

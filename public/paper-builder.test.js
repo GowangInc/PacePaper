@@ -2,12 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { CURRENT_SAMPLE_COURSE_IDS } from "../examples/sample-source/index.ts";
 import {
   BUILDER_LEVELS,
+  clipboardImageFiles,
   COURSES,
   EXAM_SYSTEMS,
   levelsForCourse,
   packageData,
   paperPreviewData,
   papersForLevel,
+  pastedQuestionImages,
   valueForLevel,
 } from "./paper-builder.js";
 
@@ -541,6 +543,26 @@ describe("Paper Builder exam presets", () => {
     expect(manifest.resources.map((resource) => resource.key)).toEqual(["source-text", "q1-media-1"]);
     expect(manifest.questions[0].resourceKeys).toEqual(["source-text", "q1-media-1"]);
     expect(manifest.questions[1].resourceKeys).toEqual(["source-text"]);
+  });
+
+  test("adds supported clipboard images with collision-safe names", () => {
+    const screenshot = new File(["image"], "image.png", { type: "image/png" });
+    const fallback = new File(["fallback"], "fallback.webp", { type: "image/webp" });
+    const fromItems = clipboardImageFiles({
+      items: [
+        { kind: "string", getAsFile() { return null; } },
+        { kind: "file", getAsFile() { return screenshot; } },
+      ],
+      files: [fallback],
+    });
+    expect(fromItems).toEqual([screenshot]);
+    expect(clipboardImageFiles({ items: [], files: [fallback] })).toEqual([fallback]);
+
+    const duplicateScreenshot = new File(["image"], "image.png", { type: "image/png" });
+    const images = pastedQuestionImages([screenshot, duplicateScreenshot, new File(["gif"], "image.gif", { type: "image/gif" })]);
+    expect(images).toHaveLength(2);
+    expect(images.every((file) => file.type === "image/png" && /^pasted-image-.+\.png$/u.test(file.name))).toBeTrue();
+    expect(images[0].name).not.toBe(images[1].name);
   });
 
   test("listening papers require audio and allow a recording to be scoped to one question", async () => {

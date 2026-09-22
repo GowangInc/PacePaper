@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createConnection } from "node:net";
 import { Database } from "bun:sqlite";
 import { listLocalPrivateIpv4Interfaces } from "./src/classroom-network.ts";
 
@@ -13,6 +14,30 @@ const lanAddress = listLocalPrivateIpv4Interfaces()[0]?.address ?? null;
 // ponytail: fixed high port; a collision fails the test loudly rather than silently.
 const port = 19914;
 const origin = `http://127.0.0.1:${port}`;
+
+function directGetStatus(value: string): Promise<number> {
+  const target = new URL(value);
+  const { promise, resolve, reject } = Promise.withResolvers<number>();
+  let settled = false;
+  const socket = createConnection({ host: target.hostname, port: Number(target.port) });
+  const finish = (result: number | Error) => {
+    if (settled) return;
+    settled = true;
+    socket.destroy();
+    if (result instanceof Error) reject(result);
+    else resolve(result);
+  };
+  let headers = "";
+  socket.once("error", finish);
+  socket.once("connect", () => socket.write(`GET ${target.pathname} HTTP/1.1\r\nHost: ${target.host}\r\nConnection: close\r\n\r\n`));
+  socket.on("data", (chunk) => {
+    headers += chunk.toString();
+    const status = /^HTTP\/\d\.\d (\d{3})\b/u.exec(headers);
+    if (status) finish(Number(status[1]));
+  });
+  socket.once("close", () => finish(new Error(`No HTTP response from ${target}`)));
+  return promise;
+}
 
 /** Waits for the launch to report its student sign-in address, then returns it. */
 async function startServer(dataDirectory: string): Promise<{ server: Bun.Subprocess; signInUrl: string }> {
@@ -58,7 +83,7 @@ describe.skipIf(lanAddress === null)("packaged launch classroom sharing", () => 
       const first = await startServer(dataDirectory);
       try {
         expect(first.signInUrl).toBe(lanStudentUrl);
-        expect((await fetch(lanStudentUrl)).status).toBe(200);
+        expect(await directGetStatus(lanStudentUrl)).toBe(200);
 
         const login = await fetch(`${origin}/api/login/admin`, {
           method: "POST",
@@ -78,7 +103,7 @@ describe.skipIf(lanAddress === null)("packaged launch classroom sharing", () => 
       const restarted = await startServer(dataDirectory);
       try {
         expect(restarted.signInUrl).toBe(lanStudentUrl);
-        expect((await fetch(lanStudentUrl)).status).toBe(200);
+        expect(await directGetStatus(lanStudentUrl)).toBe(200);
       } finally {
         await stopServer(restarted.server);
       }

@@ -14,11 +14,12 @@ import {
   endExamSession,
   findAdmin,
   findAdminById,
-  findStudentLoginById,
+  findStudentLogin,
   updateAdminPasswordHash,
   getAsset,
   getAudioPlayCount,
   getPaper,
+  getResponseRevisionLog,
   getSessionResults,
   getStudent,
   getStudentExam,
@@ -30,7 +31,6 @@ import {
   listPaperAssets,
   listPapers,
   listStudentExamSessions,
-  listStudentRoster,
   listStudents,
   restoreClass,
   restoreExamSession,
@@ -48,7 +48,7 @@ import {
   type Role,
   type StudentExamRow,
 } from "./src/db.ts";
-import { blankClassRosterCsv, encodeClassRosterCsv, parseClassRosterCsv } from "./src/class-rosters.ts";
+import { blankClassRosterCsv, encodeClassRosterCsv, identityKey, parseClassRosterCsv } from "./src/class-rosters.ts";
 import {
   allowLoginAttempt,
   assertSameOrigin,
@@ -230,6 +230,7 @@ function requiredText(value: unknown, label: string, max: number): string {
   if (!clean || clean.length > max) throw new HttpError(`${label} is invalid`, 400);
   return clean;
 }
+
 
 function optionalText(value: unknown, label: string, max: number): string | undefined {
   if (value === undefined || value === null) return undefined;
@@ -577,7 +578,7 @@ async function validatedResponse(body: Record<string, unknown>, manifest: PaperM
 
 function databaseError(error: Error): HttpError {
   if (error instanceof AudioPlaybackError) return new HttpError(error.message, error.status);
-  if (error.message.includes("UNIQUE constraint failed")) return new HttpError("That code or active session already exists", 409);
+  if (error.message.includes("UNIQUE constraint failed")) return new HttpError("That name or active session already exists", 409);
   if (error.message.includes("FOREIGN KEY constraint failed")) return new HttpError("The selected class or paper no longer exists", 400);
   if (error.message === "Authentication required") return new HttpError(error.message, 401);
   if (error.message === "Cross-origin request rejected") return new HttpError(error.message, 403);
@@ -636,23 +637,26 @@ async function handleApi(
     return json({ role: "admin" }, 200, { "Set-Cookie": cookie });
   }
 
-  if (path === "/api/student/roster" && method === "POST") {
-    const body = await jsonBody(request);
-    const classCode = requiredText(body.classCode, "Class code", 24);
-    return json({ students: listStudentRoster(classCode).map(({ id, name }) => ({ id, name })) });
-  }
-
   if (path === "/api/login/student" && method === "POST") {
     const body = await jsonBody(request);
-    const classCode = requiredText(body.classCode, "Class code", 24);
-    const studentId = requiredText(body.studentId, "Student", 64);
-    const limiterKey = `student:${clientAddress(request, server)}:${classCode.toLowerCase()}:id:${studentId}`;
-    if (!allowLoginAttempt(limiterKey)) throw new HttpError("Too many login attempts. Try again later", 429);
-    const student = findStudentLoginById(classCode, studentId);
-    if (!student) {
-      throw new HttpError("Class code or student is incorrect", 401);
+    const className = requiredText(body.className, "Class name", 100);
+    const studentName = requiredText(body.studentName, "Student name", 100);
+    const address = clientAddress(request, server);
+    const classKey = identityKey(className);
+    const studentKey = identityKey(studentName);
+    const limiterKeys = [
+      `student:${address}:all`,
+      `student:${address}:class:${classKey}`,
+      `student:${address}:student:${classKey}:${studentKey}`,
+    ];
+    if (limiterKeys.some((key) => !allowLoginAttempt(key))) {
+      throw new HttpError("Too many login attempts. Try again later", 429);
     }
-    clearLoginAttempts(limiterKey);
+    const student = findStudentLogin(className, studentName);
+    if (!student) {
+      throw new HttpError("Class or student name is incorrect", 401);
+    }
+    limiterKeys.forEach(clearLoginAttempts);
     touchStudent(student.id);
     const cookie = issueSession("student", student.id, new URL(request.url).protocol === "https:");
     return json({ role: "student", name: student.name }, 200, { "Set-Cookie": cookie });
@@ -753,9 +757,7 @@ async function handleApi(
     requireRole(request, "admin");
     const body = await jsonBody(request);
     const name = requiredText(body.name, "Class name", 100);
-    const code = requiredText(body.code, "Class code", 24).toUpperCase();
-    if (!/^[A-Z0-9-]{4,24}$/.test(code)) throw new HttpError("Class code needs 4–24 letters, numbers or hyphens", 400);
-    const created = createClass(name, code);
+    const created = createClass(name);
     publish(server, "admin", "admin-state");
     return json(created, 201);
   }
@@ -765,16 +767,13 @@ async function handleApi(
     const body = await jsonBody(request);
     const classId = requiredText(body.classId, "Class", 64);
     const name = requiredText(body.name, "Student name", 100);
-    const candidateCode = requiredText(body.candidateCode, "Candidate code", 32).toUpperCase();
     const extraMinutes = optionalInteger(body.extraMinutes, "Extra time", 0, 180);
-    if (!/^[A-Z0-9-]{2,32}$/.test(candidateCode)) throw new HttpError("Candidate code needs letters, numbers or hyphens", 400);
-    const created = createStudent({ classId, name, candidateCode, extraMinutes });
+    const created = createStudent({ classId, name, extraMinutes });
     publish(server, "admin", "admin-state");
     return json({
       id: created.id,
       classId: created.classId,
       name: created.name,
-      candidateCode: created.candidateCode,
       extraMinutes: created.extraMinutes,
       createdAt: created.createdAt,
     }, 201);
@@ -786,14 +785,11 @@ async function handleApi(
     const body = await jsonBody(request);
     const classId = requiredText(body.classId, "Class", 64);
     const name = requiredText(body.name, "Student name", 100);
-    const candidateCode = requiredText(body.candidateCode, "Candidate code", 32).toUpperCase();
     const extraMinutes = requiredInteger(body.extraMinutes, "Extra time", 0, 180);
-    if (!/^[A-Z0-9-]{2,32}$/.test(candidateCode)) throw new HttpError("Candidate code needs letters, numbers or hyphens", 400);
     const updated = updateStudent({
       id: studentUpdateMatch[1] as string,
       classId,
       name,
-      candidateCode,
       extraMinutes,
     });
     if (!updated) throw new HttpError("Student not found in selected class", 404);
@@ -938,12 +934,29 @@ async function handleApi(
       responses: results.responses.map((response) => ({
         responseId: response.responseId,
         studentName: response.studentName,
-        candidateCode: response.candidateCode,
         answers: JSON.parse(response.answersJson) as Record<string, string>,
         selectedQuestionId: response.selectedQuestionId,
         notepad: response.notepad,
         updatedAt: response.updatedAt,
         submittedAt: response.submittedAt,
+      })),
+    });
+  }
+
+  const revisionsMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/responses\/([a-f0-9-]+)\/revisions$/);
+  if (revisionsMatch && method === "GET") {
+    requireRole(request, "admin");
+    const log = getResponseRevisionLog(revisionsMatch[1] as string, revisionsMatch[2] as string);
+    if (!log) throw new HttpError("Student response not found", 404);
+    return json({
+      responseId: log.responseId,
+      studentName: log.studentName,
+      revisions: log.revisions.map((revision) => ({
+        at: revision.at,
+        answers: JSON.parse(revision.answersJson) as Record<string, string>,
+        flags: JSON.parse(revision.flagsJson) as string[],
+        notepad: revision.notepad,
+        selectedQuestionId: revision.selectedQuestionId,
       })),
     });
   }
@@ -1012,11 +1025,13 @@ async function handleApi(
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
     const phase = phaseForResponse(timing, Date.now());
     return json({
-      status: exam.submittedAt === null ? "live" : "submitted",
+      status: exam.sessionStatus === "ended" ? "history" : exam.submittedAt === null ? "live" : "submitted",
       student: { name: student.name, extraMinutes: student.extraMinutes },
       session: {
         id: exam.sessionId,
+        status: exam.sessionStatus,
         startedAt: exam.startedAt,
+        endedAt: exam.endedAt,
         readingEndsAt: timing.readingEndsAt,
         deadline: timing.deadline,
         phase: publicPhase(phase),
@@ -1176,13 +1191,14 @@ async function handleApi(
     if (actor.role === "student") {
       const sessionId = requiredText(new URL(request.url).searchParams.get("session"), "Session", 64);
       const exam = getStudentExam(actor.actorId, sessionId);
-      if (!exam || exam.sessionStatus !== "live" || exam.submittedAt !== null || exam.paperId !== paperId) {
+      if (!exam || exam.sessionStatus === "draft" || exam.paperId !== paperId) {
         throw new HttpError("Asset is not available", 403);
       }
       const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
       const resource = manifest.resources.find((item) => item.key === assetKey);
       if (!resource) throw new HttpError("Asset is not available", 403);
       if (resource.kind === "audio") {
+        if (exam.sessionStatus !== "live" || exam.submittedAt !== null) throw new HttpError("Asset is not available", 403);
         availableAudioTiming(exam);
         const playToken = requiredText(new URL(request.url).searchParams.get("play"), "Audio authorization", 64);
         const asset = getAsset(paperId, assetKey);
@@ -1203,7 +1219,8 @@ async function handleApi(
     const asset = getAsset(paperId, assetKey);
     if (!asset) throw new HttpError("Asset not found", 404);
     const range = parseByteRange(request.headers.get("range"), asset.data.byteLength);
-    return assetResponse(request, asset, "private, max-age=300", range);
+    const cacheControl = actor.role === "student" ? "private, no-store" : "private, max-age=300";
+    return assetResponse(request, asset, cacheControl, range);
   }
 
   throw new HttpError("Endpoint not found", 404);

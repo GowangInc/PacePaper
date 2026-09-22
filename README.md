@@ -34,15 +34,13 @@ A candidate preview: the real student interface for the chosen paper, with nothi
 
 ![PacePaper classes and students](docs/user-guide/screenshots/classes.png)
 
-Classes keep rosters, candidate codes, and extra time together; this sample class has two students.
+Classes keep rosters, names, and extra time together; this sample class has two students.
 
 ![PacePaper live session monitor](docs/user-guide/screenshots/session.png)
 
 Start the exam from Sessions and watch it live: who is online, how many have submitted, and the reading and writing time.
 
-![PacePaper student sign-in](docs/user-guide/screenshots/student-sign-in.png)
-
-On their own device, a student enters the class code, then chooses their name.
+Student sign-in uses the class name and each student's own name. The sign-in page does not list the roster.
 
 ![PacePaper student chooses exam](docs/user-guide/screenshots/student-choose-exam.png)
 
@@ -72,23 +70,23 @@ If a candidate leaves the exam window, the teacher dashboard raises a focus aler
 ## Using PacePaper with a class
 
 1. **Prepare.** Sign in on the teacher computer and choose **Settings** to set a password you will remember.
-2. **Add your class.** In **Classes and students**, create a class and add candidates (or import a CSV class list). Students see their own name at sign-in.
+2. **Add your class.** In **Classes and students**, create a class and add students (or import a CSV class list). Names must be unique within a class.
 3. **Choose a paper.** The preloaded **Sample paper** demonstrates the app. For real practice, build a paper in the **Paper library** with the guided builder (it follows the format of your chosen exam system) or import a prepared PacePaper paper file.
-4. **Set up an exam.** In **Sessions**, choose the class and paper. Students open the **Student sign-in** address on their own devices (the bare address is enough — it opens candidate sign-in), enter the class code, and choose their name. Check that address under **Classroom sharing** on the teacher dashboard — PacePaper shares the classroom network by default, and you can choose another detected address there if the network changed.
+4. **Set up an exam.** In **Sessions**, choose the class and paper. Students open the **Student sign-in** address on their own devices (the bare address is enough — it opens student sign-in), then enter the class name and their own name. Check that address under **Classroom sharing** on the teacher dashboard — PacePaper shares the classroom network by default, and you can choose another detected address there if the network changed.
 5. **Run the exam.** Click **Start exam** when candidates are ready. The exam clock, per-candidate progress, and **Focus alerts** (candidates leaving the window) are on the dashboard; open the **examination clock** on a second screen to project the countdown. Responses autosave, and the exam submits automatically at the deadline.
-6. **Review.** Open a session's submissions to read, print, or save each candidate's complete paper as a PDF.
+6. **Review.** Open a session's submissions to read, print, or save each candidate's complete paper as a PDF. **Answer history** replays what a candidate had written earlier in the sitting.
 
 Notes for teachers:
 
 - **All data stays on the teacher computer** in the per-user application-data folder (the exact location is in the User guide). Nothing is uploaded. Back up that folder after each sitting — the guide shows how.
-- **Students need only a browser** and a connection to the same network; no app, account, or internet access is needed during the exam.
+- **Students need only a browser** plus their class name and own name; no email account or internet access is needed during the exam.
 - **Change the look per device.** Teachers and students each have a **Light/Dark** toggle (teacher: top-right of the dashboard; student: their pages), and each person's choice is remembered on their own device.
 - PacePaper is for **practice and familiarisation** — never for live official examinations — and the bundled materials are original practice content, not official papers.
 
 ## Current capabilities
 
 - Teacher sign-in on this computer: a fresh installation uses `admin` / `admin`, and the password can be changed from **Settings** (it is saved with your data and survives restarts; teacher sessions clear on each launch)
-- Classes, class-code/name sign-in, candidate codes, individual extra time, CSV class-list import/export, and reversible roster archiving
+- Classes, class-and-student-name sign-in, individual extra time, CSV class-list import/export, and reversible roster archiving
 - Exam-format-first Paper Builder with provider-specific terminology and tuned starters for IB DP, IB MYP eAssessment, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and school-custom practice
 - Video and YouTube stimulus material: paste a video link as a shared paper material or attach one to an individual question; candidates see an embedded player (YouTube plays via youtube-nocookie; direct https video URLs stream inline)
 - Full-screen suggestion on the candidate exam screen: one click enters browser full screen, the suggestion returns if full screen exits, and an explicit dismissal is remembered for the sitting (no-op in SEB or managed-kiosk full screen)
@@ -96,17 +94,18 @@ Notes for teachers:
 - Rehearse a paper as a student before a lesson: **Preview as student** in the Paper library opens the real candidate interface in a new tab, with the paper's own timings, phases, locked sections, and audio — and records nothing at all (no class, session, response, or counted audio listen)
 - Live, independently scrollable paper preview while a teacher edits
 - One-file PacePaper paper export and re-import, including explicitly authorized attachments
-- PDF, image, text, and controlled-play audio resources, including media attached to individual questions; students receive exactly two complete plays per recording, with no pause or restart once a play begins
+- PDF, image, text, and controlled-play audio resources, including media attached to individual questions; images can be pasted from the clipboard into a question, and students receive exactly two complete plays per recording, with no pause or restart once a play begins
 - Legacy reading-then-writing timing plus multi-section phase plans with locked reading periods, fixed monitored breaks, no-return section boundaries, phase-specific tool rules, and extra time applied to the final work phase
 - Second-screen countdown with fullscreen mode and authoritative linked timing; simple-exam reading and writing minutes can be corrected from the clock while the exam is ready or live (fixed-section and ended exams stay read-only)
 - Editable student-name roster on the second-screen clock, without changing student accounts or authoritative timers
-- Visible student sign-in address with a copy action on both the teacher dashboard and projected clock
+- Visible student sign-in address with a copy action on both the teacher dashboard and projected clock, which also names the linked class
 - Timed sessions with autosave, local unsaved-work recovery, and automatic deadline submission
 - Student exam selection after sign-in, with per-exam waiting rooms and completed sittings kept separate from new sessions
 - Reversible removal and restoration of classes, students, and exam sittings without deleting saved candidate responses
-- Rich-text, short-answer, single-choice, and expandable digital-ink responses with blank, ruled, or square-grid pages, Draw/Eraser tools, and Undo/Redo
+- Rich-text, short-answer, single-choice, and digital-ink responses with a handwriting canvas and typed response area; new canvases are ruled by default and can use blank, ruled, or square-grid pages with Draw/Eraser tools and Undo/Redo
 - Page context menus suppressed on PacePaper interface controls while normal clicks, keyboard controls, and text selection remain available
 - Event-driven teacher status updates that preserve active form controls, plus printable/PDF candidate submission review
+- Answer history in the candidate review dialog: the response is snapshotted periodically during a sitting, and the teacher can move back through those saved versions to see exactly what a candidate had written at an earlier moment
 - Focus-loss notifications: when a candidate leaves the exam window, the teacher dashboard raises a live alert naming the student and keeps a per-sitting audit trail (best-effort — a crash or disconnect can prevent an event)
 - Branded native application icons for macOS and Windows, plus Linux and browser icon assets
 - Teacher **Settings** section: change the saved teacher password (current password required; all devices sign out afterwards)
@@ -172,7 +171,7 @@ The current release builder keeps data outside the replaceable executable, in th
 
 For a supervised LAN demo in a packaged release, sign in as the teacher and open **Classroom sharing** on the dashboard. Sharing is active from launch: the address saved last time is reused, and a new installation chooses and saves the machine's first private network address. Select a different detected private IPv4 address and choose **Apply classroom sharing** if the network changed; the displayed student sign-in address updates on both the dashboard and examination clock. Choose **This computer only** to stop sharing. The saved interface choice is retained beside the local database and restored on the next launch. Sharing cannot be changed while an examination is live.
 
-> **Prototype security warning:** Classroom sharing uses ordinary HTTP, so class codes and responses are not encrypted in transit. This demo intentionally has no student PIN: anyone with a class code can choose a name from that class's roster. Use fake candidates and non-sensitive practice content only. The default `admin` / `admin` is weak and restricted to loopback; change it from **Settings** before use, and remember that real student data requires HTTPS, stronger teacher authentication, student identity checks, and school approval.
+> **Prototype security warning:** Classroom sharing uses ordinary HTTP, and student sign-in matches only class and student names. Names are not secrets and do not prevent impersonation. Use supervised practice with fake candidates and non-sensitive material only. The default `admin` / `admin` is weak and restricted to loopback; change it from **Settings** before use, and remember that real student data requires HTTPS, stronger teacher authentication and school approval.
 
 ### Source/development network configuration
 

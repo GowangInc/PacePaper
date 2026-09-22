@@ -48,7 +48,7 @@ export function responseFields(question, prefix) {
     pagesLabel.append(pages);
     backgroundLabel.append(background);
     pair.append(pagesLabel, backgroundLabel);
-    const help = field("small", {}, "Students start with this background and can change it only after confirming the change; their writing remains intact. A typed alternative remains available for accessibility.");
+    const help = field("small", {}, "Students receive a handwriting canvas and a typed response area. They may use either or both.");
     container.append(pair, help);
   }
   return container;

@@ -95,7 +95,6 @@ export function isExpectedRequestAuthority(
 
 const LAN_STUDENT_API_METHODS: Readonly<Record<string, ReadonlySet<string>>> = {
   "/api/bootstrap": new Set(["GET"]),
-  "/api/student/roster": new Set(["POST"]),
   "/api/login/student": new Set(["POST"]),
   "/api/logout": new Set(["POST"]),
   "/api/student/state": new Set(["GET"]),

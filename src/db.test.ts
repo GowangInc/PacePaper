@@ -61,153 +61,115 @@ describe("database schema migration", () => {
 });
 
 describe("student roster and account lookup", () => {
-  const firstClass = database.createClass("Class One", "CLASS-ONE");
-  const secondClass = database.createClass("Class Two", "CLASS-TWO");
+  const firstClass = database.createClass("Class One");
+  const secondClass = database.createClass("Class Two");
   const zoe = database.createStudent({
     classId: firstClass.id,
     name: "Zoe",
-    candidateCode: "Z-001",
-    pinHash: "zoe-old-hash",
     extraMinutes: 0,
   });
   const amy = database.createStudent({
     classId: firstClass.id,
     name: "amy",
-    candidateCode: "A-001",
-    pinHash: "amy-old-hash",
     extraMinutes: 5,
-  });
-  const pinFreeDemoStudent = database.createStudent({
-    classId: firstClass.id,
-    name: "PIN-free demo student",
-    candidateCode: "D-001",
-    extraMinutes: 0,
   });
   database.createStudent({
     classId: secondClass.id,
     name: "Other class",
-    candidateCode: "O-001",
-    pinHash: "other-hash",
     extraMinutes: 0,
   });
 
-  test("returns only sorted student IDs and names for the requested class", () => {
-    expect(database.listStudentRoster("class-one")).toEqual([
-      { id: amy.id, name: "amy" },
-      { id: pinFreeDemoStudent.id, name: "PIN-free demo student" },
-      { id: zoe.id, name: "Zoe" },
-    ]);
+  test("requires a class name and student name match", () => {
+    expect(database.findStudentLogin("CLASS ONE", "AMY")).toMatchObject({ id: amy.id, classId: firstClass.id });
+    expect(database.findStudentLogin("CLASS TWO", "amy")).toBeNull();
+    expect(database.findStudentLogin("Class One", "missing")).toBeNull();
   });
 
-  test("requires the selected student to belong to the submitted class code", () => {
-    expect(database.findStudentLoginById("CLASS-ONE", amy.id)).toMatchObject({ id: amy.id, classId: firstClass.id });
-    expect(database.findStudentLoginById("CLASS-TWO", amy.id)).toBeNull();
-    expect(database.findStudentLogin("CLASS-ONE", "A-001")).toMatchObject({ id: amy.id });
-  });
-
-  test("keeps the retained credential column dormant for PIN-free demo students", () => {
-    expect(database.findStudentLoginById("CLASS-ONE", pinFreeDemoStudent.id)?.pinHash).toBe("pin-not-required");
-  });
-
-  test("updates only within the asserted class and preserves a dormant legacy credential", () => {
+  test("updates only within the asserted class and clears sessions after a name change", () => {
     expect(database.updateStudent({
       id: zoe.id,
       classId: secondClass.id,
       name: "Wrong class update",
-      candidateCode: "Z-002",
       extraMinutes: 10,
     })).toBeNull();
 
+    database.createAuthSession("zoe-session", "student", zoe.id, Date.now() + 60_000);
     expect(database.updateStudent({
       id: zoe.id,
       classId: firstClass.id,
       name: "Zoë Updated",
-      candidateCode: "z-002",
       extraMinutes: 25,
     })).toMatchObject({
       id: zoe.id,
       classId: firstClass.id,
       name: "Zoë Updated",
-      candidateCode: "Z-002",
       extraMinutes: 25,
     });
-    expect(database.findStudentLoginById("CLASS-ONE", zoe.id)?.pinHash).toBe("zoe-old-hash");
-
-    database.updateStudent({
-      id: zoe.id,
-      classId: firstClass.id,
-      name: "Zoë Updated",
-      candidateCode: "Z-002",
-      extraMinutes: 25,
-      pinHash: "zoe-new-hash",
-    });
-    expect(database.findStudentLoginById("CLASS-ONE", zoe.id)?.pinHash).toBe("zoe-new-hash");
+    expect(database.findStudentLogin("Class One", "Zoe")).toBeNull();
+    expect(database.findStudentLogin("class one", "zoë updated")).toMatchObject({ id: zoe.id });
+    expect(database.findAuthSession("zoe-session")).toBeNull();
   });
 });
 
 describe("class-list imports", () => {
-  test("creates and idempotently updates classes and students", () => {
-    const schoolClass = database.createClass("Import Original", "IMPORT-ONE");
+  test("creates and idempotently updates classes and students by name", () => {
+    const schoolClass = database.createClass("Import Original");
     database.createStudent({
       classId: schoolClass.id,
       name: "Before Import",
-      candidateCode: "I-001",
       extraMinutes: 0,
     });
 
     expect(database.importClassRosters([
       {
-        name: "Import Renamed",
-        code: "IMPORT-ONE",
+        name: "Import original",
         students: [
-          { name: "After Import", candidateCode: "I-001", extraMinutes: 15 },
-          { name: "New Student", candidateCode: "I-002", extraMinutes: 0 },
+          { name: "After Import", extraMinutes: 15 },
+          { name: "New Student", extraMinutes: 0 },
         ],
       },
-      { name: "Empty Imported Class", code: "IMPORT-TWO", students: [] },
+      { name: "Empty Imported Class", students: [] },
     ])).toEqual({
       classesCreated: 1,
       classesUpdated: 1,
       classesUnchanged: 0,
-      studentsCreated: 1,
-      studentsUpdated: 1,
+      studentsCreated: 2,
+      studentsUpdated: 0,
       studentsUnchanged: 0,
     });
 
-    expect(database.listClasses().find(({ code }) => code === "IMPORT-ONE")?.name).toBe("Import Renamed");
+    expect(database.listClasses().find(({ name }) => name === "Import original")?.id).toBe(schoolClass.id);
     expect(database.listStudents().filter(({ classId }) => classId === schoolClass.id)).toEqual([
-      expect.objectContaining({ name: "After Import", candidateCode: "I-001", extraMinutes: 15 }),
-      expect.objectContaining({ name: "New Student", candidateCode: "I-002", extraMinutes: 0 }),
+      expect.objectContaining({ name: "After Import", extraMinutes: 15 }),
+      expect.objectContaining({ name: "Before Import", extraMinutes: 0 }),
+      expect.objectContaining({ name: "New Student", extraMinutes: 0 }),
     ]);
     expect(database.importClassRosters([{
-      name: "Import Renamed",
-      code: "IMPORT-ONE",
+      name: "Import original",
       students: [
-        { name: "After Import", candidateCode: "I-001", extraMinutes: 15 },
-        { name: "New Student", candidateCode: "I-002", extraMinutes: 0 },
+        { name: "After Import", extraMinutes: 15 },
+        { name: "New Student", extraMinutes: 0 },
       ],
     }])).toMatchObject({ classesUnchanged: 1, studentsUnchanged: 2 });
   });
 
-  test("rejects removed identities and rolls back the entire file", () => {
-    const schoolClass = database.createClass("Archived Import", "IMPORT-ARCHIVE");
+  test("rejects removed names and rolls back the entire file", () => {
+    const schoolClass = database.createClass("Archived Import");
     const removedStudent = database.createStudent({
       classId: schoolClass.id,
       name: "Removed Student",
-      candidateCode: "R-001",
       extraMinutes: 0,
     });
     database.archiveStudent(removedStudent.id);
 
     expect(() => database.importClassRosters([
-      { name: "Must Roll Back", code: "IMPORT-ROLLBACK", students: [] },
+      { name: "Must Roll Back", students: [] },
       {
         name: "Archived Import",
-        code: "IMPORT-ARCHIVE",
-        students: [{ name: "Removed Student", candidateCode: "R-001", extraMinutes: 0 }],
+        students: [{ name: "Removed Student", extraMinutes: 0 }],
       },
-    ])).toThrow("Restore that student before importing");
-    expect(database.listClasses().some(({ code }) => code === "IMPORT-ROLLBACK")).toBeFalse();
+    ])).toThrow("Restore them before importing");
+    expect(database.listClasses().some(({ name }) => name === "Must Roll Back")).toBeFalse();
   });
 });
 
@@ -236,7 +198,7 @@ describe("paper replacement safety", () => {
     expect(database.replaceUnusedPaper(paper.id, { manifest: paperManifest("Revised"), assets: [] })).toBe(true);
     expect(database.getPaper(paper.id)?.manifest.title).toBe("Revised");
 
-    const paperClass = database.createClass("Paper Safety", "PAPER-SAFETY");
+    const paperClass = database.createClass("Paper Safety");
     database.createExamSession(paperClass.id, paper.id);
 
     expect(database.replaceUnusedPaper(paper.id, { manifest: paperManifest("Must not replace"), assets: [] })).toBe(false);
@@ -265,12 +227,10 @@ describe("student examination selection", () => {
   });
 
   test("keeps responses independent when the same student takes the same paper in two sessions", () => {
-    const schoolClass = database.createClass("Repeat Sessions", "REPEAT-SESSIONS");
+    const schoolClass = database.createClass("Repeat Sessions");
     const student = database.createStudent({
       classId: schoolClass.id,
       name: "Alex",
-      candidateCode: "A-101",
-      pinHash: "test-hash",
       extraMinutes: 0,
     });
     const paper = database.createPaper({ manifest: paperManifest, assets: [] });
@@ -316,8 +276,6 @@ describe("student examination selection", () => {
     const lateStudent = database.createStudent({
       classId: schoolClass.id,
       name: "Late addition",
-      candidateCode: "L-102",
-      pinHash: "test-hash",
       extraMinutes: 0,
     });
     expect(database.listStudentExamSessions(lateStudent.id).filter((session) => session.paperId === paper.id)).toEqual([
@@ -326,12 +284,10 @@ describe("student examination selection", () => {
   });
 
   test("saves decimal reading time on a ready exam and applies live corrections", () => {
-    const schoolClass = database.createClass("Timing Override", "TIMING-OVERRIDE");
+    const schoolClass = database.createClass("Timing Override");
     const student = database.createStudent({
       classId: schoolClass.id,
       name: "Timer Tester",
-      candidateCode: "T-101",
-      pinHash: "test-hash",
       extraMinutes: 0,
     });
     const paper = database.createPaper({ manifest: paperManifest, assets: [] });
@@ -369,12 +325,10 @@ describe("student examination selection", () => {
   });
 
   test("reads and atomically enforces the fixed two-play audio limit", async () => {
-    const schoolClass = database.createClass("Audio Count", "AUDIO-COUNT");
+    const schoolClass = database.createClass("Audio Count");
     const student = database.createStudent({
       classId: schoolClass.id,
       name: "Listener",
-      candidateCode: "L-201",
-      pinHash: "test-hash",
       extraMinutes: 0,
     });
     const paper = database.createPaper({ manifest: paperManifest, assets: [] });
@@ -416,12 +370,10 @@ describe("reversible class, student, and exam lifecycle", () => {
   const paper = database.createPaper({ manifest, assets: [] });
 
   test("archives students idempotently, filters every entry point, revokes login, and restores", () => {
-    const schoolClass = database.createClass("Student Lifecycle", "STUDENT-LIFECYCLE");
+    const schoolClass = database.createClass("Student Lifecycle");
     const student = database.createStudent({
       classId: schoolClass.id,
       name: "Lifecycle Student",
-      candidateCode: "LS-001",
-      pinHash: "pin-hash",
       extraMinutes: 5,
     });
     database.createAuthSession("student-lifecycle-token", "student", student.id, Date.now() + 60_000);
@@ -431,39 +383,32 @@ describe("reversible class, student, and exam lifecycle", () => {
     expect(database.archiveStudent(student.id)).toEqual(archived);
     expect(database.listStudents().some(({ id }) => id === student.id)).toBe(false);
     expect(database.listStudents(true)).toContainEqual(expect.objectContaining({ id: student.id, archivedAt: archived.archivedAt }));
-    expect(database.listStudentRoster("STUDENT-LIFECYCLE")).toEqual([]);
-    expect(database.findStudentLogin("STUDENT-LIFECYCLE", "LS-001")).toBeNull();
-    expect(database.findStudentLoginById("STUDENT-LIFECYCLE", student.id)).toBeNull();
+    expect(database.findStudentLogin("Student Lifecycle", "Lifecycle Student")).toBeNull();
     expect(database.getStudent(student.id)).toBeNull();
     expect(database.findAuthSession("student-lifecycle-token")).toBeNull();
     expect(database.updateStudent({
       id: student.id,
       classId: schoolClass.id,
       name: "Must not update",
-      candidateCode: "LS-002",
       extraMinutes: 0,
     })).toBeNull();
 
     expect(database.restoreStudent(student.id)).toEqual({ id: student.id, classId: schoolClass.id, archivedAt: null });
     expect(database.restoreStudent(student.id)).toEqual({ id: student.id, classId: schoolClass.id, archivedAt: null });
-    expect(database.findStudentLogin("STUDENT-LIFECYCLE", "LS-001")).toMatchObject({ id: student.id });
+    expect(database.findStudentLogin("Student Lifecycle", "Lifecycle Student")).toMatchObject({ id: student.id });
     expect(database.listStudents()).toContainEqual(expect.objectContaining({ id: student.id, archivedAt: null }));
   });
 
   test("keeps child archive flags while an archived class gates access and creation", () => {
-    const schoolClass = database.createClass("Class Lifecycle", "CLASS-LIFECYCLE");
+    const schoolClass = database.createClass("Class Lifecycle");
     const activeStudent = database.createStudent({
       classId: schoolClass.id,
       name: "Active Child",
-      candidateCode: "AC-001",
-      pinHash: "pin-hash",
       extraMinutes: 0,
     });
     const archivedStudent = database.createStudent({
       classId: schoolClass.id,
       name: "Archived Child",
-      candidateCode: "AC-002",
-      pinHash: "pin-hash",
       extraMinutes: 0,
     });
     const studentArchive = database.archiveStudent(archivedStudent.id);
@@ -487,8 +432,6 @@ describe("reversible class, student, and exam lifecycle", () => {
     expect(() => database.createStudent({
       classId: schoolClass.id,
       name: "Blocked Child",
-      candidateCode: "AC-003",
-      pinHash: "pin-hash",
       extraMinutes: 0,
     })).toThrow("Active class not found");
     expect(() => database.createExamSession(schoolClass.id, paper.id)).toThrow("Active class not found");
@@ -517,12 +460,10 @@ describe("reversible class, student, and exam lifecycle", () => {
   });
 
   test("blocks live conflicts but allows a submitted student to be archived", () => {
-    const schoolClass = database.createClass("Live Lifecycle", "LIVE-LIFECYCLE");
+    const schoolClass = database.createClass("Live Lifecycle");
     const student = database.createStudent({
       classId: schoolClass.id,
       name: "Live Student",
-      candidateCode: "LIVE-001",
-      pinHash: "pin-hash",
       extraMinutes: 0,
     });
     const sessionId = database.createExamSession(schoolClass.id, paper.id);
@@ -556,19 +497,15 @@ describe("reversible class, student, and exam lifecycle", () => {
   });
 
   test("takes the response roster only at start and never backfills restored or late students", () => {
-    const schoolClass = database.createClass("Start Snapshot", "START-SNAPSHOT");
+    const schoolClass = database.createClass("Start Snapshot");
     const presentStudent = database.createStudent({
       classId: schoolClass.id,
       name: "Present at Start",
-      candidateCode: "SS-001",
-      pinHash: "pin-hash",
       extraMinutes: 0,
     });
     const absentStudent = database.createStudent({
       classId: schoolClass.id,
       name: "Archived at Start",
-      candidateCode: "SS-002",
-      pinHash: "pin-hash",
       extraMinutes: 0,
     });
     database.archiveStudent(absentStudent.id);
@@ -582,8 +519,6 @@ describe("reversible class, student, and exam lifecycle", () => {
     const lateStudent = database.createStudent({
       classId: schoolClass.id,
       name: "Added after Start",
-      candidateCode: "SS-003",
-      pinHash: "pin-hash",
       extraMinutes: 0,
     });
     expect(database.getStudentExam(lateStudent.id, sessionId)).toBeNull();
@@ -601,12 +536,10 @@ describe("reversible class, student, and exam lifecycle", () => {
   });
 
   test("preserves completed results after the session, student, and class are archived", () => {
-    const schoolClass = database.createClass("Archived Results", "ARCHIVED-RESULTS");
+    const schoolClass = database.createClass("Archived Results");
     const student = database.createStudent({
       classId: schoolClass.id,
       name: "Result Student",
-      candidateCode: "AR-001",
-      pinHash: "pin-hash",
       extraMinutes: 0,
     });
     const sessionId = database.createExamSession(schoolClass.id, paper.id);
@@ -640,5 +573,118 @@ describe("reversible class, student, and exam lifecycle", () => {
     database.restoreClass(schoolClass.id);
     expect(database.listExamSessions(true)).toContainEqual(expect.objectContaining({ id: sessionId }));
     expect(database.getSessionResults(sessionId)?.responses).toHaveLength(1);
+  });
+});
+
+describe("candidate answer timeline", () => {
+  const paperManifest = parseManifest({
+    version: 1,
+    title: "Timeline Paper 1",
+    subject: "test-subject",
+    subjectLabel: "Test Subject",
+    level: "SL",
+    paper: "Paper 1",
+    durationMinutes: 90,
+    readingTimeMinutes: 0,
+    instructions: "Answer the question.",
+    mode: "essay",
+    maximumMarks: 10,
+    selectionMode: "all",
+    sourceClassification: "teacher-authored",
+    exportAuthorized: true,
+    resources: [],
+    questions: [{ id: "q1", label: "Question 1", prompt: "Respond.", type: "essay", marks: 10, resourceKeys: [] }],
+  });
+  const schoolClass = database.createClass("Timeline Class");
+  const student = database.createStudent({
+    classId: schoolClass.id,
+    name: "Timeline Student",
+    extraMinutes: 0,
+  });
+  const paper = database.createPaper({ manifest: paperManifest, assets: [] });
+  const sessionId = database.createExamSession(schoolClass.id, paper.id);
+  database.startExamSession(sessionId);
+  const responseId = database.getStudentExam(student.id, sessionId)!.responseId;
+  const base = Date.UTC(2026, 0, 5, 9, 0, 0);
+  const saveAt = (answer: string, offsetMs: number) => database.saveResponse(responseId, {
+    answersJson: JSON.stringify({ q1: answer }),
+    selectedQuestionId: null,
+    flagsJson: "[]",
+    notepad: "",
+  }, base + offsetMs);
+
+  test("coalesces writes into writing windows and skips unchanged saves", () => {
+    saveAt("First", 0);
+    saveAt("First word", 5_000);
+    saveAt("First word", 12_000);
+    saveAt("Second paragraph", 25_000);
+    saveAt("Third paragraph", 65_000);
+
+    const log = database.getResponseRevisionLog(sessionId, responseId);
+    expect(log).toMatchObject({ responseId, studentName: "Timeline Student" });
+    expect(log?.revisions.map((revision) => [revision.at, JSON.parse(revision.answersJson).q1]))
+      .toEqual([
+        [base + 5_000, "First word"],
+        [base + 25_000, "Second paragraph"],
+        [base + 65_000, "Third paragraph"],
+      ]);
+  });
+
+  test("records the submitted state, keeps notepad and flags, and stays scoped to the session", () => {
+    const submittedAt = base + 30 * 60_000;
+    const before = database.getResponseRevisionLog(sessionId, responseId)!.revisions.length;
+    database.saveAndSubmitResponse(responseId, {
+      answersJson: JSON.stringify({ q1: "Final answer" }),
+      selectedQuestionId: "q1",
+      flagsJson: JSON.stringify(["q1"]),
+      notepad: "Check paragraph two",
+    }, submittedAt);
+
+    const revisions = database.getResponseRevisionLog(sessionId, responseId)!.revisions;
+    expect(revisions).toHaveLength(before + 1);
+    expect(revisions.at(-1)).toMatchObject({
+      at: submittedAt,
+      flagsJson: JSON.stringify(["q1"]),
+      notepad: "Check paragraph two",
+      selectedQuestionId: "q1",
+    });
+
+    expect(() => database.saveAndSubmitResponse(responseId, {
+      answersJson: JSON.stringify({ q1: "Too late" }),
+      selectedQuestionId: null,
+      flagsJson: "[]",
+      notepad: "",
+    }, submittedAt + 1_000)).toThrow("Response is already submitted");
+    expect(database.getResponseRevisionLog(sessionId, responseId)!.revisions).toHaveLength(before + 1);
+
+    const otherSessionId = database.createExamSession(schoolClass.id, paper.id);
+    expect(database.getResponseRevisionLog(otherSessionId, responseId)).toBeNull();
+    expect(database.getResponseRevisionLog(sessionId, crypto.randomUUID())).toBeNull();
+  });
+
+  test("widens snapshot spacing once a response grows large", () => {
+    const largeClass = database.createClass("Timeline Large");
+    const largeStudent = database.createStudent({
+      classId: largeClass.id,
+      name: "Ink Student",
+      extraMinutes: 0,
+    });
+    const largeSessionId = database.createExamSession(largeClass.id, paper.id);
+    database.startExamSession(largeSessionId);
+    const largeResponseId = database.getStudentExam(largeStudent.id, largeSessionId)!.responseId;
+    const saveAt = (answerBytes: number, offsetMs: number) => database.saveResponse(largeResponseId, {
+      answersJson: JSON.stringify({ q1: "x".repeat(answerBytes) }),
+      selectedQuestionId: null,
+      flagsJson: "[]",
+      notepad: "",
+    }, base + offsetMs);
+    const times = () => database.getResponseRevisionLog(largeSessionId, largeResponseId)!.revisions.map((revision) => revision.at);
+
+    saveAt(100_000, 0);
+    saveAt(120_000, 25_000);
+    // A drawing-heavy answer snapshots once a minute, so 25 seconds apart still coalesces.
+    expect(times()).toEqual([base + 25_000]);
+    saveAt(140_000, 70_000);
+    expect(times()).toEqual([base + 25_000, base + 70_000]);
   });
 });

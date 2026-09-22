@@ -91,8 +91,8 @@ describe("safe bundled-demo migration", () => {
     for (const status of ["draft", "live", "ended"]) {
       const paperId = create(legacy);
       ids.push(paperId);
-      const classroom = database.createClass(status, status);
-      const student = database.createStudent({ classId: classroom.id, name: "Learner", candidateCode: "L1", extraMinutes: 0 });
+      const classroom = database.createClass(status);
+      const student = database.createStudent({ classId: classroom.id, name: "Learner", extraMinutes: 0 });
       const sessionId = database.createExamSession(classroom.id, paperId);
       if (status !== "draft") {
         database.startExamSession(sessionId);

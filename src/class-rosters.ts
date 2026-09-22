@@ -1,40 +1,36 @@
 export const CLASS_ROSTER_COLUMNS = [
   "class_name",
-  "class_code",
   "student_name",
-  "candidate_code",
   "extra_minutes",
 ] as const;
 
 export interface ClassRosterStudentInput {
   name: string;
-  candidateCode: string;
   extraMinutes: number;
 }
 
 export interface ClassRosterInput {
   name: string;
-  code: string;
   students: ClassRosterStudentInput[];
 }
 
 export interface ClassRosterExportClass {
   id: string;
   name: string;
-  code: string;
 }
 
 export interface ClassRosterExportStudent {
   classId: string;
   name: string;
-  candidateCode: string;
   extraMinutes: number;
 }
 
 const MAX_CLASSES = 500;
 const MAX_STUDENTS = 5_000;
-const CLASS_CODE = /^[A-Z0-9-]{4,24}$/u;
-const CANDIDATE_CODE = /^[A-Z0-9-]{2,32}$/u;
+
+export function identityKey(value: string): string {
+  return value.trim().normalize("NFC").toLowerCase().normalize("NFC");
+}
 
 function parseCsvRows(source: string): string[][] {
   const text = source.startsWith("\uFEFF") ? source.slice(1) : source;
@@ -129,51 +125,41 @@ export function parseClassRosterCsv(source: string): ClassRosterInput[] {
   const studentsByClass = new Map<string, Map<string, ClassRosterStudentInput>>();
   let studentCount = 0;
   const cell = (row: string[], column: typeof CLASS_ROSTER_COLUMNS[number]) => row[indexes.get(column) as number] ?? "";
-
   for (const [rowIndex, row] of rows.entries()) {
     const rowNumber = rowIndex + 2;
     if (row.length > normalizedHeader.length) throw new Error(`Row ${rowNumber}: too many columns`);
     const className = requiredCell(cell(row, "class_name"), "class_name", rowNumber, 100);
-    const classCode = requiredCell(cell(row, "class_code"), "class_code", rowNumber, 24).toUpperCase();
-    if (!CLASS_CODE.test(classCode)) {
-      throw new Error(`Row ${rowNumber}: class_code needs 4–24 letters, numbers or hyphens`);
-    }
-
-    const existingRoster = rosters.get(classCode);
-    if (existingRoster && existingRoster.name.localeCompare(className, undefined, { sensitivity: "accent" }) !== 0) {
-      throw new Error(`Row ${rowNumber}: class_code ${classCode} has more than one class name`);
+    const classKey = identityKey(className);
+    const existingRoster = rosters.get(classKey);
+    if (existingRoster && existingRoster.name !== className) {
+      throw new Error(`Row ${rowNumber}: class_name ${className} has more than one spelling`);
     }
     if (!existingRoster) {
       if (rosters.size >= MAX_CLASSES) throw new Error(`A class-list CSV can contain at most ${MAX_CLASSES} classes`);
-      rosters.set(classCode, { name: className, code: classCode, students: [] });
-      studentsByClass.set(classCode, new Map());
+      rosters.set(classKey, { name: className, students: [] });
+      studentsByClass.set(classKey, new Map());
     }
 
     const studentNameCell = cleanCell(cell(row, "student_name"));
-    const candidateCodeCell = cleanCell(cell(row, "candidate_code"));
-    if (!studentNameCell && !candidateCodeCell) {
+    if (!studentNameCell) {
       if (cleanCell(cell(row, "extra_minutes"))) {
-        throw new Error(`Row ${rowNumber}: extra_minutes requires a student name and candidate code`);
+        throw new Error(`Row ${rowNumber}: extra_minutes requires a student name`);
       }
       continue;
     }
 
     const studentName = requiredCell(studentNameCell, "student_name", rowNumber, 100);
-    const candidateCode = requiredCell(candidateCodeCell, "candidate_code", rowNumber, 32).toUpperCase();
-    if (!CANDIDATE_CODE.test(candidateCode)) {
-      throw new Error(`Row ${rowNumber}: candidate_code needs 2–32 letters, numbers or hyphens`);
-    }
-    const student = { name: studentName, candidateCode, extraMinutes: parseExtraMinutes(cell(row, "extra_minutes"), rowNumber) };
-    const classmates = studentsByClass.get(classCode) as Map<string, ClassRosterStudentInput>;
-    const duplicate = classmates.get(candidateCode);
+    const student = { name: studentName, extraMinutes: parseExtraMinutes(cell(row, "extra_minutes"), rowNumber) };
+    const classmates = studentsByClass.get(classKey) as Map<string, ClassRosterStudentInput>;
+    const duplicate = classmates.get(identityKey(studentName));
     if (duplicate && (duplicate.name !== student.name || duplicate.extraMinutes !== student.extraMinutes)) {
-      throw new Error(`Row ${rowNumber}: candidate_code ${candidateCode} has conflicting student details in class ${classCode}`);
+      throw new Error(`Row ${rowNumber}: student_name ${studentName} has conflicting details in class ${className}`);
     }
     if (!duplicate) {
       studentCount += 1;
       if (studentCount > MAX_STUDENTS) throw new Error(`A class-list CSV can contain at most ${MAX_STUDENTS} students`);
-      classmates.set(candidateCode, student);
-      (rosters.get(classCode) as ClassRosterInput).students.push(student);
+      classmates.set(identityKey(studentName), student);
+      (rosters.get(classKey) as ClassRosterInput).students.push(student);
     }
   }
 
@@ -200,11 +186,11 @@ export function encodeClassRosterCsv(
       .filter((student) => student.classId === schoolClass.id)
       .sort((left, right) => collator.compare(left.name, right.name));
     if (classStudents.length === 0) {
-      rows.push([schoolClass.name, schoolClass.code, "", "", ""]);
+      rows.push([schoolClass.name, "", ""]);
       continue;
     }
     for (const student of classStudents) {
-      rows.push([schoolClass.name, schoolClass.code, student.name, student.candidateCode, student.extraMinutes]);
+      rows.push([schoolClass.name, student.name, student.extraMinutes]);
     }
   }
   return `\uFEFF${rows.map((row) => row.map(csvCell).join(",")).join("\r\n")}\r\n`;

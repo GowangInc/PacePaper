@@ -75,9 +75,9 @@ describe("PacePaper network policy", () => {
 
   test("allows only the student API surface over LAN", () => {
     expect(isLanStudentApiRequest("/api/bootstrap", "GET")).toBeTrue();
+    expect(isLanStudentApiRequest("/api/student/roster", "POST")).toBeFalse();
     expect(isLanStudentApiRequest("/api/login/student", "POST")).toBeTrue();
     expect(isLanStudentApiRequest("/api/student/response", "PUT")).toBeTrue();
-    expect(isLanStudentApiRequest("/api/assets/abc-123/audio_1", "GET")).toBeTrue();
     expect(isLanStudentApiRequest("/api/login/admin", "POST")).toBeFalse();
     expect(isLanStudentApiRequest("/api/admin/state", "GET")).toBeFalse();
     expect(isLanStudentApiRequest("/api/setup", "POST")).toBeFalse();

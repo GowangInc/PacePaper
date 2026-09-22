@@ -828,20 +828,19 @@ export function createInkResponse({ value, settings, label, onChange, signal }) 
 
   syncBackgroundControls();
   root.append(toolbar, backgroundPicker, canvasHint, workspaceStatus, surface);
-  const typed = document.createElement("details");
-  typed.className = "ink-typed-alternative";
-  typed.open = Boolean(answer.typed.trim());
-  const summary = document.createElement("summary");
-  summary.textContent = "Type working instead";
+  const typed = document.createElement("section");
+  typed.className = "ink-typed-response";
+  const heading = document.createElement("h4");
+  heading.textContent = "Typed response";
   const typedLabel = document.createElement("label");
-  typedLabel.textContent = "Typed working (alternative to drawing)";
+  typedLabel.textContent = "Add a typed response here.";
   const textarea = document.createElement("textarea");
   textarea.rows = 5;
   textarea.maxLength = 20_000;
   textarea.value = answer.typed;
   textarea.spellcheck = false;
   typedLabel.append(textarea);
-  typed.append(summary, typedLabel);
+  typed.append(heading, typedLabel);
   textarea.addEventListener("input", () => {
     answer.typed = textarea.value;
     emitChange();
@@ -911,7 +910,7 @@ export function renderInkSubmission(value, settings) {
     const typed = document.createElement("section");
     typed.className = "ink-submission-typed";
     const heading = document.createElement("h4");
-    heading.textContent = "Typed working";
+    heading.textContent = "Typed response";
     const copy = document.createElement("p");
     copy.textContent = answer.typed;
     typed.append(heading, copy);

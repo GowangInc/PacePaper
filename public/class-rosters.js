@@ -22,7 +22,7 @@ export function mountClassRosterTransfer(container, { request, onImported, notif
         <p class="form-help">Prepare one or more classes in Excel, Numbers or Google Sheets, then save the sheet as CSV.</p>
         <label for="class-roster-file">Class-list CSV</label>
         <input id="class-roster-file" name="classRoster" type="file" accept=".csv,text/csv" required aria-describedby="class-roster-help">
-        <small id="class-roster-help">Matching class and candidate codes update names and extra time. Importing does not remove anyone.</small>
+        <small id="class-roster-help">Matching class and student names update display names and extra time. Names must be unique within a class.</small>
         <button type="submit">Import class list</button>
         <div class="class-roster-links" aria-label="Class-list downloads">
           <a href="/api/admin/class-rosters/template" download>Download blank template</a>

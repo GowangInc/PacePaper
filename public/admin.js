@@ -215,8 +215,7 @@ function renderCandidatePaper(data, response) {
 
   const metadata = document.createElement("dl");
   metadata.className = "candidate-paper-metadata";
-  appendMetadata(metadata, "Candidate", response.studentName, "candidate-paper-identity");
-  appendMetadata(metadata, "Candidate code", response.candidateCode, "candidate-paper-code");
+  appendMetadata(metadata, "Student", response.studentName, "candidate-paper-identity");
   appendMetadata(metadata, "Class", data.session.className);
   appendMetadata(metadata, "Assessment session", formatAssessmentSession(data.session.assessmentSession));
   appendMetadata(metadata, "Paper", data.session.paper ?? "Practice paper");
@@ -318,12 +317,17 @@ function renderCandidatePaper(data, response) {
 
   const footer = document.createElement("footer");
   footer.className = "candidate-paper-footer";
-  footer.append(copy("span", "", "End of candidate response"), copy("code", "", response.candidateCode));
+  footer.append(copy("span", "", "End of student response"));
   paper.append(footer);
   return paper;
 }
 
+// The dialog renders once per open. The answer-history panel reuses the payload the
+// papers were rendered from instead of asking the server for the same sitting twice.
+let submissionsData = null;
+
 function renderSubmissions(data) {
+  submissionsData = data;
   document.querySelector("#submissions-title").textContent = data.session.paperTitle;
   document.querySelector("#submissions-context").textContent = `${data.session.className} · ${data.responses.length} candidate${data.responses.length === 1 ? "" : "s"}`;
   const printAll = document.querySelector("#print-submissions");
@@ -341,21 +345,188 @@ function renderSubmissions(data) {
     record.dataset.responseId = response.responseId;
     const summary = document.createElement("summary");
     const identity = copy("strong", "", response.studentName);
-    const code = copy("code", "", response.candidateCode);
     const timestamp = response.submittedAt ?? response.updatedAt;
     const state = copy("span", "", `${response.submittedAt ? "Submitted" : "Last saved"} ${new Date(timestamp).toLocaleString()}`);
-    summary.append(identity, code, state);
+    summary.append(identity, state);
 
     const actions = document.createElement("div");
     actions.className = "submission-screen-actions";
     const printOne = copy("button", "compact", "Print this candidate");
     printOne.type = "button";
     printOne.dataset.printResponse = response.responseId;
-    actions.append(printOne);
+    const answerHistory = copy("button", "compact", "Answer history");
+    answerHistory.type = "button";
+    answerHistory.dataset.answerHistory = response.responseId;
+    answerHistory.setAttribute("aria-expanded", "false");
+    actions.append(printOne, answerHistory);
     record.append(summary, actions, renderCandidatePaper(data, response));
     list.append(record);
   }
   document.querySelector("#submissions-dialog").showModal();
+}
+
+/** One saved moment of a candidate's paper: answers only, in the paper's question order. */
+function renderRevisionAnswers(data, revision) {
+  const answers = document.createElement("div");
+  answers.className = "submission-answers";
+  for (const [index, question] of data.questions.entries()) {
+    const item = document.createElement("article");
+    item.className = "candidate-question";
+    const heading = document.createElement("header");
+    heading.className = "candidate-question-heading";
+    const title = copy("h3", "", question.label);
+    if ((revision.flags ?? []).includes(question.id)) {
+      title.append(copy("span", "candidate-question-selection", "Flagged"));
+    }
+    heading.append(copy("span", "candidate-question-number", String(index + 1).padStart(2, "0")), title);
+    item.append(
+      heading,
+      copy("p", "submission-prompt", question.prompt),
+      renderSubmissionAnswer(question, revision.answers?.[question.id] ?? ""),
+    );
+    answers.append(item);
+  }
+  return answers;
+}
+
+/** Fills a record's answer-history panel with the timeline and the selected moment. */
+function renderAnswerHistory(panel, data, response, revisions) {
+  panel.replaceChildren();
+  const header = document.createElement("header");
+  header.className = "answer-history-header";
+  header.append(copy("h3", "", "Answer history"));
+  panel.append(header);
+  if (revisions.length === 0) {
+    // Answers without snapshots mean the response was stored before this feature existed
+    // (an older database, or a sitting from before the update); an entirely empty response
+    // means the candidate simply never saved any work.
+    const savedWork = (response?.notepad ?? "").trim() !== ""
+      || Object.values(response?.answers ?? {}).some((value) => typeof value === "string" && value.trim() !== "");
+    emptyState(panel, savedWork
+      ? "No saved versions are available. This response was recorded before answer history was kept, so only the final version above can be reviewed."
+      : "No answer history was recorded for this candidate.");
+    return;
+  }
+
+  const timeOf = (revision) => new Date(revision.at).toLocaleTimeString();
+  header.append(copy("p", "answer-history-summary", revisions.length === 1
+    ? `1 saved version at ${timeOf(revisions[0])}`
+    : `${revisions.length} saved versions between ${timeOf(revisions[0])} and ${timeOf(revisions[revisions.length - 1])}`));
+
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.min = "0";
+  slider.max = String(revisions.length - 1);
+  slider.step = "1";
+  slider.setAttribute("aria-label", "Review moment");
+
+  const moment = document.createElement("time");
+  moment.className = "answer-history-moment";
+  moment.setAttribute("aria-live", "polite");
+  const counter = copy("span", "answer-history-counter", "");
+  counter.setAttribute("aria-live", "polite");
+
+  const view = document.createElement("div");
+  view.className = "answer-history-view";
+
+  const earliest = copy("button", "compact", "Earliest");
+  const earlier = copy("button", "compact", "Previous version");
+  const later = copy("button", "compact", "Next version");
+  const latest = copy("button", "compact", "Latest");
+  for (const button of [earliest, earlier, later, latest]) button.type = "button";
+
+  let selected = revisions.length - 1;
+  const draw = () => {
+    const revision = revisions[selected];
+    const at = new Date(revision.at);
+    moment.dateTime = at.toISOString();
+    moment.textContent = at.toLocaleTimeString();
+    counter.textContent = `Save ${selected + 1} of ${revisions.length}`;
+    if (revisions.length > 1) {
+      slider.value = String(selected);
+      earliest.disabled = selected === 0;
+      earlier.disabled = selected === 0;
+      later.disabled = selected === revisions.length - 1;
+      latest.disabled = selected === revisions.length - 1;
+    }
+    view.replaceChildren(renderRevisionAnswers(data, revision));
+    appendCandidateNotepad(view, revision.notepad);
+  };
+  const select = (index) => {
+    selected = Math.min(Math.max(index, 0), revisions.length - 1);
+    draw();
+  };
+
+  slider.addEventListener("input", () => select(Number(slider.value)));
+  earliest.addEventListener("click", () => select(0));
+  earlier.addEventListener("click", () => select(selected - 1));
+  later.addEventListener("click", () => select(selected + 1));
+  latest.addEventListener("click", () => select(revisions.length - 1));
+
+  const controls = document.createElement("div");
+  controls.className = "answer-history-controls";
+  const range = document.createElement("div");
+  range.className = "answer-history-range";
+  // One saved version has nothing to scrub or step through.
+  if (revisions.length > 1) range.append(slider);
+  range.append(moment, counter);
+  controls.append(range);
+  if (revisions.length > 1) {
+    const steps = document.createElement("div");
+    steps.className = "answer-history-steps";
+    steps.append(earliest, earlier, later, latest);
+    controls.append(steps);
+  }
+
+  panel.append(
+    controls,
+    view,
+    copy("p", "answer-history-note", "Snapshots are captured at intervals while the sitting runs — about every 20 seconds, and less often for drawing-heavy answers — not on every keystroke, so the newest snapshot can lag the final answer."),
+  );
+  draw();
+}
+
+async function openAnswerHistory(responseId) {
+  const data = submissionsData;
+  if (!data) return;
+  const record = [...document.querySelectorAll("#submission-list .submission-record")]
+    .find((item) => item.dataset.responseId === responseId);
+  if (!record) return;
+  // A loading or mounted panel already owns this record; only a failure may be retried.
+  if (record.dataset.answerHistoryState === "loading" || record.dataset.answerHistoryState === "ready") return;
+
+  const trigger = record.querySelector("button[data-answer-history]");
+  let panel = record.querySelector(".answer-history-panel");
+  if (!panel) {
+    panel = document.createElement("section");
+    panel.className = "answer-history-panel";
+    panel.id = `answer-history-${responseId}`;
+    record.append(panel);
+    trigger?.setAttribute("aria-controls", panel.id);
+  }
+  record.dataset.answerHistoryState = "loading";
+  panel.replaceChildren(copy("p", "answer-history-status", "Loading answer history…"));
+
+  try {
+    const history = await api(`/api/admin/sessions/${data.session.id}/responses/${responseId}/revisions`);
+    record.dataset.answerHistoryState = "ready";
+    trigger?.setAttribute("aria-expanded", "true");
+    const response = data.responses?.find((item) => item.responseId === responseId);
+    renderAnswerHistory(panel, data, response, history.revisions ?? []);
+  } catch (error) {
+    record.dataset.answerHistoryState = "error";
+    const status = document.createElement("div");
+    status.className = "answer-history-status";
+    status.dataset.tone = "error";
+    const retry = copy("button", "compact", "Try again");
+    retry.type = "button";
+    retry.dataset.answerHistory = responseId;
+    status.append(
+      copy("p", "", error instanceof Error ? error.message : "Answer history could not be loaded."),
+      retry,
+    );
+    panel.replaceChildren(status);
+  }
 }
 
 function renderFocusEvents(events) {
@@ -373,7 +544,7 @@ function renderFocusEvents(events) {
     for (const event of events) {
       const item = document.createElement("li");
       item.dataset.kind = event.kind;
-      item.textContent = `${new Date(event.at).toLocaleTimeString()} — ${event.studentName} (${event.candidateCode}) ${event.kind === "focus_lost" ? "left the exam window" : "returned"}`;
+      item.textContent = `${new Date(event.at).toLocaleTimeString()} — ${event.studentName} ${event.kind === "focus_lost" ? "left the exam window" : "returned"}`;
       list.append(item);
     }
     section.append(list);
@@ -433,7 +604,6 @@ function renderLiveWorkList() {
     button.setAttribute("aria-pressed", String(response.responseId === liveWork?.selectedId));
     button.dataset.selected = String(response.responseId === liveWork?.selectedId);
     const meta = copy("span", "live-work-candidate-meta", [
-      response.candidateCode,
       `${answered} of ${questionCount} answered`,
       response.submittedAt ? `submitted ${new Date(response.submittedAt).toLocaleTimeString()}` : `saved ${new Date(response.updatedAt).toLocaleTimeString()}`,
     ].join(" · "));
@@ -559,15 +729,13 @@ function renderLiveFocusList(live) {
     const summaryEl = document.createElement("summary");
     const name = document.createElement("strong");
     name.textContent = student.studentName;
-    const code = document.createElement("code");
-    code.textContent = student.candidateCode;
     const status = document.createElement("span");
     status.className = "focus-live-status";
     const last = student.lastEventAt ? new Date(student.lastEventAt).toLocaleTimeString() : "—";
     status.textContent = student.currentlyAway
       ? `away now · ${student.lostCount} loss${student.lostCount === 1 ? "" : "es"} · last ${last}`
       : `${student.lostCount} focus loss${student.lostCount === 1 ? "" : "es"} · last ${last}`;
-    summaryEl.append(name, code, status);
+    summaryEl.append(name, status);
     details.append(summaryEl);
     const events = document.createElement("ol");
     events.className = "focus-live-events";
@@ -599,7 +767,7 @@ function showFocusToast(event) {
   toast.className = "focus-toast";
   toast.setAttribute("role", "alert");
   const label = document.createElement("p");
-  label.textContent = `${new Date(event.at).toLocaleTimeString()} — ${event.studentName} (${event.candidateCode}) left the exam window`;
+  label.textContent = `${new Date(event.at).toLocaleTimeString()} — ${event.studentName} left the exam window`;
   const dismiss = document.createElement("button");
   dismiss.type = "button";
   dismiss.setAttribute("aria-label", "Dismiss notification");
@@ -639,7 +807,7 @@ async function refreshLiveFocus(state) {
         seenFocusEventIds.add(event.id);
         let summary = byStudent.get(event.studentId);
         if (!summary) {
-          summary = { studentId: event.studentId, studentName: event.studentName, candidateCode: event.candidateCode, lostCount: 0, currentlyAway: false, lastEventAt: null, events: [] };
+          summary = { studentId: event.studentId, studentName: event.studentName, lostCount: 0, currentlyAway: false, lastEventAt: null, events: [] };
           byStudent.set(event.studentId, summary);
         }
         if (event.kind === "focus_lost") { summary.lostCount += 1; summary.currentlyAway = true; }
@@ -745,10 +913,9 @@ function openStudentEditor(studentId) {
   form.reset();
   form.dataset.studentId = student.id;
   form.elements.namedItem("name").value = student.name;
-  form.elements.namedItem("candidateCode").value = student.candidateCode;
   form.elements.namedItem("extraMinutes").value = String(student.extraMinutes ?? 0);
   document.querySelector("#student-edit-title").textContent = `Edit ${student.name}`;
-  document.querySelector("#student-edit-context").textContent = "Update the candidate details below.";
+  document.querySelector("#student-edit-context").textContent = "Update the student's name or extra time.";
   const errorRegion = document.querySelector("#student-edit-error");
   errorRegion.textContent = "";
   errorRegion.hidden = true;
@@ -773,7 +940,6 @@ async function saveStudentEdits(form) {
       body: {
         classId: student.classId,
         name: updatedName,
-        candidateCode: String(values.candidateCode).trim(),
         extraMinutes: Number(values.extraMinutes),
       },
     });
@@ -1015,7 +1181,13 @@ function bindDashboard() {
   document.querySelector("#print-submissions").addEventListener("click", () => printSubmissions());
   document.querySelector("#submission-list").addEventListener("click", (event) => {
     const button = event.target.closest("button[data-print-response]");
-    if (button) printSubmissions(button.dataset.printResponse);
+    if (button) {
+      printSubmissions(button.dataset.printResponse);
+      return;
+    }
+    // Same delegation for the answer history: the button carries its response id.
+    const history = event.target.closest("button[data-answer-history]");
+    if (history) openAnswerHistory(history.dataset.answerHistory);
   });
 
   document.querySelectorAll("[data-jump]").forEach((link) => {
@@ -1082,7 +1254,6 @@ async function renderDashboard() {
             <form id="class-form" class="utility-form" method="post">
               <fieldset><legend>Create class</legend>
                 <label for="class-name">Class name</label><input id="class-name" name="name" required maxlength="100">
-                <label for="class-code">Class code</label><input id="class-code" name="code" required minlength="4" maxlength="24" pattern="[A-Za-z0-9\\-]+" autocomplete="off">
                 <button type="submit">Create class</button>
               </fieldset>
             </form>
@@ -1090,8 +1261,6 @@ async function renderDashboard() {
               <fieldset><legend>Add student</legend>
                 <label for="student-class">Class</label><select id="student-class" name="classId" required></select>
                 <label for="student-name">Student name</label><input id="student-name" name="name" required maxlength="100" autocomplete="off">
-                <label for="candidate-code">Candidate code</label><input id="candidate-code" name="candidateCode" required minlength="2" maxlength="32" pattern="[A-Za-z0-9\\-]{2,32}" autocomplete="off" aria-describedby="candidate-code-help">
-                <small id="candidate-code-help">A unique student reference for this class, such as S01. Use 2–32 letters, numbers or hyphens.</small>
                 <label for="extra-minutes">Extra time in minutes</label><input id="extra-minutes" name="extraMinutes" type="number" min="0" max="180" value="0">
                 <button type="submit">Add student</button>
               </fieldset>
@@ -1194,11 +1363,9 @@ async function renderDashboard() {
     </div>
     <dialog id="student-edit-dialog" class="exam-dialog compact-dialog" aria-labelledby="student-edit-title" aria-describedby="student-edit-context">
       <form id="student-edit-form" method="post">
-        <header><p class="eyebrow">Candidate details</p><h2 id="student-edit-title">Edit student</h2><p id="student-edit-context">Update the candidate details below.</p></header>
+        <header><p class="eyebrow">Student details</p><h2 id="student-edit-title">Edit student</h2><p id="student-edit-context">Update the student details below.</p></header>
         <fieldset class="preference-grid">
-          <legend class="visually-hidden">Student details</legend>
           <label for="edit-student-name">Display name<input id="edit-student-name" name="name" required maxlength="100" autocomplete="off"></label>
-          <label for="edit-candidate-code">Candidate code<input id="edit-candidate-code" name="candidateCode" required minlength="2" maxlength="32" pattern="[A-Za-z0-9\\-]{2,32}" autocomplete="off"></label>
           <label for="edit-extra-minutes">Extra time in minutes<input id="edit-extra-minutes" name="extraMinutes" type="number" min="0" max="180" value="0" required></label>
         </fieldset>
         <p id="student-edit-error" class="status-message" data-tone="error" role="alert" tabindex="-1" hidden></p>

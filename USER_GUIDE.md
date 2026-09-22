@@ -109,32 +109,29 @@ Select **Classes**. Add students one at a time or import a prepared CSV class li
 ### Option A — Add students manually
 
 1. Under **Create class**, enter a clear **Class name**.
-2. Enter a short **Class code** using at least four letters, numbers, or hyphens.
-3. Select **Create class**.
-4. Under **Add student**, select the class.
-5. Enter the student's **Student name** and **Candidate code**.
-6. Enter **Extra time in minutes**, or leave it at `0`.
-7. Select **Add student**.
-8. Repeat for the rest of the class.
-9. Check the class list before moving on.
-
-Select **Edit** beside a student to change their name, candidate code, or extra time. Select **Save changes** when finished.
+2. Select **Create class**.
+3. Under **Add student**, select the class.
+4. Enter the student's **Student name**.
+5. Enter **Extra time in minutes**, or leave it at `0`.
+6. Select **Add student**.
+7. Repeat for the rest of the class.
+8. Check the class list before moving on.
 
 ### Option B — Import a class list
 
 1. Select **Download blank template**.
 2. Open the CSV file in Excel, Numbers, or Google Sheets.
 3. Add one row for each student.
-4. Repeat the class name and class code on every student row.
+4. Repeat the class name on every student row.
 5. Enter `0` in `extra_minutes` when a student has no extra time.
 6. Save or download the completed sheet as a CSV file.
 7. Back in PacePaper, choose the file under **Class-list CSV**.
 8. Select **Import class list**.
 9. Check the displayed classes and students.
 
-One CSV file may contain several classes. To create an empty class, include one row with the three student fields left blank.
+The blank template uses `class_name`, `student_name`, and `extra_minutes`. Student names must be unique within a class. One CSV file may contain several classes. To create an empty class, include one row with the student name and extra-time fields left blank.
 
-Class codes and candidate codes identify existing records. Importing the same file again updates matching names and extra time and adds missing students. It does not remove students. Restore a removed class or student before importing a row with the same code.
+Importing the same file again updates matching class and student names plus extra time; it adds missing students and does not remove students. Restore a removed class or student before importing a row with the same name.
 
 Select **Export active classes** to save the current active rosters as CSV. Store exported files securely because they contain student names.
 
@@ -180,7 +177,7 @@ Full-length does not mean official or difficulty-calibrated. No awarding body ha
 11. Add the first question under **Questions and student entry areas**.
 12. Enter the complete question wording and its marks.
 13. Choose one of the response areas offered for that exam format.
-14. Attach any image, PDF, or audio required only for that question.
+14. Attach any image, PDF, or audio required only for that question. To add an image from the clipboard, select **Paste image** on its question card, then press ⌘V or Ctrl+V.
 15. Repeat for the remaining questions.
 16. Scroll through **Paper preview** and check the full student view.
 17. Confirm that the marks a student can earn match **Maximum marks**. For a choose-one paper, count the selected question rather than adding all alternatives together.
@@ -206,8 +203,8 @@ The AP profiles target **May 2027** and remain visibly marked **Adapted practice
 - Enter the complete question wording in **Question or prompt**. Attached PDF pages are not copied into the printed candidate response automatically.
 - Images appear with the response when printed. PDFs and audio are listed as companion material.
 - Listening audio allows two complete listens. Students cannot pause, restart, seek, or change speed after a listen begins.
-- For a canvas question, choose its starting page count and default background: **Blank**, **Ruled**, or **Square grid**.
-- Students can draw, erase, undo, redo, add pages, and change the background. PacePaper warns them before changing the teacher's default.
+- For a canvas question, choose its starting page count and default background. New canvas questions start **Ruled**; **Blank** and **Square grid** remain available when needed.
+- Students can draw, erase, undo, redo, add pages, change the background, and add a typed response. PacePaper warns them before changing the teacher's default.
 
 ### Preview a paper as a student
 
@@ -258,7 +255,7 @@ You may set up several sessions in advance. Different classes can take different
 3. Move the new tab or window to the projector or second screen.
 4. Check the paper, class, start time, reading time, and writing time.
 5. Edit the displayed student names if needed.
-6. Confirm that the student sign-in address is visible.
+6. Confirm that the linked class name and student sign-in address are visible.
 
 For a simple paper with one reading period and one writing period (no fixed timed sections), changing **Reading minutes** or **Writing minutes** and selecting **Save exam timing and update display** saves the configured minutes for that sitting. For example, `0.1` reading minutes is six seconds. You can make this change while the exam is ready or after it has started: saving during a live exam moves the reading/writing boundary and the deadline immediately for every candidate, which is the fastest way to correct a mistaken duration. Check the saved confirmation and the session's timing on the teacher dashboard.
 
@@ -274,18 +271,19 @@ The clock remains on **Ready to start** until the teacher selects **Start exam**
 
 ## Step 7 — Ask students to join
 
-Give students the **Student sign-in** address and the class code.
+Give students the **Student sign-in** address, the class name, and their own name. The names must match the roster. Names are not secrets, so use supervised classroom practice only.
 
 Ask each student to:
 
 1. Open the exact address supplied by the teacher.
-2. Enter the **Class code**.
-3. Select **Load names**.
-4. Choose their own name.
-5. Select **Continue**.
-6. Under **Choose your examination**, find the correct paper.
-7. Select **Join waiting room**.
-8. Check the paper title and wait for the teacher.
+2. Enter the **Class name**.
+3. Enter their own name.
+4. Select **Continue**.
+5. Under **Choose your examination**, find the correct paper.
+6. Select **Join waiting room**.
+7. Check the paper title and wait for the teacher.
+
+After a sitting ends, the student's assessment list includes earlier submitted assessments. **View assessment** opens a read-only copy of that student's own saved response; it never exposes another student's work.
 
 Their sign-in screen and waiting room both state that the teacher can see their work during the sitting: answers, drawings, notes, and flagged questions, within PacePaper only.
 
@@ -308,7 +306,7 @@ Ask students to confirm that the correct paper title appears in their waiting ro
 While a sitting is live, each session row offers **Watch work**:
 
 1. Select **Watch work** on the live session.
-2. Choose a candidate from the list on the left. Each row shows their candidate code, how many questions they have answered, and when they last saved.
+2. Choose a student from the list on the left. Each row shows their name, how many questions they have answered, and when they last saved.
 3. Read their paper on the right: current answers, choice selections, drawing pages, and their notepad.
 4. Leave the window open. It refreshes as candidates save, so you can see progress without walking the room.
 
@@ -344,9 +342,10 @@ The recovery JSON file includes typed answers, canvas data and notes. It is an e
 1. Find the session on the teacher dashboard.
 2. Select **View submissions**.
 3. Open a candidate and check the saved response.
-4. Select **Print this candidate** for one student, or **Print all or save PDF** for the group.
-5. In the browser print window, choose a printer or **Save as PDF**.
-6. Open the saved PDF and check it before closing PacePaper.
+4. Select **Answer history** to review the response over time. The slider and step buttons move between saved versions, so you can see what the candidate had written earlier in the sitting. Snapshots are taken every 20 seconds or so (less often for drawing-heavy answers), not on every keystroke.
+5. Select **Print this candidate** for one student, or **Print all or save PDF** for the group.
+6. In the browser print window, choose a printer or **Save as PDF**.
+7. Open the saved PDF and check it before closing PacePaper.
 
 The printable record includes questions, typed responses, canvas pages, inline images, and the student's notepad. PDFs and audio used as companion materials are listed rather than reproduced inside the response paper.
 
@@ -413,20 +412,22 @@ Restoring a backup returns the installation to the date of that backup. Later wo
 Teachers may give this section directly to students.
 
 1. Open the address supplied by your teacher.
-2. Enter the class code and select **Load names**.
-3. Choose your own name and select **Continue**.
-4. Choose the correct examination and select **Join waiting room**.
-5. Wait for the teacher to start it.
-6. Answer in the area below each question. Work saves automatically.
-7. Use **Flag** and **View summary** to check unfinished questions.
-8. Use the **Notepad** only for rough work. It is included in the teacher's PDF but is separate from your answers.
-9. When finished, select **Submit**, check the summary, and select **Submit now**.
+2. Enter the class name.
+3. Enter your own name.
+4. Select **Continue**.
+5. Choose the correct examination and select **Join waiting room**.
+6. Wait for the teacher to start it.
+7. Answer in the area below each question. Work saves automatically.
+8. Use **Flag** and **View summary** to check unfinished questions.
+9. Use the **Notepad** only for rough work. It is included in the teacher's PDF but is separate from your answers.
+10. When finished, select **Submit**, check the summary, and select **Submit now**.
+11. Later, sign in again with the same class and student names and select **View assessment** to read your own earlier response.
 
 During reading time, answer areas remain locked. You can still read the questions and answer choices and switch between the available texts.
 
 You may highlight text shown directly on the PacePaper page. Highlighting does not work inside attached PDFs or images. **Accessibility** controls can change text size, colours, typeface, or spacing without changing the paper.
 
-For a drawing question, use **Draw**, **Eraser**, **Undo**, **Redo**, or **Add page**. You may choose **Blank**, **Ruled**, or **Square grid** under **Canvas background**.
+For a handwritten question, use **Draw**, **Eraser**, **Undo**, **Redo**, or **Add page**. New pages start **Ruled**. You may choose **Blank**, **Ruled**, or **Square grid** under **Canvas background**, and add a typed response as well.
 
 For listening audio, select **Start first listen** only when ready and let it play to the end. After completion, **Start final listen** becomes available.
 
@@ -435,7 +436,7 @@ For listening audio, select **Start first listen** only when ready and let it pl
 - **The Mac app says it is damaged:** Do not bypass Gatekeeper. Confirm that the release is notarized. If you are working from a source checkout, use `Start PacePaper.command` from the project folder.
 - **The app does not open:** Extract the complete download, use the correct platform file, and close any second copy of PacePaper.
 - **Students cannot connect:** Confirm that classroom sharing is on, use the displayed private-network address, and test it on a real student device. Do not give students `localhost` or `127.0.0.1`.
-- **A student name is missing:** Check the class code, select **Refresh names**, and confirm that the student is active in the correct class.
+- **A student cannot sign in:** Check that the class name and student name exactly match the active roster. A teacher can correct a name through **Edit**.
 - **An exam is missing:** Confirm that the teacher selected **Set up exam**. Ask the student to return to **Choose your examination**.
 - **A student is stuck on Connecting or Reconnecting:** Keep the page open. Confirm that PacePaper is running and both devices are still on the same network.
 - **The clock is counting the wrong session:** Choose the exam from the clock's session list, or reopen the clock from the correct session row.
@@ -444,6 +445,6 @@ For listening audio, select **Start first listen** only when ready and let it pl
 
 ## Demo safety
 
-A fresh installation uses the default teacher login `admin` / `admin`; change it in **Settings** before real use. Students use a class code and choose a name; there is no PIN or identity check. Classroom traffic uses unencrypted HTTP.
+A fresh installation uses the default teacher login `admin` / `admin`; change it in **Settings** before real use. Student sign-in matches class and student names only, so it does not authenticate identity. Classroom traffic uses unencrypted HTTP, so use supervised practice with fake candidates and approved material unless the network is appropriately protected.
 
 Use fake candidates, approved practice material, and a trusted private network only. PacePaper is not the official IB Digital Examination System and is not affiliated with or endorsed by the International Baccalaureate.

@@ -8,7 +8,7 @@ const WRITTEN_WORKING = {
     type: "ink",
     prompt: "Enter your answer and show all required working.",
     inkPages: 1,
-    inkBackground: "square-grid",
+    inkBackground: "lined",
   },
 };
 

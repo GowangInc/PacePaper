@@ -1,7 +1,8 @@
 import { mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname } from "node:path";
 import { Database } from "bun:sqlite";
-import type { ClassRosterInput } from "./class-rosters.ts";
+import { identityKey, type ClassRosterInput } from "./class-rosters.ts";
 import { initializeDatabaseSchema } from "./db-schema.ts";
 import { AUDIO_PLAY_LIMIT, type ImportedPaper, type PaperManifest } from "./papers.ts";
 
@@ -19,15 +20,9 @@ export interface StudentLoginRow {
   classId: string;
   className: string;
   name: string;
-  candidateCode: string;
-  pinHash: string;
   extraMinutes: number;
 }
 
-export interface StudentRosterRow {
-  id: string;
-  name: string;
-}
 
 export interface AuthRow {
   role: Role;
@@ -38,7 +33,6 @@ export interface AuthRow {
 export interface ClassRow {
   id: string;
   name: string;
-  code: string;
   createdAt: number;
   archivedAt: number | null;
 }
@@ -47,7 +41,6 @@ export interface StudentRow {
   id: string;
   classId: string;
   name: string;
-  candidateCode: string;
   extraMinutes: number;
   lastSeenAt: number | null;
   createdAt: number;
@@ -176,7 +169,6 @@ export interface ResponsePayload {
 export interface SessionResponseRow {
   responseId: string;
   studentName: string;
-  candidateCode: string;
   answersJson: string;
   selectedQuestionId: string | null;
   notepad: string;
@@ -205,12 +197,7 @@ export interface LifecycleResult {
 const databasePath = process.env.DIGITALDP_DB ?? "data/digitaldp.sqlite";
 mkdirSync(dirname(databasePath), { recursive: true });
 export const db = new Database(databasePath, { create: true, strict: true });
-initializeDatabaseSchema(db);
-
-// Keep the existing non-null column intact during the demo migration. It holds
-// no credential for new roster entries, while preserving old data should PIN
-// authentication be deliberately reintroduced later.
-const DORMANT_PIN_HASH = "pin-not-required";
+const databaseSchema = initializeDatabaseSchema(db);
 
 export function setupRequired(): boolean {
   const row = db.query<{ count: number }, []>("SELECT COUNT(*) AS count FROM admins").get();
@@ -263,53 +250,22 @@ export function findAdmin(username: string): AdminRow | null {
   ).get({ username }) ?? null;
 }
 
-export function findStudentLogin(classCode: string, candidateCode: string): StudentLoginRow | null {
-  return db.query<StudentLoginRow, { classCode: string; candidateCode: string }>(`
+export function findStudentLogin(className: string, studentName: string): StudentLoginRow | null {
+  return db.query<StudentLoginRow, { classKey: string; studentKey: string }>(`
     SELECT students.id,
            students.class_id AS classId,
            classes.name AS className,
            students.name,
-           students.candidate_code AS candidateCode,
-           students.pin_hash AS pinHash,
            students.extra_minutes AS extraMinutes
       FROM students
       JOIN classes ON classes.id = students.class_id
-     WHERE classes.code = $classCode COLLATE NOCASE
-       AND students.candidate_code = $candidateCode COLLATE NOCASE
+     WHERE classes.name_key = $classKey
+       AND students.name_key = $studentKey
        AND classes.archived_at IS NULL
        AND students.archived_at IS NULL
-  `).get({ classCode, candidateCode }) ?? null;
+  `).get({ classKey: identityKey(className), studentKey: identityKey(studentName) }) ?? null;
 }
 
-export function findStudentLoginById(classCode: string, studentId: string): StudentLoginRow | null {
-  return db.query<StudentLoginRow, { classCode: string; studentId: string }>(`
-    SELECT students.id,
-           students.class_id AS classId,
-           classes.name AS className,
-           students.name,
-           students.candidate_code AS candidateCode,
-           students.pin_hash AS pinHash,
-           students.extra_minutes AS extraMinutes
-      FROM students
-      JOIN classes ON classes.id = students.class_id
-     WHERE classes.code = $classCode COLLATE NOCASE
-       AND students.id = $studentId
-       AND classes.archived_at IS NULL
-       AND students.archived_at IS NULL
-  `).get({ classCode, studentId }) ?? null;
-}
-
-export function listStudentRoster(classCode: string): StudentRosterRow[] {
-  return db.query<StudentRosterRow, { classCode: string }>(`
-    SELECT students.id, students.name
-      FROM students
-      JOIN classes ON classes.id = students.class_id
-     WHERE classes.code = $classCode COLLATE NOCASE
-       AND classes.archived_at IS NULL
-       AND students.archived_at IS NULL
-     ORDER BY students.name COLLATE NOCASE, students.name, students.id
-  `).all({ classCode });
-}
 
 export function createAuthSession(tokenHash: string, role: Role, actorId: string, expiresAt: number): void {
   const now = Date.now();
@@ -334,20 +290,31 @@ export function deleteAuthSession(tokenHash: string): void {
 export function deleteAdminSessions(): void {
   db.query("DELETE FROM auth_sessions WHERE role = 'admin'").run();
 }
+export function deleteStudentSessions(studentId: string): void {
+  db.query("DELETE FROM auth_sessions WHERE role = 'student' AND actor_id = $studentId").run({ studentId });
+}
 
 export function deleteExpiredAuthSessions(): void {
   db.query("DELETE FROM auth_sessions WHERE expires_at <= $now").run({ now: Date.now() });
 }
 
-export function createClass(name: string, code: string): ClassRow {
-  const row = { id: crypto.randomUUID(), name, code: code.toUpperCase(), createdAt: Date.now(), archivedAt: null };
-  db.query("INSERT INTO classes (id, name, code, created_at) VALUES ($id, $name, $code, $createdAt)").run(row);
+export function createClass(name: string): ClassRow {
+  const nameKey = identityKey(name);
+  if (!nameKey) throw new Error("Class name is invalid");
+  const row = { id: crypto.randomUUID(), name, createdAt: Date.now(), archivedAt: null };
+  if (databaseSchema.legacyClassCode) {
+    db.query("INSERT INTO classes (id, name, name_key, code, created_at) VALUES ($id, $name, $nameKey, $legacyCode, $createdAt)")
+      .run({ ...row, nameKey, legacyCode: row.id });
+  } else {
+    db.query("INSERT INTO classes (id, name, name_key, created_at) VALUES ($id, $name, $nameKey, $createdAt)")
+      .run({ ...row, nameKey });
+  }
   return row;
 }
 
 export function listClasses(archived = false): ClassRow[] {
   return db.query<ClassRow, { archived: number }>(`
-    SELECT id, name, code, created_at AS createdAt, archived_at AS archivedAt
+    SELECT id, name, created_at AS createdAt, archived_at AS archivedAt
       FROM classes
      WHERE ($archived = 0 AND archived_at IS NULL)
         OR ($archived = 1 AND archived_at IS NOT NULL)
@@ -358,26 +325,40 @@ export function listClasses(archived = false): ClassRow[] {
 export function createStudent(input: {
   classId: string;
   name: string;
-  candidateCode: string;
-  pinHash?: string;
   extraMinutes: number;
 }): StudentRow {
+  const nameKey = identityKey(input.name);
+  if (!nameKey) throw new Error("Student name is invalid");
   const row = {
     id: crypto.randomUUID(),
     classId: input.classId,
     name: input.name,
-    candidateCode: input.candidateCode.toUpperCase(),
     extraMinutes: input.extraMinutes,
     lastSeenAt: null,
     createdAt: Date.now(),
     archivedAt: null,
   };
+  const columns = ["id", "class_id", "name", "name_key", "extra_minutes", "created_at"];
+  const parameters = ["$id", "$classId", "$name", "$nameKey", "$extraMinutes", "$createdAt"];
+  if (databaseSchema.legacyStudentCandidateCode) {
+    columns.push("candidate_code");
+    parameters.push("$legacyCandidateCode");
+  }
+  if (databaseSchema.legacyStudentPinHash) {
+    columns.push("pin_hash");
+    parameters.push("$legacyPinHash");
+  }
   const created = db.query(`
-    INSERT INTO students (id, class_id, name, candidate_code, pin_hash, extra_minutes, created_at)
-    SELECT $id, $classId, $name, $candidateCode, $pinHash, $extraMinutes, $createdAt
+    INSERT INTO students (${columns.join(", ")})
+    SELECT ${parameters.join(", ")}
       FROM classes
      WHERE id = $classId AND archived_at IS NULL
-  `).run({ ...row, pinHash: input.pinHash ?? DORMANT_PIN_HASH });
+  `).run({
+    ...row,
+    nameKey,
+    legacyCandidateCode: row.id,
+    legacyPinHash: "legacy-name-login",
+  });
   if (created.changes !== 1) throw new Error("Active class not found");
   return row;
 }
@@ -387,7 +368,6 @@ export function listStudents(archived = false): StudentRow[] {
     SELECT students.id,
            students.class_id AS classId,
            students.name,
-           students.candidate_code AS candidateCode,
            students.extra_minutes AS extraMinutes,
            students.last_seen_at AS lastSeenAt,
            students.created_at AS createdAt,
@@ -412,24 +392,25 @@ export const importClassRosters = db.transaction((rosters: ClassRosterInput[]): 
   };
 
   for (const roster of rosters) {
-    const existingClass = db.query<ClassRow, { code: string }>(`
-      SELECT id, name, code, created_at AS createdAt, archived_at AS archivedAt
+    const nameKey = identityKey(roster.name);
+    const existingClass = db.query<ClassRow, { nameKey: string }>(`
+      SELECT id, name, created_at AS createdAt, archived_at AS archivedAt
         FROM classes
-       WHERE code = $code COLLATE NOCASE
-    `).get({ code: roster.code });
+       WHERE name_key = $nameKey
+    `).get({ nameKey });
     if (existingClass?.archivedAt !== null && existingClass?.archivedAt !== undefined) {
-      throw new Error(`Class code ${roster.code} belongs to a removed class. Restore it before importing`);
+      throw new Error(`Class ${roster.name} belongs to a removed class. Restore it before importing`);
     }
 
     let classId: string;
     if (!existingClass) {
-      const created = createClass(roster.name, roster.code);
-      classId = created.id;
+      classId = createClass(roster.name).id;
       result.classesCreated += 1;
     } else {
       classId = existingClass.id;
       if (existingClass.name !== roster.name) {
-        db.query("UPDATE classes SET name = $name WHERE id = $id").run({ id: classId, name: roster.name });
+        db.query("UPDATE classes SET name = $name, name_key = $nameKey WHERE id = $id")
+          .run({ id: classId, name: roster.name, nameKey });
         result.classesUpdated += 1;
       } else {
         result.classesUnchanged += 1;
@@ -437,31 +418,38 @@ export const importClassRosters = db.transaction((rosters: ClassRosterInput[]): 
     }
 
     for (const student of roster.students) {
+      const studentNameKey = identityKey(student.name);
       const existingStudent = db.query<{
         id: string;
         name: string;
         extraMinutes: number;
         archivedAt: number | null;
-      }, { classId: string; candidateCode: string }>(`
+      }, { classId: string; nameKey: string }>(`
         SELECT id, name, extra_minutes AS extraMinutes, archived_at AS archivedAt
           FROM students
-         WHERE class_id = $classId AND candidate_code = $candidateCode COLLATE NOCASE
-      `).get({ classId, candidateCode: student.candidateCode });
+         WHERE class_id = $classId AND name_key = $nameKey
+      `).get({ classId, nameKey: studentNameKey });
       if (existingStudent?.archivedAt !== null && existingStudent?.archivedAt !== undefined) {
-        throw new Error(
-          `Candidate code ${student.candidateCode} belongs to a removed student in class ${roster.code}. Restore that student before importing`,
-        );
+        throw new Error(`Student ${student.name} belongs to a removed class member. Restore them before importing`);
       }
 
       if (!existingStudent) {
-        createStudent({ classId, ...student });
+        createStudent({ classId, name: student.name, extraMinutes: student.extraMinutes });
         result.studentsCreated += 1;
       } else if (existingStudent.name !== student.name || existingStudent.extraMinutes !== student.extraMinutes) {
         db.query(`
           UPDATE students
-             SET name = $name, extra_minutes = $extraMinutes
+             SET name = $name,
+                 name_key = $nameKey,
+                 extra_minutes = $extraMinutes
            WHERE id = $id
-        `).run({ id: existingStudent.id, name: student.name, extraMinutes: student.extraMinutes });
+        `).run({
+          id: existingStudent.id,
+          name: student.name,
+          nameKey: studentNameKey,
+          extraMinutes: student.extraMinutes,
+        });
+        if (existingStudent.name !== student.name) deleteStudentSessions(existingStudent.id);
         result.studentsUpdated += 1;
       } else {
         result.studentsUnchanged += 1;
@@ -477,7 +465,6 @@ export function getStudent(studentId: string): StudentRow | null {
     SELECT students.id,
            students.class_id AS classId,
            students.name,
-           students.candidate_code AS candidateCode,
            students.extra_minutes AS extraMinutes,
            students.last_seen_at AS lastSeenAt,
            students.created_at AS createdAt,
@@ -494,16 +481,17 @@ export function updateStudent(input: {
   id: string;
   classId: string;
   name: string;
-  candidateCode: string;
   extraMinutes: number;
-  pinHash?: string;
 }): StudentRow | null {
+  const existing = getStudent(input.id);
+  if (!existing || existing.classId !== input.classId) return null;
+  const nameKey = identityKey(input.name);
+  if (!nameKey) throw new Error("Student name is invalid");
   const result = db.query(`
     UPDATE students
        SET name = $name,
-           candidate_code = $candidateCode,
-           extra_minutes = $extraMinutes,
-           pin_hash = COALESCE($pinHash, pin_hash)
+           name_key = $nameKey,
+           extra_minutes = $extraMinutes
      WHERE id = $id
        AND class_id = $classId
        AND archived_at IS NULL
@@ -516,11 +504,11 @@ export function updateStudent(input: {
     id: input.id,
     classId: input.classId,
     name: input.name,
-    candidateCode: input.candidateCode.toUpperCase(),
+    nameKey,
     extraMinutes: input.extraMinutes,
-    pinHash: input.pinHash ?? null,
   });
   if (result.changes !== 1) return null;
+  if (existing.name !== input.name) deleteStudentSessions(input.id);
   return getStudent(input.id);
 }
 
@@ -780,7 +768,6 @@ export type StudentFocusEventRow = {
   sessionId: string;
   studentId: string;
   studentName: string;
-  candidateCode: string;
   kind: "focus_lost" | "focus_gained";
   at: number;
 };
@@ -800,8 +787,7 @@ export function recordStudentFocusEvent(sessionId: string, studentId: string, ki
 export function listStudentFocusEvents(sessionId: string): StudentFocusEventRow[] {
   return db.query<StudentFocusEventRow, { sessionId: string }>(`
     SELECT events.id, events.session_id AS sessionId, events.student_id AS studentId,
-           students.name AS studentName, students.candidate_code AS candidateCode,
-           events.kind, events.at
+           students.name AS studentName, events.kind, events.at
       FROM student_focus_events AS events
       JOIN students ON students.id = events.student_id
      WHERE events.session_id = $sessionId
@@ -812,7 +798,6 @@ export function listStudentFocusEvents(sessionId: string): StudentFocusEventRow[
 export type StudentFocusSummary = {
   studentId: string;
   studentName: string;
-  candidateCode: string;
   lostCount: number;
   currentlyAway: boolean;
   lastEventAt: number | null;
@@ -829,7 +814,6 @@ export function listSessionFocusByStudent(sessionId: string): StudentFocusSummar
       summary = {
         studentId: row.studentId,
         studentName: row.studentName,
-        candidateCode: row.candidateCode,
         lostCount: 0,
         currentlyAway: false,
         lastEventAt: null,
@@ -989,7 +973,6 @@ export function getSessionResults(sessionId: string): SessionResults | null {
   const responses = db.query<SessionResponseRow, { sessionId: string }>(`
     SELECT responses.id AS responseId,
            students.name AS studentName,
-           students.candidate_code AS candidateCode,
            responses.answers_json AS answersJson,
            responses.selected_question_id AS selectedQuestionId,
            responses.notepad AS notepad,
@@ -1033,7 +1016,6 @@ export function listStudentExamSessions(studentId: string): StudentExamSessionRo
      ORDER BY CASE sessions.status WHEN 'live' THEN 0 WHEN 'draft' THEN 1 ELSE 2 END,
               sessions.created_at DESC,
               sessions.id
-     LIMIT 30
   `).all({ studentId });
 }
 
@@ -1071,33 +1053,123 @@ export function getStudentExam(studentId: string, sessionId: string): StudentExa
   `).get({ studentId, sessionId }) ?? null;
 }
 
-export function saveResponse(responseId: string, payload: ResponsePayload): void {
+/**
+ * Answer snapshots behind the teacher's answer-history timeline. Writes coalesce into
+ * fixed time buckets, so one row holds the last state a candidate wrote in that window.
+ * ponytail: snapshots are spaced wider as a response grows, so a drawing-heavy paper
+ * cannot flood the store (a 4-page ink answer is the large case, a typed essay the small).
+ * Rows are read back in time order, and a coarser bucket can replace one finer snapshot
+ * at the moment the response crosses a tier.
+ */
+const REVISION_BUCKET_TIERS = [
+  { maxBytes: 64_000, bucketMs: 20_000 },
+  { maxBytes: 1_000_000, bucketMs: 60_000 },
+  { maxBytes: Number.POSITIVE_INFINITY, bucketMs: 300_000 },
+] as const;
+
+function revisionBucketMs(bytes: number): number {
+  return (REVISION_BUCKET_TIERS.find((tier) => bytes <= tier.maxBytes) ?? REVISION_BUCKET_TIERS[2]).bucketMs;
+}
+
+export interface ResponseRevisionRow {
+  at: number;
+  answersJson: string;
+  selectedQuestionId: string | null;
+  flagsJson: string;
+  notepad: string;
+}
+
+export interface ResponseRevisionLog {
+  responseId: string;
+  studentName: string;
+  revisions: ResponseRevisionRow[];
+}
+
+function recordResponseRevision(responseId: string, payload: ResponsePayload, at: number): void {
+  const contentHash = createHash("sha256")
+    .update([payload.answersJson, payload.selectedQuestionId ?? "", payload.flagsJson, payload.notepad].join("\u0000"))
+    .digest("hex");
+  const previous = db.query<{ contentHash: string }, { responseId: string }>(`
+    SELECT content_hash AS contentHash FROM response_revisions
+     WHERE response_id = $responseId
+     ORDER BY at DESC
+     LIMIT 1
+  `).get({ responseId });
+  // Unchanged content (a repeat save or a bare submit) never adds a timeline entry.
+  if (previous?.contentHash === contentHash) return;
+  const bucketMs = revisionBucketMs(payload.answersJson.length + payload.notepad.length);
+  db.query(`
+    INSERT INTO response_revisions
+      (response_id, bucket, at, answers_json, selected_question_id, flags_json, notepad, content_hash)
+    VALUES ($responseId, $bucket, $at, $answersJson, $selectedQuestionId, $flagsJson, $notepad, $contentHash)
+    ON CONFLICT(response_id, bucket) DO UPDATE SET
+      at = excluded.at,
+      answers_json = excluded.answers_json,
+      selected_question_id = excluded.selected_question_id,
+      flags_json = excluded.flags_json,
+      notepad = excluded.notepad,
+      content_hash = excluded.content_hash
+  `).run({
+    ...payload,
+    responseId,
+    bucket: Math.floor(at / bucketMs),
+    at,
+    contentHash,
+  });
+}
+
+/** Full answer timeline for one student response, oldest snapshot first. */
+export function getResponseRevisionLog(sessionId: string, responseId: string): ResponseRevisionLog | null {
+  const response = db.query<Omit<ResponseRevisionLog, "revisions">, { sessionId: string; responseId: string }>(`
+    SELECT responses.id AS responseId,
+           students.name AS studentName
+      FROM responses
+      JOIN students ON students.id = responses.student_id
+     WHERE responses.id = $responseId AND responses.session_id = $sessionId
+  `).get({ sessionId, responseId });
+  if (!response) return null;
+  const revisions = db.query<ResponseRevisionRow, { responseId: string }>(`
+    SELECT at,
+           answers_json AS answersJson,
+           selected_question_id AS selectedQuestionId,
+           flags_json AS flagsJson,
+           notepad
+      FROM response_revisions
+     WHERE response_id = $responseId
+     ORDER BY at ASC
+  `).all({ responseId });
+  return { ...response, revisions };
+}
+
+export const saveResponse = db.transaction((responseId: string, payload: ResponsePayload, at = Date.now()): void => {
   const changed = db.query(`
     UPDATE responses
        SET answers_json = $answersJson,
            selected_question_id = $selectedQuestionId,
            flags_json = $flagsJson,
            notepad = $notepad,
-           updated_at = $now
+           updated_at = $at
      WHERE id = $responseId AND submitted_at IS NULL
-  `).run({ ...payload, now: Date.now(), responseId });
+  `).run({ ...payload, at, responseId });
   if (changed.changes !== 1) throw new Error("Response is already submitted");
-}
-export function saveAndSubmitResponse(responseId: string, payload: ResponsePayload): number {
-  const now = Date.now();
+  recordResponseRevision(responseId, payload, at);
+});
+
+export const saveAndSubmitResponse = db.transaction((responseId: string, payload: ResponsePayload, at = Date.now()): number => {
   const changed = db.query(`
     UPDATE responses
        SET answers_json = $answersJson,
            selected_question_id = $selectedQuestionId,
            flags_json = $flagsJson,
            notepad = $notepad,
-           submitted_at = $now,
-           updated_at = $now
+           submitted_at = $at,
+           updated_at = $at
      WHERE id = $responseId AND submitted_at IS NULL
-  `).run({ ...payload, now, responseId });
+  `).run({ ...payload, at, responseId });
   if (changed.changes !== 1) throw new Error("Response is already submitted");
-  return now;
-}
+  recordResponseRevision(responseId, payload, at);
+  return at;
+});
 
 
 export function submitResponse(responseId: string): void {

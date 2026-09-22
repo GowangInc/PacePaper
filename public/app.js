@@ -112,7 +112,7 @@ function landing() {
         <a class="entry-option" href="/student">
           <span class="entry-option__index">01</span>
           <strong>Student examination</strong>
-          <span>Enter a class code, then choose your name.</span>
+          <span>Use your class name and your own name.</span>
         </a>
         <a class="entry-option" href="/admin">
           <span class="entry-option__index">02</span>

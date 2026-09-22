@@ -13,8 +13,8 @@ describe("illustrated user guide", () => {
   test("is self-contained, structured, and screenshot-rich", () => {
     const html = readFileSync(userGuideHtmlPath, "utf8");
     expect(html.match(/<h1\b/gu)?.length).toBe(1);
-    expect(html.match(/<figure\b/gu)?.length).toBe(9);
-    expect(html.match(/src="data:image\/png;base64,/gu)?.length).toBe(10);
+    expect(html.match(/<figure\b/gu)?.length).toBe(8);
+    expect(html.match(/src="data:image\/png;base64,/gu)?.length).toBe(9);
     expect(html).toContain('<nav aria-label="Guide sections">');
     expect(html).toContain('<main id="main-content">');
     expect(html).toContain("@media print");

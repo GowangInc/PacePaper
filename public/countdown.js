@@ -276,6 +276,12 @@ function applyDisplay(config, customised = false) {
           ? "Linked exam ended"
           : "Linked · using saved student timings";
   document.title = `PacePaper · ${config.title} clock`;
+  const session = config.sessionId === "custom"
+    ? null
+    : adminState?.sessions.find((item) => item.id === config.sessionId) ?? null;
+  const className = document.querySelector("#clock-student-class");
+  className.hidden = !session;
+  className.textContent = session ? `Class: ${session.className}` : "";
   updateSchedule(config);
   renderTick();
 }
@@ -575,6 +581,7 @@ function renderClockShell() {
             <p id="clock-display-subtitle" class="clock-display__subtitle"></p>
             <section class="clock-student-connect" aria-labelledby="clock-student-connect-title">
               <h3 id="clock-student-connect-title">Students connect at</h3>
+              <p id="clock-student-class" class="clock-student-class" hidden></p>
               <div class="clock-student-connect__body">
                 <a class="clock-student-url" data-student-connection-link href="/" target="_blank" rel="noopener">PacePaper</a>
                 <button data-copy-student-connection type="button" aria-describedby="clock-student-connect-status">Copy URL</button>

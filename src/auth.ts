@@ -6,7 +6,7 @@ import {
   type Role,
 } from "./db.ts";
 
-const COOKIE_NAME = "digitaldp_session";
+const COOKIE_NAME = "digitaldp_session_v2";
 const ADMIN_SESSION_SECONDS = 12 * 60 * 60;
 const STUDENT_SESSION_SECONDS = 8 * 60 * 60;
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
