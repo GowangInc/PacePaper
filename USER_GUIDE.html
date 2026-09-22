@@ -251,6 +251,7 @@
     <main id="main-content">
       <article class="guide"><h1 id="pacepaper-teacher-guide">PacePaper teacher guide</h1>
 <p>This step-by-step guide covers the current PacePaper classroom demo. PacePaper runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.</p>
+<p>This guide matches PacePaper <strong>0.1.0-demo.15</strong>.</p>
 <p>PacePaper is for <strong>practice and candidate familiarisation only</strong>. It does not deliver an official examination. A fresh installation starts with one preloaded <strong>Sample paper</strong> that has no subject, level, or IB branding, so you can try the whole exam workflow before building your own. An older app download does not update itself; use the guide supplied with your version.</p>
 <h2 id="the-four-parts-of-the-teacher-dashboard">The four parts of the teacher dashboard</h2>
 <p>Use the left-hand menu to move between these areas:</p>
@@ -267,7 +268,7 @@
 </table>
 <p>A <strong>paper</strong> is reusable exam content. A <strong>session</strong> is one sitting of that paper with one class. You can use the same paper again without rebuilding it.</p>
 <p>Select <strong>User guide</strong> in the teacher sidebar to open these instructions in another tab. The guide also works offline from the HTML file supplied with the app.</p>
-<p>Marking stays with the teacher: a packaged installation includes no worked answers and no marking guides, and candidate copies never carry them.</p>
+<p>Marking stays with the teacher: a packaged installation includes no worked answers or marking guides. When building a paper, a teacher may add an answer or marking guidance to each question. PacePaper shows that guidance only in authenticated teacher submission views and never sends it to candidate browsers.</p>
 <h2 id="quick-classroom-checklist">Quick classroom checklist</h2>
 <p>Follow this order for a complete practice exam:</p>
 <ol>
@@ -401,7 +402,7 @@
 <li>Find <strong>Paper Builder</strong> in the Paper library area.</li>
 <li>Under <strong>Choose the exact exam format</strong>, select the <strong>Exam system</strong>. The builder currently offers IB Diploma Programme, IB MYP eAssessment, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and a school-custom practice option.</li>
 <li>Select the assessment session or profile year.</li>
-<li>Select the course, syllabus, or qualification.</li>
+<li>Select the course, syllabus, qualification, or practice type. For <strong>School custom</strong>, choose <strong>Enter a custom exam type…</strong>, enter the assessment type in the box, then select <strong>Use this exam type</strong>.</li>
 <li>Select the level or tier when the chosen system uses one.</li>
 <li>Select the exact paper, component, or delivery format.</li>
 <li>Read the <strong>practice profile</strong>, timing facts, tool rules, and teacher guidance that appear.</li>
@@ -409,7 +410,7 @@
 <li>Check the <strong>Reading time</strong>, <strong>Writing time</strong>, and <strong>Maximum marks</strong>.</li>
 <li>Add clear <strong>Student instructions</strong>.</li>
 <li>Add the first question under <strong>Questions and student entry areas</strong>.</li>
-<li>Enter the complete question wording and its marks.</li>
+<li>Enter the complete question wording and its marks. When an answer or marking guidance is available, add it in the teacher-only field; students do not receive this field.</li>
 <li>Choose one of the response areas offered for that exam format.</li>
 <li>Attach any image, PDF, or audio required only for that question. To add an image from the clipboard, select <strong>Paste image</strong> on its question card, then press ⌘V or Ctrl+V.</li>
 <li>Repeat for the remaining questions.</li>
@@ -418,7 +419,7 @@
 <li>Select <strong>Save paper to library</strong>.</li>
 <li>Confirm that the paper appears in the <strong>Paper library</strong> with the correct exam-system name.</li>
 </ol>
-<p>Choose the exam type before entering questions. If you change format, PacePaper asks first and keeps the old paper as a recoverable draft in this browser, including attachments. Select <strong>Recover an unfinished paper</strong>, choose the draft, then <strong>Restore draft</strong>. <strong>Undo question removal</strong> restores the last removed question and its attachments.</p>
+<p>Choose the exam system, session, course or custom exam type, and format before entering questions. If you change format, PacePaper asks first and keeps the old paper as a recoverable draft in this browser, including attachments. Select <strong>Recover an unfinished paper</strong>, choose the draft, then <strong>Restore draft</strong>. <strong>Undo question removal</strong> restores the last removed question and its attachments.</p>
 <p>Wait for <strong>Draft saved in this browser</strong> before closing the page. Drafts belong to this browser and this PacePaper address; they are not in the shared paper library or a database backup. Use <strong>Save paper to library</strong>, then export the paper, when you want to keep or move it. If draft storage fails, keep the page open and save to the library; format changes and sign-out are blocked to protect the draft.</p>
 <p>For papers with fixed timed sections, the reading and total-time fields are read-only. Editing the instructions, title or marks keeps the sections and breaks intact. Choose a custom format if you need a different schedule.</p>
 <p>The selected profile changes the terminology, timing, marks, materials, suggested question cards, available response areas, delivery description, phase plan, and tool guidance. For an AP paper, assign every question to the correct section or part using the field shown on its question card. PacePaper then locks earlier sections, blocks entry during explicitly locked phases and the monitored break, and changes the displayed calculator/material rule for each part. AP English's optional 15-minute reading period remains inside its writable 135-minute free-response phase; it is not a separate lock.</p>

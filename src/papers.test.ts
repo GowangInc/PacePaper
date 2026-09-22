@@ -200,6 +200,21 @@ describe("paper manifests", () => {
       questions: [{ type: "ink", marks: 8, ink: { pages: 2, background: "square-grid", allowTypedAlternative: true } }],
     });
   });
+  test("accepts trimmed teacher-only marking guidance and omits empty values", () => {
+    const question = (value: unknown) => parseManifest({
+      ...manifest,
+      questions: [{ ...manifest.questions[0], marks: 6, markingGuidance: value }],
+    }).questions[0]!;
+    expect(question("  Award 1 mark for each valid point.  ")).toMatchObject({
+      marks: 6,
+      markingGuidance: "Award 1 mark for each valid point.",
+    });
+    expect("markingGuidance" in question("   ")).toBe(false);
+    expect("markingGuidance" in question(undefined)).toBe(false);
+    expect(question("G".repeat(10_000)).markingGuidance).toHaveLength(10_000);
+    expect(() => question("G".repeat(10_001))).toThrow("questions[0].markingGuidance");
+    expect(() => question(7)).toThrow("questions[0].markingGuidance must be text");
+  });
 });
 
 describe("paper uploads", () => {
@@ -303,6 +318,24 @@ describe("paper uploads", () => {
     const imported = await parsePaperUpload(form);
 
     expect(imported.assets[0]?.bytes).toEqual(wav);
+  });
+  test("keeps marks and marking guidance through a portable round trip", async () => {
+    const packaged = parseManifest({
+      ...manifest,
+      sourceClassification: "teacher-authored",
+      exportAuthorized: true,
+      resources: [{ key: "source-a", label: "Source A", kind: "document", file: "source.pdf" }],
+      questions: [{ ...manifest.questions[0], marks: 4, markingGuidance: "Credit any two developed points." }],
+    });
+    const portableBytes = await encodePortablePaper(packaged, [
+      { filename: "source.pdf", mime: "application/pdf", data: new TextEncoder().encode("%PDF-1.7") },
+    ]);
+    const form = new FormData();
+    form.set("format", "portable");
+    form.set("portablePaper", new File([portableBytes], "history.digitaldp-paper"));
+    const imported = await parsePaperUpload(form);
+    expect(imported.manifest).toEqual(packaged);
+    expect(imported.manifest.questions[0]).toMatchObject({ marks: 4, markingGuidance: "Credit any two developed points." });
   });
 
   test("rejects an asset whose bytes do not match its claimed type", async () => {

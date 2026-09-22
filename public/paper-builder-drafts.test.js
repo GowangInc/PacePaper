@@ -4,14 +4,21 @@ import { builderDraftStore, captureBuilderDraft } from "./paper-builder-drafts.j
 describe("browser paper drafts", () => {
   test("captures independent question state and all attachment groups", async () => {
     const file = new File(["original attachment"], "diagram.pdf", { type: "application/pdf" });
-    const questions = [{ key: 1, prompt: "Original question", mediaFiles: [file] }];
+    const questions = [{
+      key: 1,
+      prompt: "Original question",
+      markingGuidance: "Credit a supported comparison.",
+      mediaFiles: [file],
+    }];
     const form = { querySelector: (id) => ({ value: id, files: [file] }) };
     const snapshot = captureBuilderDraft(form, questions);
     questions[0].prompt = "Changed later";
     expect(snapshot.questions[0].prompt).toBe("Original question");
     expect(await snapshot.questions[0].mediaFiles[0].text()).toBe("original attachment");
+    expect(snapshot.questions[0].markingGuidance).toBe("Credit a supported comparison.");
     expect(snapshot.files["builder-pdf"][0].name).toBe("diagram.pdf");
     expect(snapshot.files["builder-audio"]).toHaveLength(1);
+    expect(snapshot.values["builder-custom-exam-type"]).toBe("#builder-custom-exam-type");
     expect(snapshot.values["builder-instructions"]).toBe("#builder-instructions");
   });
 

@@ -327,6 +327,7 @@ function questionFrom(template, number = 1) {
     type: template.type,
     options: template.options ?? "Option A\nOption B",
     marks: template.marks ?? "",
+    markingGuidance: template.markingGuidance ?? "",
     wordCountMin: template.wordCountMin ?? "",
     wordCountMax: template.wordCountMax ?? "",
     inkPages: template.inkPages ?? 1,
@@ -343,7 +344,22 @@ function selectedSystem(form) {
 }
 
 function selectedCourse(form) {
-  return selectedSystem(form)?.courses.find((course) => course.value === form.querySelector("#builder-subject").value);
+  const selected = selectedSystem(form);
+  const value = form.querySelector("#builder-subject").value;
+  const course = selected?.courses.find((item) => item.value === value);
+  if (course) return course;
+  return selected?.value === "school-custom" && value === "custom" ? selected.courses[0] : undefined;
+}
+
+function selectedCustomExamType(form) {
+  if (selectedSystem(form)?.value !== "school-custom" || form.querySelector("#builder-subject").value !== "custom") return "";
+  return form.querySelector("#builder-custom-exam-type")?.value.trim() ?? "";
+}
+
+function customExamTypeSlug(value) {
+  const slug = value.normalize("NFKD").replace(/[\u0300-\u036f]/gu, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+  return slug || "custom";
 }
 
 export const BUILDER_LEVELS = ["SL", "HL", "SL/HL"];
@@ -375,8 +391,10 @@ function selectedExam(form) {
   const level = form.querySelector("#builder-level").value;
   const paperValue = form.querySelector("#builder-paper").value;
   const paper = course && papersForLevel(course, assessmentSession, level).find((item) => item.value === paperValue);
+  const customExamType = selectedCustomExamType(form);
+  if (system?.value === "school-custom" && form.querySelector("#builder-subject").value === "custom" && !customExamType) return null;
   return system && assessmentSession && course && level && paper
-    ? { system, assessmentSession, course, level, paper }
+    ? { system, assessmentSession, course, level, paper, customExamType }
     : null;
 }
 
@@ -458,7 +476,8 @@ function effectivePhases(selection, form) {
 export function paperPreviewData(form, questions) {
   const selection = selectedExam(form);
   if (!selection) return null;
-  const { system, course, level, paper } = selection;
+  const { system, course, level, paper, customExamType } = selection;
+  const courseLabel = customExamType || course.label;
   const allowedMaterials = new Set(paper.materials);
   const videoUrl = allowedMaterials.has("video") ? form.querySelector("#builder-video-url").value.trim() : "";
   const sharedResources = [
@@ -468,11 +487,11 @@ export function paperPreviewData(form, questions) {
   ];
   return {
     title: form.querySelector("#builder-title").value.trim(),
-    examSystem: system.label,
+    examSystem: customExamType || system.label,
     deliveryFormat: paper.deliveryFormat,
     toolSummary: paper.toolSummary,
     phases: effectivePhases(selection, form),
-    subject: course.label,
+    subject: courseLabel,
     level,
     paper: form.querySelector("#builder-paper-label").value.trim(),
     sessionLabel: form.querySelector("#builder-session").selectedOptions?.[0]?.textContent ?? selection.assessmentSession,
@@ -575,6 +594,8 @@ export function packageData(form, questions) {
       ...(question.sectionId ? { sectionId: question.sectionId } : {}),
     };
     item.marks = integerOrUndefined(question.marks);
+    const markingGuidance = question.markingGuidance?.trim();
+    if (markingGuidance) item.markingGuidance = markingGuidance;
     if (question.type === "single-choice") {
       item.options = question.options.split("\n").map((value) => value.trim()).filter(Boolean);
       if (item.options.length < 2) throw new Error(`${item.label} needs at least two answer choices.`);
@@ -596,6 +617,7 @@ export function packageData(form, questions) {
     return item;
   });
   const paperLabel = form.querySelector("#builder-paper-label").value.trim();
+  const customExamType = examSelection.customExamType;
   const durationMinutes = Number(form.querySelector("#builder-duration").value);
   const readingTimeMinutes = Number(form.querySelector("#builder-reading-time").value);
   const maximumMarks = integerOrUndefined(form.querySelector("#builder-maximum-marks").value);
@@ -616,9 +638,9 @@ export function packageData(form, questions) {
     assessmentSession: presetMatches ? examSelection.assessmentSession : examSelection.assessmentSession === "custom" ? "custom" : `custom-from-${examSelection.assessmentSession}`,
     ...(presetMatches ? { examProfileId: `${examSelection.system.value}:${examSelection.assessmentSession}:${examSelection.course.value}:${examSelection.level}:${examSelection.paper.value}` } : {}),
     examFormat: {
-      systemId: examSelection.system.value,
-      systemLabel: examSelection.system.label,
-      qualificationLabel: examSelection.system.qualificationLabel,
+      systemId: customExamType ? `school-custom-${customExamTypeSlug(customExamType)}` : examSelection.system.value,
+      systemLabel: customExamType || examSelection.system.label,
+      qualificationLabel: customExamType || examSelection.system.qualificationLabel,
       deliveryMode: examSelection.paper.deliveryFormat ?? "Digital practice",
       fidelity: examSelection.system.value === "school-custom"
         ? "school-custom"
@@ -630,7 +652,7 @@ export function packageData(form, questions) {
     exportAuthorized: true,
     title: form.querySelector("#builder-title").value.trim(),
     subject: examSelection.course.value,
-    subjectLabel: examSelection.course.label,
+    subjectLabel: customExamType || examSelection.course.label,
     level: examSelection.level,
     paper: paperLabel,
     durationMinutes,
@@ -651,6 +673,29 @@ export function packageData(form, questions) {
   return data;
 }
 
+function promptCustomExamType(currentValue, trigger) {
+  const dialog = document.createElement("dialog");
+  dialog.className = "exam-dialog compact-dialog";
+  dialog.setAttribute("aria-labelledby", "custom-exam-type-title");
+  dialog.setAttribute("aria-describedby", "custom-exam-type-context");
+  dialog.innerHTML = `<form method="dialog"><header><p class="eyebrow">School custom</p><h2 id="custom-exam-type-title">Custom exam type</h2><p id="custom-exam-type-context">Name the assessment type candidates and the library should use, for example “Internal history assessment” or “Year 9 reading benchmark”.</p></header><label for="custom-exam-type-input">Exam type</label><input id="custom-exam-type-input" required maxlength="100" value=""><footer><button value="cancel" formnovalidate>Cancel</button><button class="primary-action" value="save">Use this exam type</button></footer></form>`;
+  document.body.append(dialog);
+  const input = dialog.querySelector("input");
+  input.value = currentValue;
+  const result = new Promise((resolve) => {
+    dialog.addEventListener("close", () => {
+      const value = dialog.returnValue === "save" ? input.value.trim() : "";
+      dialog.remove();
+      requestAnimationFrame(() => trigger?.focus());
+      resolve(value);
+    }, { once: true });
+  });
+  dialog.showModal();
+  input.focus();
+  input.select();
+  return result;
+}
+
 export function mountPaperBuilder(container, onSubmit) {
   const questions = [];
   container.innerHTML = `
@@ -669,6 +714,7 @@ export function mountPaperBuilder(container, onSubmit) {
         <label id="builder-session-label" for="builder-session">Assessment session</label>
         <select id="builder-session" required></select>
         <label id="builder-subject-label" for="builder-subject">Course</label><select id="builder-subject" required></select>
+        <input id="builder-custom-exam-type" type="hidden">
         <div class="inline-fields">
           <label for="builder-level"><span id="builder-level-label">Level</span><select id="builder-level" required disabled></select></label>
           <label for="builder-paper"><span id="builder-paper-label-text">Paper</span><select id="builder-paper" required disabled></select></label>
@@ -744,7 +790,9 @@ export function mountPaperBuilder(container, onSubmit) {
   const subject = form.querySelector("#builder-subject");
   const level = form.querySelector("#builder-level");
   const paper = form.querySelector("#builder-paper");
+  const customExamType = form.querySelector("#builder-custom-exam-type");
   const setup = form.querySelector("#builder-exam-setup");
+  let previousSubjectValue = "";
   const preview = createPaperPreview(form.querySelector("#builder-preview-scroll"));
   let previewFrame;
   let removedQuestion;
@@ -782,6 +830,7 @@ export function mountPaperBuilder(container, onSubmit) {
     form.querySelector("#builder-subject-label").textContent = selected.courseLabel;
     form.querySelector("#builder-level-label").textContent = selected.levelLabel;
     form.querySelector("#builder-paper-label-text").textContent = selected.paperLabel;
+    if (selected.value !== "school-custom") customExamType.value = "";
     for (const item of selected.sessions) assessmentSession.append(option(item.value, item.label));
     assessmentSession.disabled = false;
     assessmentSession.value = selected.sessions[0]?.value ?? "";
@@ -797,7 +846,12 @@ export function mountPaperBuilder(container, onSubmit) {
     for (const course of (selected?.courses ?? []).filter((item) => courseSupportsSession(item, assessmentSession.value))) {
       subject.append(option(course.value, course.label));
     }
+    if (selected?.value === "school-custom") {
+      const label = customExamType.value.trim();
+      subject.append(option("custom", label ? `${label} (custom exam type)` : "Enter a custom exam type…"));
+    }
     subject.disabled = !selected;
+    previousSubjectValue = "";
   }
 
   function hideSetup() {
@@ -867,6 +921,23 @@ export function mountPaperBuilder(container, onSubmit) {
       prompt.value = question.prompt;
       const marksLabel = field("label", { for: `${prefix}-marks` }, "Marks for this question (optional)");
       const marks = field("input", { id: `${prefix}-marks`, type: "number", min: "1", max: "1000", value: question.marks });
+      const markingGuidanceLabel = field(
+        "label",
+        { for: `${prefix}-marking-guidance` },
+        "Teacher-only answer or marking guidance (optional)",
+      );
+      const markingGuidance = field("textarea", {
+        id: `${prefix}-marking-guidance`,
+        rows: "4",
+        maxlength: "10000",
+        "aria-describedby": `${prefix}-marking-guidance-help`,
+      });
+      markingGuidance.value = question.markingGuidance ?? "";
+      const markingGuidanceHelp = field(
+        "small",
+        { id: `${prefix}-marking-guidance-help`, className: "form-help" },
+        "Shown only to signed-in teachers reviewing live or submitted work. PacePaper never sends it to student browsers.",
+      );
       const typeLabel = field("label", { for: `${prefix}-type` }, "Student entry area");
       const type = field("select", { id: `${prefix}-type` });
       const availableResponseTypes = selectedExam(form)?.paper.responseTypes ?? ALL_RESPONSE_TYPES;
@@ -965,6 +1036,7 @@ export function mountPaperBuilder(container, onSubmit) {
       });
       prompt.addEventListener("input", () => { question.prompt = prompt.value; });
       marks.addEventListener("input", () => { question.marks = marks.value; });
+      markingGuidance.addEventListener("input", () => { question.markingGuidance = markingGuidance.value; });
       type.addEventListener("change", () => { question.type = type.value; renderQuestions({ key: question.key, selector: "select[id$='-type']" }); });
       up.addEventListener("click", () => { questions.splice(index - 1, 0, questions.splice(index, 1)[0]); renderQuestions({ key: question.key, selector: "button[data-action='up']" }); });
       down.addEventListener("click", () => { questions.splice(index + 1, 0, questions.splice(index, 1)[0]); renderQuestions({ key: question.key, selector: "button[data-action='down']" }); });
@@ -983,6 +1055,9 @@ export function mountPaperBuilder(container, onSubmit) {
         prompt,
         marksLabel,
         marks,
+        markingGuidanceLabel,
+        markingGuidance,
+        markingGuidanceHelp,
         ...sectionControls,
         mediaLabel,
         media,
@@ -1010,12 +1085,13 @@ export function mountPaperBuilder(container, onSubmit) {
     hideSetup();
     const selection = selectedExam(form);
     if (!selection) return;
-    const { system: selectedSystemProfile, course, level: selectedLevel, paper: selectedPaper } = selection;
-    form.querySelector("#builder-exam-name").textContent = `${selectedSystemProfile.label} · ${course.label} · ${selectedLevel} · ${selectedPaper.label}`;
+    const { system: selectedSystemProfile, course, level: selectedLevel, paper: selectedPaper, customExamType: selectedCustomType } = selection;
+    const courseLabel = selectedCustomType || course.label;
+    form.querySelector("#builder-exam-name").textContent = `${selectedSystemProfile.label} · ${courseLabel} · ${selectedLevel} · ${selectedPaper.label}`;
     form.querySelector("#builder-fidelity").textContent = selectedPaper.fidelity === "official-format"
       ? "Official-format practice profile"
       : selectedPaper.fidelity === "school-custom" ? "School custom practice" : "Adapted practice starter";
-    form.querySelector("#builder-title").value = `${course.label} ${selectedLevel} ${selectedPaper.label} practice`;
+    form.querySelector("#builder-title").value = `${courseLabel} ${selectedLevel} ${selectedPaper.label} practice`;
     form.querySelector("#builder-paper-label").value = selectedPaper.label;
     form.querySelector("#builder-reading-time").value = String(selectedPaper.readingTime);
     const duration = valueForLevel(selectedPaper, "duration", selectedLevel);
@@ -1068,14 +1144,42 @@ export function mountPaperBuilder(container, onSubmit) {
 
   const drafts = mountBuilderDrafts(form, questions, (values) => {
     system.value = values["builder-system"]; populateSessions();
+    customExamType.value = values["builder-custom-exam-type"] ?? "";
     assessmentSession.value = values["builder-session"]; populateSubjects();
     subject.value = values["builder-subject"]; populateLevels();
     level.value = values["builder-level"]; populatePapers();
     paper.value = values["builder-paper"]; applyExam();
+    previousSubjectValue = subject.value;
   }, renderQuestions);
-  for (const [select, change] of [[system, populateSessions], [subject, populateLevels], [assessmentSession, populateSubjects], [level, populatePapers], [paper, applyExam]]) {
+  for (const [select, change] of [[system, populateSessions], [assessmentSession, populateSubjects], [level, populatePapers], [paper, applyExam]]) {
     select.addEventListener("change", (event) => void drafts.changeFormat(event, change));
   }
+  subject.addEventListener("change", (event) => {
+    if (subject.value !== "custom") {
+      void drafts.changeFormat(event, () => {
+        previousSubjectValue = subject.value;
+        populateLevels();
+      });
+      return;
+    }
+    void (async () => {
+      const previous = customExamType.value.trim();
+      const label = await promptCustomExamType(previous, subject);
+      if (!label) {
+        subject.value = previousSubjectValue;
+        return;
+      }
+      customExamType.value = label;
+      await drafts.changeFormat({ target: subject }, () => {
+        previousSubjectValue = subject.value;
+        const customOption = subject.querySelector('option[value="custom"]');
+        if (customOption) customOption.textContent = `${label} (custom exam type)`;
+        populateLevels();
+      });
+      if (subject.value !== "custom") customExamType.value = previous;
+      previousSubjectValue = subject.value;
+    })();
+  });
   form.querySelector("#builder-undo-remove").addEventListener("click", () => {
     if (!removedQuestion) return;
     questions.splice(Math.min(removedQuestion.index, questions.length), 0, removedQuestion.question);

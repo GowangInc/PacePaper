@@ -74,6 +74,7 @@ Place `paper.json` beside the source files. In PacePaper's **Structured paper pa
       "prompt": "Exact question wording.",
       "type": "short",
       "marks": 5,
+      "markingGuidance": "Teacher-supplied answer or marking notes.",
       "resourceKeys": ["text-a"]
     },
     {
@@ -118,6 +119,7 @@ Place `paper.json` beside the source files. In PacePaper's **Structured paper pa
 - `durationMinutes` is an integer from 5 to 360.
 - `readingTimeMinutes` is the separate pre-writing period as an integer from 0 to 60; use `0` when none applies.
 - `maximumMarks` and `subjectWeightPercent` are optional positive integers for a verified preset. Each question may also carry optional positive integer `marks`; do not invent any of these values.
+- `markingGuidance` is optional teacher-only text of at most 10,000 characters. Include it only when the teacher supplied the answer or marking notes; never invent it.
 - `assessmentSession` and `examProfileId` are included when the teacher or verified exam profile supplies them; do not guess them.
 - `sourceClassification` is exactly `teacher-authored`, `school-authorized`, `official-public-reference`, or `unknown-local-only`; classification records provenance but never grants copying or redistribution rights.
 - `exportAuthorized` is a separate boolean attestation. Set it to `true` only when the paper and every attachment may be copied into a portable PacePaper export; otherwise use `false`.
@@ -131,4 +133,4 @@ Place `paper.json` beside the source files. In PacePaper's **Structured paper pa
 - Every listening paper has at least one audio resource, and every audio resource either omits `maxPlays` or sets it to exactly `2`.
 - An `ink` question has 1–4 pages and a `blank`, `lined`, or `square-grid` background. Use `lined` unless the task requires another background. Every ink question includes both a handwriting canvas and a typed response area.
 - Word limits are positive integers no greater than 10,000, with minimum no greater than maximum.
-- All teacher-provided wording is preserved. No answer key, markscheme, examiner notes, or hidden instructions appear in `paper.json`.
+- All teacher-provided wording is preserved. Do not add examiner notes or hidden candidate instructions. Teacher-supplied answers or markscheme notes belong only in `markingGuidance`, which PacePaper removes from candidate data at runtime.

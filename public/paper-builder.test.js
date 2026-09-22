@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { CURRENT_SAMPLE_COURSE_IDS } from "../examples/sample-source/index.ts";
+import { parseManifest } from "../src/papers.ts";
 import {
   BUILDER_LEVELS,
   clipboardImageFiles,
@@ -225,6 +226,78 @@ describe("Paper Builder exam presets", () => {
       kind: "document",
       file: "0580-formula-list.pdf",
     });
+  });
+
+  test("stores a teacher-entered school-custom exam type in the portable manifest", async () => {
+    const form = builderForm({
+      "#builder-system": { value: "school-custom" },
+      "#builder-session": { value: "custom" },
+      "#builder-subject": { value: "custom" },
+      "#builder-custom-exam-type": { value: "Internal History Assessment" },
+      "#builder-level": { value: "All students" },
+      "#builder-paper": { value: "typed-paper" },
+      "#builder-title": { value: "Internal History Assessment practice" },
+      "#builder-paper-label": { value: "Typed-response paper" },
+      "#builder-duration": { value: "60" },
+      "#builder-reading-time": { value: "0" },
+      "#builder-maximum-marks": { value: "" },
+      "#builder-instructions": { value: "Answer every question using the response areas provided." },
+      "#builder-video-url": { value: "" },
+    });
+    const question = [{
+      label: "Question 1",
+      prompt: "Explain the cause.",
+      type: "essay",
+      marks: "10",
+      wordCountMin: "100",
+      wordCountMax: "200",
+      mediaFiles: [],
+    }];
+    const manifest = JSON.parse(await packageData(form, question).getAll("packageFiles")[0].text());
+
+    expect(manifest).toMatchObject({
+      assessmentSession: "custom",
+      subject: "school-defined-practice",
+      subjectLabel: "Internal History Assessment",
+      examFormat: {
+        systemId: "school-custom-internal-history-assessment",
+        systemLabel: "Internal History Assessment",
+        qualificationLabel: "Internal History Assessment",
+        fidelity: "school-custom",
+      },
+    });
+    expect(manifest.examProfileId).toBeUndefined();
+    expect(() => parseManifest(manifest)).not.toThrow();
+    expect(paperPreviewData(form, question)).toMatchObject({
+      examSystem: "Internal History Assessment",
+      subject: "Internal History Assessment",
+    });
+    form.querySelector("#builder-custom-exam-type").value = "";
+    expect(() => packageData(form, question)).toThrow("Choose an exam system");
+  });
+
+  test("stores teacher-only marking guidance without adding it to candidate preview data", async () => {
+    const form = builderForm();
+    const secretGuidance = "Accept equivalent working when the conclusion is justified.";
+    const question = [{
+      label: "Question 1",
+      prompt: "Explain your conclusion.",
+      type: "short",
+      marks: "4",
+      markingGuidance: `  ${secretGuidance}  `,
+      mediaFiles: [],
+    }];
+    const manifest = JSON.parse(await packageData(form, question).getAll("packageFiles")[0].text());
+
+    expect(manifest.questions[0]).toMatchObject({ marks: 4, markingGuidance: secretGuidance });
+    expect(parseManifest(manifest).questions[0]?.markingGuidance).toBe(secretGuidance);
+    const preview = paperPreviewData(form, question);
+    expect(preview.questions[0]).not.toHaveProperty("markingGuidance");
+    expect(JSON.stringify(preview)).not.toContain(secretGuidance);
+
+    question[0].markingGuidance = "   ";
+    const withoutGuidance = JSON.parse(await packageData(form, question).getAll("packageFiles")[0].text());
+    expect(withoutGuidance.questions[0]).not.toHaveProperty("markingGuidance");
   });
 
   test("builds preview data from the live combined-level fields without claiming one level's marks", () => {

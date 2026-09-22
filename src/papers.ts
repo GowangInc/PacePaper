@@ -50,6 +50,7 @@ export interface PaperQuestion {
   type: QuestionType;
   resourceKeys: string[];
   marks?: number;
+  markingGuidance?: string;
   options?: string[];
   wordCountMin?: number;
   wordCountMax?: number;
@@ -170,6 +171,11 @@ function stringList(value: unknown, label: string, maxItems: number, maxLength =
   if (!Array.isArray(value) || value.length > maxItems) throw new Error(`${label} must be a list`);
   return value.map((item, index) => text(item, `${label}[${index}]`, maxLength));
 }
+function optionalText(value: unknown, label: string, max: number): string | undefined {
+  if (value === undefined) return undefined;
+  const clean = text(value, label, max, true);
+  return clean ? clean : undefined;
+}
 
 function optionalInteger(value: unknown, label: string, min: number, max: number): number | undefined {
   return value === undefined ? undefined : integer(value, label, min, max);
@@ -242,6 +248,7 @@ function parseQuestion(value: unknown, index: number): PaperQuestion {
   const id = text(source.id, `questions[${index}].id`, 64);
   if (!KEY.test(id)) throw new Error(`questions[${index}].id has an invalid format`);
   const type = oneOf(source.type, QUESTION_TYPES, `questions[${index}].type`);
+  const markingGuidance = optionalText(source.markingGuidance, `questions[${index}].markingGuidance`, 10_000);
   const question: PaperQuestion = {
     id,
     label: text(source.label, `questions[${index}].label`, 100),
@@ -249,6 +256,7 @@ function parseQuestion(value: unknown, index: number): PaperQuestion {
     type,
     resourceKeys: stringList(source.resourceKeys ?? [], `questions[${index}].resourceKeys`, 20),
     marks: optionalInteger(source.marks, `questions[${index}].marks`, 1, 1_000),
+    ...(markingGuidance === undefined ? {} : { markingGuidance }),
     sectionId: source.sectionId === undefined ? undefined : text(source.sectionId, `questions[${index}].sectionId`, 64),
   };
 

@@ -199,7 +199,18 @@ function appendCandidateNotepad(paper, notepad) {
   paper.append(section);
 }
 
-function renderCandidatePaper(data, response) {
+function appendMarkingGuidance(container, markingGuidance) {
+  if (typeof markingGuidance !== "string" || !markingGuidance.trim()) return;
+  const section = document.createElement("section");
+  section.className = "candidate-question-guidance";
+  section.append(
+    copy("h4", "", "Teacher-only marking guidance"),
+    copy("p", "", markingGuidance),
+  );
+  container.append(section);
+}
+
+export function renderCandidatePaper(data, response) {
   const paper = document.createElement("section");
   paper.className = "candidate-paper";
   paper.setAttribute("aria-label", `${response.studentName}'s candidate paper`);
@@ -310,6 +321,7 @@ function renderCandidatePaper(data, response) {
     } else {
       item.append(renderSubmissionAnswer(question, answer));
     }
+    appendMarkingGuidance(item, question.markingGuidance);
     answers.append(item);
   }
   paper.append(answers);
@@ -392,6 +404,7 @@ export function renderRevisionAnswers(data, revision) {
     } else {
       item.append(renderSubmissionAnswer(question, revision.answers?.[question.id] ?? ""));
     }
+    appendMarkingGuidance(item, question.markingGuidance);
     answers.append(item);
   }
   return answers;

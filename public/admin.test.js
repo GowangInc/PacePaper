@@ -30,7 +30,7 @@ mock.module("/class-rosters.js", () => ({ mountClassRosterTransfer() {} }));
 mock.module("/paper-builder.js", () => ({ mountPaperBuilder() {} }));
 mock.module("/student-connection.js", () => ({ mountStudentConnection() {} }));
 
-const { renderRevisionAnswers } = await import("./admin.js");
+const { renderCandidatePaper, renderRevisionAnswers } = await import("./admin.js");
 const source = await Bun.file(new URL("./admin.js", import.meta.url)).text();
 const styles = await Bun.file(new URL("./styles.css", import.meta.url)).text();
 
@@ -101,6 +101,49 @@ describe("teacher dashboard presentation", () => {
     expect(source).toContain("appendCandidateNotepad(paper, response.notepad)");
     expect(styles).toContain(".candidate-paper-notepad p {\n  margin: 0;\n  line-height: 1.55;\n  overflow-wrap: anywhere;\n  white-space: pre-wrap;");
     expect(styles).toContain(".candidate-paper-notepad h3 {\n    margin-bottom: 1.5mm;\n    font-size: 10pt;\n    break-after: avoid-page;");
+  });
+
+  test("shows plain-text marking guidance only beside its question", () => {
+    const originalDocument = globalThis.document;
+    globalThis.document = { createElement: (tagName) => new FakeElement(tagName) };
+    try {
+      const markingGuidance = "  <img src=x onerror=alert(1)>\nAward one mark.  ";
+      const data = {
+        session: {
+          paperTitle: "Practice paper",
+          className: "Class A",
+          assessmentSession: "custom",
+          selectionMode: "all",
+          mode: "short",
+        },
+        questions: [
+          { id: "guided", label: "Question 1", prompt: "Guided prompt", type: "short", markingGuidance },
+          { id: "plain", label: "Question 2", prompt: "Plain prompt", type: "short" },
+        ],
+      };
+      const response = {
+        studentName: "Candidate",
+        answers: { guided: "Candidate answer", plain: "Another answer" },
+        updatedAt: "2026-09-22T09:00:00.000Z",
+      };
+
+      const paper = renderCandidatePaper(data, response);
+      const finalAnswers = paper.children.find((child) => child.className === "submission-answers");
+      const guidance = finalAnswers.children[0].children[3];
+      expect(finalAnswers.children[0].children[2].textContent).toBe("Candidate answer");
+      expect(guidance.className).toBe("candidate-question-guidance");
+      expect(guidance.children[0].textContent).toBe("Teacher-only marking guidance");
+      expect(guidance.children[1].textContent).toBe(markingGuidance);
+      expect(guidance.children[1].innerHTML).toBeUndefined();
+      expect(guidance.children[1].children).toHaveLength(0);
+      expect(finalAnswers.children[1].children).toHaveLength(3);
+
+      const revisions = renderRevisionAnswers(data, response);
+      expect(revisions.children[0].children[3].children[1].textContent).toBe(markingGuidance);
+      expect(revisions.children[1].children).toHaveLength(3);
+    } finally {
+      globalThis.document = originalDocument;
+    }
   });
 
   test("hides unselected essay answers in answer history", () => {

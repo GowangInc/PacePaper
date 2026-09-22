@@ -1,4 +1,4 @@
-const PICKERS = ["builder-system", "builder-session", "builder-subject", "builder-level", "builder-paper"];
+const PICKERS = ["builder-system", "builder-session", "builder-subject", "builder-custom-exam-type", "builder-level", "builder-paper"];
 const DETAILS = ["builder-title", "builder-paper-label", "builder-reading-time", "builder-duration", "builder-maximum-marks", "builder-instructions", "builder-source-text", "builder-video-url"];
 const FILES = ["builder-pdf", "builder-audio"];
 

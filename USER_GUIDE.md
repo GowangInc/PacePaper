@@ -2,6 +2,8 @@
 
 This step-by-step guide covers the current PacePaper classroom demo. PacePaper runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.
 
+This guide matches PacePaper **0.1.0-demo.15**.
+
 PacePaper is for **practice and candidate familiarisation only**. It does not deliver an official examination. A fresh installation starts with one preloaded **Sample paper** that has no subject, level, or IB branding, so you can try the whole exam workflow before building your own. An older app download does not update itself; use the guide supplied with your version.
 
 ## The four parts of the teacher dashboard
@@ -19,7 +21,7 @@ A **paper** is reusable exam content. A **session** is one sitting of that paper
 
 Select **User guide** in the teacher sidebar to open these instructions in another tab. The guide also works offline from the HTML file supplied with the app.
 
-Marking stays with the teacher: a packaged installation includes no worked answers and no marking guides, and candidate copies never carry them.
+Marking stays with the teacher: a packaged installation includes no worked answers or marking guides. When building a paper, a teacher may add an answer or marking guidance to each question. PacePaper shows that guidance only in authenticated teacher submission views and never sends it to candidate browsers.
 
 ## Quick classroom checklist
 
@@ -167,7 +169,7 @@ Full-length does not mean official or difficulty-calibrated. No awarding body ha
 1. Find **Paper Builder** in the Paper library area.
 2. Under **Choose the exact exam format**, select the **Exam system**. The builder currently offers IB Diploma Programme, IB MYP eAssessment, Cambridge IGCSE Mathematics 0580, Pearson Edexcel International GCSE Mathematics A, selected 2027 AP formats, and a school-custom practice option.
 3. Select the assessment session or profile year.
-4. Select the course, syllabus, or qualification.
+4. Select the course, syllabus, qualification, or practice type. For **School custom**, choose **Enter a custom exam type…**, enter the assessment type in the box, then select **Use this exam type**.
 5. Select the level or tier when the chosen system uses one.
 6. Select the exact paper, component, or delivery format.
 7. Read the **practice profile**, timing facts, tool rules, and teacher guidance that appear.
@@ -175,7 +177,7 @@ Full-length does not mean official or difficulty-calibrated. No awarding body ha
 9. Check the **Reading time**, **Writing time**, and **Maximum marks**.
 10. Add clear **Student instructions**.
 11. Add the first question under **Questions and student entry areas**.
-12. Enter the complete question wording and its marks.
+12. Enter the complete question wording and its marks. When an answer or marking guidance is available, add it in the teacher-only field; students do not receive this field.
 13. Choose one of the response areas offered for that exam format.
 14. Attach any image, PDF, or audio required only for that question. To add an image from the clipboard, select **Paste image** on its question card, then press ⌘V or Ctrl+V.
 15. Repeat for the remaining questions.
@@ -184,7 +186,7 @@ Full-length does not mean official or difficulty-calibrated. No awarding body ha
 18. Select **Save paper to library**.
 19. Confirm that the paper appears in the **Paper library** with the correct exam-system name.
 
-Choose the exam type before entering questions. If you change format, PacePaper asks first and keeps the old paper as a recoverable draft in this browser, including attachments. Select **Recover an unfinished paper**, choose the draft, then **Restore draft**. **Undo question removal** restores the last removed question and its attachments.
+Choose the exam system, session, course or custom exam type, and format before entering questions. If you change format, PacePaper asks first and keeps the old paper as a recoverable draft in this browser, including attachments. Select **Recover an unfinished paper**, choose the draft, then **Restore draft**. **Undo question removal** restores the last removed question and its attachments.
 
 Wait for **Draft saved in this browser** before closing the page. Drafts belong to this browser and this PacePaper address; they are not in the shared paper library or a database backup. Use **Save paper to library**, then export the paper, when you want to keep or move it. If draft storage fails, keep the page open and save to the library; format changes and sign-out are blocked to protect the draft.
 

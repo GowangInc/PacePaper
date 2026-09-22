@@ -1850,6 +1850,29 @@ legend {
   overflow-wrap: anywhere;
 }
 
+.candidate-question-guidance {
+  margin: var(--space-3) 0 0 3.25rem;
+  border: var(--rule-thin) solid var(--color-rule-strong);
+  border-left: 3px solid var(--color-accent-strong);
+  background: var(--color-surface-muted);
+  padding: var(--space-4);
+}
+
+.candidate-question-guidance h4 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent-strong);
+  font-size: var(--text-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.candidate-question-guidance p {
+  margin: 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
 .submission-answer[data-answer-type="short"] {
   white-space: pre-wrap;
 }
@@ -3644,7 +3667,8 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 
   .submission-prompt,
   .submission-resources,
-  .submission-answer {
+  .submission-answer,
+  .candidate-question-guidance {
     margin-left: 0;
   }
 
@@ -3980,7 +4004,8 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 
   .submission-prompt,
   .submission-resources,
-  .submission-answer {
+  .submission-answer,
+  .candidate-question-guidance {
     margin-left: 11mm;
   }
 
@@ -4022,6 +4047,23 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
     font-size: 10.5pt;
     line-height: 1.55;
     box-decoration-break: clone;
+  }
+
+  .candidate-question-guidance {
+    margin-top: 3mm;
+    border: 0.75pt solid var(--color-ink-muted);
+    border-left: 2.5pt solid var(--color-ink);
+    background: var(--color-paper);
+    padding: 3mm;
+    font-size: 9.5pt;
+    box-decoration-break: clone;
+  }
+
+  .candidate-question-guidance h4 {
+    margin-bottom: 1.5mm;
+    color: var(--color-ink);
+    font-size: 8pt;
+    break-after: avoid-page;
   }
 
   .submission-answer:has(.ink-submission) {

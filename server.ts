@@ -481,15 +481,63 @@ function publish(server: Server<SocketData>, topic: string, type: string): void 
 }
 
 function publicManifest(manifest: PaperManifest, paperId: string, sessionId: string): Record<string, unknown> {
+  const resources = manifest.resources.map(({ key, label, kind, text, url, maxPlays, file }) => ({
+    key,
+    label,
+    kind,
+    text,
+    url: file && kind !== "audio"
+      ? `/api/assets/${paperId}/${key}?session=${encodeURIComponent(sessionId)}`
+      : url,
+    maxPlays,
+  }));
+  const questions = manifest.questions.map(({
+    id,
+    label,
+    prompt,
+    type,
+    resourceKeys,
+    marks,
+    options,
+    wordCountMin,
+    wordCountMax,
+    ink,
+    sectionId,
+  }) => ({
+    id,
+    label,
+    prompt,
+    type,
+    resourceKeys,
+    marks,
+    options,
+    wordCountMin,
+    wordCountMax,
+    ink,
+    sectionId,
+  }));
   return {
-    ...manifest,
-    resources: manifest.resources.map((resource) => ({
-      ...resource,
-      file: undefined,
-      url: resource.file && resource.kind !== "audio"
-        ? `/api/assets/${paperId}/${resource.key}?session=${encodeURIComponent(sessionId)}`
-        : resource.url,
-    })),
+    version: manifest.version,
+    assessmentSession: manifest.assessmentSession,
+    examProfileId: manifest.examProfileId,
+    examFormat: manifest.examFormat,
+    sourceClassification: manifest.sourceClassification,
+    exportAuthorized: manifest.exportAuthorized,
+    title: manifest.title,
+    subject: manifest.subject,
+    subjectLabel: manifest.subjectLabel,
+    level: manifest.level,
+    paper: manifest.paper,
+    durationMinutes: manifest.durationMinutes,
+    readingTimeMinutes: manifest.readingTimeMinutes,
+    phases: manifest.phases,
+    maximumMarks: manifest.maximumMarks,
+    subjectWeightPercent: manifest.subjectWeightPercent,
+    mode: manifest.mode,
+    instructions: manifest.instructions,
+    selectionMode: manifest.selectionMode,
+    resources,
+    questions,
   };
 }
 
@@ -916,12 +964,16 @@ async function handleApi(
         selectionMode: manifest.selectionMode,
         instructions: manifest.instructions,
       },
-      resources: manifest.resources.map((resource) => ({
-        ...resource,
+      resources: manifest.resources.map(({ key, label, kind, text, url, maxPlays, file }) => ({
+        key,
+        label,
+        kind,
+        text,
         file: undefined,
-        url: resource.file ? `/api/assets/${results.paperId}/${resource.key}` : resource.url,
+        url: file ? `/api/assets/${results.paperId}/${key}` : url,
+        maxPlays,
       })),
-      questions: manifest.questions.map(({ id, label, prompt, type, options, ink, resourceKeys, marks }) => ({
+      questions: manifest.questions.map(({
         id,
         label,
         prompt,
@@ -930,6 +982,23 @@ async function handleApi(
         ink,
         resourceKeys,
         marks,
+        wordCountMin,
+        wordCountMax,
+        sectionId,
+        markingGuidance,
+      }) => ({
+        id,
+        label,
+        prompt,
+        type,
+        options,
+        ink,
+        resourceKeys,
+        marks,
+        wordCountMin,
+        wordCountMax,
+        sectionId,
+        markingGuidance,
       })),
       responses: results.responses.map((response) => ({
         responseId: response.responseId,

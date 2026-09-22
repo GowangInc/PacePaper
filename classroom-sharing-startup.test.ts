@@ -139,11 +139,27 @@ describe("candidate preview", () => {
       const paper = state.papers[0];
       expect(paper).toBeDefined();
 
-      const preview = await (await fetch(`${origin}/api/admin/papers/${paper.id}/preview`, { headers })).json();
+      const secretGuidance = "Accept any equivalent answer with a justified comparison.";
+      const database = new Database(join(dataDirectory, "digitaldp.sqlite"));
+      try {
+        const row = database.query("SELECT manifest_json FROM papers WHERE id = ?").get(paper.id) as { manifest_json: string };
+        const manifest = JSON.parse(row.manifest_json);
+        manifest.questions[0].markingGuidance = secretGuidance;
+        database.query("UPDATE papers SET manifest_json = ? WHERE id = ?").run(JSON.stringify(manifest), paper.id);
+      } finally {
+        database.close();
+      }
+      const previewResponse = await fetch(`${origin}/api/admin/papers/${paper.id}/preview`, { headers });
+      const previewText = await previewResponse.text();
+      expect(previewText).not.toContain("markingGuidance");
+      expect(previewText).not.toContain(secretGuidance);
+      expect(previewText).not.toContain("Teacher-only marking guidance");
+      const preview = JSON.parse(previewText);
       expect(preview.preview).toBe(true);
       expect(preview.status).toBe("live");
       expect(preview.paper.title).toBe(paper.title);
       expect(preview.paper.questions.length).toBeGreaterThan(0);
+      expect(preview.paper.questions.every((question: Record<string, unknown>) => !("markingGuidance" in question))).toBe(true);
       expect(preview.session.timeline.length).toBeGreaterThan(0);
       expect(preview.response.id).toBeNull();
       expect(preview.response.answers).toEqual({});
