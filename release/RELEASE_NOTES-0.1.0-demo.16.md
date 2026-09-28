@@ -30,5 +30,5 @@ Existing sittings remain compatible. They can continue to use name-only candidat
 - The full test suite passes with 356 tests and 10,773 assertions.
 - Browser checks confirmed candidate PIN creation, direct-link sign-in, wrong-PIN rejection, credential reset, scoped session access, calculator use, safe exam ending, and mobile layouts.
 - Database tests cover integrity checks, snapshot verification, migration failure recovery, credential replacement, and revision conflicts.
-- The Windows x64 and Linux x64 bundles are rebuilt from this tag. The packaged Linux app is smoke-tested after extraction.
+- The Windows x64 and Linux x64 archives are rebuilt and pass checksum/archive-content verification. Native Windows/Linux runtime smoke was not performed in this environment.
 - The release remains a familiarisation tool, not an official examination-delivery system. Classroom sharing uses ordinary HTTP on a trusted private network. Use approved non-sensitive materials only.
