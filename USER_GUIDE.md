@@ -2,7 +2,7 @@
 
 This step-by-step guide covers the current PacePaper classroom demo. PacePaper runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.
 
-This guide matches PacePaper **0.1.0-demo.17**.
+This guide matches PacePaper **0.1.0-demo.18**.
 
 PacePaper is for **practice and candidate familiarisation only**. It does not deliver an official examination. A fresh installation starts with one preloaded **Sample paper** that has no subject, level, or IB branding, so you can try the whole exam workflow before building your own. An older app download does not update itself; use the guide supplied with your version.
 
@@ -85,20 +85,20 @@ Use the page that opens automatically. This launcher includes the example librar
 
 ## Step 2 — Let students connect
 
-PacePaper shares the classroom network from launch, using the address it saved last time (the first private network address is chosen and saved on a new installation).
+PacePaper is designed for a teacher computer serving students on their own devices over the same trusted LAN. Classroom sharing is active from launch, using the address saved last time; a new installation chooses and saves the machine's first private network address.
 
-1. Select **Overview**.
+1. Select **Overview** on the teacher computer.
 2. Find **Classroom sharing**.
-3. Check the private network used by the teacher and student devices, and choose another detected address if needed.
-4. Select **Apply classroom sharing**.
+3. Check the private network used by the teacher and student devices.
+4. If the network changed, choose another detected private IPv4 address and select **Apply classroom sharing**.
 5. Find the **Student sign-in** address.
 6. Select **Copy URL**.
 7. Open that exact address on one real student device.
 8. Confirm that the PacePaper student sign-in page appears.
 
-Do this test before students begin. `localhost` and `127.0.0.1` work only on the teacher computer.
+Do this test before students begin. Students must use the private-network address from their own devices; `localhost` and `127.0.0.1` work only on the teacher computer.
 
-The **Student sign-in** address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows `127.0.0.1` or `localhost`, and students can type it without adding `/student` because the bare address opens candidate sign-in. If classroom sharing is off, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.
+The **Student sign-in** address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows `127.0.0.1` or `localhost`, and students can type it without adding `/student` because the bare address opens candidate sign-in. If classroom sharing is disabled, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.
 
 The teacher and students must be on a network that allows their devices to communicate. Guest Wi-Fi, different school networks, or network isolation may block access.
 
