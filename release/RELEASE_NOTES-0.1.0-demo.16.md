@@ -27,7 +27,7 @@ Existing sittings remain compatible. They can continue to use name-only candidat
 ## Verification
 
 - `bun run check` passes against the source.
-- The full test suite passes with 350 tests and 10,751 assertions.
+- The full test suite passes with 356 tests and 10,773 assertions.
 - Browser checks confirmed candidate PIN creation, direct-link sign-in, wrong-PIN rejection, credential reset, scoped session access, calculator use, safe exam ending, and mobile layouts.
 - Database tests cover integrity checks, snapshot verification, migration failure recovery, credential replacement, and revision conflicts.
 - The Windows x64 and Linux x64 bundles are rebuilt from this tag. The packaged Linux app is smoke-tested after extraction.
