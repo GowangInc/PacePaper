@@ -128,6 +128,36 @@ describe("database schema migration", () => {
     }
   });
 
+  test("upgrades an existing v3 client ledger with its timestamp column", () => {
+    const upgraded = new Database(":memory:", { create: true, strict: true });
+    try {
+      upgraded.exec(`
+        CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL);
+        INSERT INTO schema_migrations (version, applied_at) VALUES (1, 1), (2, 2), (3, 3);
+        CREATE TABLE classes (id TEXT PRIMARY KEY, name TEXT NOT NULL, name_key TEXT, created_at INTEGER NOT NULL, archived_at INTEGER);
+        CREATE TABLE students (id TEXT PRIMARY KEY, class_id TEXT NOT NULL, name TEXT NOT NULL, name_key TEXT, extra_minutes INTEGER NOT NULL DEFAULT 0, last_seen_at INTEGER, created_at INTEGER NOT NULL, archived_at INTEGER);
+        CREATE TABLE response_clients (
+          response_id TEXT NOT NULL,
+          client_id TEXT NOT NULL,
+          state TEXT NOT NULL,
+          revision INTEGER NOT NULL,
+          end_snapshot INTEGER,
+          PRIMARY KEY(response_id, client_id)
+        );
+      `);
+
+      initializeDatabaseSchema(upgraded);
+
+      expect(upgraded.query<{ name: string }, []>("PRAGMA table_info(response_clients)").all().map(({ name }) => name))
+        .toContain("updated_at");
+      expect(upgraded.query<{ version: number }, []>(
+        "SELECT version FROM schema_migrations ORDER BY version",
+      ).all().map(({ version }) => version)).toEqual([1, 2, 3, 4]);
+    } finally {
+      upgraded.close();
+    }
+  });
+
   test("quarantines duplicate legacy sign-in names without losing their records", () => {
     const legacy = new Database(":memory:", { create: true, strict: true });
     try {

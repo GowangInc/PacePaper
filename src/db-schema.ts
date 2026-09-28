@@ -3,7 +3,7 @@ import { identityKey } from "./class-rosters.ts";
 
 const archivableTables = ["classes", "students", "papers", "exam_sessions"] as const;
 
-export const DATABASE_SCHEMA_VERSION = 3;
+export const DATABASE_SCHEMA_VERSION = 4;
 
 export interface DatabaseSchema {
   legacyClassCode: boolean;
@@ -372,6 +372,9 @@ export function initializeDatabaseSchema(db: Database): DatabaseSchema {
       CREATE INDEX IF NOT EXISTS response_clients_response ON response_clients(response_id);
     `);
     ensureColumn(db, "response_clients", "end_snapshot", "INTEGER");
+  });
+
+  applyMigration(db, 4, () => {
     ensureColumn(db, "response_clients", "updated_at", "INTEGER NOT NULL DEFAULT 0");
   });
 
