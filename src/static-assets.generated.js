@@ -1,3 +1,6 @@
+import pdfAnnotations from "../public/pdf-annotations.js" with { type: "file" };
+import pdfMin from "../public/pdf.min.mjs" with { type: "file" };
+import pdfWorkerMin from "../public/pdf.worker.min.mjs" with { type: "file" };
 // Bun reads these file imports from disk in development and embeds them when
 // `bun build --compile` creates a standalone executable. Do not use ordinary
 // JavaScript imports here: browsers must receive the source modules unchanged.
@@ -14,6 +17,8 @@ import appIcon512 from "../public/app-icon-512.png" with { type: "file" };
 import app from "../public/app.js" with { type: "file" };
 import appleTouchIcon from "../public/apple-touch-icon.png" with { type: "file" };
 import classRosters from "../public/class-rosters.js" with { type: "file" };
+import calculator from "../public/calculator.js" with { type: "file" };
+import calculatorDemo from "../public/calculator-demo.js" with { type: "file" };
 import contextMenuLock from "../public/context-menu-lock.js" with { type: "file" };
 import countdownModel from "../public/countdown-model.js" with { type: "file" };
 import countdownCss from "../public/countdown.css" with { type: "file" };
@@ -56,6 +61,8 @@ export default {
   "public/app-icon-512.png": appIcon512,
   "public/app.js": app,
   "public/apple-touch-icon.png": appleTouchIcon,
+  "public/calculator-demo.js": calculatorDemo,
+  "public/calculator.js": calculator,
   "public/class-rosters.js": classRosters,
   "public/context-menu-lock.js": contextMenuLock,
   "public/countdown-model.js": countdownModel,
@@ -82,6 +89,9 @@ export default {
   "public/styles.css": styles,
   "public/teacher-dashboard.png": teacherDashboard,
   "public/text-highlights.js": textHighlights,
+  "public/pdf-annotations.js": pdfAnnotations,
+  "public/pdf.min.mjs": pdfMin,
+  "public/pdf.worker.min.mjs": pdfWorkerMin,
   "paper-authoring/SKILL.md": paperAuthoringGuide,
   "tokens.css": tokens,
   "USER_GUIDE.html": userGuide,

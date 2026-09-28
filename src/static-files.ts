@@ -2,13 +2,14 @@ const PAGE_FILES: Readonly<Record<string, string>> = {
   "/": "public/index.html",
   "/admin": "public/index.html",
   "/clock": "public/index.html",
+  "/calculator": "public/index.html",
   "/guide": "USER_GUIDE.html",
   "/student": "public/index.html",
   "/presentation": "public/presentation.html",
 };
 
 const PUBLIC_ASSET = /^\/[a-z0-9][a-z0-9._-]{0,127}$/u;
-const PUBLIC_EXTENSIONS = new Set(["css", "jpeg", "jpg", "js", "png", "webmanifest", "webp"]);
+const PUBLIC_EXTENSIONS = new Set(["css", "jpeg", "jpg", "js", "mjs", "png", "webmanifest", "webp"]);
 
 export function publicAssetPath(pathname: string): string | null {
   if (!PUBLIC_ASSET.test(pathname) || pathname.includes("..") || pathname.includes(".test.")) return null;

@@ -33,6 +33,10 @@ export interface CourseSampleSeedResult {
 
 const EARLIER_VERSION_SUFFIX = " · earlier demo version";
 
+function earlierVersionLabel(row: Pick<ExistingPaper, "id" | "title">): string {
+  return `${row.title} · ${row.id.slice(0, 8)}${EARLIER_VERSION_SUFFIX}`;
+}
+
 function sampleKey(paper: Pick<PaperManifest, "subject" | "level" | "paper">): string {
   const component = paper.paper.match(/^(Paper|Unit)\s+(\d+[A-Za-z]?)/i);
   // AP offers both a full-clock demonstration and a separate accelerated walkthrough.
@@ -53,6 +57,18 @@ function canonical(value: unknown): unknown {
 
 function fingerprint(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(canonical(value))).digest("hex");
+}
+
+function normalizeIdentityPart(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function samePaperIdentity(row: ExistingPaper, previous: PaperManifest, next: PaperManifest): boolean {
+  return normalizeIdentityPart(row.title) === normalizeIdentityPart(next.title)
+    && row.subject === next.subject
+    && normalizeIdentityPart(row.level) === normalizeIdentityPart(next.level)
+    && normalizeIdentityPart(row.paper) === normalizeIdentityPart(next.paper)
+    && (previous.assessmentSession ?? "") === (next.assessmentSession ?? "");
 }
 
 function metadataMatches(row: ExistingPaper, manifest: PaperManifest): boolean {
@@ -138,6 +154,30 @@ export function seedCourseSamplePapers(manifests: readonly PaperManifest[]): Cou
           recordSeed(currentId, key, manifest);
           result.updated += 1;
         } else {
+          // A teacher may edit a seeded manifest without renaming its library entry.
+          // Preserve that local copy under a distinct label before adding the new seed.
+          for (const match of matches) {
+            if (recognized.includes(match) || !samePaperIdentity(match.row, match.manifest, manifest)) continue;
+            const title = `${match.row.title} · preserved local copy ${match.row.id.slice(0, 8)}`;
+            const renamed = db.query("UPDATE papers SET title = $title WHERE id = $id AND archived_at IS NULL")
+              .run({ id: match.row.id, title });
+            if (renamed.changes === 1) {
+              match.row.title = title;
+              result.renamed += 1;
+            }
+          }
+          // A session-linked sample stays active and immutable; only its library label changes.
+          for (const match of recognized) {
+            if (!samePaperIdentity(match.row, match.manifest, manifest)) continue;
+            const title = earlierVersionLabel(match.row);
+            const renamed = db.query("UPDATE papers SET title = $title WHERE id = $id AND archived_at IS NULL")
+              .run({ id: match.row.id, title });
+            if (renamed.changes !== 1) continue;
+            match.row.title = title;
+            recordSeed(match.row.id, key, match.manifest);
+            result.superseded += 1;
+            if (match.row.sessionCount > 0) result.protectedBySession += 1;
+          }
           currentId = createPaper({ manifest, assets: [] }).id;
           recordSeed(currentId, key, manifest);
           result.created += 1;
@@ -148,8 +188,8 @@ export function seedCourseSamplePapers(manifests: readonly PaperManifest[]): Cou
       for (const { row, manifest: previous } of recognized) {
         if (row.id === currentId || fingerprint(previous) === nextHash || row.title.endsWith(EARLIER_VERSION_SUFFIX)) continue;
         // Only the library label changes. Historical manifests, assets, sessions and responses stay intact.
-        db.query("UPDATE papers SET title = $title WHERE id = $id")
-          .run({ id: row.id, title: `${row.title}${EARLIER_VERSION_SUFFIX}` });
+        const title = earlierVersionLabel(row);
+        db.query("UPDATE papers SET title = $title WHERE id = $id").run({ id: row.id, title });
         recordSeed(row.id, key, previous);
         result.superseded += 1;
         if (row.sessionCount > 0) result.protectedBySession += 1;

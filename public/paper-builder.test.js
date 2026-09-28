@@ -193,6 +193,7 @@ describe("Paper Builder exam presets", () => {
       "#builder-reading-time": { value: "0" },
       "#builder-maximum-marks": { value: "100" },
       "#builder-instructions": { value: "Answer all questions. Calculators must not be used. Show all necessary working clearly." },
+      "#builder-calculator-enabled": { checked: true },
       "#builder-pdf": { files: [new File(["formula list"], "0580-formula-list.pdf", { type: "application/pdf" })] },
       "#builder-source-text": { value: "" },
     });
@@ -220,6 +221,7 @@ describe("Paper Builder exam presets", () => {
       },
     });
     expect(manifest.examFormat.rulesSummary).toContain("No calculator");
+    expect(manifest.calculatorEnabled).toBeFalse();
     expect(manifest.resources).toContainEqual({
       key: "paper-1",
       label: "Paper-wide PDF",
@@ -373,6 +375,15 @@ describe("Paper Builder exam presets", () => {
     const question = [{ label: "Question 1", prompt: "Explain your reasoning.", type: "short", mediaFiles: [] }];
     const manifest = JSON.parse(await packageData(builderForm(), question).getAll("packageFiles")[0].text());
     expect(manifest).toMatchObject({ sourceClassification: "school-authorized", exportAuthorized: true });
+  });
+
+  test("stores the built-in calculator choice for mathematics papers", async () => {
+    const form = builderForm({ "#builder-calculator-enabled": { checked: true } });
+    const question = [{ label: "Question 1", prompt: "Calculate the value.", type: "short", marks: "1", mediaFiles: [] }];
+    const manifest = JSON.parse(await packageData(form, question).getAll("packageFiles")[0].text());
+
+    expect(manifest.calculatorEnabled).toBeTrue();
+    expect(parseManifest(manifest).calculatorEnabled).toBeTrue();
   });
 
   test("every course exposes valid level-specific paper choices", () => {

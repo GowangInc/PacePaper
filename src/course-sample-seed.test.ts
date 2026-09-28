@@ -69,11 +69,12 @@ describe("safe bundled-demo migration", () => {
 
   test("preserves legacy question edits, renamed copies and added assets", () => runScenario(`
     const edited = structuredClone(legacy);
+    edited.title = "Teacher's edited lesson paper";
     edited.questions[0].prompt = "Teacher's locally written task";
     const editedId = create(edited);
     const renamed = { ...legacy, title: "Mr Lee's lesson paper" };
     const renamedId = create(renamed);
-    const assetId = create(legacy);
+    const assetId = create({ ...legacy, title: "Teacher asset copy" });
     database.db.query("INSERT INTO paper_assets (id,paper_id,asset_key,filename,mime,data) VALUES (?,?,?,?,?,?)")
       .run("teacher-asset", assetId, "extra", "notes.txt", "text/plain", new Uint8Array([1,2,3]));
     const before = [editedId, renamedId, assetId].map(read);
@@ -89,7 +90,7 @@ describe("safe bundled-demo migration", () => {
 
   test("protects draft, live and ended sessions, manifests and responses while labelling earlier demos", () => runScenario(`
     const ids = [];
-    for (const status of ["draft", "live", "ended"]) {
+    for (const status of ["draft", "ended", "live"]) {
       const paperId = create(legacy);
       ids.push(paperId);
       const classroom = database.createClass(status);
@@ -101,6 +102,7 @@ describe("safe bundled-demo migration", () => {
           .run(JSON.stringify({ q1: "A student's saved response" }), "Saved notes", sessionId);
         if (status === "ended") database.endExamSession(sessionId);
       }
+      if (status !== "live") database.db.query("UPDATE papers SET archived_at = ? WHERE id = ?").run(Date.now(), paperId);
     }
     const sessionBefore = database.db.query("SELECT * FROM exam_sessions ORDER BY id").all();
     const responseBefore = database.db.query("SELECT * FROM responses ORDER BY id").all();
@@ -129,8 +131,11 @@ describe("safe bundled-demo migration", () => {
     database.db.query("UPDATE papers SET manifest_json = ? WHERE id = ?").run(JSON.stringify(edited), id);
     const before = read(id);
     const newer = { ...revised, durationMinutes: revised.durationMinutes + 1 };
-    assert.equal(seed([newer]).created, 1);
-    assert.deepEqual(read(id), before);
+    const result = seed([newer]);
+    assert.equal(result.created, 1);
+    assert.equal(result.renamed, 1);
+    assert.equal(read(id).manifest_json, before.manifest_json);
+    assert.match(read(id).title, /preserved local copy/);
     assert.equal(seed([newer]).unchanged, 1);
     assert.equal(count(), 2);
   `));

@@ -1,10 +1,29 @@
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { Database } from "bun:sqlite";
 import { identityKey, type ClassRosterInput } from "./class-rosters.ts";
-import { initializeDatabaseSchema } from "./db-schema.ts";
+import { DATABASE_SCHEMA_VERSION, initializeDatabaseSchema, type DatabaseSchema } from "./db-schema.ts";
+import {
+  createVerifiedSnapshot,
+  databaseRecoveryDiagnostics,
+  runDatabaseCheck,
+  type DatabaseCheckResult,
+  type DatabaseRecoveryOperation,
+} from "./database-recovery.ts";
 import { AUDIO_PLAY_LIMIT, type ImportedPaper, type PaperManifest } from "./papers.ts";
+import {
+  issueCandidateCredentials,
+  normalizeCandidateToken,
+  type StoredCandidateCredentials,
+} from "./candidate-credentials.ts";
+import {
+  nextResponseRevision,
+  sessionEndReadiness,
+  type CandidateEndState,
+  type CandidateResponseState,
+  type SessionEndReadiness,
+} from "./response-concurrency.ts";
 
 export type Role = "admin" | "student";
 export type ExamStatus = "draft" | "live" | "ended";
@@ -27,6 +46,7 @@ export interface StudentLoginRow {
 export interface AuthRow {
   role: Role;
   actorId: string;
+  scopeId: string | null;
   expiresAt: number;
 }
 
@@ -67,6 +87,7 @@ export interface PaperRow {
   mode: string;
   manifestJson: string;
   createdAt: number;
+  archivedAt: number | null;
 }
 
 export interface PaperSummary {
@@ -88,6 +109,19 @@ export interface PaperSummary {
   sourceClassification: PaperManifest["sourceClassification"];
   exportAuthorized: boolean;
   createdAt: number;
+  sessionCount: number;
+  liveSessionCount: number;
+  archivedAt: number | null;
+}
+
+export interface PaperImportConflict {
+  id: string;
+  title: string;
+  createdAt: number;
+  sourceClassification: PaperManifest["sourceClassification"];
+  exportAuthorized: boolean;
+  sessionCount: number;
+  replaceable: boolean;
 }
 
 export interface AssetRow {
@@ -115,6 +149,8 @@ export interface ExamSessionRow {
   startedAt: number | null;
   endedAt: number | null;
   createdAt: number;
+  endingAt: number | null;
+  requireCandidatePin: boolean;
   archivedAt: number | null;
   candidateCount: number;
   submittedCount: number;
@@ -132,15 +168,19 @@ export interface StudentExamRow {
   manifestJson: string;
   startedAt: number;
   endedAt: number | null;
+  endingAt: number | null;
+  requireCandidatePin: boolean;
   responseId: string;
   answersJson: string;
   flagsJson: string;
   audioPlaysJson: string;
+  annotationsJson: string;
   selectedQuestionId: string | null;
   notepad: string;
   updatedAt: number;
   submittedAt: number | null;
   extraMinutes: number;
+  revision: number;
 }
 
 export interface StudentExamSessionRow {
@@ -157,13 +197,17 @@ export interface StudentExamSessionRow {
   endedAt: number | null;
   createdAt: number;
   submittedAt: number | null;
+  requireCandidatePin: boolean;
 }
 
 export interface ResponsePayload {
   answersJson: string;
   flagsJson: string;
   selectedQuestionId: string | null;
+  annotationsJson: string;
   notepad: string;
+  expectedRevision?: number;
+  clientId?: string;
 }
 
 export interface SessionResponseRow {
@@ -171,7 +215,9 @@ export interface SessionResponseRow {
   studentName: string;
   answersJson: string;
   selectedQuestionId: string | null;
+  annotationsJson: string;
   notepad: string;
+  revision: number;
   updatedAt: number;
   submittedAt: number | null;
 }
@@ -195,9 +241,44 @@ export interface LifecycleResult {
 }
 
 const databasePath = process.env.DIGITALDP_DB ?? "data/digitaldp.sqlite";
+const existingDatabase = databasePath !== ":memory:"
+  && existsSync(databasePath)
+  && statSync(databasePath).size > 0;
 mkdirSync(dirname(databasePath), { recursive: true });
 export const db = new Database(databasePath, { create: true, strict: true });
-const databaseSchema = initializeDatabaseSchema(db);
+let recoveryOperation: DatabaseRecoveryOperation = "check";
+let recoveryCheck: DatabaseCheckResult | undefined;
+let databaseSchema: DatabaseSchema;
+try {
+  if (existingDatabase) {
+    recoveryCheck = runDatabaseCheck(db, "quick");
+    if (!recoveryCheck.ok) throw new Error("Database quick check failed");
+    const hasMigrationLedger = Boolean(db.query<{ found: number }, []>(
+      "SELECT 1 AS found FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'",
+    ).get());
+    const currentVersion = hasMigrationLedger
+      ? db.query<{ version: number }, []>("SELECT COALESCE(MAX(version), 0) AS version FROM schema_migrations").get()?.version ?? 0
+      : 0;
+    if (currentVersion < DATABASE_SCHEMA_VERSION) {
+      recoveryOperation = "snapshot-create";
+      const snapshotPath = join(
+        dirname(databasePath),
+        "backups",
+        `${basename(databasePath)}.pre-v${DATABASE_SCHEMA_VERSION}-${Date.now()}.sqlite`,
+      );
+      createVerifiedSnapshot(db, snapshotPath);
+    }
+  }
+  databaseSchema = initializeDatabaseSchema(db);
+} catch (error) {
+  const diagnostic = databaseRecoveryDiagnostics({
+    operation: recoveryOperation,
+    databasePath,
+    check: recoveryCheck,
+    error,
+  });
+  throw new Error(`Database recovery preflight failed: ${JSON.stringify(diagnostic)}`);
+}
 
 export function setupRequired(): boolean {
   const row = db.query<{ count: number }, []>("SELECT COUNT(*) AS count FROM admins").get();
@@ -265,19 +346,178 @@ export function findStudentLogin(className: string, studentName: string): Studen
        AND students.archived_at IS NULL
   `).get({ classKey: identityKey(className), studentKey: identityKey(studentName) }) ?? null;
 }
+export interface CandidateCredentialRow extends StudentLoginRow {
+  sessionId: string;
+  sessionStatus: ExamStatus;
+  pinHash: string;
+  tokenHash: string;
+  issuedAt: number;
+  revokedAt: number | null;
+}
+
+export function candidateTokenLookup(token: string): string {
+  return createHash("sha256").update(normalizeCandidateToken(token)).digest("hex");
+}
+
+export function findCandidateCredentialOptions(className: string, studentName: string): CandidateCredentialRow[] {
+  return db.query<CandidateCredentialRow, { classKey: string; studentKey: string }>(`
+    SELECT students.id,
+           students.class_id AS classId,
+           classes.name AS className,
+           students.name,
+           students.extra_minutes AS extraMinutes,
+           sessions.id AS sessionId,
+           sessions.status AS sessionStatus,
+           credentials.pin_hash AS pinHash,
+           credentials.token_hash AS tokenHash,
+           credentials.issued_at AS issuedAt,
+           credentials.revoked_at AS revokedAt
+      FROM candidate_credentials AS credentials
+      JOIN students ON students.id = credentials.student_id
+      JOIN classes ON classes.id = students.class_id
+      JOIN exam_sessions AS sessions ON sessions.id = credentials.session_id
+     WHERE classes.name_key = $classKey
+       AND students.name_key = $studentKey
+       AND classes.archived_at IS NULL
+       AND students.archived_at IS NULL
+       AND sessions.archived_at IS NULL
+       AND sessions.status IN ('draft', 'live')
+     ORDER BY sessions.created_at DESC
+  `).all({ classKey: identityKey(className), studentKey: identityKey(studentName) });
+}
+
+export function findCandidateCredentialByToken(token: string): CandidateCredentialRow | null {
+  return db.query<CandidateCredentialRow, { tokenLookup: string }>(`
+    SELECT students.id,
+           students.class_id AS classId,
+           classes.name AS className,
+           students.name,
+           students.extra_minutes AS extraMinutes,
+           sessions.id AS sessionId,
+           sessions.status AS sessionStatus,
+           credentials.pin_hash AS pinHash,
+           credentials.token_hash AS tokenHash,
+           credentials.issued_at AS issuedAt,
+           credentials.revoked_at AS revokedAt
+      FROM candidate_credentials AS credentials
+      JOIN students ON students.id = credentials.student_id
+      JOIN classes ON classes.id = students.class_id
+      JOIN exam_sessions AS sessions ON sessions.id = credentials.session_id
+     WHERE credentials.token_lookup = $tokenLookup
+       AND classes.archived_at IS NULL
+       AND students.archived_at IS NULL
+       AND sessions.archived_at IS NULL
+       AND sessions.status IN ('draft', 'live')
+  `).get({ tokenLookup: candidateTokenLookup(token) }) ?? null;
+}
+
+export function storedCandidateCredentials(row: CandidateCredentialRow): StoredCandidateCredentials {
+  return row.revokedAt === null
+    ? { state: "active", pinHash: row.pinHash, tokenHash: row.tokenHash }
+    : { state: "revoked", pinHash: row.pinHash, tokenHash: row.tokenHash, revokedAt: row.revokedAt };
+}
+
+export function revokeCandidateCredential(sessionId: string, studentId: string): boolean {
+  const now = Date.now();
+  const revoke = db.transaction(() => {
+    const changed = db.query(`
+      UPDATE candidate_credentials
+         SET revoked_at = COALESCE(revoked_at, $now)
+       WHERE session_id = $sessionId AND student_id = $studentId
+    `).run({ now, sessionId, studentId });
+    db.query(`
+      DELETE FROM auth_sessions
+       WHERE role = 'student' AND actor_id = $studentId AND scope_id = $sessionId
+    `).run({ sessionId, studentId });
+    return changed.changes === 1;
+  });
+  return revoke();
+}
+
+export function restoreCandidateCredential(sessionId: string, studentId: string): boolean {
+  const changed = db.query(`
+    UPDATE candidate_credentials SET revoked_at = NULL
+     WHERE session_id = $sessionId AND student_id = $studentId
+  `).run({ sessionId, studentId });
+  return changed.changes === 1;
+}
+
+export function listCandidateCredentials(sessionId: string): Array<{
+  studentId: string;
+  studentName: string;
+  revokedAt: number | null;
+}> {
+  return db.query<{
+    studentId: string;
+    studentName: string;
+    revokedAt: number | null;
+  }, { sessionId: string }>(`
+    SELECT credentials.student_id AS studentId,
+           students.name AS studentName,
+           credentials.revoked_at AS revokedAt
+      FROM candidate_credentials AS credentials
+      JOIN students ON students.id = credentials.student_id
+     WHERE credentials.session_id = $sessionId
+     ORDER BY students.name COLLATE NOCASE
+  `).all({ sessionId });
+}
+
+export interface IssuedCandidateCredential {
+  studentId: string;
+  studentName: string;
+  pin: string;
+  token: string;
+}
 
 
-export function createAuthSession(tokenHash: string, role: Role, actorId: string, expiresAt: number): void {
+export function createAuthSession(
+  tokenHash: string,
+  role: Role,
+  actorId: string,
+  expiresAt: number,
+  scopeId: string | null = null,
+): void {
   const now = Date.now();
   db.query(`
-    INSERT INTO auth_sessions (token_hash, role, actor_id, expires_at, created_at)
-    VALUES ($tokenHash, $role, $actorId, $expiresAt, $now)
-  `).run({ tokenHash, role, actorId, expiresAt, now });
+    INSERT INTO auth_sessions (token_hash, role, actor_id, scope_id, expires_at, created_at)
+    VALUES ($tokenHash, $role, $actorId, $scopeId, $expiresAt, $now)
+  `).run({ tokenHash, role, actorId, scopeId, expiresAt, now });
+}
+
+export function createCandidateAuthSession(
+  tokenHash: string,
+  candidate: Pick<CandidateCredentialRow, "id" | "sessionId" | "pinHash" | "tokenHash" | "issuedAt">,
+  expiresAt: number,
+  scopeId: string,
+): boolean {
+  const now = Date.now();
+  const created = db.query(`
+    INSERT INTO auth_sessions (token_hash, role, actor_id, scope_id, expires_at, created_at)
+    SELECT $tokenHash, 'student', $studentId, $scopeId, $expiresAt, $now
+      FROM candidate_credentials
+     WHERE session_id = $sessionId
+       AND student_id = $studentId
+       AND pin_hash = $pinHash
+       AND token_hash = $candidateTokenHash
+       AND issued_at = $issuedAt
+       AND revoked_at IS NULL
+  `).run({
+    tokenHash,
+    studentId: candidate.id,
+    scopeId,
+    expiresAt,
+    now,
+    sessionId: candidate.sessionId,
+    pinHash: candidate.pinHash,
+    candidateTokenHash: candidate.tokenHash,
+    issuedAt: candidate.issuedAt,
+  });
+  return created.changes === 1;
 }
 
 export function findAuthSession(tokenHash: string): AuthRow | null {
   return db.query<AuthRow, { tokenHash: string; now: number }>(`
-    SELECT role, actor_id AS actorId, expires_at AS expiresAt
+    SELECT role, actor_id AS actorId, scope_id AS scopeId, expires_at AS expiresAt
       FROM auth_sessions
      WHERE token_hash = $tokenHash AND expires_at > $now
   `).get({ tokenHash, now: Date.now() }) ?? null;
@@ -589,6 +829,9 @@ export function createPaper(imported: ImportedPaper): PaperSummary {
     sourceClassification: imported.manifest.sourceClassification,
     exportAuthorized: imported.manifest.exportAuthorized,
     createdAt: now,
+    sessionCount: 0,
+    liveSessionCount: 0,
+    archivedAt: null,
   };
 }
 
@@ -607,6 +850,7 @@ export function replaceUnusedPaper(paperId: string, imported: ImportedPaper): bo
              manifest_json = $manifestJson
        WHERE id = $paperId
          AND NOT EXISTS (SELECT 1 FROM exam_sessions WHERE paper_id = $paperId)
+         AND archived_at IS NULL
     `).run({
       paperId,
       title: imported.manifest.title,
@@ -627,8 +871,8 @@ export function replaceUnusedPaper(paperId: string, imported: ImportedPaper): bo
   return replace();
 }
 
-export function listPapers(): PaperSummary[] {
-  const rows = db.query<PaperSummary, []>(`
+export function listPapers(archived = false): PaperSummary[] {
+  const rows = db.query<PaperSummary, { archived: number }>(`
     SELECT id,
            title,
            subject,
@@ -646,12 +890,76 @@ export function listPapers(): PaperSummary[] {
            mode,
            COALESCE(json_extract(manifest_json, '$.sourceClassification'), 'unknown-local-only') AS sourceClassification,
            COALESCE(json_extract(manifest_json, '$.exportAuthorized'), 0) AS exportAuthorized,
-           created_at AS createdAt
+           (SELECT COUNT(*) FROM exam_sessions WHERE paper_id = papers.id) AS sessionCount,
+           (SELECT COUNT(*) FROM exam_sessions
+             WHERE paper_id = papers.id AND status = 'live' AND archived_at IS NULL) AS liveSessionCount,
+           created_at AS createdAt,
+           archived_at AS archivedAt
       FROM papers
+     WHERE ($archived = 0 AND archived_at IS NULL)
+        OR ($archived = 1 AND archived_at IS NOT NULL)
      ORDER BY created_at DESC
-  `).all();
+  `).all({ archived: Number(archived) });
   return rows.map((row) => ({ ...row, exportAuthorized: Boolean(row.exportAuthorized) }));
 }
+
+export function findPaperImportConflicts(manifest: PaperManifest): PaperImportConflict[] {
+  const rows = db.query<Omit<PaperImportConflict, "exportAuthorized" | "replaceable"> & { exportAuthorized: number }, {
+    title: string;
+    subject: string;
+    level: string;
+    paper: string;
+    assessmentSession: string;
+  }>(`
+    SELECT id,
+           title,
+           created_at AS createdAt,
+           COALESCE(json_extract(manifest_json, '$.sourceClassification'), 'unknown-local-only') AS sourceClassification,
+           COALESCE(json_extract(manifest_json, '$.exportAuthorized'), 0) AS exportAuthorized,
+           (SELECT COUNT(*) FROM exam_sessions WHERE paper_id = papers.id) AS sessionCount
+      FROM papers
+     WHERE archived_at IS NULL
+       AND title = $title COLLATE NOCASE
+       AND subject = $subject
+       AND level = $level COLLATE NOCASE
+       AND paper = $paper COLLATE NOCASE
+       AND COALESCE(json_extract(manifest_json, '$.assessmentSession'), '') = $assessmentSession
+     ORDER BY created_at DESC
+  `).all({
+    title: manifest.title,
+    subject: manifest.subject,
+    level: manifest.level,
+    paper: manifest.paper,
+    assessmentSession: manifest.assessmentSession ?? "",
+  });
+  return rows.map((row) => ({
+    ...row,
+    exportAuthorized: Boolean(row.exportAuthorized),
+    replaceable: row.sessionCount === 0,
+  }));
+}
+
+export type PaperImportResult =
+  | { status: "created"; paper: PaperSummary }
+  | { status: "replaced"; conflict: PaperImportConflict }
+  | { status: "conflict"; conflicts: PaperImportConflict[] };
+
+export const importPaperAtomic = db.transaction((
+  imported: ImportedPaper,
+  replacePaperId: string | null = null,
+): PaperImportResult => {
+  const conflicts = findPaperImportConflicts(imported.manifest);
+  if (!replacePaperId) {
+    return conflicts.length > 0
+      ? { status: "conflict", conflicts }
+      : { status: "created", paper: createPaper(imported) };
+  }
+  const conflict = conflicts.find(({ id }) => id === replacePaperId);
+  if (!conflict || !conflict.replaceable || !replaceUnusedPaper(replacePaperId, imported)) {
+    return { status: "conflict", conflicts };
+  }
+  return { status: "replaced", conflict };
+});
 
 export function getPaper(paperId: string): { row: PaperRow; manifest: PaperManifest } | null {
   const row = db.query<PaperRow, { paperId: string }>(`
@@ -664,11 +972,51 @@ export function getPaper(paperId: string): { row: PaperRow; manifest: PaperManif
            duration_minutes AS durationMinutes,
            mode,
            manifest_json AS manifestJson,
-           created_at AS createdAt
+           created_at AS createdAt,
+           archived_at AS archivedAt
       FROM papers WHERE id = $paperId
   `).get({ paperId });
   return row ? { row, manifest: JSON.parse(row.manifestJson) as PaperManifest } : null;
 }
+
+export interface PaperLifecycleResult {
+  id: string;
+  archivedAt: number | null;
+}
+
+function paperLifecycleRow(paperId: string): PaperLifecycleResult {
+  const row = db.query<PaperLifecycleResult, { paperId: string }>(
+    "SELECT id, archived_at AS archivedAt FROM papers WHERE id = $paperId",
+  ).get({ paperId });
+  if (!row) throw new Error("Paper not found");
+  return row;
+}
+
+export const archivePaper = db.transaction((paperId: string): PaperLifecycleResult => {
+  const row = paperLifecycleRow(paperId);
+  if (row.archivedAt !== null) return row;
+  const live = db.query(`
+    SELECT 1 FROM exam_sessions
+     WHERE paper_id = $paperId AND status = 'live' AND archived_at IS NULL
+  `).get({ paperId });
+  if (live) throw new Error("Cannot remove a paper used by a live exam. End the exam first");
+  row.archivedAt = Date.now();
+  db.query("UPDATE papers SET archived_at = $archivedAt WHERE id = $paperId")
+    .run({ paperId, archivedAt: row.archivedAt });
+  return row;
+});
+
+export const restorePaper = db.transaction((paperId: string): PaperLifecycleResult => {
+  const row = paperLifecycleRow(paperId);
+  if (row.archivedAt === null) return row;
+  const stored = getPaper(paperId);
+  if (!stored) throw new Error("Paper not found");
+  if (findPaperImportConflicts(stored.manifest).some((conflict) => conflict.id !== paperId)) {
+    throw new Error("Cannot restore this paper while an active paper has the same identity");
+  }
+  db.query("UPDATE papers SET archived_at = NULL WHERE id = $paperId").run({ paperId });
+  return { ...row, archivedAt: null };
+});
 
 export function getAsset(paperId: string, assetKey: string): AssetRow | null {
   return db.query<AssetRow, { paperId: string; assetKey: string }>(`
@@ -685,16 +1033,189 @@ export function listPaperAssets(paperId: string): PaperAssetRow[] {
   `).all({ paperId });
 }
 
-export function createExamSession(classId: string, paperId: string): string {
+export function createExamSession(classId: string, paperId: string, requireCandidatePin = false): string {
   const id = crypto.randomUUID();
   const created = db.query(`
-    INSERT INTO exam_sessions (id, class_id, paper_id, status, created_at)
-    SELECT $id, $classId, $paperId, 'draft', $now
+    INSERT INTO exam_sessions (id, class_id, paper_id, status, require_candidate_pin, created_at)
+    SELECT $id, classes.id, papers.id, 'draft', $requireCandidatePin, $now
       FROM classes
-     WHERE id = $classId AND archived_at IS NULL
-  `).run({ id, classId, paperId, now: Date.now() });
-  if (created.changes !== 1) throw new Error("Active class not found");
+      JOIN papers ON papers.id = $paperId AND papers.archived_at IS NULL
+     WHERE classes.id = $classId AND classes.archived_at IS NULL
+  `).run({ id, classId, paperId, requireCandidatePin: Number(requireCandidatePin), now: Date.now() });
+  if (created.changes !== 1) {
+    const activeClass = db.query("SELECT 1 FROM classes WHERE id = $classId AND archived_at IS NULL").get({ classId });
+    throw new Error(activeClass ? "Active paper not found" : "Active class not found");
+  }
   return id;
+}
+export async function createExamSessionWithCredentials(
+  classId: string,
+  paperId: string,
+): Promise<{ id: string; credentials: IssuedCandidateCredential[] }> {
+  const students = db.query<{ id: string; name: string }, { classId: string }>(`
+    SELECT id, name
+      FROM students
+     WHERE class_id = $classId AND archived_at IS NULL
+     ORDER BY name COLLATE NOCASE
+  `).all({ classId });
+  const issued = await Promise.all(students.map(async (student) => ({
+    student,
+    issuance: await issueCandidateCredentials(),
+  })));
+  const create = db.transaction(() => {
+    const id = createExamSession(classId, paperId, true);
+    const issuedAt = Date.now();
+    for (const { student, issuance } of issued) {
+      db.query(`
+        INSERT INTO candidate_credentials (
+          session_id, student_id, pin_hash, token_hash, token_lookup, issued_at
+        ) VALUES (
+          $sessionId, $studentId, $pinHash, $tokenHash, $tokenLookup, $issuedAt
+        )
+      `).run({
+        sessionId: id,
+        studentId: student.id,
+        pinHash: issuance.stored.pinHash,
+        tokenHash: issuance.stored.tokenHash,
+        tokenLookup: candidateTokenLookup(issuance.oneTime.token),
+        issuedAt,
+      });
+    }
+    return {
+      id,
+      credentials: issued.map(({ student, issuance }) => ({
+        studentId: student.id,
+        studentName: student.name,
+        pin: issuance.oneTime.pin,
+        token: issuance.oneTime.token,
+      })),
+    };
+  });
+  return create();
+}
+
+export async function rotateCandidateCredential(
+  sessionId: string,
+  studentId: string,
+): Promise<IssuedCandidateCredential | null> {
+  const student = db.query<{ name: string }, { sessionId: string; studentId: string }>(`
+    SELECT students.name
+      FROM candidate_credentials AS credentials
+      JOIN students ON students.id = credentials.student_id
+      JOIN exam_sessions AS sessions ON sessions.id = credentials.session_id
+     WHERE credentials.session_id = $sessionId
+       AND credentials.student_id = $studentId
+       AND sessions.status IN ('draft', 'live')
+  `).get({ sessionId, studentId });
+  if (!student) return null;
+  const issuance = await issueCandidateCredentials();
+  const rotate = db.transaction(() => {
+    const changed = db.query(`
+      UPDATE candidate_credentials
+         SET pin_hash = $pinHash,
+             token_hash = $tokenHash,
+             token_lookup = $tokenLookup,
+             issued_at = $issuedAt,
+             revoked_at = NULL
+       WHERE session_id = $sessionId AND student_id = $studentId
+    `).run({
+      sessionId,
+      studentId,
+      pinHash: issuance.stored.pinHash,
+      tokenHash: issuance.stored.tokenHash,
+      tokenLookup: candidateTokenLookup(issuance.oneTime.token),
+      issuedAt: Date.now(),
+    });
+    if (changed.changes !== 1) return null;
+    db.query(`
+      DELETE FROM auth_sessions
+       WHERE role = 'student' AND actor_id = $studentId AND scope_id = $sessionId
+    `).run({ sessionId, studentId });
+    return {
+      studentId,
+      studentName: student.name,
+      pin: issuance.oneTime.pin,
+      token: issuance.oneTime.token,
+    };
+  });
+  return rotate();
+}
+
+export function candidateCredentialRequired(studentId: string): boolean {
+  return Boolean(db.query<{ required: number }, { studentId: string }>(`
+    SELECT 1 AS required
+      FROM students
+      JOIN exam_sessions AS sessions ON sessions.class_id = students.class_id
+     WHERE students.id = $studentId
+       AND sessions.status IN ('draft', 'live')
+       AND sessions.archived_at IS NULL
+       AND sessions.require_candidate_pin = 1
+     LIMIT 1
+  `).get({ studentId }));
+}
+
+export async function resetCandidateCredentials(
+  sessionId: string,
+): Promise<IssuedCandidateCredential[] | null> {
+  const students = db.query<{ id: string; name: string }, { sessionId: string }>(`
+    SELECT students.id, students.name
+      FROM exam_sessions AS sessions
+      JOIN students ON students.class_id = sessions.class_id AND students.archived_at IS NULL
+     WHERE sessions.id = $sessionId
+       AND sessions.status IN ('draft', 'live')
+       AND sessions.archived_at IS NULL
+       AND sessions.require_candidate_pin = 1
+     ORDER BY students.name COLLATE NOCASE
+  `).all({ sessionId });
+  if (students.length === 0) {
+    const active = db.query<{ found: number }, { sessionId: string }>(`
+      SELECT 1 AS found FROM exam_sessions
+       WHERE id = $sessionId
+         AND status IN ('draft', 'live')
+         AND archived_at IS NULL
+         AND require_candidate_pin = 1
+    `).get({ sessionId });
+    if (!active) return null;
+  }
+  const issued = await Promise.all(students.map(async (student) => ({
+    student,
+    issuance: await issueCandidateCredentials(),
+  })));
+  return db.transaction(() => {
+    const stillActive = db.query<{ found: number }, { sessionId: string }>(`
+      SELECT 1 AS found FROM exam_sessions
+       WHERE id = $sessionId
+         AND status IN ('draft', 'live')
+         AND archived_at IS NULL
+         AND require_candidate_pin = 1
+    `).get({ sessionId });
+    if (!stillActive) return null;
+    const issuedAt = Date.now();
+    db.query("DELETE FROM candidate_credentials WHERE session_id = $sessionId").run({ sessionId });
+    for (const { student, issuance } of issued) {
+      db.query(`
+        INSERT INTO candidate_credentials (
+          session_id, student_id, pin_hash, token_hash, token_lookup, issued_at, revoked_at
+        ) VALUES (
+          $sessionId, $studentId, $pinHash, $tokenHash, $tokenLookup, $issuedAt, NULL
+        )
+      `).run({
+        sessionId,
+        studentId: student.id,
+        pinHash: issuance.stored.pinHash,
+        tokenHash: issuance.stored.tokenHash,
+        tokenLookup: candidateTokenLookup(issuance.oneTime.token),
+        issuedAt,
+      });
+    }
+    db.query("DELETE FROM auth_sessions WHERE role = 'student' AND scope_id = $sessionId").run({ sessionId });
+    return issued.map(({ student, issuance }) => ({
+      studentId: student.id,
+      studentName: student.name,
+      pin: issuance.oneTime.pin,
+      token: issuance.oneTime.token,
+    }));
+  })();
 }
 
 export function updateExamSessionTiming(sessionId: string, readingTimeMinutes: number, durationMinutes: number,
@@ -753,20 +1274,119 @@ export function startExamSession(sessionId: string): void {
   start();
 }
 
-export function endExamSession(sessionId: string): void {
+export type ExamEndPreview = SessionEndReadiness;
+
+export class ExamEndBlockedError extends Error {
+  readonly status = 409;
+  readonly code = "exam_end_blocked";
+
+  constructor(readonly preview: ExamEndPreview) {
+    super("Some candidate devices have not confirmed their latest response.");
+  }
+}
+
+function candidateEndStates(sessionId: string): CandidateEndState[] {
+  return db.query<CandidateEndState, { sessionId: string }>(`
+    WITH latest_clients AS (
+      SELECT response_id,
+             state,
+             end_snapshot,
+             ROW_NUMBER() OVER (
+               PARTITION BY response_id
+               ORDER BY updated_at DESC, revision DESC, client_id DESC
+             ) AS rank
+        FROM response_clients
+    )
+    SELECT responses.id,
+           students.name,
+           CASE
+             WHEN responses.submitted_at IS NOT NULL THEN 'submitted'
+             WHEN sessions.ending_at IS NULL AND latest.state IN ('saved', 'submitted') THEN 'saved'
+             WHEN latest.state IN ('saved', 'submitted') AND latest.end_snapshot IS NOT NULL THEN 'saved'
+             ELSE 'pending'
+           END AS state
+      FROM responses
+      JOIN exam_sessions AS sessions ON sessions.id = responses.session_id
+      JOIN students ON students.id = responses.student_id
+      LEFT JOIN latest_clients AS latest
+        ON latest.response_id = responses.id AND latest.rank = 1
+     WHERE responses.session_id = $sessionId
+     ORDER BY students.name COLLATE NOCASE
+  `).all({ sessionId });
+}
+
+export const beginExamEnd = db.transaction((sessionId: string): ExamEndPreview => {
+  const session = db.query<{ endingAt: number | null }, { sessionId: string }>(`
+    SELECT ending_at AS endingAt FROM exam_sessions
+     WHERE id = $sessionId AND status = 'live'
+  `).get({ sessionId });
+  if (!session) throw new Error("Live exam session not found");
+  if (session.endingAt === null) {
+    const now = Date.now();
+    db.query("UPDATE exam_sessions SET ending_at = $now WHERE id = $sessionId").run({ now, sessionId });
+    db.query(`
+      UPDATE response_clients
+         SET state = CASE WHEN state = 'submitted' THEN state ELSE 'pending' END,
+             end_snapshot = $now,
+             updated_at = $now
+       WHERE response_id IN (SELECT id FROM responses WHERE session_id = $sessionId)
+    `).run({ now, sessionId });
+  }
+  return sessionEndReadiness(candidateEndStates(sessionId));
+});
+export const cancelExamEnd = db.transaction((sessionId: string): void => {
+  const now = Date.now();
+  db.query(`
+    UPDATE response_clients
+       SET state = 'saved', end_snapshot = NULL, updated_at = $now
+     WHERE state = 'pending'
+       AND response_id IN (SELECT id FROM responses WHERE session_id = $sessionId)
+       AND revision = (SELECT responses.revision FROM responses WHERE responses.id = response_clients.response_id)
+  `).run({ now, sessionId });
+  db.query(`
+    UPDATE exam_sessions SET ending_at = NULL
+     WHERE id = $sessionId AND status = 'live'
+  `).run({ sessionId });
+});
+
+export function getExamEndReadiness(sessionId: string): ExamEndPreview {
+  return sessionEndReadiness(candidateEndStates(sessionId));
+}
+export function finalizeExamSession(
+  sessionId: string,
+  actorId: string,
+  overrideReason?: string,
+): void {
   const end = db.transaction(() => {
+    const readiness = sessionEndReadiness(candidateEndStates(sessionId), overrideReason);
+    if (!readiness.canFinalize) throw new ExamEndBlockedError(readiness);
     const now = Date.now();
     const changed = db.query(`
-      UPDATE exam_sessions SET status = 'ended', ended_at = $now
-       WHERE id = $sessionId AND status = 'live'
+      UPDATE exam_sessions SET status = 'ended', ended_at = $now, ending_at = NULL
+       WHERE id = $sessionId AND status = 'live' AND ending_at IS NOT NULL
     `).run({ now, sessionId });
     if (changed.changes !== 1) throw new Error("Live exam session not found");
     db.query(`
       UPDATE responses SET submitted_at = COALESCE(submitted_at, $now), updated_at = $now
        WHERE session_id = $sessionId
     `).run({ now, sessionId });
+    db.query(`
+      INSERT INTO audit_events (id, actor_id, action, target_id, reason, at)
+      VALUES ($id, $actorId, 'exam_end', $sessionId, $reason, $now)
+    `).run({
+      id: crypto.randomUUID(),
+      actorId,
+      sessionId,
+      reason: readiness.overrideReason,
+      now,
+    });
   });
   end();
+}
+
+export function endExamSession(sessionId: string): void {
+  beginExamEnd(sessionId);
+  finalizeExamSession(sessionId, "system", "Direct database finalization");
 }
 
 export type StudentFocusEventRow = {
@@ -841,7 +1461,7 @@ export function listSessionFocusByStudent(sessionId: string): StudentFocusSummar
 
 export function listExamSessions(archived = false): ExamSessionRow[] {
   const onlineCutoff = Date.now() - 20_000;
-  return db.query<ExamSessionRow, { onlineCutoff: number; archived: number }>(`
+  const sessions = db.query<Omit<ExamSessionRow, "requireCandidatePin"> & { requireCandidatePin: number }, { onlineCutoff: number; archived: number }>(`
     SELECT sessions.id,
            sessions.class_id AS classId,
            classes.name AS className,
@@ -856,6 +1476,8 @@ export function listExamSessions(archived = false): ExamSessionRow[] {
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,
            sessions.created_at AS createdAt,
+           sessions.ending_at AS endingAt,
+           sessions.require_candidate_pin AS requireCandidatePin,
            sessions.archived_at AS archivedAt,
            COUNT(responses.id) AS candidateCount,
            COALESCE(SUM(CASE WHEN responses.submitted_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS submittedCount,
@@ -873,6 +1495,7 @@ export function listExamSessions(archived = false): ExamSessionRow[] {
      ORDER BY sessions.created_at DESC
      LIMIT 30
   `).all({ onlineCutoff, archived: Number(archived) });
+  return sessions.map((session) => ({ ...session, requireCandidatePin: Boolean(session.requireCandidatePin) }));
 }
 
 type LifecycleTable = "classes" | "students" | "exam_sessions";
@@ -1014,6 +1637,8 @@ export function getSessionResults(sessionId: string): SessionResults | null {
            responses.answers_json AS answersJson,
            responses.selected_question_id AS selectedQuestionId,
            responses.notepad AS notepad,
+           responses.annotations_json AS annotationsJson,
+           responses.revision,
            responses.updated_at AS updatedAt,
            responses.submitted_at AS submittedAt
       FROM responses
@@ -1025,7 +1650,7 @@ export function getSessionResults(sessionId: string): SessionResults | null {
 }
 
 export function listStudentExamSessions(studentId: string): StudentExamSessionRow[] {
-  return db.query<StudentExamSessionRow, { studentId: string }>(`
+  const sessions = db.query<Omit<StudentExamSessionRow, "requireCandidatePin"> & { requireCandidatePin: number }, { studentId: string }>(`
     SELECT sessions.id,
            papers.id AS paperId,
            papers.title AS paperTitle,
@@ -1038,7 +1663,8 @@ export function listStudentExamSessions(studentId: string): StudentExamSessionRo
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,
            sessions.created_at AS createdAt,
-           responses.submitted_at AS submittedAt
+           responses.submitted_at AS submittedAt,
+           sessions.require_candidate_pin AS requireCandidatePin
       FROM students
       JOIN exam_sessions AS sessions ON sessions.class_id = students.class_id
       JOIN classes ON classes.id = students.class_id
@@ -1055,10 +1681,11 @@ export function listStudentExamSessions(studentId: string): StudentExamSessionRo
               sessions.created_at DESC,
               sessions.id
   `).all({ studentId });
+  return sessions.map((session) => ({ ...session, requireCandidatePin: Boolean(session.requireCandidatePin) }));
 }
 
 export function getStudentExam(studentId: string, sessionId: string): StudentExamRow | null {
-  return db.query<StudentExamRow, { studentId: string; sessionId: string }>(`
+  const exam = db.query<Omit<StudentExamRow, "requireCandidatePin"> & { requireCandidatePin: number }, { studentId: string; sessionId: string }>(`
     SELECT sessions.id AS sessionId,
            sessions.status AS sessionStatus,
            sessions.class_id AS classId,
@@ -1069,12 +1696,16 @@ export function getStudentExam(studentId: string, sessionId: string): StudentExa
            papers.manifest_json AS manifestJson,
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,
+           sessions.ending_at AS endingAt,
+           sessions.require_candidate_pin AS requireCandidatePin,
            responses.id AS responseId,
            responses.answers_json AS answersJson,
            responses.selected_question_id AS selectedQuestionId,
            responses.flags_json AS flagsJson,
            responses.audio_plays_json AS audioPlaysJson,
+           responses.annotations_json AS annotationsJson,
            responses.notepad,
+           responses.revision,
            responses.updated_at AS updatedAt,
            responses.submitted_at AS submittedAt,
            students.extra_minutes AS extraMinutes
@@ -1088,7 +1719,8 @@ export function getStudentExam(studentId: string, sessionId: string): StudentExa
        AND students.archived_at IS NULL
        AND classes.archived_at IS NULL
        AND sessions.archived_at IS NULL
-  `).get({ studentId, sessionId }) ?? null;
+  `).get({ studentId, sessionId });
+  return exam ? { ...exam, requireCandidatePin: Boolean(exam.requireCandidatePin) } : null;
 }
 
 /**
@@ -1114,6 +1746,7 @@ export interface ResponseRevisionRow {
   answersJson: string;
   selectedQuestionId: string | null;
   flagsJson: string;
+  annotationsJson: string;
   notepad: string;
 }
 
@@ -1122,10 +1755,15 @@ export interface ResponseRevisionLog {
   studentName: string;
   revisions: ResponseRevisionRow[];
 }
-
 function recordResponseRevision(responseId: string, payload: ResponsePayload, at: number): void {
   const contentHash = createHash("sha256")
-    .update([payload.answersJson, payload.selectedQuestionId ?? "", payload.flagsJson, payload.notepad].join("\u0000"))
+    .update([
+      payload.answersJson,
+      payload.selectedQuestionId ?? "",
+      payload.flagsJson,
+      payload.annotationsJson,
+      payload.notepad,
+    ].join("\u0000"))
     .digest("hex");
   const previous = db.query<{ contentHash: string }, { responseId: string }>(`
     SELECT content_hash AS contentHash FROM response_revisions
@@ -1133,18 +1771,18 @@ function recordResponseRevision(responseId: string, payload: ResponsePayload, at
      ORDER BY at DESC
      LIMIT 1
   `).get({ responseId });
-  // Unchanged content (a repeat save or a bare submit) never adds a timeline entry.
   if (previous?.contentHash === contentHash) return;
-  const bucketMs = revisionBucketMs(payload.answersJson.length + payload.notepad.length);
+  const bucketMs = revisionBucketMs(payload.answersJson.length + payload.annotationsJson.length + payload.notepad.length);
   db.query(`
     INSERT INTO response_revisions
-      (response_id, bucket, at, answers_json, selected_question_id, flags_json, notepad, content_hash)
-    VALUES ($responseId, $bucket, $at, $answersJson, $selectedQuestionId, $flagsJson, $notepad, $contentHash)
+      (response_id, bucket, at, answers_json, selected_question_id, flags_json, annotations_json, notepad, content_hash)
+    VALUES ($responseId, $bucket, $at, $answersJson, $selectedQuestionId, $flagsJson, $annotationsJson, $notepad, $contentHash)
     ON CONFLICT(response_id, bucket) DO UPDATE SET
       at = excluded.at,
       answers_json = excluded.answers_json,
       selected_question_id = excluded.selected_question_id,
       flags_json = excluded.flags_json,
+      annotations_json = excluded.annotations_json,
       notepad = excluded.notepad,
       content_hash = excluded.content_hash
   `).run({
@@ -1171,6 +1809,7 @@ export function getResponseRevisionLog(sessionId: string, responseId: string): R
            answers_json AS answersJson,
            selected_question_id AS selectedQuestionId,
            flags_json AS flagsJson,
+           annotations_json AS annotationsJson,
            notepad
       FROM response_revisions
      WHERE response_id = $responseId
@@ -1179,34 +1818,164 @@ export function getResponseRevisionLog(sessionId: string, responseId: string): R
   return { ...response, revisions };
 }
 
-export const saveResponse = db.transaction((responseId: string, payload: ResponsePayload, at = Date.now()): void => {
+export class ResponseRevisionConflictError extends Error {
+  readonly status = 409;
+  readonly code = "response_revision_conflict";
+
+  constructor(
+    readonly expectedRevision: number,
+    readonly currentRevision: number,
+  ) {
+    super("This response changed in another browser. Reload before saving again.");
+  }
+}
+
+function responseRevisionForSave(responseId: string, expectedRevision: number | undefined): {
+  currentRevision: number;
+  nextRevision: number;
+} {
+  const current = db.query<{ revision: number; submittedAt: number | null }, { responseId: string }>(`
+    SELECT revision, submitted_at AS submittedAt FROM responses WHERE id = $responseId
+  `).get({ responseId });
+  if (!current || current.submittedAt !== null) throw new Error("Response is already submitted");
+  const expected = expectedRevision ?? current.revision;
+  const decision = nextResponseRevision(expected, current.revision);
+  if (!decision.ok) throw new ResponseRevisionConflictError(expected, current.revision);
+  return { currentRevision: current.revision, nextRevision: decision.nextRevision };
+}
+
+function setResponseClientState(
+  responseId: string,
+  clientId: string | undefined,
+  state: CandidateResponseState,
+  revision: number,
+  at: number,
+): void {
+  if (!clientId) return;
+  const session = db.query<{ endingAt: number | null }, { responseId: string }>(`
+    SELECT exam_sessions.ending_at AS endingAt
+      FROM responses
+      JOIN exam_sessions ON exam_sessions.id = responses.session_id
+     WHERE responses.id = $responseId
+  `).get({ responseId });
+  db.query(`
+    INSERT INTO response_clients (response_id, client_id, state, revision, updated_at, end_snapshot)
+    VALUES ($responseId, $clientId, $state, $revision, $at, $endSnapshot)
+    ON CONFLICT(response_id, client_id) DO UPDATE SET
+      state = excluded.state,
+      revision = excluded.revision,
+      updated_at = excluded.updated_at,
+      end_snapshot = COALESCE(response_clients.end_snapshot, excluded.end_snapshot)
+  `).run({
+    responseId,
+    clientId,
+    state,
+    revision,
+    at,
+    endSnapshot: session?.endingAt ?? null,
+  });
+}
+
+export function acknowledgeResponseClient(
+  responseId: string,
+  clientId: string,
+  revision: number,
+  at = Date.now(),
+): boolean {
+  const response = db.query<{ revision: number; endingAt: number | null }, { responseId: string }>(`
+    SELECT responses.revision,
+           exam_sessions.ending_at AS endingAt
+      FROM responses
+      JOIN exam_sessions ON exam_sessions.id = responses.session_id
+     WHERE responses.id = $responseId
+  `).get({ responseId });
+  if (!response || response.revision !== revision) return false;
+  const result = db.query(`
+    INSERT INTO response_clients (response_id, client_id, state, revision, updated_at, end_snapshot)
+    VALUES ($responseId, $clientId, 'saved', $revision, $at, $endSnapshot)
+    ON CONFLICT(response_id, client_id) DO UPDATE SET
+      state = 'saved',
+      revision = excluded.revision,
+      updated_at = excluded.updated_at,
+      end_snapshot = COALESCE(response_clients.end_snapshot, excluded.end_snapshot)
+    WHERE response_clients.revision <= excluded.revision
+  `).run({
+    responseId,
+    clientId,
+    revision,
+    at,
+    endSnapshot: response.endingAt,
+  });
+  return result.changes === 1;
+}
+
+export const saveResponse = db.transaction((
+  responseId: string,
+  payload: ResponsePayload,
+  at = Date.now(),
+): number => {
+  const { nextRevision } = responseRevisionForSave(responseId, payload.expectedRevision);
   const changed = db.query(`
     UPDATE responses
        SET answers_json = $answersJson,
            selected_question_id = $selectedQuestionId,
            flags_json = $flagsJson,
+           annotations_json = $annotationsJson,
            notepad = $notepad,
+           revision = $nextRevision,
            updated_at = $at
-     WHERE id = $responseId AND submitted_at IS NULL
-  `).run({ ...payload, at, responseId });
-  if (changed.changes !== 1) throw new Error("Response is already submitted");
+     WHERE id = $responseId AND submitted_at IS NULL AND revision = $expectedRevision
+  `).run({
+    ...payload,
+    expectedRevision: payload.expectedRevision ?? nextRevision - 1,
+    nextRevision,
+    at,
+    responseId,
+  });
+  if (changed.changes !== 1) throw new ResponseRevisionConflictError(
+    payload.expectedRevision ?? nextRevision - 1,
+    db.query<{ revision: number }, { responseId: string }>(
+      "SELECT revision FROM responses WHERE id = $responseId",
+    ).get({ responseId })?.revision ?? nextRevision,
+  );
   recordResponseRevision(responseId, payload, at);
+  setResponseClientState(responseId, payload.clientId, "saved", nextRevision, at);
+  return nextRevision;
 });
 
-export const saveAndSubmitResponse = db.transaction((responseId: string, payload: ResponsePayload, at = Date.now()): number => {
+export const saveAndSubmitResponse = db.transaction((
+  responseId: string,
+  payload: ResponsePayload,
+  at = Date.now(),
+): { submittedAt: number; revision: number } => {
+  const { nextRevision } = responseRevisionForSave(responseId, payload.expectedRevision);
   const changed = db.query(`
     UPDATE responses
        SET answers_json = $answersJson,
            selected_question_id = $selectedQuestionId,
            flags_json = $flagsJson,
+           annotations_json = $annotationsJson,
            notepad = $notepad,
+           revision = $nextRevision,
            submitted_at = $at,
            updated_at = $at
-     WHERE id = $responseId AND submitted_at IS NULL
-  `).run({ ...payload, at, responseId });
-  if (changed.changes !== 1) throw new Error("Response is already submitted");
+     WHERE id = $responseId AND submitted_at IS NULL AND revision = $expectedRevision
+  `).run({
+    ...payload,
+    expectedRevision: payload.expectedRevision ?? nextRevision - 1,
+    nextRevision,
+    at,
+    responseId,
+  });
+  if (changed.changes !== 1) throw new ResponseRevisionConflictError(
+    payload.expectedRevision ?? nextRevision - 1,
+    db.query<{ revision: number }, { responseId: string }>(
+      "SELECT revision FROM responses WHERE id = $responseId",
+    ).get({ responseId })?.revision ?? nextRevision,
+  );
   recordResponseRevision(responseId, payload, at);
-  return at;
+  setResponseClientState(responseId, payload.clientId, "submitted", nextRevision, at);
+  return { submittedAt: at, revision: nextRevision };
 });
 
 

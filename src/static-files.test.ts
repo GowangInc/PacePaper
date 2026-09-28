@@ -7,6 +7,7 @@ const ROOT_IMPORT = /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["'](\/[^"']+\.js)["']/g
 describe("static application files", () => {
   test("resolves app pages and safe root assets without exposing test modules", () => {
     expect(staticFilePath("/student")).toBe("public/index.html");
+    expect(staticFilePath("/calculator")).toBe("public/index.html");
     expect(staticFilePath("/guide")).toBe("USER_GUIDE.html");
     expect(staticFilePath("/exam-audio.js")).toBe("public/exam-audio.js");
     expect(staticFilePath("/styles.css")).toBe("public/styles.css");

@@ -52,7 +52,7 @@ for (const folder of paperFolders) {
   }
 
   const portable = await encodePortablePaper(manifest, assets);
-  const outputName = `${folder}.digitaldp-paper`;
+  const outputName = `${folder}.pp`;
   const outputPath = `${outputDirectory}/${outputName}`;
   await Bun.write(outputPath, portable);
 
@@ -60,7 +60,7 @@ for (const folder of paperFolders) {
   form.set("format", "portable");
   form.set(
     "portablePaper",
-    new File([portable], outputName, { type: "application/vnd.digitaldp.paper+gzip" }),
+    new File([portable], outputName, { type: "application/vnd.pacepaper+gzip" }),
   );
   const restored = await parsePaperUpload(form);
   if (JSON.stringify(restored.manifest) !== JSON.stringify(manifest)) {

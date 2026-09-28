@@ -11,7 +11,7 @@ import {
   syncOptions,
   updatePresence,
 } from "/admin-collections.js";
-import { renderPaperLibrary, renderSelectedPaper, renderSessionPaperSelectors } from "/admin-papers.js";
+import { confirmPaperReplacement, renderPaperLibrary, renderSelectedPaper, renderSessionPaperSelectors } from "/admin-papers.js";
 import { hasInkResponse, renderInkSubmission } from "/ink-canvas.js";
 import { mountAdminNetwork } from "/admin-network.js";
 import { mountClassRosterTransfer } from "/class-rosters.js";
@@ -19,6 +19,7 @@ import { mountPaperBuilder } from "/paper-builder.js";
 import { confirmEndExam } from "./admin-end-exam.js";
 import { mountStudentConnection } from "/student-connection.js";
 import { renderResourceText } from "./resource-text.js";
+import { createPdfAnnotationViewer } from "./pdf-annotations.js";
 
 let stopSocket;
 let presenceTimer;
@@ -28,6 +29,15 @@ let classroomNetworkControls;
 const seenFocusEventIds = new Set();
 // Focus events older than the dashboard page load are history, not alerts.
 const adminOpenedAt = Date.now();
+
+function rememberDialogTrigger(dialog, trigger) {
+  if (!trigger) return;
+  dialog.addEventListener("close", () => {
+    requestAnimationFrame(() => {
+      if (trigger.isConnected) trigger.focus();
+    });
+  }, { once: true });
+}
 
 function authFrame(title, description, fields, actionLabel) {
   setView(`
@@ -116,7 +126,7 @@ async function refreshPresence() {
 
 function renderPapers(state) {
   renderSessionPaperSelectors(state.papers);
-  renderPaperLibrary(state.papers);
+  renderPaperLibrary(state.papers, state.archived?.papers ?? []);
 }
 
 function copy(tag, className, value) {
@@ -141,7 +151,7 @@ function appendMetadata(list, label, value, className = "") {
   list.append(item);
 }
 
-function appendQuestionResources(container, question, resourcesByKey, renderedResources, headingLabel = null) {
+function appendQuestionResources(container, question, resourcesByKey, renderedResources, headingLabel = null, annotations = []) {
   const resources = (question.resourceKeys ?? [])
     .map((key) => resourcesByKey.get(key))
     .filter((resource) => resource && !renderedResources.has(resource.key));
@@ -162,11 +172,14 @@ function appendQuestionResources(container, question, resourcesByKey, renderedRe
       item.append(image);
     } else if (resource.kind === "text") {
       item.append(renderResourceText(copy("blockquote", "submission-resource-text", ""), resource.text, { label: resource.label }));
+    } else if (resource.kind === "document") {
+      item.append(createPdfAnnotationViewer({
+        resource,
+        annotations: annotations.filter((annotation) => annotation.resourceKey === resource.key),
+        readOnly: true,
+      }));
     } else {
-      const description = resource.kind === "audio"
-        ? "Listening audio · two complete plays · no pause or restart"
-        : "PDF document · supplied with the digital examination";
-      item.append(copy("p", "submission-resource-reference", description));
+      item.append(copy("p", "submission-resource-reference", "Listening audio · two complete plays · no pause or restart"));
     }
     item.append(copy("figcaption", "", resource.label));
     section.append(item);
@@ -272,6 +285,7 @@ export function renderCandidatePaper(data, response) {
     resourcesByKey,
     renderedResources,
     sharedResourceKeys.length === 1 ? "Paper resource" : "Paper resources",
+    response.annotations ?? [],
   );
   for (const [index, question] of data.questions.entries()) {
     const answer = response.answers[question.id] ?? "";
@@ -300,6 +314,8 @@ export function renderCandidatePaper(data, response) {
       },
       resourcesByKey,
       renderedResources,
+      null,
+      response.annotations ?? [],
     );
     if (question.type === "single-choice" && question.options?.length) {
       const options = document.createElement("ol");
@@ -338,7 +354,7 @@ export function renderCandidatePaper(data, response) {
 // papers were rendered from instead of asking the server for the same sitting twice.
 let submissionsData = null;
 
-function renderSubmissions(data) {
+function renderSubmissions(data, trigger = null) {
   submissionsData = data;
   document.querySelector("#submissions-title").textContent = data.session.paperTitle;
   document.querySelector("#submissions-context").textContent = `${data.session.className} · ${data.responses.length} candidate${data.responses.length === 1 ? "" : "s"}`;
@@ -374,6 +390,7 @@ function renderSubmissions(data) {
     record.append(summary, actions, renderCandidatePaper(data, response));
     list.append(record);
   }
+  rememberDialogTrigger(document.querySelector("#submissions-dialog"), trigger);
   document.querySelector("#submissions-dialog").showModal();
 }
 
@@ -406,6 +423,15 @@ export function renderRevisionAnswers(data, revision) {
     }
     appendMarkingGuidance(item, question.markingGuidance);
     answers.append(item);
+  }
+  for (const resource of (data.resources ?? []).filter(({ kind }) => kind === "document")) {
+    const annotations = (revision.annotations ?? []).filter((annotation) => annotation.resourceKey === resource.key);
+    if (!annotations.length) continue;
+    const section = document.createElement("section");
+    section.className = "submission-resources candidate-paper-resources";
+    section.append(copy("h4", "", `${resource.label} annotations`));
+    section.append(createPdfAnnotationViewer({ resource, annotations, readOnly: true }));
+    answers.append(section);
   }
   return answers;
 }
@@ -573,11 +599,11 @@ function renderFocusEvents(events) {
   return section;
 }
 
-async function openSubmissions(sessionId) {
+async function openSubmissions(sessionId, trigger = null) {
   const slot = document.querySelector("#focus-integrity-slot");
   // Responses are the point of this dialog; focus telemetry must never block them.
   const responses = await api(`/api/admin/sessions/${sessionId}/responses`);
-  renderSubmissions(responses);
+  renderSubmissions(responses, trigger);
   try {
     const focus = await api(`/api/admin/sessions/${sessionId}/focus-events`);
     slot.replaceChildren(renderFocusEvents(focus.events));
@@ -660,11 +686,13 @@ function renderLiveWork() {
   renderLiveWorkDetail();
 }
 
-async function openLiveWork(sessionId) {
+async function openLiveWork(sessionId, trigger = null) {
   const results = await api(`/api/admin/sessions/${sessionId}/responses`);
   liveWork = { sessionId, selectedId: null, signature: liveWorkSignature(results), results };
   renderLiveWork();
-  document.querySelector("#live-work-dialog").showModal();
+  const dialog = document.querySelector("#live-work-dialog");
+  rememberDialogTrigger(dialog, trigger);
+  dialog.showModal();
 }
 
 /** Refreshes an open live view without disturbing the reader: same candidate, same scroll. */
@@ -878,6 +906,111 @@ async function refreshState(silent = false) {
   }
 }
 
+function candidateAccessLink(token) {
+  const url = new URL("/student", studentConnectionOrigin ?? location.origin);
+  url.searchParams.set("token", token);
+  return url.href;
+}
+
+function candidateAccessCsv(credentials) {
+  const quote = (value) => `"${String(value).replaceAll('"', '""')}"`;
+  return [
+    ["Candidate", "PIN", "Access link"],
+    ...credentials.map((credential) => [
+      credential.studentName,
+      credential.pin,
+      candidateAccessLink(credential.token),
+    ]),
+  ].map((row) => row.map(quote).join(",")).join("\r\n");
+}
+
+function showCandidateAccess(credentials, trigger = null) {
+  const dialog = document.createElement("dialog");
+  dialog.className = "candidate-access-dialog";
+  dialog.setAttribute("aria-labelledby", "candidate-access-title");
+  dialog.setAttribute("aria-describedby", "candidate-access-warning");
+  const title = copy("h2", "", "Candidate access");
+  title.id = "candidate-access-title";
+  const warning = copy("p", "callout warning",
+    "Save or print this list now. PacePaper stores only protected credential hashes and cannot show these PINs again.");
+  warning.id = "candidate-access-warning";
+  const table = document.createElement("table");
+  table.innerHTML = "<thead><tr><th>Candidate</th><th>PIN</th><th>Direct link</th></tr></thead>";
+  const body = document.createElement("tbody");
+  for (const credential of credentials) {
+    const row = document.createElement("tr");
+    const name = document.createElement("td");
+    name.textContent = credential.studentName;
+    const pin = document.createElement("td");
+    const code = document.createElement("code");
+    code.textContent = credential.pin;
+    pin.append(code);
+    const linkCell = document.createElement("td");
+    const link = document.createElement("a");
+    link.href = candidateAccessLink(credential.token);
+    link.textContent = "Open sign-in link";
+    link.target = "_blank";
+    link.rel = "noopener";
+    linkCell.append(link);
+    row.append(name, pin, linkCell);
+    body.append(row);
+  }
+  table.append(body);
+  const actions = document.createElement("div");
+  actions.className = "dialog-actions";
+  const download = copy("button", "", "Download CSV");
+  download.type = "button";
+  download.disabled = credentials.length === 0;
+  download.addEventListener("click", () => {
+    const url = URL.createObjectURL(new Blob([candidateAccessCsv(credentials)], { type: "text/csv;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "PacePaper-candidate-access.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  });
+  const close = copy("button", "primary-action", "Done");
+  close.type = "button";
+  close.addEventListener("click", () => dialog.close());
+  actions.append(download, close);
+  dialog.append(title, warning);
+  if (credentials.length === 0) {
+    dialog.append(copy("p", "empty-state", "This class has no active students. Add the roster, then reset access PINs from the exam sitting."));
+  } else {
+    dialog.append(table);
+  }
+  dialog.append(actions);
+  rememberDialogTrigger(dialog, trigger);
+  dialog.addEventListener("close", () => dialog.remove(), { once: true });
+  document.body.append(dialog);
+  dialog.showModal();
+}
+
+async function createSession(form) {
+  const submit = form.querySelector("button[type=submit]");
+  submit.disabled = true;
+  try {
+    const result = await api("/api/admin/sessions", {
+      method: "POST",
+      body: Object.fromEntries(new FormData(form)),
+    });
+    form.reset();
+    showCandidateAccess(result.credentials ?? [], submit);
+    announce("Exam set up with individual candidate access", "success");
+  } catch (error) {
+    announce(error instanceof Error ? error.message : "Could not set up exam", "error");
+  } finally {
+    submit.disabled = false;
+  }
+}
+
+async function resetCandidateAccess(sessionId, trigger = null) {
+  if (!confirm("Reset every candidate PIN and direct link for this sitting? Anyone already signed in to this sitting will be signed out.")) return;
+  const result = await api(`/api/admin/sessions/${sessionId}/credentials/reset`, { method: "POST" });
+  showCandidateAccess(result.credentials ?? [], trigger);
+  announce("Candidate access reset", "success");
+}
+
 async function mutate(form, path, transform) {
   const submit = form.querySelector("button[type=submit]");
   submit.disabled = true;
@@ -894,25 +1027,53 @@ async function mutate(form, path, transform) {
   }
 }
 
+async function savePaperImport(data) {
+  try {
+    await api("/api/admin/papers", { method: "POST", body: data });
+    return "created";
+  } catch (error) {
+    const conflicts = error instanceof ApiError
+      && error.status === 409
+      && error.payload?.code === "paper-import-conflict"
+      && Array.isArray(error.payload.conflicts)
+      ? error.payload.conflicts
+      : null;
+    if (!conflicts) throw error;
+    const replacePaperId = await confirmPaperReplacement(conflicts);
+    if (!replacePaperId) return null;
+    data.set("replacePaperId", replacePaperId);
+    await api("/api/admin/papers", { method: "POST", body: data });
+    return "replaced";
+  }
+}
+
 async function importPaper(form) {
   const submit = form.querySelector("button[type=submit]");
+  let cancelled = false;
   submit.disabled = true;
   try {
-    await api("/api/admin/papers", { method: "POST", body: new FormData(form) });
+    const action = await savePaperImport(new FormData(form));
+    if (!action) {
+      cancelled = true;
+      return;
+    }
     form.reset();
     await refreshState(true);
-    announce("Paper added to the library", "success");
+    announce(action === "replaced" ? "Paper updated in the library" : "Paper added to the library", "success");
   } catch (error) {
     announce(error instanceof Error ? error.message : "Could not add paper", "error");
   } finally {
     submit.disabled = false;
+    if (cancelled) submit.focus();
   }
 }
 
 async function addBuiltPaper(data) {
-  await api("/api/admin/papers", { method: "POST", body: data });
+  const action = await savePaperImport(data);
+  if (!action) return false;
   await refreshState(true);
-  announce("Paper added to the library", "success");
+  announce(action === "replaced" ? "Paper updated in the library" : "Paper added to the library", "success");
+  return true;
 }
 
 function showStudentEditError(message) {
@@ -922,7 +1083,7 @@ function showStudentEditError(message) {
   errorRegion.focus();
 }
 
-function openStudentEditor(studentId) {
+function openStudentEditor(studentId, trigger = null) {
   const student = currentState?.students.find((candidate) => candidate.id === studentId);
   if (!student) {
     announce("That student is no longer in the current roster", "error");
@@ -940,6 +1101,7 @@ function openStudentEditor(studentId) {
   const errorRegion = document.querySelector("#student-edit-error");
   errorRegion.textContent = "";
   errorRegion.hidden = true;
+  rememberDialogTrigger(dialog, trigger);
   dialog.showModal();
   form.elements.namedItem("name").focus();
 }
@@ -976,6 +1138,7 @@ async function saveStudentEdits(form) {
 
 function lifecycleFocusTarget(target) {
   if (target.action === "archive") {
+    if (target.collection === "papers") return document.querySelector("#archived-papers-summary");
     return document.querySelector(target.collection === "sessions" ? "#archived-sessions-summary" : "#archived-roster-summary");
   }
   return document.querySelector(
@@ -1017,19 +1180,30 @@ function bindCollectionController() {
 
   root.addEventListener("click", async (event) => {
     const button = event.target.closest(
-      "button[data-edit-student], button[data-session-action], button[data-live-work], button[data-responses], button[data-collection-action]",
+      "button[data-edit-student], button[data-session-action], button[data-candidate-access], button[data-live-work], button[data-responses], button[data-collection-action]",
     );
     if (!button || button.disabled) return;
 
     if (button.dataset.editStudent) {
-      openStudentEditor(button.dataset.editStudent);
+      openStudentEditor(button.dataset.editStudent, button);
+      return;
+    }
+    if (button.dataset.candidateAccess) {
+      button.disabled = true;
+      try {
+        await resetCandidateAccess(button.dataset.candidateAccess, button);
+      } catch (error) {
+        announce(error instanceof Error ? error.message : "Could not reset candidate access", "error");
+      } finally {
+        button.disabled = false;
+      }
       return;
     }
     if (button.dataset.liveWork) {
       button.disabled = true;
       try {
         announce("");
-        await openLiveWork(button.dataset.liveWork);
+        await openLiveWork(button.dataset.liveWork, button);
       } catch (error) {
         announce(error instanceof Error ? error.message : "Could not load candidate work", "error");
       } finally {
@@ -1041,7 +1215,7 @@ function bindCollectionController() {
       button.disabled = true;
       try {
         announce("");
-        await openSubmissions(button.dataset.responses);
+        await openSubmissions(button.dataset.responses, button);
       } catch (error) {
         announce(error instanceof Error ? error.message : "Could not load submissions", "error");
       } finally {
@@ -1053,13 +1227,35 @@ function bindCollectionController() {
       button.disabled = true;
       const sessionId = button.dataset.sessionId;
       const action = button.dataset.sessionAction;
+      let endingBegan = false;
       try {
-        if (action === "end" && !await confirmEndExam({ trigger: button,
-          loadResults: () => api(`/api/admin/sessions/${sessionId}/responses`) })) return;
-        await api(`/api/admin/sessions/${sessionId}/${action}`, { method: "POST" });
+        let body;
+        if (action === "end") {
+          const decision = await confirmEndExam({
+            trigger: button,
+            beginEnd: () => api(`/api/admin/sessions/${sessionId}/end/begin`, { method: "POST" }),
+            loadReadiness: () => api(`/api/admin/sessions/${sessionId}/end/readiness`),
+            cancelEnd: () => api(`/api/admin/sessions/${sessionId}/end/cancel`, { method: "POST" }),
+          });
+          if (!decision.confirmed) {
+            if (decision.cancellationError) throw new Error(`Could not resume candidate entry: ${decision.cancellationError.message}`);
+            return;
+          }
+          endingBegan = true;
+          body = { overrideReason: decision.overrideReason };
+        }
+        await api(`/api/admin/sessions/${sessionId}/${action}`, { method: "POST", body });
         await refreshState(true);
         announce(button.dataset.sessionAction === "start" ? "Exam started" : "Exam ended and responses submitted", "success");
       } catch (error) {
+        if (action === "end" && endingBegan) {
+          try {
+            await api(`/api/admin/sessions/${sessionId}/end/cancel`, { method: "POST" });
+            await refreshState(true);
+          } catch {
+            // The end may already have committed; refresh on the next dashboard poll.
+          }
+        }
         announce(error instanceof Error ? error.message : "Session action failed", "error");
       } finally {
         button.disabled = false;
@@ -1162,7 +1358,7 @@ function bindDashboard() {
 
   document.querySelector("#session-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    mutate(event.currentTarget, "/api/admin/sessions");
+    void createSession(event.currentTarget);
   });
 
   const passwordForm = document.querySelector("#password-form");
@@ -1194,8 +1390,12 @@ function bindDashboard() {
 
   document.querySelector("#session-system").addEventListener("change", () => renderSessionPaperSelectors(currentState.papers));
   document.querySelector("#session-paper").addEventListener("change", () => renderSelectedPaper(currentState.papers));
-  document.querySelector("#library-search").addEventListener("input", () => renderPaperLibrary(currentState.papers));
-  document.querySelector("#library-system").addEventListener("change", () => renderPaperLibrary(currentState.papers));
+  document.querySelector("#library-search").addEventListener("input", () => (
+    renderPaperLibrary(currentState.papers, currentState.archived?.papers ?? [])
+  ));
+  document.querySelector("#library-system").addEventListener("change", () => (
+    renderPaperLibrary(currentState.papers, currentState.archived?.papers ?? [])
+  ));
 
   bindCollectionController();
 
@@ -1299,31 +1499,33 @@ async function renderDashboard() {
               <p id="library-count" role="status" aria-live="polite"></p>
             </div>
             <ul id="paper-list" class="paper-list" tabindex="0" aria-label="Available papers"></ul>
+            <details id="archived-papers" class="archive-disclosure">
+              <summary id="archived-papers-summary">Removed papers (<span id="archived-paper-count">0</span>)</summary>
+              <p>Removed papers stay attached to earlier exam sittings and responses. Restore one to use it for a new sitting.</p>
+              <ul id="archived-paper-list" class="archived-list"></ul>
+            </details>
           </div>
           <div class="form-stack">
-            <form id="portable-paper-form" data-paper-form class="utility-form paper-portability" method="post" enctype="multipart/form-data">
+            <form id="package-form" data-paper-form class="utility-form paper-portability" method="post" enctype="multipart/form-data">
+              <input name="format" type="hidden" value="package">
+              <fieldset><legend>Import paper JSON</legend>
+                <p class="form-help">Select <code>paper.json</code> and every referenced PDF, image or audio file together.</p>
+                <label for="paper-package">Paper JSON and assets</label><input id="paper-package" name="packageFiles" type="file" accept="application/json,.json,application/pdf,image/png,image/jpeg,image/webp,audio/mpeg,audio/mp4,audio/ogg,audio/wav" multiple required aria-describedby="package-help">
+                <small id="package-help">JSON is the primary authoring format. PacePaper checks that every referenced asset is included.</small>
+                <button type="submit">Import JSON paper</button>
+              </fieldset>
+            </form>
+
+            <form id="portable-paper-form" data-paper-form class="utility-form" method="post" enctype="multipart/form-data">
               <input name="format" type="hidden" value="portable">
-              <fieldset><legend>Import a saved paper</legend>
-                <p class="form-help">A single PacePaper paper file includes its questions, settings and permitted attachments.</p>
-                <label for="portable-paper">PacePaper paper file</label><input id="portable-paper" name="portablePaper" type="file" accept=".digitaldp-paper,application/vnd.digitaldp.paper+gzip" required>
-                <button type="submit">Import paper</button>
+              <fieldset><legend>Import portable paper</legend>
+                <p class="form-help">Use the canonical <code>.pp</code> file. Legacy <code>.digitaldp-paper</code> files remain supported for compatibility.</p>
+                <label for="portable-paper">PacePaper portable file</label><input id="portable-paper" name="portablePaper" type="file" accept=".pp,.digitaldp-paper,application/vnd.pacepaper+gzip,application/vnd.digitaldp.paper+gzip" required>
+                <button type="submit">Import portable paper</button>
               </fieldset>
             </form>
 
             <div id="paper-builder"></div>
-
-            <details class="advanced-import">
-              <summary>Advanced: import a prepared paper package</summary>
-              <form id="package-form" data-paper-form class="utility-form" method="post" enctype="multipart/form-data">
-                <input name="format" type="hidden" value="package">
-                <fieldset><legend>Structured paper package</legend>
-                  <p class="form-help">For paper files prepared outside the guided builder.</p>
-                  <label for="paper-package">Paper files</label><input id="paper-package" name="packageFiles" type="file" accept="application/json,.json,application/pdf,image/png,image/jpeg,image/webp,audio/mpeg,audio/mp4,audio/ogg,audio/wav" multiple required aria-describedby="package-help">
-                  <small id="package-help">Select <code>paper.json</code> and every referenced PDF, image or audio file together.</small>
-                  <button type="submit">Add paper package</button>
-                </fieldset>
-              </form>
-            </details>
 
             <details class="advanced-import">
               <summary>Advanced: manifest and separate assets</summary>
@@ -1355,7 +1557,7 @@ async function renderDashboard() {
           </div>
           <form id="session-form" class="utility-form" method="post">
             <fieldset><legend>Set up an exam</legend>
-              <small>This creates a new draft sitting from the library paper. The original stays unchanged and can be reused for other classes or dates.</small>
+              <small>This creates a new draft sitting and one private PIN and direct sign-in link per candidate. Save the access list when it appears; PacePaper cannot show the same PINs again.</small>
               <label for="session-class">Class</label><select id="session-class" name="classId" required></select>
               <label for="session-system">Exam system</label><select id="session-system" required></select>
               <label for="session-paper">Paper</label><select id="session-paper" name="paperId" required></select>
@@ -1400,7 +1602,17 @@ async function renderDashboard() {
         <footer><button type="button" data-cancel-archive>Cancel</button><button id="confirm-archive" class="danger-action" type="submit" value="confirm">Remove</button></footer>
       </form>
     </dialog>
-    <dialog id="live-work-dialog" class="exam-dialog live-work-dialog">
+    <dialog id="paper-replacement-dialog" class="exam-dialog compact-dialog" aria-labelledby="paper-replacement-title" aria-describedby="paper-replacement-context">
+      <form method="dialog">
+        <header><p class="eyebrow">Duplicate paper</p><h2 id="paper-replacement-title">Paper already in the library</h2><p id="paper-replacement-context">PacePaper will not create another copy automatically. Choose an unused paper to update with this import, or cancel and keep the library unchanged.</p></header>
+        <ul id="paper-conflict-list" class="conflict-list"></ul>
+        <label for="paper-replacement-target">Paper to update</label>
+        <select id="paper-replacement-target" required></select>
+        <p class="form-help">Papers already used by an exam sitting cannot be replaced. Remove an older paper from the active library before importing a separate revision.</p>
+        <footer><button type="submit" value="cancel" data-cancel-paper-replacement>Cancel</button><button id="confirm-paper-replacement" class="primary-action" type="submit" value="confirm">Replace unused paper</button></footer>
+      </form>
+    </dialog>
+    <dialog id="live-work-dialog" class="exam-dialog live-work-dialog" aria-labelledby="live-work-title" aria-describedby="live-work-context">
       <form method="dialog">
         <header>
           <p class="eyebrow">Live supervision</p>
@@ -1415,7 +1627,7 @@ async function renderDashboard() {
         <footer><button value="close">Close</button></footer>
       </form>
     </dialog>
-    <dialog id="submissions-dialog" class="exam-dialog submissions-dialog">
+    <dialog id="submissions-dialog" class="exam-dialog submissions-dialog" aria-labelledby="submissions-title" aria-describedby="submissions-context">
       <form method="dialog">
         <header><p class="eyebrow">Completed papers</p><h2 id="submissions-title">Candidate responses</h2><p id="submissions-context"></p><p>Open a candidate to review their complete paper. Use your browser's print dialog to print one candidate or save a single class PDF.</p></header>
         <div id="focus-integrity-slot"></div>

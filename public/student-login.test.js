@@ -12,16 +12,16 @@ mock.module("/app.js", () => ({
 
 const { buildStudentLoginPayload } = await import("./student.js");
 
-describe("student name login", () => {
-  test("sends only the class and student names", () => {
+describe("student candidate login", () => {
+  test("sends names and the teacher-issued PIN without unrelated form data", () => {
     const payload = buildStudentLoginPayload(new Map([
       ["className", "English A"],
       ["studentName", "Sam Lee"],
       ["candidateCode", "must-not-leak"],
-      ["pin", "must-not-leak"],
+      ["pin", "ABCD-2345"],
       ["studentId", "must-not-leak"],
     ]));
-    expect(payload).toEqual({ className: "English A", studentName: "Sam Lee" });
+    expect(payload).toEqual({ className: "English A", studentName: "Sam Lee", pin: "ABCD-2345" });
   });
 
 });

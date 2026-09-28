@@ -10,11 +10,13 @@ describe("compiled static assets", () => {
       .filter((file) => !file.includes(".test."))
       .map((file) => publicAssetPath(`/${file}`))
       .filter((file): file is string => file !== null);
-    const pageFiles = ["/", "/admin", "/clock", "/guide", "/student", "/presentation", "/tokens.css", "/paper-authoring/SKILL.md"]
+    const pageFiles = ["/", "/admin", "/calculator", "/clock", "/guide", "/student", "/presentation", "/tokens.css", "/paper-authoring/SKILL.md"]
       .map((pathname) => staticFilePath(pathname))
       .filter((file): file is string => file !== null);
 
     expect(new Set(staticAssetSourcePaths)).toEqual(new Set([...servedFiles, ...pageFiles]));
+    expect(staticAssetSourcePaths).toContain("public/calculator.js");
+    expect(staticAssetSourcePaths).toContain("public/calculator-demo.js");
   });
 
   test("resolves each compiled asset to a readable file path in development", async () => {

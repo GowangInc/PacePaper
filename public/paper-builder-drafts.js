@@ -1,11 +1,13 @@
 const PICKERS = ["builder-system", "builder-session", "builder-subject", "builder-custom-exam-type", "builder-level", "builder-paper"];
 const DETAILS = ["builder-title", "builder-paper-label", "builder-reading-time", "builder-duration", "builder-maximum-marks", "builder-instructions", "builder-source-text", "builder-video-url"];
+const CHECKS = ["builder-calculator-enabled"];
 const FILES = ["builder-pdf", "builder-audio"];
 
 export function captureBuilderDraft(form, questions) {
   const values = Object.fromEntries([...PICKERS, ...DETAILS].map((id) => [id, form.querySelector(`#${id}`)?.value ?? ""]));
-  return { id: PICKERS.map((id) => values[id]).join("|"), values, updatedAt: Date.now(),
-    questions: structuredClone(questions),
+  return { id: PICKERS.map((id) => values[id]).join("|"), values,
+    checks: Object.fromEntries(CHECKS.map((id) => [id, form.querySelector(`#${id}`)?.checked === true])),
+    updatedAt: Date.now(), questions: structuredClone(questions),
     files: Object.fromEntries(FILES.map((id) => [id, [...form.querySelector(`#${id}`).files]])) };
 }
 
@@ -100,6 +102,7 @@ export function mountBuilderDrafts(form, questions, restoreSelection, renderQues
       draftId = draft.id;
       restoreSelection(draft.values);
       for (const id of DETAILS) { const field = form.querySelector(`#${id}`); if (field) field.value = draft.values[id] ?? ""; }
+      for (const id of CHECKS) { const field = form.querySelector(`#${id}`); if (field) field.checked = draft.checks?.[id] === true; }
       for (const id of FILES) {
         const transfer = new DataTransfer();
         for (const file of draft.files[id]) transfer.items.add(file);

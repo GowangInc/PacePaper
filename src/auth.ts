@@ -1,11 +1,12 @@
 import {
   createAuthSession,
+  createCandidateAuthSession,
   deleteAuthSession,
   findAuthSession,
   type AuthRow,
+  type CandidateCredentialRow,
   type Role,
 } from "./db.ts";
-
 const COOKIE_NAME = "digitaldp_session_v2";
 const ADMIN_SESSION_SECONDS = 12 * 60 * 60;
 const STUDENT_SESSION_SECONDS = 8 * 60 * 60;
@@ -65,11 +66,29 @@ export function requireRole(request: Request, role: Role): AuthActor {
   return actor;
 }
 
-export function issueSession(role: Role, actorId: string, secure: boolean): string {
+export function issueSession(role: Role, actorId: string, secure: boolean, scopeId: string | null = null): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const token = Buffer.from(bytes).toString("base64url");
   const maxAge = role === "admin" ? ADMIN_SESSION_SECONDS : STUDENT_SESSION_SECONDS;
-  createAuthSession(hashToken(token), role, actorId, Date.now() + maxAge * 1000);
+  createAuthSession(hashToken(token), role, actorId, Date.now() + maxAge * 1000, scopeId);
+  const secureAttribute = secure ? "; Secure" : "";
+  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secureAttribute}`;
+}
+
+export function issueCandidateSession(
+  candidate: Pick<CandidateCredentialRow, "id" | "sessionId" | "pinHash" | "tokenHash" | "issuedAt">,
+  secure: boolean,
+): string | null {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  const token = Buffer.from(bytes).toString("base64url");
+  const maxAge = STUDENT_SESSION_SECONDS;
+  const created = createCandidateAuthSession(
+    hashToken(token),
+    candidate,
+    Date.now() + maxAge * 1000,
+    candidate.sessionId,
+  );
+  if (!created) return null;
   const secureAttribute = secure ? "; Secure" : "";
   return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secureAttribute}`;
 }

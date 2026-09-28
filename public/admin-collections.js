@@ -1,4 +1,4 @@
-const COLLECTIONS = new Set(["classes", "students", "sessions"]);
+const COLLECTIONS = new Set(["classes", "students", "sessions", "papers"]);
 const LIFECYCLE_ACTIONS = new Set(["archive", "restore"]);
 const LEVEL_ORDER = new Map([["SL", 0], ["HL", 1], ["SL/HL", 2]]);
 const PAPER_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
@@ -94,11 +94,13 @@ export function partitionDashboardState(state) {
       classes: state.classes ?? [],
       students: state.students ?? [],
       sessions: state.sessions ?? [],
+      papers: state.papers ?? [],
     },
     archived: {
       classes: state.archived?.classes ?? [],
       students: state.archived?.students ?? [],
       sessions: state.archived?.sessions ?? [],
+      papers: state.archived?.papers ?? [],
     },
   };
 }
@@ -115,16 +117,23 @@ export function archiveDialogCopy(collection, label) {
     classes: "Students will no longer be able to sign in with this class.",
     students: "This student will no longer be available at sign-in.",
     sessions: "This exam sitting will no longer be available to students.",
+    papers: "This paper will no longer be available when setting up a new exam sitting.",
+  };
+  const confirmLabels = {
+    classes: "Remove class",
+    students: "Remove student",
+    sessions: "Remove exam sitting",
+    papers: "Remove paper",
   };
   if (!descriptions[collection]) throw new TypeError("Unknown dashboard collection");
   return {
     title: collection === "classes" ? `Remove class ${label}?` : `Remove ${label}?`,
     description: `${descriptions[collection]} Previous responses stay saved, and you can restore it later.`,
-    confirmLabel: collection === "classes" ? "Remove class" : collection === "students" ? "Remove student" : "Remove exam sitting",
+    confirmLabel: confirmLabels[collection],
   };
 }
 
-function lifecycleButton(documentRoot, { action, collection, id, label, text, className = "compact" }) {
+export function lifecycleButton(documentRoot, { action, collection, id, label, text, className = "compact" }) {
   const button = documentRoot.createElement("button");
   button.type = "button";
   button.className = className;
@@ -359,6 +368,7 @@ export function sessionActionModel(session, archived = false) {
   }
   if (session.status === "live") actions.push("watch");
   if (session.status !== "ended") actions.push("clock", session.status === "draft" ? "start" : "end");
+  if (session.requireCandidatePin && session.status !== "ended") actions.push("access");
   if (session.status !== "draft") actions.push("responses");
   if (session.status !== "live") actions.push("archive");
   return actions;
@@ -408,6 +418,14 @@ function renderSessionActions(documentRoot, session, actions, archived) {
       container.append(watch);
     } else if (action === "responses") {
       container.append(responseButton(documentRoot, session));
+    } else if (action === "access") {
+      const access = documentRoot.createElement("button");
+      access.type = "button";
+      access.dataset.candidateAccess = session.id;
+      access.className = "compact";
+      access.textContent = "Reset access PINs";
+      access.setAttribute("aria-label", `Reset candidate access PINs for ${label}`);
+      container.append(access);
     } else {
       container.append(lifecycleButton(documentRoot, {
         action,

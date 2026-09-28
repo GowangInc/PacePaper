@@ -10,7 +10,7 @@ describe("browser paper drafts", () => {
       markingGuidance: "Credit a supported comparison.",
       mediaFiles: [file],
     }];
-    const form = { querySelector: (id) => ({ value: id, files: [file] }) };
+    const form = { querySelector: (id) => ({ value: id, files: [file], checked: id === "#builder-calculator-enabled" }) };
     const snapshot = captureBuilderDraft(form, questions);
     questions[0].prompt = "Changed later";
     expect(snapshot.questions[0].prompt).toBe("Original question");
@@ -20,6 +20,7 @@ describe("browser paper drafts", () => {
     expect(snapshot.files["builder-audio"]).toHaveLength(1);
     expect(snapshot.values["builder-custom-exam-type"]).toBe("#builder-custom-exam-type");
     expect(snapshot.values["builder-instructions"]).toBe("#builder-instructions");
+    expect(snapshot.checks["builder-calculator-enabled"]).toBeTrue();
   });
 
   test("waits for the database transaction and rejects an aborted write", async () => {

@@ -129,6 +129,7 @@ export function createPaperPreview(container) {
     const instructions = node("section", "paper-preview-instructions");
     instructions.append(node("h5", "", "Instructions"), node("p", "", model.instructions || "Student instructions will appear here."));
     if (model.toolSummary) instructions.append(node("p", "paper-preview-rules", model.toolSummary));
+    if (model.calculatorEnabled) instructions.append(node("p", "paper-preview-calculator", "Built-in scientific and graphing calculator enabled."));
     paper.append(instructions);
 
     if (model.phases?.length) {

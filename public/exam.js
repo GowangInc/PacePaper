@@ -7,6 +7,8 @@ import { createTextHighlighter } from "/text-highlights.js";
 import { renderResourceText } from "./resource-text.js";
 import { createPreviewAudioApi } from "./preview-audio.js";
 import { createResponseSaveState, downloadResponseRecovery } from "./response-save-state.js";
+import { mountExamCalculator, phaseAllowsCalculator } from "./calculator.js";
+import { createPdfAnnotationViewer, normalizePdfAnnotations } from "./pdf-annotations.js";
 
 const RICH_TAGS = new Set([
   "div", "p", "br", "b", "strong", "i", "em", "u", "sup", "sub", "ol", "ul", "li",
@@ -96,7 +98,7 @@ function textBlock(tag, className, text) {
   return element;
 }
 
-export function mountExam(state, { onSubmitted, preview = false }) {
+export function mountExam(state, { onSubmitted, onStateRefresh, preview = false }) {
   // A teacher rehearsing a paper: the real candidate interface, but nothing is
   // recorded. Every path that would reach a student endpoint checks this first.
   const previewMode = preview === true;
@@ -106,6 +108,17 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   const sessionId = state.session.id;
   const response = state.response;
   const responseId = typeof response.id === "string" && response.id ? response.id : null;
+  const clientIdKey = responseId ? `digitaldp:client:${responseId}` : null;
+  let clientId = null;
+  try {
+    clientId = clientIdKey ? sessionStorage.getItem(clientIdKey) : null;
+    if (!clientId && clientIdKey) {
+      clientId = crypto.randomUUID();
+      sessionStorage.setItem(clientIdKey, clientId);
+    }
+  } catch {
+    clientId = crypto.randomUUID();
+  }
   const questionIds = new Set(paper.questions.map((question) => question.id));
   const resourceKeys = new Set(paper.resources.map((resource) => resource.key));
   const draftKey = responseId ? `digitaldp:draft:${responseId}` : null;
@@ -126,6 +139,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   let tickTimer;
   let dirty = false;
   let saving = null;
+  let forceSavePending = false;
   let submitting = false;
   let expiredHandled = false;
   let activePhase = phaseAtTime(state.session.timeline, Date.now() + serverOffset) ?? state.session.phase;
@@ -148,7 +162,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   };
 
   function responseLocked() {
-    return !activePhase?.responseAllowed;
+    return state.session.endingAt != null || !activePhase?.responseAllowed;
   }
 
   // Report when the candidate leaves the exam window so the teacher sees it live.
@@ -227,8 +241,10 @@ export function mountExam(state, { onSubmitted, preview = false }) {
     audioPlays: Object.fromEntries(
       Object.entries(response.audioPlays ?? {}).filter(([key, value]) => resourceKeys.has(key) && Number.isInteger(value)),
     ),
+    annotations: normalizePdfAnnotations(response.annotations),
     notepad: typeof response.notepad === "string" ? response.notepad : "",
     updatedAt: Number(response.updatedAt) || 0,
+    revision: Number.isSafeInteger(response.revision) ? response.revision : 0,
   };
 
   if (obsoleteDraftKey !== draftKey) removeLocalItem(obsoleteDraftKey);
@@ -242,6 +258,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
       Object.entries(localDraft.answers ?? {}).filter(([id, value]) => questionIds.has(id) && typeof value === "string"),
     );
     draft.flags = new Set((localDraft.flags ?? []).filter((id) => questionIds.has(id)));
+    draft.annotations = normalizePdfAnnotations(localDraft.annotations);
     draft.notepad = typeof localDraft.notepad === "string" ? localDraft.notepad : draft.notepad;
     draft.updatedAt = Number(localDraft.updatedAt) || draft.updatedAt;
     activeQuestionId = draft.selectedQuestionId ?? activeQuestionId;
@@ -281,6 +298,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
           <button data-submit-exam class="submit-tool" type="button">Submit</button>
           <button id="flag-tool" type="button" aria-pressed="false">Flag</button>
           <button id="notepad-tool" type="button">Notepad</button>
+          ${paper.calculatorEnabled ? `<button id="calculator-tool" type="button" hidden>Calculator</button>` : ""}
           <details class="highlight-menu">
             <summary>Highlight</summary>
             <div class="highlight-palette" role="group" aria-label="Highlight colours">
@@ -369,6 +387,13 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   highlighter.decorate(document.querySelector("#instructions-copy"), "paper:instructions", paper.instructions);
   const notepad = document.querySelector("#notepad");
   notepad.value = draft.notepad;
+  const calculatorTool = document.querySelector("#calculator-tool");
+  const calculator = paper.calculatorEnabled
+    ? mountExamCalculator(shell, {
+        signal,
+        storageKey: `digitaldp:calculator:${responseId ?? sessionId}`,
+      })
+    : null;
   const previewAudioApi = createPreviewAudioApi({ resources: paper.resources, paperId: paper.id, fallbackApi: api });
 
   const audioController = createExamAudioController({
@@ -420,6 +445,9 @@ export function mountExam(state, { onSubmitted, preview = false }) {
       selectedQuestionId: draft.selectedQuestionId,
       answers,
       flags: [...draft.flags],
+      annotations: draft.annotations,
+      expectedRevision: draft.revision,
+      clientId,
       notepad: draft.notepad,
     };
   }
@@ -434,6 +462,8 @@ export function mountExam(state, { onSubmitted, preview = false }) {
         answers: draft.answers,
         flags: [...draft.flags],
         notepad: draft.notepad,
+        annotations: draft.annotations,
+        revision: draft.revision,
         unsaved: true,
         updatedAt: draft.updatedAt,
       }));
@@ -473,31 +503,53 @@ export function mountExam(state, { onSubmitted, preview = false }) {
     saveTimer = setTimeout(saveNow, 1_200);
   }
 
-  async function saveNow() {
+  async function saveNow(force = false) {
     if (previewMode) {
       dirty = false;
       return;
     }
-    if (saving) return saving;
-    if (!dirty || submitting || responseLocked()) return;
+    if (saving) {
+      if (force) forceSavePending = true;
+      return saving;
+    }
+    if ((!dirty && !force) || submitting) return;
+    const hasChanges = dirty;
+    if (force && !hasChanges) saveState.edit();
+    const acknowledgeOnly = force && !hasChanges && responseLocked();
     dirty = false;
     const sentRevision = saveState.revision;
     showSaveState();
-    saving = api("/api/student/response", { method: "PUT", body: payload() })
-      .then(({ savedAt, expired }) => {
+    saving = api("/api/student/response", {
+      method: "PUT",
+      body: acknowledgeOnly ? { ...payload(), acknowledgeOnly: true } : payload(),
+    })
+      .then(({ savedAt, expired, revision }) => {
+        draft.revision = revision;
         saveState.acknowledge(sentRevision);
-        if (!saveState.pending) {
+        if (!acknowledgeOnly && !saveState.pending) {
           draft.updatedAt = savedAt;
           removeLocalItem(draftKey);
-        } else {
+        } else if (!acknowledgeOnly) {
           // The server timestamp belongs to the older request, not the newer
           // draft. Keep recovery ordering correct if the page reloads now.
           persistLocal(Math.max(Date.now() + serverOffset, savedAt + 1));
         }
+        if (acknowledgeOnly && hasChanges) dirty = true;
         showSaveState();
         if (expired) onSubmitted();
       })
       .catch((error) => {
+        if (hasChanges) dirty = true;
+        if (error instanceof ApiError && error.status === 409 && error.payload?.code === "response_revision_conflict") {
+          dirty = false;
+          persistLocal();
+          saveState.fail("A newer save exists. Reload to review it, or download this recovery copy.");
+          const retry = document.querySelector("#retry-save");
+          retry.disabled = true;
+          retry.textContent = "Reload required";
+          showSaveState();
+          return;
+        }
         if (error instanceof ApiError && error.status === 409) {
           persistLocal();
           saveState.fail(error.message);
@@ -519,12 +571,27 @@ export function mountExam(state, { onSubmitted, preview = false }) {
       })
       .finally(() => {
         saving = null;
-        if (dirty && !submitting) {
-          clearTimeout(saveTimer);
-          saveTimer = setTimeout(saveNow, 3_000);
+        const queuedForce = forceSavePending;
+        forceSavePending = false;
+        if ((dirty || queuedForce) && !submitting) {
+          if (queuedForce) {
+            void saveNow(true);
+          } else {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => saveNow(state.session.endingAt !== null), 3_000);
+          }
         }
       });
     return saving;
+  }
+  function acknowledgeExamEnd() {
+    if (previewMode || response.submittedAt !== null) return;
+    if (dirty) persistLocal();
+    applyPhase(activePhase, true);
+    document.querySelector("#phase-banner-title").textContent = "Teacher is ending the examination";
+    document.querySelector("#phase-banner-copy").textContent = "Your latest response is being saved. Keep this page open.";
+    setSaveStatus("Saving final response…");
+    void saveNow(true);
   }
 
   function attempted(question) {
@@ -892,10 +959,19 @@ export function mountExam(state, { onSubmitted, preview = false }) {
       image.alt = resource.label;
       viewer.append(image);
     } else if (resource.kind === "document") {
-      const frame = document.createElement("iframe");
-      frame.src = resource.url;
-      frame.title = resource.label;
-      viewer.append(frame);
+      viewer.append(createPdfAnnotationViewer({
+        resource,
+        annotations: draft.annotations.filter((annotation) => annotation.resourceKey === resource.key),
+        signal,
+        locked: responseLocked(),
+        onChange(nextAnnotations) {
+          draft.annotations = [
+            ...draft.annotations.filter((annotation) => annotation.resourceKey !== resource.key),
+            ...nextAnnotations,
+          ];
+          markDirty();
+        },
+      }));
     } else if (resource.kind === "video") {
       const embed = youtubeEmbedUrl(resource.url);
       const wrap = document.createElement("div");
@@ -1020,7 +1096,8 @@ export function mountExam(state, { onSubmitted, preview = false }) {
     setSaveStatus(auto ? "Time expired — submitting…" : "Submitting…");
     try {
       if (saving) await saving;
-      const { submittedAt } = await api("/api/student/submit", { method: "POST", body: payload() });
+      const { submittedAt, revision } = await api("/api/student/submit", { method: "POST", body: payload() });
+      draft.revision = revision;
       saveState.acknowledge(saveState.revision);
       dirty = false;
       removeLocalItem(draftKey);
@@ -1052,8 +1129,9 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   function applyPhase(nextPhase, force = false) {
     const changed = nextPhase?.id !== activePhase?.id;
     if (!force && !changed) { activePhase = nextPhase; return; }
-    if (changed && dirty && activePhase?.responseAllowed) void saveNow();
+    const phaseSave = changed && dirty && activePhase?.responseAllowed ? saveNow() : null;
     activePhase = nextPhase;
+    if (changed && !previewMode) void Promise.resolve(phaseSave).finally(() => onStateRefresh?.());
     shell.dataset.phase = activePhase?.kind === "work" ? "writing" : activePhase?.kind ?? "transition";
     shell.dataset.phaseId = activePhase?.id ?? "transition";
     document.querySelector("#exam-phase-label").textContent = activePhase?.label ?? "Phase transition";
@@ -1067,6 +1145,12 @@ export function mountExam(state, { onSubmitted, preview = false }) {
     document.querySelector("#phase-banner-copy").textContent = phaseLockMessage(activePhase);
     document.querySelector(".exam-workspace").inert = activePhase?.kind === "break";
     document.querySelector("#notepad-tool").disabled = responseLocked();
+    const calculatorAllowed = Boolean(calculator && phaseAllowsCalculator(activePhase));
+    if (calculatorTool) {
+      calculatorTool.hidden = !calculatorAllowed;
+      calculatorTool.disabled = !calculatorAllowed;
+    }
+    calculator?.setEnabled(calculatorAllowed);
     document.querySelector("#summary-tool").disabled = activePhase?.kind === "break" || visibleQuestions().length === 0;
     document.querySelectorAll("[data-highlight], [data-clear-highlights]").forEach((control) => {
       control.disabled = responseLocked();
@@ -1184,6 +1268,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
     markDirty();
   }, { signal });
   document.querySelector("#notepad-tool").addEventListener("click", () => document.querySelector("#notepad-dialog").showModal(), { signal });
+  calculatorTool?.addEventListener("click", () => calculator.open(), { signal });
   notepad.addEventListener("input", () => { draft.notepad = notepad.value; markDirty(); }, { signal });
   document.querySelector("#timer-tool").addEventListener("click", cycleTimer, { signal });
   document.querySelector("#accessibility-tool").addEventListener("click", () => document.querySelector("#accessibility-dialog").showModal(), { signal });
@@ -1232,6 +1317,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   }
   // A preview must never claim to be saving: say so from the first paint.
   if (previewMode) showSaveState();
+  else if (state.session.endingAt != null) acknowledgeExamEnd();
   else if (dirty && !responseLocked()) {
     showSaveState();
     saveTimer = setTimeout(saveNow, 1_200);
@@ -1252,11 +1338,21 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   }
   cleanup.pendingRecovery = () => saveState.pending ? recoveryPayload() : null;
   cleanup.updateState = (next) => {
+    const currentQuestionIds = paper.questions.map(({ id }) => id).join("\u0000");
+    const nextQuestionIds = next.paper.questions.map(({ id }) => id).join("\u0000");
+    if (nextQuestionIds !== currentQuestionIds) return true;
     if (next.session.id !== sessionId || next.serverTime < state.serverTime) return;
+    const endingStarted = next.session.endingAt != null && state.session.endingAt == null;
+    if (!dirty && !saving && !saveState.pending && Number.isSafeInteger(next.response?.revision)) {
+      draft.revision = Math.max(draft.revision, next.response.revision);
+    }
     state = { ...state, session: next.session, serverTime: next.serverTime };
     serverOffset = next.serverTime - Date.now();
     // Keep the existing editors, ink, audio, focus and unsaved answers mounted.
     tick();
+    if (endingStarted) acknowledgeExamEnd();
+    else if (next.session.endingAt == null) applyPhase(activePhase, true);
+    return false;
   };
   return cleanup;
 }

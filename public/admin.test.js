@@ -25,7 +25,12 @@ mock.module("/admin-collections.js", () => ({
 }));
 mock.module("/ink-canvas.js", () => ({ hasInkResponse() { return false; }, renderInkSubmission() {} }));
 mock.module("/admin-network.js", () => ({ mountAdminNetwork() {} }));
-mock.module("/admin-papers.js", () => ({ renderPaperLibrary() {}, renderSelectedPaper() {}, renderSessionPaperSelectors() {} }));
+mock.module("/admin-papers.js", () => ({
+  confirmPaperReplacement() {},
+  renderPaperLibrary() {},
+  renderSelectedPaper() {},
+  renderSessionPaperSelectors() {},
+}));
 mock.module("/class-rosters.js", () => ({ mountClassRosterTransfer() {} }));
 mock.module("/paper-builder.js", () => ({ mountPaperBuilder() {} }));
 mock.module("/student-connection.js", () => ({ mountStudentConnection() {} }));
@@ -56,17 +61,13 @@ describe("teacher dashboard presentation", () => {
     expect(source).toContain("setInterval(refreshPresence, 10_000)");
   });
 
-  test("omits source-rights status from the teacher library and candidate papers", () => {
-    expect(source).not.toContain("rightsLabel");
-    expect(source).not.toContain("rights not recorded");
-    expect(source).not.toContain('appendMetadata(metadata, "Source status"');
-  });
 
   test("shows the active student connection address on the dashboard", () => {
     expect(source).toContain("mountStudentConnection(document, { origin: studentConnectionOrigin })");
     expect(source).toContain("bootstrap.studentOrigin ?? location.origin");
     expect(source).toContain("data-student-connection-link");
     expect(source).toContain("data-copy-student-connection");
+    expect(source).toContain('new URL("/student", studentConnectionOrigin ?? location.origin)');
   });
 
   test("uses one archive confirmation dialog while restore remains direct", () => {

@@ -5,9 +5,10 @@ import { initTheme, themeRoleForPath } from "./theme.js";
 initTheme(themeRoleForPath());
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, payload = null) {
     super(message);
     this.status = status;
+    this.payload = payload;
   }
 }
 
@@ -20,7 +21,7 @@ export async function api(path, options = {}) {
   }
   const response = await fetch(path, request);
   const payload = response.status === 204 ? null : await response.json().catch(() => null);
-  if (!response.ok) throw new ApiError(payload?.error ?? `Request failed (${response.status})`, response.status);
+  if (!response.ok) throw new ApiError(payload?.error ?? `Request failed (${response.status})`, response.status, payload);
   return payload;
 }
 
@@ -138,6 +139,9 @@ async function start() {
     document.title = "PacePaper · Teacher dashboard";
     const { renderAdmin } = await import("/admin.js");
     await renderAdmin(bootstrap);
+  } else if (path === "/calculator") {
+    const { renderCalculatorInspection } = await import("/calculator-demo.js");
+    renderCalculatorInspection();
   } else if (path === "/clock") {
     const { renderCountdown } = await import("/countdown.js");
     await renderCountdown(bootstrap);

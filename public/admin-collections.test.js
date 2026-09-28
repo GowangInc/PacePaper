@@ -84,16 +84,26 @@ describe("teacher dashboard collections", () => {
   test("partitions active and archived state without mixing overview data", () => {
     const activeClass = { id: "active" };
     const archivedClass = { id: "archived" };
+    const activePaper = { id: "paper-active" };
+    const archivedPaper = { id: "paper-archived" };
     const result = partitionDashboardState({
       classes: [activeClass],
       students: [],
       sessions: [],
-      archived: { classes: [archivedClass], students: [{ id: "student-old" }], sessions: [] },
+      papers: [activePaper],
+      archived: {
+        classes: [archivedClass],
+        students: [{ id: "student-old" }],
+        sessions: [],
+        papers: [archivedPaper],
+      },
     });
     expect(result.active.classes).toEqual([activeClass]);
     expect(result.archived.classes).toEqual([archivedClass]);
     expect(result.active.students).toEqual([]);
     expect(result.archived.students).toHaveLength(1);
+    expect(result.active.papers).toEqual([activePaper]);
+    expect(result.archived.papers).toEqual([archivedPaper]);
   });
 
   test("builds only supported lifecycle API paths", () => {
@@ -101,7 +111,9 @@ describe("teacher dashboard collections", () => {
       .toBe("/api/admin/students/student%2Fa/archive");
     expect(collectionActionPath("sessions", "session-1", "restore"))
       .toBe("/api/admin/sessions/session-1/restore");
-    expect(() => collectionActionPath("papers", "paper-1", "archive")).toThrow(TypeError);
+    expect(collectionActionPath("papers", "paper-1", "archive"))
+      .toBe("/api/admin/papers/paper-1/archive");
+    expect(() => collectionActionPath("responses", "response-1", "archive")).toThrow(TypeError);
   });
 
   test("labels class names and preserves stable dropdown selections", () => {
@@ -216,6 +228,8 @@ describe("teacher dashboard collections", () => {
     expect(sessionActionModel(session({ status: "live" }))).toEqual(["watch", "clock", "end", "responses"]);
     expect(sessionActionModel(session({ status: "ended" }))).toEqual(["responses", "archive"]);
     expect(sessionActionModel(session({ status: "ended" }), true)).toEqual(["restore", "responses"]);
+    expect(sessionActionModel(session({ status: "draft", requireCandidatePin: true })))
+      .toEqual(["clock", "start", "access", "archive"]);
     expect(classHasLiveSession([session({ status: "live" })], "class-1")).toBe(true);
     expect(classHasLiveSession([session({ status: "ended" })], "class-1")).toBe(false);
   });
@@ -270,5 +284,12 @@ describe("teacher dashboard collections", () => {
     expect(documentRoot.querySelector("#confirm-archive").textContent).toBe("Remove student");
     expect(error.hidden).toBe(true);
     expect(error.textContent).toBe("");
+  });
+
+  test("describes paper removal as reversible library management", () => {
+    const content = archiveDialogCopy("papers", "English A Paper 1");
+    expect(content.confirmLabel).toBe("Remove paper");
+    expect(content.description).toContain("new exam sitting");
+    expect(content.description).toContain("restore it later");
   });
 });

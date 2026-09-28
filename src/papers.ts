@@ -10,6 +10,7 @@ export const SOURCE_CLASSIFICATIONS = [
   "teacher-authored",
   "school-authorized",
   "official-public-reference",
+  "public-educational-practice",
   "unknown-local-only",
 ] as const;
 export const PRACTICE_FIDELITIES = ["official-format", "adapted", "school-custom"] as const;
@@ -83,6 +84,7 @@ export interface PaperManifest {
   durationMinutes: number;
   readingTimeMinutes: number;
   phases?: ExamPhase[];
+  calculatorEnabled?: boolean;
   maximumMarks?: number;
   subjectWeightPercent?: number;
   mode: PaperMode;
@@ -120,7 +122,8 @@ const MAX_PORTABLE_ASSET_BYTES = 40_000_000;
 const MAX_PORTABLE_TOTAL_ASSET_BYTES = 64_000_000;
 const MAX_PORTABLE_FILE_BYTES = 70_000_000;
 const MAX_PORTABLE_JSON_BYTES = 90_000_000;
-const PORTABLE_FORMAT = "digitaldp-paper";
+const PORTABLE_FORMAT = "pacepaper";
+const LEGACY_PORTABLE_FORMAT = "digitaldp-paper";
 const ALLOWED_MIME: Record<string, true> = {
   "application/pdf": true,
   "image/png": true,
@@ -366,17 +369,22 @@ export function parseManifest(value: unknown): PaperManifest {
   const durationMinutes = integer(source.durationMinutes, "manifest.durationMinutes", 5, 360);
   const readingTimeMinutes = optionalInteger(source.readingTimeMinutes, "manifest.readingTimeMinutes", 0, 60) ?? 0;
   const phases = parsePhases(source.phases, durationMinutes, readingTimeMinutes, questions);
+  const sourceClassification = oneOf(
+    source.sourceClassification ?? "unknown-local-only",
+    SOURCE_CLASSIFICATIONS,
+    "manifest.sourceClassification",
+  );
+  const exportAuthorized = optionalBoolean(source.exportAuthorized, "manifest.exportAuthorized");
+  if (exportAuthorized && !["teacher-authored", "school-authorized"].includes(sourceClassification)) {
+    throw new Error("manifest.exportAuthorized requires teacher-authored or school-authorized source material");
+  }
   return {
     version: 1,
     assessmentSession: source.assessmentSession === undefined ? undefined : text(source.assessmentSession, "manifest.assessmentSession", 80),
     examProfileId: source.examProfileId === undefined ? undefined : text(source.examProfileId, "manifest.examProfileId", 240),
     examFormat: parseExamFormat(source.examFormat),
-    sourceClassification: oneOf(
-      source.sourceClassification ?? "unknown-local-only",
-      SOURCE_CLASSIFICATIONS,
-      "manifest.sourceClassification",
-    ),
-    exportAuthorized: optionalBoolean(source.exportAuthorized, "manifest.exportAuthorized"),
+    sourceClassification,
+    exportAuthorized,
     title: text(source.title, "manifest.title", 160),
     subject,
     subjectLabel: text(source.subjectLabel, "manifest.subjectLabel", 100),
@@ -384,6 +392,7 @@ export function parseManifest(value: unknown): PaperManifest {
     paper: text(source.paper, "manifest.paper", 80),
     durationMinutes,
     readingTimeMinutes,
+    calculatorEnabled: optionalBoolean(source.calculatorEnabled, "manifest.calculatorEnabled") ?? false,
     phases,
     maximumMarks: optionalInteger(source.maximumMarks, "manifest.maximumMarks", 1, 1_000),
     subjectWeightPercent: optionalInteger(source.subjectWeightPercent, "manifest.subjectWeightPercent", 1, 100),
@@ -565,7 +574,7 @@ async function parsePortablePaper(file: File): Promise<ImportedPaper> {
     if (error instanceof SyntaxError) throw new Error("PacePaper paper file is not valid JSON");
     throw error;
   }
-  if (source.format !== PORTABLE_FORMAT || source.version !== 1) {
+  if (![PORTABLE_FORMAT, LEGACY_PORTABLE_FORMAT].includes(source.format as string) || source.version !== 1) {
     throw new Error("PacePaper paper file has an unsupported version");
   }
   if (!Array.isArray(source.assets) || source.assets.length > 30) {

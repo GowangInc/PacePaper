@@ -8,6 +8,7 @@ import { downloadResponseRecovery } from "./response-save-state.js";
 let cleanupExam;
 let pollTimer;
 let loading = false;
+let refreshPending = false;
 let selectedSessionId = null;
 let connectionState = "connecting";
 let connectionGeneration = 0;
@@ -34,6 +35,7 @@ export function buildStudentLoginPayload(entries) {
   return {
     className: values.className,
     studentName: values.studentName,
+    pin: values.pin,
   };
 }
 
@@ -77,13 +79,15 @@ function authFrame() {
         <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
         <p class="eyebrow">Student sign in</p>
         <h1>Find your examination</h1>
-        <p>Enter your class name and your own name.</p>
+        <p>Enter your class name, your own name, and the candidate PIN supplied by your teacher.</p>
         <p class="supervision-notice">Your teacher can see your work during a sitting: your answers, drawings, notes, and flagged questions. This covers only PacePaper — nothing else on your computer.</p>
         <form id="student-login" method="post">
           <label for="class-name">Class name</label>
           <input id="class-name" name="className" autocomplete="organization" maxlength="100" required>
           <label for="student-name-input">Your name</label>
           <input id="student-name-input" name="studentName" autocomplete="name" maxlength="100" required>
+          <label for="candidate-pin">Candidate PIN <small>(leave blank only for an older sitting)</small></label>
+          <input id="candidate-pin" name="pin" autocomplete="one-time-code" autocapitalize="characters" maxlength="32">
           <button class="primary-action" type="submit">Continue</button>
         </form>
         <p id="global-status" class="status-message" role="status" aria-live="polite" hidden></p>
@@ -98,8 +102,8 @@ function authFrame() {
     submit.disabled = true;
     announce("Signing in…");
     try {
-      await api("/api/login/student", { method: "POST", body: buildStudentLoginPayload(new FormData(form)) });
-      selectedSessionId = null;
+      const result = await api("/api/login/student", { method: "POST", body: buildStudentLoginPayload(new FormData(form)) });
+      selectedSessionId = result.sessionId ?? null;
       beginLiveConnection();
       await loadState();
     } catch (error) {
@@ -108,6 +112,22 @@ function authFrame() {
       submit.disabled = false;
     }
   });
+
+  const token = new URLSearchParams(location.search).get("token");
+  if (token) {
+    form.hidden = true;
+    announce("Checking candidate access link…");
+    void api("/api/login/student", { method: "POST", body: { token } }).then(async (result) => {
+      history.replaceState(null, "", "/student");
+      selectedSessionId = result.sessionId;
+      beginLiveConnection();
+      await loadState();
+    }).catch((error) => {
+      history.replaceState(null, "", "/student");
+      form.hidden = false;
+      announce(error instanceof Error ? error.message : "Candidate access link failed", "error");
+    });
+  }
 }
 
 function stopExam() {
@@ -498,12 +518,15 @@ async function renderExam(state) {
   clearInterval(pollTimer);
   stopExam();
   const { mountExam } = await import("./exam.js");
-  cleanupExam = mountExam(state, { onSubmitted: loadState });
+  cleanupExam = mountExam(state, { onSubmitted: loadState, onStateRefresh: loadState });
   pollTimer = setInterval(loadState, 30_000);
 }
 
 async function loadState() {
-  if (loading) return;
+  if (loading) {
+    refreshPending = true;
+    return;
+  }
   loading = true;
   try {
     const endpoint = selectedSessionId
@@ -525,7 +548,8 @@ async function loadState() {
     } else if (!document.querySelector(`.exam-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) {
       await renderExam(state);
     } else {
-      cleanupExam?.updateState?.(state);
+      const remount = cleanupExam?.updateState?.(state);
+      if (remount) await renderExam(state);
     }
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
@@ -538,6 +562,10 @@ async function loadState() {
     }
   } finally {
     loading = false;
+    if (refreshPending) {
+      refreshPending = false;
+      queueMicrotask(loadState);
+    }
   }
 }
 
@@ -553,7 +581,7 @@ function beginLiveConnection() {
     } else if (event.type === "socket-closed") {
       connectionState = "reconnecting";
       renderConnectionState();
-    } else if (["exam-started", "exam-ended", "exam-list-changed"].includes(event.type)) {
+    } else if (["exam-started", "exam-ending", "exam-end-cancelled", "exam-ended", "exam-list-changed"].includes(event.type)) {
       loadState();
     }
   });

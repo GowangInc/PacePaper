@@ -2,6 +2,7 @@ import { createPaperPreview } from "./paper-preview.js";
 import { createExamSystems } from "./exam-format-profiles.js";
 import { field, option, responseFields } from "./paper-builder-dom.js";
 import { mountBuilderDrafts } from "./paper-builder-drafts.js";
+import { phaseAllowsCalculator } from "./calculator.js";
 
 const AUDIO_PLAY_LIMIT = 2;
 
@@ -398,6 +399,16 @@ function selectedExam(form) {
     : null;
 }
 
+function calculatorEligible(selection) {
+  const mathematics = /\b(?:math|mathematics|calculus)\b/iu.test([
+    selection?.course?.value,
+    selection?.course?.label,
+    selection?.customExamType,
+  ].filter(Boolean).join(" "));
+  const paperRules = [selection?.paper?.toolSummary, selection?.paper?.instructions].filter(Boolean);
+  return mathematics && phaseAllowsCalculator({ kind: "work", responseAllowed: true, tools: paperRules });
+}
+
 export function valueForLevel(paper, property, level) {
   const variants = paper[`${property}ByLevel`];
   if (level !== "SL/HL") return variants?.[level] ?? paper[property];
@@ -500,6 +511,8 @@ export function paperPreviewData(form, questions) {
     durationLabel: paper.durationLabel ?? "Writing",
     maximumMarks: integerOrUndefined(form.querySelector("#builder-maximum-marks").value),
     subjectWeightPercent: valueForLevel(paper, "subjectWeightPercent", level),
+    calculatorEnabled: calculatorEligible(selection)
+      && form.querySelector("#builder-calculator-enabled")?.checked === true,
     instructions: form.querySelector("#builder-instructions").value.trim(),
     sourceText: allowedMaterials.has("text") ? form.querySelector("#builder-source-text").value.trim() : "",
     sharedResources,
@@ -533,6 +546,8 @@ export function packageData(form, questions) {
   const pdfFiles = allowedMaterials.has("pdf") ? [...form.querySelector("#builder-pdf").files] : [];
   const audioFiles = allowedMaterials.has("audio") ? [...form.querySelector("#builder-audio").files] : [];
   const sourceText = allowedMaterials.has("text") ? form.querySelector("#builder-source-text").value.trim() : "";
+  const calculatorEnabled = calculatorEligible(examSelection)
+    && form.querySelector("#builder-calculator-enabled")?.checked === true;
   const videoUrl = allowedMaterials.has("video") ? form.querySelector("#builder-video-url").value.trim() : "";
   if (videoUrl && !/^https?:\/\//iu.test(videoUrl)) throw new Error("The video link must start with https:// or http://.");
   const questionMedia = questions.flatMap((question) => question.mediaFiles);
@@ -632,6 +647,7 @@ export function packageData(form, questions) {
     && readingTimeMinutes === examSelection.paper.readingTime
     && maximumMarks === valueForLevel(examSelection.paper, "maximumMarks", examSelection.level)
     && instructions === valueForLevel(examSelection.paper, "instructions", examSelection.level)
+    && !calculatorEnabled
     && (!examSelection.paper.requiredDocumentLabel || pdfFiles.length > 0);
   const manifest = {
     version: 1,
@@ -657,6 +673,7 @@ export function packageData(form, questions) {
     paper: paperLabel,
     durationMinutes,
     readingTimeMinutes,
+    calculatorEnabled,
     ...(examSelection.paper.phases?.length ? { phases: effectivePhases(examSelection, form) } : {}),
     maximumMarks,
     subjectWeightPercent: valueForLevel(examSelection.paper, "subjectWeightPercent", examSelection.level),
@@ -741,6 +758,10 @@ export function mountPaperBuilder(container, onSubmit) {
                 <label for="builder-maximum-marks">Maximum marks <small>optional</small><input id="builder-maximum-marks" type="number" min="1" max="1000" step="1" inputmode="numeric"></label>
               </div>
               <p class="form-help">Reading time runs first and does not use a student's extra writing time. Enter 0 when the paper has no separate reading period.</p>
+              <div id="builder-calculator-setting" class="builder-calculator-setting" hidden>
+                <label for="builder-calculator-enabled"><input id="builder-calculator-enabled" type="checkbox"> Provide PacePaper's built-in scientific and graphing calculator</label>
+                <small>Practice tool only. It runs locally, does not emulate a named calculator model, and is hidden during timed phases that prohibit calculator use.</small>
+              </div>
               <label for="builder-instructions">Student instructions</label><textarea id="builder-instructions" rows="3" required maxlength="20000"></textarea>
               <div class="builder-material" data-material="pdf">
                 <label for="builder-pdf"><span id="builder-pdf-label">Paper-wide PDFs</span> <small id="builder-pdf-status">optional</small></label><input id="builder-pdf" type="file" accept="application/pdf,.pdf" multiple>
@@ -1101,6 +1122,9 @@ export function mountPaperBuilder(container, onSubmit) {
     const maximumMarks = valueForLevel(selectedPaper, "maximumMarks", selectedLevel);
     form.querySelector("#builder-maximum-marks").value = maximumMarks ?? "";
     form.querySelector("#builder-instructions").value = valueForLevel(selectedPaper, "instructions", selectedLevel);
+    const calculatorSetting = form.querySelector("#builder-calculator-setting");
+    calculatorSetting.hidden = !calculatorEligible(selection);
+    form.querySelector("#builder-calculator-enabled").checked = false;
     const guidance = valueForLevel(selectedPaper, "guidance", selectedLevel);
     const guidanceElement = form.querySelector("#builder-exam-guidance");
     const combinedGuidance = selectedLevel === selectedSystemProfile.combinedLevel
@@ -1205,11 +1229,16 @@ export function mountPaperBuilder(container, onSubmit) {
     event.preventDefault();
     const submit = form.querySelector("button[type=submit]");
     const error = form.querySelector("#builder-error");
+    let cancelled = false;
     submit.disabled = true;
     form.inert = true;
     error.hidden = true;
     try {
-      await onSubmit(packageData(form, questions));
+      const saved = await onSubmit(packageData(form, questions), submit);
+      if (saved === false) {
+        cancelled = true;
+        return;
+      }
       await drafts.savedToLibrary().catch(() => {});
       form.reset();
       populateSessions();
@@ -1222,6 +1251,7 @@ export function mountPaperBuilder(container, onSubmit) {
     } finally {
       form.inert = false;
       submit.disabled = false;
+      if (cancelled) submit.focus();
     }
   });
 

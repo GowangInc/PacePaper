@@ -1,0 +1,333 @@
+{
+  "version": 1,
+  "assessmentSession": "custom",
+  "sourceClassification": "unknown-local-only",
+  "exportAuthorized": false,
+  "title": "2026-09-10 · English B Paper 2 Reading · Real-article adaptation",
+  "subject": "english-b",
+  "subjectLabel": "English B",
+  "level": "SL/HL",
+  "paper": "Paper 2 – Reading",
+  "durationMinutes": 60,
+  "readingTimeMinutes": 5,
+  "maximumMarks": 40,
+  "mode": "reading",
+  "instructions": "Read Text A and Text B during the separate reading period. Answer all 24 questions in the linked response areas. The two source texts are original classroom adaptations based on real public articles; they are not official IB examination materials. No separate answer sheet is used.",
+  "selectionMode": "all",
+  "resources": [
+    {
+      "key": "text-a",
+      "label": "Text A — Campus gardens as environmental classrooms",
+      "kind": "text",
+      "text": "CAMPUS GARDENS ARE GROWING MORE THAN FOOD\nAn adapted classroom article\n\nSource basis: Zoë Y. Deskin and Blane Harvey’s study, ‘Critical food systems education in university student-run food initiatives: learning opportunities for food systems transformation’, reported in ‘Campus garden initiatives can help grow the next generation of environmental change-makers’, McGill University Newsroom, 11 April 2024. Verified public article link: https://www.mcgill.ca/newsroom/channels/news/campus-garden-initiatives-can-help-grow-next-generation-environmental-change-makers-356720\n\n[1] At first glance, a campus garden can seem like a small project. A few raised beds occupy an unused corner, students carry buckets of compost, and a noticeboard lists the week’s jobs. Yet gardens can become outdoor classrooms where students connect everyday decisions about food with larger questions about climate change, health and fairness. The important lesson is not simply how to grow a tomato. It is how a food system works, who benefits from it and what might be changed.\n\n[2] The gardens described by researchers do not follow one fixed model. Some are managed by students; others involve teachers, local organisations or nearby residents. A group may grow vegetables, collect rainwater or turn food scraps into compost. These activities make environmental ideas visible. Instead of discussing soil as an abstract resource, students can see what happens when soil is covered, disturbed or fed with organic material. Instead of treating waste as something that disappears, they can watch scraps become part of another process.\n\n[3] This practical work also changes the kind of knowledge students bring to a lesson. A student who has grown food may ask why some neighbourhoods have shops full of fresh produce while others do not. Another may notice that a garden depends on time, land and water—resources that are not shared equally. The garden therefore becomes a starting point for discussing food security, rather than a pleasant activity separated from social issues.\n\n[4] The researchers argue that the strongest programmes connect garden work to the curriculum and to the surrounding community. A planting day by itself may be memorable, but it can remain an isolated event. When students measure compost, interview growers or compare the price and availability of food in different areas, they begin to investigate evidence. When they share what they have learned with families or community groups, environmental action becomes a conversation rather than a private school exercise.\n\n[5] There are practical difficulties. Gardens need land, tools, water and people who can maintain them after the first burst of enthusiasm. University timetables can make regular work difficult, and not every student feels confident outdoors. A successful project therefore needs planning and shared responsibility. It should not depend on one energetic teacher or a small group of volunteers who may leave at the end of the year.\n\n[6] The researchers do not present gardens as a complete answer to climate change. A few beds cannot replace wider changes in transport, energy or agriculture. Their value is different: they help students practise noticing connections and acting with others. A garden can make a global problem local enough to examine, while reminding learners that local action is most useful when it leads to wider questions.\n\n[7] The best campus garden is therefore not judged only by its harvest. Its deeper result may be a student who asks better questions, recognises an unfair pattern or joins a community project. In that sense, the garden grows environmental change-makers before it grows a large quantity of food."
+    },
+    {
+      "key": "text-b",
+      "label": "Text B — Trees, roofs and urban heat",
+      "kind": "text",
+      "text": "TWO WAYS TO COOL A CITY\nAn adapted classroom article\n\nSource basis: Ian A. Smith, Dan Li, David K. Fork, Gregory A. Wellenius and Lucy R. Hutyra, ‘Integrated tree canopy expansion and cool roofs can optimize air temperature and heat exposure reductions in Boston’, Communications Earth & Environment, 1 July 2025, with supporting information from the U.S. Environmental Protection Agency. Verified public article links: https://www.nature.com/articles/s43247-025-02462-3 and https://www.epa.gov/heatislands/using-cool-roofs-reduce-heat-islands\n\n[1] On a hot summer afternoon, two streets in the same city can feel like different climates. One may have mature trees, shaded pavements and cooler building walls. Another may offer little shade and hold heat in its asphalt long after sunset. This difference is not only uncomfortable. Extreme heat can threaten health, especially for older people, young children and residents whose homes cannot be cooled easily.\n\n[2] Researchers studying cities have compared two ways of reducing this heat: planting trees and installing cool roofs. Trees provide shade and release water vapour through their leaves, a process that can lower nearby temperatures. Cool roofs use reflective materials to send more of the sun’s energy away instead of allowing it to warm the building. Neither solution works everywhere in the same way. The best choice depends on the street, the buildings and the people who live there.\n\n[3] Tree planting has benefits beyond temperature. Trees can make walking more comfortable, support wildlife and change how residents use public space. But a tree is not an instant machine. It needs years to grow, regular watering and enough room for its roots. Young trees can fail if they are planted without a plan for maintenance. Large trees may also conflict with underground pipes, power lines or narrow pavements.\n\n[4] Cool roofs can sometimes be installed more quickly, particularly on buildings that already need repair. They can reduce indoor heat and may lower the demand for air conditioning. However, a roof cannot shade a person waiting at a bus stop. Reflective surfaces may also have less effect at street level than at roof level, and a programme focused only on roofs could miss people who spend much of their day outdoors.\n\n[5] This is why the researchers emphasise mapping heat and vulnerability together. A city should not simply count trees or roofs. It should ask where heat is highest, where shade is scarce and which communities have fewer resources to protect themselves. A neighbourhood with many elderly residents, poorly insulated homes and little green space may deserve attention before a wealthier area that already has several cooling options.\n\n[6] In a Boston modelling exercise, a combined programme of 2,500 new trees and 3,000 cool roofs was associated with lower heat exposure for nearly 80,000 residents. The figures are not a promise that every person would experience the same change. They show what can happen when a city treats cooling as a targeted public investment rather than a competition between two fashionable ideas.\n\n[7] Residents should also be part of the decision. They know which pavements become unbearable, which bus stops lack shelter and which buildings stay hot at night. Listening can reveal problems that a city-wide temperature map misses. It can also build trust, which matters because trees need long-term care and roof programmes require access to private buildings.\n\n[8] The central question, then, is not ‘trees or roofs?’ It is ‘which combination will protect these people in this place, and who will keep it working?’ A cooler city is not created by a single impressive project. It is created by matching evidence, investment and local knowledge—and by checking whether the benefits reach the residents who face the greatest heat."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Text A · Question 1",
+      "prompt": "According to paragraph 1, what larger topics can a campus garden help students connect with food?",
+      "type": "short",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q2",
+      "label": "Text A · Question 2",
+      "prompt": "Which statement best describes the garden models in paragraph 2?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 1,
+      "options": [
+        "They all follow one university design",
+        "They involve different combinations of participants",
+        "They are managed only by professional growers",
+        "They avoid practical environmental activities"
+      ]
+    },
+    {
+      "id": "q3",
+      "label": "Text A · Question 3",
+      "prompt": "Give one activity that can make an environmental idea visible to students.",
+      "type": "short",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q4",
+      "label": "Text A · Question 4",
+      "prompt": "What does the phrase ‘waste as something that disappears’ suggest?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 1,
+      "options": [
+        "Students believe waste has no consequences once removed",
+        "Students think food scraps are difficult to collect",
+        "Students are required to hide waste from visitors",
+        "Students see composting as a form of gardening"
+      ]
+    },
+    {
+      "id": "q5",
+      "label": "Text A · Question 5",
+      "prompt": "Why might a student question differences between neighbourhood food shops after growing food?",
+      "type": "short",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q6",
+      "label": "Text A · Question 6",
+      "prompt": "The garden becomes a starting point for discussing…",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 1,
+      "options": [
+        "food security and unequal access",
+        "university examination rules",
+        "the history of garden tools",
+        "the design of indoor classrooms"
+      ]
+    },
+    {
+      "id": "q7",
+      "label": "Text A · Question 7",
+      "prompt": "Using two details from paragraph 4, explain how a garden programme can move beyond an isolated event.",
+      "type": "short",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q8",
+      "label": "Text A · Question 8",
+      "prompt": "Which practical problem is mentioned in paragraph 5?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 1,
+      "options": [
+        "Projects may lose support when key people leave",
+        "Students are forbidden to work with local groups",
+        "Gardens cannot grow food in university climates",
+        "Teachers must replace every garden tool yearly"
+      ]
+    },
+    {
+      "id": "q9",
+      "label": "Text A · Question 9",
+      "prompt": "What does the writer mean by saying that a global problem becomes ‘local enough to examine’?",
+      "type": "short",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q10",
+      "label": "Text A · Question 10",
+      "prompt": "Which limitation of campus gardens does the writer acknowledge?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 1,
+      "options": [
+        "They cannot by themselves replace wider climate changes",
+        "They always require professional agricultural staff",
+        "They produce too much food for students to use",
+        "They prevent students from studying social issues"
+      ]
+    },
+    {
+      "id": "q11",
+      "label": "Text A · Question 11",
+      "prompt": "What deeper result may be more important than the amount of food harvested?",
+      "type": "short",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q12",
+      "label": "Text A · Question 12",
+      "prompt": "Using evidence from the whole text, explain two ways campus gardens can develop environmental change-makers.",
+      "type": "short",
+      "resourceKeys": [
+        "text-a"
+      ],
+      "marks": 5
+    },
+    {
+      "id": "q13",
+      "label": "Text B · Question 13",
+      "prompt": "Why can two streets in the same city feel like different climates?",
+      "type": "short",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q14",
+      "label": "Text B · Question 14",
+      "prompt": "Which two cooling methods are compared by the researchers?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 1,
+      "options": [
+        "Trees and cool roofs",
+        "Parks and underground trains",
+        "Air conditioning and buses",
+        "Pavements and water tanks"
+      ]
+    },
+    {
+      "id": "q15",
+      "label": "Text B · Question 15",
+      "prompt": "Give one benefit of trees that is not directly about temperature.",
+      "type": "short",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q16",
+      "label": "Text B · Question 16",
+      "prompt": "Why is a tree described as ‘not an instant machine’?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 1,
+      "options": [
+        "It needs time and continuing care to provide benefits",
+        "It can operate only when a roof is also reflective",
+        "It produces heat before it begins to grow",
+        "It must be moved between streets each summer"
+      ]
+    },
+    {
+      "id": "q17",
+      "label": "Text B · Question 17",
+      "prompt": "Using two details from paragraph 3, explain why tree planting requires planning.",
+      "type": "short",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q18",
+      "label": "Text B · Question 18",
+      "prompt": "What can cool roofs do that trees may not do as quickly?",
+      "type": "short",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 1
+    },
+    {
+      "id": "q19",
+      "label": "Text B · Question 19",
+      "prompt": "Why would a roof-only programme miss some people?",
+      "type": "short",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q20",
+      "label": "Text B · Question 20",
+      "prompt": "What should cities map together when planning cooling investment?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 1,
+      "options": [
+        "Heat and vulnerability",
+        "Roof colour and rainfall",
+        "Tree age and road length",
+        "Building height and air-conditioning brand"
+      ]
+    },
+    {
+      "id": "q21",
+      "label": "Text B · Question 21",
+      "prompt": "What is the purpose of the Boston figures in paragraph 6?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 1,
+      "options": [
+        "To illustrate the possible reach of a combined strategy",
+        "To prove that every resident would receive identical cooling",
+        "To show that roofs are always better than trees",
+        "To identify the exact cost of planting each tree"
+      ]
+    },
+    {
+      "id": "q22",
+      "label": "Text B · Question 22",
+      "prompt": "Give two kinds of local knowledge residents can contribute to a cooling plan.",
+      "type": "short",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 2
+    },
+    {
+      "id": "q23",
+      "label": "Text B · Question 23",
+      "prompt": "Which question best expresses the central argument of the final paragraph?",
+      "type": "single-choice",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 1,
+      "options": [
+        "Which combination protects the most vulnerable people in this place?",
+        "Which cooling project looks most impressive to visitors?",
+        "Which technology can remove the need for local decisions?",
+        "Which neighbourhood can avoid all future heat?"
+      ]
+    },
+    {
+      "id": "q24",
+      "label": "Text B · Question 24",
+      "prompt": "Using evidence from the whole text, explain why the writer supports combining scientific evidence with local knowledge.",
+      "type": "short",
+      "resourceKeys": [
+        "text-b"
+      ],
+      "marks": 5
+    }
+  ]
+}

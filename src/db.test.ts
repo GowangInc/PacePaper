@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { Database } from "bun:sqlite";
 import { initializeDatabaseSchema } from "./db-schema.ts";
 import { parseManifest } from "./papers.ts";
+import { verifyCandidatePin } from "./candidate-credentials.ts";
 
 const temporaryDirectory = mkdtempSync(join(tmpdir(), "digitaldp-db-test-"));
 const previousDatabasePath = process.env.DIGITALDP_DB;
@@ -57,6 +58,74 @@ describe("database schema migration", () => {
     const sessionColumns = database.db.query<{ name: string; notnull: number }, []>("PRAGMA table_info(exam_sessions)").all();
     expect(sessionColumns.find(({ name }) => name === "duration_minutes_override")).toMatchObject({ notnull: 0 });
     expect(sessionColumns.find(({ name }) => name === "reading_time_minutes_override")).toMatchObject({ notnull: 0 });
+  });
+  test("backfills the current tables when the v1 and v2 ledger already exist", () => {
+    const upgraded = new Database(":memory:", { create: true, strict: true });
+    try {
+      upgraded.exec(`
+        CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL);
+        INSERT INTO schema_migrations (version, applied_at) VALUES (1, 1), (2, 2);
+        CREATE TABLE admins (id TEXT PRIMARY KEY, username TEXT NOT NULL, password_hash TEXT NOT NULL, created_at INTEGER NOT NULL);
+        CREATE TABLE classes (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL, name_key TEXT, created_at INTEGER NOT NULL, archived_at INTEGER
+        );
+        CREATE TABLE students (
+          id TEXT PRIMARY KEY, class_id TEXT NOT NULL, name TEXT NOT NULL, name_key TEXT,
+          extra_minutes INTEGER NOT NULL DEFAULT 0, last_seen_at INTEGER, created_at INTEGER NOT NULL, archived_at INTEGER
+        );
+        CREATE TABLE papers (
+          id TEXT PRIMARY KEY, title TEXT NOT NULL, subject TEXT NOT NULL, subject_label TEXT NOT NULL,
+          level TEXT NOT NULL, paper TEXT NOT NULL, duration_minutes INTEGER NOT NULL, mode TEXT NOT NULL,
+          manifest_json TEXT NOT NULL, created_at INTEGER NOT NULL, archived_at INTEGER
+        );
+        CREATE TABLE exam_sessions (
+          id TEXT PRIMARY KEY, class_id TEXT NOT NULL, paper_id TEXT NOT NULL,
+          status TEXT NOT NULL, started_at INTEGER, ended_at INTEGER, created_at INTEGER NOT NULL,
+          archived_at INTEGER, duration_minutes_override REAL, reading_time_minutes_override REAL
+        );
+        CREATE TABLE responses (
+          id TEXT PRIMARY KEY, session_id TEXT NOT NULL, student_id TEXT NOT NULL,
+          answers_json TEXT NOT NULL, selected_question_id TEXT, flags_json TEXT NOT NULL,
+          audio_plays_json TEXT NOT NULL, notepad TEXT NOT NULL, updated_at INTEGER NOT NULL,
+          submitted_at INTEGER, UNIQUE(session_id, student_id)
+        );
+        CREATE TABLE response_revisions (
+          response_id TEXT NOT NULL, bucket INTEGER NOT NULL, at INTEGER NOT NULL,
+          answers_json TEXT NOT NULL, selected_question_id TEXT, flags_json TEXT NOT NULL,
+          notepad TEXT NOT NULL, content_hash TEXT NOT NULL, PRIMARY KEY(response_id, bucket)
+        );
+        CREATE TABLE auth_sessions (
+          token_hash TEXT PRIMARY KEY, role TEXT NOT NULL, actor_id TEXT NOT NULL,
+          expires_at INTEGER NOT NULL, created_at INTEGER NOT NULL
+        );
+        CREATE TABLE student_focus_events (
+          id TEXT PRIMARY KEY, session_id TEXT NOT NULL, student_id TEXT NOT NULL,
+          kind TEXT NOT NULL, at INTEGER NOT NULL
+        );
+      `);
+
+      initializeDatabaseSchema(upgraded);
+
+      const columns = (table: string) => upgraded
+        .query<{ name: string }, []>(`PRAGMA table_info(${table})`)
+        .all()
+        .map(({ name }) => name);
+      expect(columns("exam_sessions")).toContain("require_candidate_pin");
+      expect(columns("exam_sessions")).toContain("ending_at");
+      expect(columns("responses")).toContain("revision");
+      expect(columns("auth_sessions")).toContain("scope_id");
+      expect(columns("response_revisions")).toContain("annotations_json");
+      expect(upgraded.query<{ name: string }, []>(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('candidate_credentials', 'response_clients', 'audit_events') ORDER BY name",
+      ).all()).toEqual([
+        { name: "audit_events" },
+        { name: "candidate_credentials" },
+        { name: "response_clients" },
+      ]);
+      expect(columns("response_clients")).toContain("end_snapshot");
+    } finally {
+      upgraded.close();
+    }
   });
 
   test("quarantines duplicate legacy sign-in names without losing their records", () => {
@@ -389,6 +458,53 @@ describe("paper replacement safety", () => {
     expect(database.replaceUnusedPaper(paper.id, { manifest: paperManifest("Must not replace"), assets: [] })).toBe(false);
     expect(database.getPaper(paper.id)?.manifest.title).toBe("Revised");
   });
+
+  test("reports same-identity imports and only marks unused papers replaceable", () => {
+    const first = database.createPaper({ manifest: paperManifest("Conflict Paper"), assets: [] });
+    expect(database.findPaperImportConflicts(paperManifest("Conflict Paper"))).toEqual([
+      expect.objectContaining({ id: first.id, sessionCount: 0, replaceable: true }),
+    ]);
+
+    const paperClass = database.createClass("Conflict Paper Class");
+    database.createExamSession(paperClass.id, first.id);
+    expect(database.findPaperImportConflicts(paperManifest("Conflict Paper"))).toEqual([
+      expect.objectContaining({ id: first.id, sessionCount: 1, replaceable: false }),
+    ]);
+  });
+
+  test("checks and applies paper imports in one database transaction", () => {
+    const imported = { manifest: paperManifest("Atomic Import"), assets: [] };
+    const created = database.importPaperAtomic(imported);
+    expect(created.status).toBe("created");
+    const conflict = database.importPaperAtomic(imported);
+    expect(conflict).toMatchObject({ status: "conflict", conflicts: [{ replaceable: true }] });
+    if (conflict.status !== "conflict") throw new Error("Expected a paper conflict");
+    const target = conflict.conflicts[0];
+    if (!target) throw new Error("Expected a conflicting paper");
+    const replaced = database.importPaperAtomic(
+      { manifest: { ...imported.manifest, instructions: "Revised safely." }, assets: [] },
+      target.id,
+    );
+    expect(replaced.status).toBe("replaced");
+    expect(database.getPaper(target.id)?.manifest.instructions).toBe("Revised safely.");
+  });
+
+  test("archives papers reversibly while preserving live-exam safety and identity conflicts", () => {
+    const paper = database.createPaper({ manifest: paperManifest("Paper Lifecycle"), assets: [] });
+    expect(database.archivePaper(paper.id).archivedAt).toBeNumber();
+    expect(database.listPapers().some(({ id }) => id === paper.id)).toBeFalse();
+    expect(database.listPapers(true).some(({ id }) => id === paper.id)).toBeTrue();
+    expect(database.restorePaper(paper.id)).toEqual({ id: paper.id, archivedAt: null });
+
+    const paperClass = database.createClass("Paper Lifecycle Class");
+    const sessionId = database.createExamSession(paperClass.id, paper.id);
+    database.startExamSession(sessionId);
+    expect(() => database.archivePaper(paper.id)).toThrow("live exam");
+    database.endExamSession(sessionId);
+    database.archivePaper(paper.id);
+    database.createPaper({ manifest: paperManifest("Paper Lifecycle"), assets: [] });
+    expect(() => database.restorePaper(paper.id)).toThrow("same identity");
+  });
 });
 
 describe("student examination selection", () => {
@@ -418,7 +534,7 @@ describe("student examination selection", () => {
       name: "Alex",
       extraMinutes: 0,
     });
-    const paper = database.createPaper({ manifest: paperManifest, assets: [] });
+    const paper = database.createPaper({ manifest: { ...paperManifest, title: "Independent attempts" }, assets: [] });
     const firstSessionId = database.createExamSession(schoolClass.id, paper.id);
     const secondSessionId = database.createExamSession(schoolClass.id, paper.id);
 
@@ -437,6 +553,7 @@ describe("student examination selection", () => {
       answersJson: JSON.stringify({ q1: "First sitting response" }),
       selectedQuestionId: null,
       flagsJson: "[]",
+      annotationsJson: "[]",
       notepad: "",
     });
 
@@ -475,7 +592,7 @@ describe("student examination selection", () => {
       name: "Timer Tester",
       extraMinutes: 0,
     });
-    const paper = database.createPaper({ manifest: paperManifest, assets: [] });
+    const paper = database.createPaper({ manifest: { ...paperManifest, title: "Timing override" }, assets: [] });
     const sessionId = database.createExamSession(schoolClass.id, paper.id);
 
     database.updateExamSessionTiming(sessionId, 0.1, 12);
@@ -516,7 +633,7 @@ describe("student examination selection", () => {
       name: "Listener",
       extraMinutes: 0,
     });
-    const paper = database.createPaper({ manifest: paperManifest, assets: [] });
+    const paper = database.createPaper({ manifest: { ...paperManifest, title: "Audio count" }, assets: [] });
     const sessionId = database.createExamSession(schoolClass.id, paper.id);
     database.startExamSession(sessionId);
     const exam = database.getStudentExam(student.id, sessionId)!;
@@ -689,6 +806,7 @@ describe("reversible class, student, and exam lifecycle", () => {
       answersJson: JSON.stringify({ q1: "Submitted work" }),
       selectedQuestionId: null,
       flagsJson: "[]",
+      annotationsJson: "[]",
       notepad: "",
     });
     database.archiveStudent(student.id);
@@ -757,6 +875,7 @@ describe("reversible class, student, and exam lifecycle", () => {
       answersJson: JSON.stringify({ q1: "Preserved answer" }),
       selectedQuestionId: "q1",
       flagsJson: "[]",
+      annotationsJson: "[]",
       notepad: "Student notepad content",
     });
     database.endExamSession(sessionId);
@@ -781,6 +900,93 @@ describe("reversible class, student, and exam lifecycle", () => {
     database.restoreClass(schoolClass.id);
     expect(database.listExamSessions(true)).toContainEqual(expect.objectContaining({ id: sessionId }));
     expect(database.getSessionResults(sessionId)?.responses).toHaveLength(1);
+  });
+
+  test("uses the latest client acknowledgement and preserves readiness across retries and cancellation", () => {
+    const schoolClass = database.createClass("End Readiness");
+    const student = database.createStudent({ classId: schoolClass.id, name: "Ready Student", extraMinutes: 0 });
+    const sessionId = database.createExamSession(schoolClass.id, paper.id);
+    database.startExamSession(sessionId);
+    const exam = database.getStudentExam(student.id, sessionId)!;
+    const response = (answer: string, expectedRevision: number, clientId: string) => ({
+      answersJson: JSON.stringify({ q1: answer }),
+      selectedQuestionId: "q1",
+      flagsJson: "[]",
+      annotationsJson: "[]",
+      notepad: "",
+      expectedRevision,
+      clientId,
+    });
+
+    expect(database.saveResponse(exam.responseId, response("old", 0, "old-client"), 1)).toBe(1);
+    expect(database.saveResponse(exam.responseId, response("current", 1, "active-client"), 2)).toBe(2);
+    expect(database.beginExamEnd(sessionId).unresolvedCandidates).toHaveLength(1);
+
+    expect(database.saveResponse(exam.responseId, response("final", 2, "active-client"), Date.now() + 1_000)).toBe(3);
+    expect(database.getExamEndReadiness(sessionId).unresolvedCandidates).toEqual([]);
+    expect(database.beginExamEnd(sessionId).unresolvedCandidates).toEqual([]);
+
+    database.cancelExamEnd(sessionId);
+    expect(database.getExamEndReadiness(sessionId).unresolvedCandidates).toEqual([]);
+    expect(database.beginExamEnd(sessionId).unresolvedCandidates).toHaveLength(1);
+    database.cancelExamEnd(sessionId);
+    expect(database.getExamEndReadiness(sessionId).unresolvedCandidates).toEqual([]);
+  });
+
+  test("accepts a first locked-phase acknowledgement without a prior save", () => {
+    const schoolClass = database.createClass("Zero Edit End");
+    const student = database.createStudent({ classId: schoolClass.id, name: "No Edit Candidate", extraMinutes: 0 });
+    const sessionId = database.createExamSession(schoolClass.id, paper.id);
+    database.startExamSession(sessionId);
+    const exam = database.getStudentExam(student.id, sessionId)!;
+
+    expect(database.beginExamEnd(sessionId).unresolvedCandidates).toHaveLength(1);
+    expect(database.acknowledgeResponseClient(exam.responseId, "first-client", exam.revision)).toBe(true);
+    expect(database.getExamEndReadiness(sessionId).unresolvedCandidates).toEqual([]);
+  });
+
+  test("marks a save racing exam ending as the final client snapshot", () => {
+    const schoolClass = database.createClass("Racing End");
+    const student = database.createStudent({ classId: schoolClass.id, name: "Racing Candidate", extraMinutes: 0 });
+    const sessionId = database.createExamSession(schoolClass.id, paper.id);
+    database.startExamSession(sessionId);
+    const exam = database.getStudentExam(student.id, sessionId)!;
+
+    expect(database.beginExamEnd(sessionId).unresolvedCandidates).toHaveLength(1);
+    expect(database.saveResponse(exam.responseId, {
+      answersJson: JSON.stringify({ q1: "last answer" }),
+      selectedQuestionId: "q1",
+      flagsJson: "[]",
+      annotationsJson: "[]",
+      notepad: "",
+      expectedRevision: exam.revision,
+      clientId: "racing-client",
+    }, Date.now() + 1_000)).toBe(1);
+    expect(database.getExamEndReadiness(sessionId).unresolvedCandidates).toEqual([]);
+  });
+
+  test("issues, scopes, and resets candidate access for the current roster", async () => {
+    const schoolClass = database.createClass("Candidate Access");
+    const first = database.createStudent({ classId: schoolClass.id, name: "First Candidate", extraMinutes: 0 });
+    const created = await database.createExamSessionWithCredentials(schoolClass.id, paper.id);
+    expect(created.credentials).toHaveLength(1);
+    expect(database.candidateCredentialRequired(first.id)).toBeTrue();
+    const original = database.findCandidateCredentialOptions(schoolClass.name, first.name)[0]!;
+    await expect(verifyCandidatePin(database.storedCandidateCredentials(original), created.credentials[0]!.pin)).resolves.toBeTrue();
+
+    const second = database.createStudent({ classId: schoolClass.id, name: "Late Candidate", extraMinutes: 0 });
+    expect(database.findCandidateCredentialOptions(schoolClass.name, second.name)).toHaveLength(0);
+    database.createAuthSession("scoped-session", "student", first.id, Date.now() + 60_000, created.id);
+    const reset = await database.resetCandidateCredentials(created.id);
+    expect(reset?.map(({ studentName }) => studentName)).toEqual(["First Candidate", "Late Candidate"]);
+    expect(database.findAuthSession("scoped-session")).toBeNull();
+
+    const replaced = database.findCandidateCredentialOptions(schoolClass.name, first.name)[0]!;
+    await expect(verifyCandidatePin(database.storedCandidateCredentials(replaced), created.credentials[0]!.pin)).resolves.toBeFalse();
+    await expect(verifyCandidatePin(
+      database.storedCandidateCredentials(replaced),
+      reset?.find(({ studentId }) => studentId === first.id)?.pin ?? "",
+    )).resolves.toBeTrue();
   });
 });
 
@@ -809,7 +1015,7 @@ describe("candidate answer timeline", () => {
     name: "Timeline Student",
     extraMinutes: 0,
   });
-  const paper = database.createPaper({ manifest: paperManifest, assets: [] });
+  const paper = database.createPaper({ manifest: { ...paperManifest, title: "Revision history" }, assets: [] });
   const sessionId = database.createExamSession(schoolClass.id, paper.id);
   database.startExamSession(sessionId);
   const responseId = database.getStudentExam(student.id, sessionId)!.responseId;
@@ -818,6 +1024,7 @@ describe("candidate answer timeline", () => {
     answersJson: JSON.stringify({ q1: answer }),
     selectedQuestionId: null,
     flagsJson: "[]",
+    annotationsJson: "[]",
     notepad: "",
   }, base + offsetMs);
 
@@ -845,6 +1052,7 @@ describe("candidate answer timeline", () => {
       answersJson: JSON.stringify({ q1: "Final answer" }),
       selectedQuestionId: "q1",
       flagsJson: JSON.stringify(["q1"]),
+      annotationsJson: "[]",
       notepad: "Check paragraph two",
     }, submittedAt);
 
@@ -861,6 +1069,7 @@ describe("candidate answer timeline", () => {
       answersJson: JSON.stringify({ q1: "Too late" }),
       selectedQuestionId: null,
       flagsJson: "[]",
+      annotationsJson: "[]",
       notepad: "",
     }, submittedAt + 1_000)).toThrow("Response is already submitted");
     expect(database.getResponseRevisionLog(sessionId, responseId)!.revisions).toHaveLength(before + 1);
@@ -884,6 +1093,7 @@ describe("candidate answer timeline", () => {
       answersJson: JSON.stringify({ q1: "x".repeat(answerBytes) }),
       selectedQuestionId: null,
       flagsJson: "[]",
+      annotationsJson: "[]",
       notepad: "",
     }, base + offsetMs);
     const times = () => database.getResponseRevisionLog(largeSessionId, largeResponseId)!.revisions.map((revision) => revision.at);

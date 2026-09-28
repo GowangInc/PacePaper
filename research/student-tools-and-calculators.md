@@ -1,14 +1,14 @@
 # Student tools and calculator profiles
 
-Research snapshot: **2026-09-04**\
+Research snapshot: **2026-09-27**\
 Scope: DigitalDP’s current course set and a demonstration-first release.\
-Status: product recommendation backed by the retained public course guides and current public IB pages. Session-specific examination procedures and the annual calculator booklet remain authoritative for live use.
+Status: the built-in practice calculator is implemented; session-specific examination procedures, annual calculator guidance, and approved physical calculators remain authoritative for live use.
 
 ## Recommendation
 
-Do not add one teacher-controlled “calculator on/off” switch.
+Use a paper profile to determine the official calculator rule. For teacher-authored or custom mathematics practice, expose one explicit opt-in setting for PacePaper’s built-in calculator.
 
-Instead, every paper preset should load a versioned **student tool profile** from:
+Every paper preset should still load a versioned **student tool profile** from:
 
 `assessment cycle → course → level → paper/component`
 
@@ -19,7 +19,7 @@ The profile should separate:
 3. **Computational tools** — calculator or graphing technology, available only where the paper profile permits or requires it.
 4. **Access arrangements** — candidate-specific adjustments controlled separately from the paper and never treated as casual teacher preferences.
 
-Official-profile settings should be read-only in the normal builder. A teacher may choose **Make custom practice copy** to change them, but the resulting paper must be labelled as a custom practice paper rather than a current IB preset.
+The current `calculatorEnabled` Boolean means only “provide PacePaper’s numeric practice calculator.” It does not claim that a calculator is officially allowed, required, or model-approved. Enabling it makes an otherwise official-format paper a customized practice paper. A future full tool-profile schema should retain the separate policy states below.
 
 ## Course and paper matrix
 
@@ -47,9 +47,25 @@ Official-profile settings should be read-only in the normal builder. A teacher m
 - The Business Management guide says four-function capability is sufficient while GDCs are allowed. The official 2026 examiner instructions confirm calculators are allowed on Papers 2 and 3 and that Paper 2 parts may require one.
 - Official 2026 Language B examiner instructions confirm that Paper 2 listening uses three audio texts. The retained public specimen sets a per-text sequence of question-reading time, two complete plays, and a pause between plays. DigitalDP’s exact live sequence still needs comparison with current PRC conduct instructions.
 
-## What to ship first
+## Built-in practice calculator
 
-### Ship in the next student-view iteration
+### Shipped on 2026-09-27
+
+- An opt-in **Provide PacePaper’s built-in scientific and graphing calculator** setting appears only for mathematics, calculus, or math-labelled courses.
+- The setting is stored in the portable paper manifest and browser draft.
+- The student **Calculator** button appears only when the paper enables it and the current work phase does not prohibit calculator use. It is absent during reading, breaks, locked phases, and after submission.
+- The calculator runs entirely in the page. Its expression parser uses an allowlist and does not use `eval`, `Function`, external scripts, or network calls.
+- Supported numeric work: arithmetic, implicit multiplication, powers, parentheses, π, e, `Ans`, square roots, absolute values, trigonometric and inverse-trigonometric functions, degree/radian modes, natural/common logs, exponentials, rounding, minima, and maxima.
+- Graphing supports up to three numeric functions of `x` with teacher-independent student bounds. History, angle mode, expressions, functions, and bounds persist only in `sessionStorage` for the current sitting.
+- The UI deliberately identifies itself as a practice tool, not a TI product or approved calculator emulator.
+
+### Deliberate boundary
+
+The first implementation covers the two core TI-Nspire Scratchpad activities documented by Texas Instruments: calculations with history and function graphing. It does not reproduce TI-Nspire trade dress or firmware and does not provide CAS, symbolic solving, saved documents/programs, statistics, spreadsheets, matrices, geometry, finance packages, data collection, Press-to-Test, or model certification.
+
+Use school-approved physical calculators whenever an official or live examination requires an approved model. PacePaper should display the paper rule (“GDC required”, “calculator permitted”, or “not permitted”) even when its built-in tool is unavailable. Before a full mock, compare the paper against the current course guide, PRC conduct instructions, and annual calculator guidance.
+
+### Other student tools still required
 
 - Question navigator with answered/unanswered status.
 - Highlighter for selectable paper text.
@@ -63,15 +79,8 @@ Official-profile settings should be read-only in the normal builder. A teacher m
 - A teacher-visible and student-visible **Allowed tools** summary before the sitting begins.
 - A print/PDF candidate record containing prompts, typed responses, ink pages, and the notepad, while keeping non-printing interface metadata out of the paper.
 
-### Keep external for the first demonstration release
-
-Use school-approved physical calculators for calculator-required practice papers. DigitalDP should display the paper rule (“GDC required”, “calculator permitted”, or “not permitted”) but should not yet pretend that a home-grown calculator is an approved substitute.
-
-This is the safer route because a compliant graphing calculator involves much more than arithmetic: model restrictions, stored-memory rules, CAS/symbolic manipulation, graphing behaviour, statistics, financial packages, examination mode, and annual policy changes. The IB’s public calculator policy directs schools to the current PRC guidance, and the IB’s 2025 procedure update specifically required schools to clear GDC memories.
-
 ### Later, after validation
 
-- An embedded scientific calculator for profiles that explicitly allow it.
 - A separately validated GDC/graphing engine with an exact feature profile and offline examination mode.
 - Geometry instruments such as protractor/compass only where a real assessment need is verified.
 - Structured table/spreadsheet entry only where it cannot introduce functions unavailable in the actual examination.
@@ -150,6 +159,8 @@ If a teacher changes an official profile:
 - [2026 Language B examiner instructions](https://ibpublishing.ibo.org/exinst/apps/exinst/index.html?chapter=1&doc=EX_instructions_2026_e&part=9)
 - [2026 Business Management examiner instructions](https://ibpublishing.ibo.org/exinst/apps/exinst/index.html?chapter=1&doc=EX_instructions_2026_e&part=10)
 - [IB’s May 2025 examination-procedure update](https://www.ibo.org/news/news-about-the-ib/ib-updates-assessment-procedures-for-may-2025-exams/)
+- [TI-Nspire CX II Handhelds Guidebook, version 6.3](https://education.ti.com/en/guidebook/details/en/4BEBB458C6A64278A3249BA6443E8688/TI-NspireCXIIHHGuidebook)
+- [TI-Nspire CX II exam preparation and Press-to-Test guide](https://education.ti.com/en/resources/test-preparation/education-test-prep-guides/ti-nspire-cx-ii)
 
 ## Local retained guide evidence
 

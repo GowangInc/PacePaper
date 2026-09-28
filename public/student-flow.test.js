@@ -13,11 +13,14 @@ const appModuleMock = {
 mock.module("/app.js", () => appModuleMock);
 
 const examCalls = [];
+const examUpdates = [];
 mock.module("./exam.js", () => ({
   default: `${process.cwd()}/public/exam.js`,
   mountExam(...args) {
     examCalls.push(args);
-    return () => {};
+    const cleanup = () => {};
+    cleanup.updateState = (state) => examUpdates.push(state);
+    return cleanup;
   },
 }));
 
@@ -180,6 +183,26 @@ describe("student live transition", () => {
       expect(examCalls).toHaveLength(1);
       expect(examCalls[0][0]).toMatchObject({ status: "live", session: { id: "session-1" } });
       expect(examCalls[0][1]).toEqual(expect.objectContaining({ onSubmitted: expect.any(Function) }));
+    });
+  });
+
+  test("applies end freeze and cancellation events without waiting for the poll timer", async () => {
+    examCalls.length = 0;
+    examUpdates.length = 0;
+    await withStudentView(async (view) => {
+      view.state({ status: "live", student: { name: "Learner" }, session: session({ status: "live" }) });
+      await renderStudent({ role: "student" });
+      await Bun.sleep(0);
+      view.setNode('.exam-shell[data-session-id="session-1"]');
+
+      view.state({ status: "live", student: { name: "Learner" }, session: session({ status: "live", endingAt: 500 }) });
+      await view.event("exam-ending");
+      expect(examUpdates.at(-1).session.endingAt).toBe(500);
+      await Bun.sleep(0);
+
+      view.state({ status: "live", student: { name: "Learner" }, session: session({ status: "live", endingAt: null }) });
+      await view.event("exam-end-cancelled");
+      expect(examUpdates.at(-1).session.endingAt).toBeNull();
     });
   });
 

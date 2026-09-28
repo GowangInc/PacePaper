@@ -1,6 +1,6 @@
 {
   "name": "pacepaper",
-  "version": "0.1.0-demo.15",
+  "version": "0.1.0-demo.16",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,5 +17,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "latest"
+  },
+  "dependencies": {
+    "pdfjs-dist": "4.10.38"
   }
 }

@@ -36,14 +36,25 @@ describe("paper manifests", () => {
     });
   });
 
-  test("accepts and validates source-rights classification", () => {
+  test("accepts source-rights classifications and keeps public practice non-exportable", () => {
     expect(parseManifest({ ...manifest, sourceClassification: "school-authorized" }).sourceClassification).toBe("school-authorized");
+    expect(parseManifest({ ...manifest, sourceClassification: "public-educational-practice" }).sourceClassification)
+      .toBe("public-educational-practice");
+    expect(() => parseManifest({
+      ...manifest,
+      sourceClassification: "public-educational-practice",
+      exportAuthorized: true,
+    })).toThrow("manifest.exportAuthorized");
     expect(() => parseManifest({ ...manifest, sourceClassification: "public-domain" })).toThrow("manifest.sourceClassification");
   });
 
   test("defaults portable export permission to false and validates an explicit attestation", () => {
     expect(parseManifest(manifest).exportAuthorized).toBe(false);
-    expect(parseManifest({ ...manifest, exportAuthorized: true }).exportAuthorized).toBe(true);
+    expect(parseManifest({
+      ...manifest,
+      sourceClassification: "teacher-authored",
+      exportAuthorized: true,
+    }).exportAuthorized).toBe(true);
     expect(() => parseManifest({ ...manifest, exportAuthorized: "yes" })).toThrow("manifest.exportAuthorized");
   });
 

@@ -448,17 +448,34 @@ legend {
 
 .admin-rail nav {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   gap: var(--space-2);
   margin-top: var(--space-12);
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: var(--space-2);
+  scrollbar-width: thin;
 }
 
+
 .admin-rail nav button {
+  display: flex;
+  width: 100%;
   justify-content: start;
   border-color: transparent;
   background: transparent;
   padding-inline: var(--space-3);
   text-align: left;
+  white-space: nowrap;
 }
+
+.admin-rail nav button[aria-current="location"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
 
 .admin-rail > .quiet-action {
   margin-top: auto;
@@ -474,12 +491,19 @@ legend {
   z-index: 5;
   top: 0;
   display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   border-bottom: var(--rule-thin) solid var(--color-rule-strong);
   background: var(--color-topbar);
   padding: var(--space-5) clamp(1.5rem, 4vw, 4rem);
   backdrop-filter: blur(12px);
+}
+
+.admin-topbar > * {
+  min-width: 0;
 }
 
 .admin-topbar h1 {
@@ -746,6 +770,40 @@ legend {
   padding: var(--space-3) var(--space-5);
   color: var(--color-text-muted);
   line-height: 1.55;
+}
+
+.builder-calculator-setting {
+  display: grid;
+  gap: var(--space-2);
+  margin-block: var(--space-3);
+  border: var(--rule-thin) solid var(--color-rule-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  padding: var(--space-3);
+}
+
+.builder-calculator-setting[hidden] {
+  display: none;
+}
+
+.builder-calculator-setting label {
+  display: flex;
+  align-items: start;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+
+.builder-calculator-setting input {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  accent-color: var(--color-accent);
+}
+
+.builder-calculator-setting small {
+  color: var(--color-ink-muted);
+  line-height: 1.45;
 }
 
 .builder-material {
@@ -1256,6 +1314,12 @@ legend {
   justify-content: space-between;
   gap: var(--space-4);
 }
+.roster-heading > *,
+.roster-list li > *,
+.paper-list li > *,
+.session-row > * {
+  min-width: 0;
+}
 
 .roster-list,
 .paper-list,
@@ -1617,6 +1681,9 @@ legend {
 }
 
 .candidate-paper {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   background: var(--color-surface);
   color: var(--color-ink);
   font-family: var(--font-exam);
@@ -1761,10 +1828,11 @@ legend {
   font-size: var(--text-sm);
   font-weight: 750;
 }
-
 .candidate-question-heading h3 {
+  min-width: 0;
   margin-bottom: var(--space-2);
   font-size: var(--text-lg);
+  overflow-wrap: anywhere;
 }
 
 .candidate-question-marks,
@@ -1885,16 +1953,19 @@ legend {
 }
 
 .submission-answer[data-answer-type="essay"] table {
+  width: 100%;
   max-width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .submission-answer[data-answer-type="essay"] td,
 .submission-answer[data-answer-type="essay"] th {
-  min-width: 5rem;
+  min-width: 0;
   border: var(--rule-thin) solid var(--color-rule-strong);
   padding: var(--space-2);
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .candidate-question-selection {
@@ -1913,13 +1984,16 @@ legend {
 
 .candidate-paper .candidate-paper-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  min-width: 0;
   gap: var(--space-4);
   border-top: var(--rule-strong) solid var(--color-ink);
   margin: 0 var(--space-8);
   padding: var(--space-3) 0 var(--space-8);
   color: var(--color-ink-muted);
   font-size: var(--text-xs);
+  overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
@@ -2532,6 +2606,103 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
   min-height: 32rem;
   border: 0;
   background: var(--color-surface);
+}
+.pdf-annotation-viewer {
+  display: grid;
+  min-width: 0;
+  max-width: 100%;
+  gap: var(--space-3);
+}
+
+.pdf-annotation-toolbar {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pdf-annotation-toolbar button {
+  flex: 0 1 auto;
+}
+
+.pdf-annotation-status {
+  min-width: 0;
+  color: var(--exam-muted);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.pdf-annotation-pages {
+  display: grid;
+  min-width: 0;
+  max-width: 100%;
+  gap: var(--space-5);
+}
+
+.pdf-page {
+  position: relative;
+  width: min(100%, 60rem);
+  min-width: 0;
+  margin-inline: auto;
+  overflow: hidden;
+  border: var(--rule-thin) solid var(--exam-rule);
+  background: var(--exam-surface);
+}
+
+.pdf-page canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pdf-text-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  line-height: 1;
+  text-size-adjust: none;
+  transform-origin: 0 0;
+  user-select: text;
+}
+
+.pdf-text-layer span,
+.pdf-text-layer br {
+  position: absolute;
+  color: transparent;
+  cursor: text;
+  white-space: pre;
+  transform-origin: 0% 0%;
+}
+
+.pdf-text-layer ::selection {
+  background: color-mix(in srgb, var(--exam-accent) 28%, transparent);
+}
+
+.pdf-annotation {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pdf-annotation-rect {
+  position: absolute;
+  border-radius: 0.15rem;
+  background: color-mix(in srgb, var(--exam-accent) 28%, transparent);
+}
+
+.pdf-annotation-note .pdf-annotation-rect {
+  border: 0.12rem solid var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+}
+
+.pdf-annotation-pages > iframe {
+  width: 100%;
+  min-height: 32rem;
+  border: 0;
+  background: var(--exam-surface);
 }
 
 .resource-copy {
@@ -3381,8 +3552,11 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 
 .exam-dialog {
   width: min(92vw, 64rem);
+  max-width: calc(100vw - 1rem);
   max-height: min(88dvh, 54rem);
+  min-width: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   border: var(--rule-thin) solid var(--color-rule-strong);
   border-top: 4px solid var(--color-accent);
   border-radius: var(--radius-sm);
@@ -3399,6 +3573,7 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 
 .exam-dialog form {
   display: grid;
+  min-width: 0;
   gap: var(--space-5);
   padding: clamp(1.5rem, 4vw, 3rem);
 }
@@ -3424,6 +3599,8 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 
 .exam-dialog footer {
   display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
   justify-content: end;
   gap: var(--space-3);
   border-top: var(--rule-thin) solid var(--color-rule);
@@ -3431,11 +3608,301 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 }
 
 .exam-dialog footer button {
+  min-width: 0;
+  max-width: 100%;
   padding-inline: var(--space-5);
+  overflow-wrap: anywhere;
 }
 
 .compact-dialog {
   width: min(92vw, 42rem);
+  max-width: calc(100vw - 1rem);
+}
+
+.candidate-access-dialog {
+  width: min(92vw, 48rem);
+  max-width: calc(100vw - 1rem);
+  max-height: min(88dvh, 54rem);
+  overflow: auto;
+  border: var(--rule-thin) solid var(--color-rule-strong);
+  border-top: 4px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+.candidate-access-dialog h2 {
+  margin-top: 0;
+}
+
+.candidate-access-dialog .warning {
+  border-left: 0.25rem solid var(--color-warning);
+  background: var(--color-warning-soft);
+  padding: var(--space-3);
+  overflow-wrap: anywhere;
+}
+
+.candidate-access-dialog table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.candidate-access-dialog th,
+.candidate-access-dialog td {
+  border-bottom: var(--rule-thin) solid var(--color-rule);
+  padding: var(--space-2);
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.candidate-access-dialog code,
+.candidate-access-dialog a {
+  overflow-wrap: anywhere;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: var(--space-3);
+  border-top: var(--rule-thin) solid var(--color-rule);
+  padding-top: var(--space-4);
+}
+
+.calculator-dialog {
+  width: min(96vw, 68rem);
+}
+
+.calculator-dialog form {
+  gap: var(--space-4);
+  padding: clamp(1rem, 3vw, 2rem);
+}
+.calculator-help {
+  border: var(--rule-thin) solid var(--color-rule);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  padding: var(--space-2) var(--space-3);
+}
+
+.calculator-help summary {
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.calculator-help-copy {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.calculator-help-copy ul {
+  margin-bottom: 0;
+  padding-left: var(--space-5);
+}
+
+
+.calculator-tabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: var(--rule-thin) solid var(--color-rule);
+}
+
+.calculator-tabs button {
+  width: auto;
+  border: 0;
+  border-bottom: 0.2rem solid transparent;
+  border-radius: 0;
+  background: transparent;
+  padding: var(--space-2) var(--space-4);
+}
+
+.calculator-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-accent-strong);
+  font-weight: 750;
+}
+
+.calculator-panel {
+  min-width: 0;
+}
+
+.calculator-evaluate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.7fr);
+  gap: var(--space-3) var(--space-5);
+}
+
+.calculator-evaluate > label {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+
+.calculator-evaluate input,
+.calculator-function input,
+.calculator-bound input {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+}
+
+.calculator-display {
+  display: block;
+  min-height: 4rem;
+  overflow-x: auto;
+  border: var(--rule-thin) solid var(--color-rule-strong);
+  border-left: 0.3rem solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper);
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  text-align: right;
+}
+
+.calculator-display[data-error="true"],
+.calculator-graph-status[data-error="true"] {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.calculator-controls {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.calculator-mode {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.calculator-keypad {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.calculator-keypad button {
+  min-height: 2.75rem;
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+}
+
+.calculator-keypad .calculator-equals {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-inverse);
+}
+
+.calculator-evaluate h3 {
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+.calculator-history {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  max-height: 19rem;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.calculator-history button {
+  width: 100%;
+  border-color: transparent;
+  background: var(--color-surface-muted);
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.calculator-graph {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.calculator-panel[hidden] {
+  display: none;
+}
+
+.calculator-functions,
+.calculator-bounds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.calculator-function,
+.calculator-bound {
+  display: grid;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.calculator-bounds {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 0;
+  padding: 0;
+}
+
+.calculator-bounds legend {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-2);
+  font-weight: 750;
+}
+
+.calculator-graph > button {
+  width: max-content;
+}
+
+.calculator-graph-status {
+  margin: 0;
+  border-left: 0.2rem solid var(--color-accent);
+  padding-left: var(--space-2);
+  color: var(--color-ink-muted);
+}
+
+.calculator-canvas {
+  --calculator-canvas: #f7f7f2;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 12 / 7;
+  border: var(--rule-thin) solid var(--color-rule-strong);
+  border-radius: var(--radius-sm);
+  background: var(--calculator-canvas);
+}
+
+@media (max-width: 48rem) {
+  .calculator-evaluate {
+    grid-template-columns: 1fr;
+  }
+
+  .calculator-display,
+  .calculator-controls,
+  .calculator-keypad,
+  .calculator-evaluate h3,
+  .calculator-history {
+    grid-column: 1;
+  }
+
+  .calculator-functions,
+  .calculator-bounds {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .danger-dialog {
@@ -3510,13 +3977,25 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
     flex-direction: row;
     align-items: center;
     gap: var(--space-4);
+    flex-wrap: wrap;
+    overflow: hidden;
     border-right: 0;
     border-bottom: var(--rule-thin) solid var(--color-rule-strong);
   }
 
   .admin-rail nav {
     display: flex;
-    margin: 0 auto;
+    order: 3;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    overflow-x: auto;
+    padding-bottom: var(--space-1);
+  }
+
+  .admin-rail nav button {
+    width: auto;
+    flex: 0 0 auto;
   }
 
   .admin-rail > .quiet-action {
@@ -3599,7 +4078,6 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
     border-left: 0;
   }
 
-  .admin-rail nav,
   .exam-identity .eyebrow,
   .language-tool {
     display: none;
@@ -3686,6 +4164,7 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
     position: sticky;
     top: 0;
     min-width: 0;
+    flex-wrap: wrap;
   }
 
   .exam-identity {
@@ -3695,9 +4174,10 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
   }
 
   .exam-tools {
-    flex: 1 1 55vw;
+    flex: 1 1 100%;
+    width: 100%;
     min-width: 0;
-    max-width: 55vw;
+    max-width: 100%;
   }
 
   .exam-workspace,
@@ -3759,6 +4239,20 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
     min-width: 0;
   }
 
+  .exam-dialog {
+    width: calc(100vw - var(--space-3));
+    max-height: calc(100dvh - var(--space-3));
+    margin: auto;
+  }
+
+  .exam-dialog footer {
+    flex-wrap: wrap;
+  }
+
+  .exam-dialog footer button {
+    flex: 1 1 12rem;
+  }
+
   .summary-row {
     grid-template-columns: 1fr auto;
   }
@@ -3774,6 +4268,37 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 
   .audio-player > * {
     grid-column: 1;
+  }
+}
+@media (max-width: 30rem) {
+  .candidate-paper-metadata {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-paper-metadata > div {
+    border-left: 0 !important;
+  }
+
+  .candidate-paper-identity,
+  .candidate-paper-code {
+    grid-column: 1;
+  }
+
+  .candidate-question-heading {
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    gap: var(--space-2);
+  }
+
+  .candidate-paper-header,
+  .submission-answers,
+  .candidate-paper-instructions,
+  .candidate-paper-notepad,
+  .candidate-paper-footer {
+    min-width: 0;
+  }
+
+  .candidate-access-dialog {
+    padding: var(--space-4);
   }
 }
 
@@ -4030,6 +4555,28 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 
   .submission-resource img {
     max-height: 125mm;
+  }
+  .pdf-annotation-toolbar {
+    display: none;
+  }
+
+  .pdf-annotation-pages {
+    gap: 4mm;
+  }
+
+  .pdf-page {
+    width: 100%;
+    border-color: var(--color-ink-muted);
+    break-inside: avoid-page;
+  }
+
+  .pdf-annotation-rect {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .pdf-annotation-pages > iframe {
+    min-height: 100mm;
   }
 
   .submission-resource figcaption {

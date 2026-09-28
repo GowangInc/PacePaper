@@ -1,26 +1,36 @@
 import type { Server } from "bun";
 import {
   archiveClass,
+  archivePaper,
   archiveExamSession,
   archiveStudent,
   configureDemoAdmin,
   createAdmin,
   createClass,
-  createExamSession,
-  createPaper,
+  createExamSessionWithCredentials,
   createStudent,
   deleteAdminSessions,
   deleteExpiredAuthSessions,
-  endExamSession,
+  beginExamEnd,
+  cancelExamEnd,
+  ExamEndBlockedError,
+  finalizeExamSession,
+  getExamEndReadiness,
   findAdmin,
   findAdminById,
+  findCandidateCredentialByToken,
+  findCandidateCredentialOptions,
   findStudentLogin,
+  candidateCredentialRequired,
+  candidateTokenLookup,
+  storedCandidateCredentials,
   updateAdminPasswordHash,
   getAsset,
   getAudioPlayCount,
   getPaper,
-  getResponseRevisionLog,
+  importPaperAtomic,
   getSessionResults,
+  getResponseRevisionLog,
   getStudent,
   getStudentExam,
   incrementAudioPlay,
@@ -35,7 +45,11 @@ import {
   restoreClass,
   restoreExamSession,
   restoreStudent,
+  restorePaper,
+  resetCandidateCredentials,
   saveAndSubmitResponse,
+  acknowledgeResponseClient,
+  ResponseRevisionConflictError,
   recordStudentFocusEvent,
   saveResponse,
   setupRequired,
@@ -54,10 +68,12 @@ import {
   assertSameOrigin,
   authFromRequest,
   clearLoginAttempts,
+  issueCandidateSession,
   issueSession,
   requireRole,
   revokeSession,
 } from "./src/auth.ts";
+import { verifyCandidatePin, verifyCandidateToken } from "./src/candidate-credentials.ts";
 import {
   AUDIO_PLAY_LIMIT,
   encodePortablePaper,
@@ -86,6 +102,11 @@ import { staticAssetPath } from "./src/static-assets.ts";
 import { examPhaseAt, examTimeline, examTiming, type ScheduledExamPhase } from "./src/timing.ts";
 import { responseFitsPhase, type CandidateResponseSnapshot } from "./src/exam-phase-access.ts";
 import {
+  candidateAssetAuthorized,
+  candidateVisibleManifest,
+  type ExamPhaseAvailability,
+} from "./src/exam-phase-policy.ts";
+import {
   AudioPlaybackError,
   AudioPlaybackTickets,
   type AudioPlaybackIdentity,
@@ -97,11 +118,24 @@ interface SocketData {
   classId: string | null;
 }
 
+interface AnnotationPayload {
+  resourceKey: string;
+  id: string;
+  kind: "highlight" | "note";
+  page: number;
+  quote: string;
+  note: string;
+  rects: Array<{ x: number; y: number; width: number; height: number }>;
+}
+
 interface SavedResponseInput {
   sessionId: string;
   selectedQuestionId: string | null;
   answers: Record<string, string>;
   flags: string[];
+  annotations: AnnotationPayload[];
+  expectedRevision: number;
+  clientId: string;
   notepad: string;
 }
 
@@ -111,6 +145,15 @@ class HttpError extends Error {
     readonly status: number,
   ) {
     super(message);
+  }
+}
+function requireStudentSessionScope(
+  scopeId: string | null,
+  sessionId: string,
+  requireCandidatePin: boolean,
+): void {
+  if ((requireCandidatePin && scopeId !== sessionId) || (!requireCandidatePin && scopeId !== null && scopeId !== sessionId)) {
+    throw new HttpError("This sign-in is not valid for that examination", 403);
   }
 }
 
@@ -345,11 +388,27 @@ function publicPhase(phase: ScheduledExamPhase | null) {
   };
 }
 
-function responseSnapshot(exam: StudentExamRow): CandidateResponseSnapshot {
+function candidateAvailability(
+  exam: Pick<StudentExamRow, "sessionStatus"> & Parameters<typeof timingFor>[0],
+  now: number,
+): ExamPhaseAvailability {
+  if (exam.sessionStatus === "ended") {
+    return { availablePhaseIds: [], availablePhaseKinds: [], preview: true };
+  }
+  const phase = phaseForResponse(timingFor(exam), now);
+  return {
+    availablePhaseIds: phase ? [phase.id] : [],
+    availablePhaseKinds: phase ? [phase.kind] : [],
+    preview: false,
+  };
+}
+
+function responseSnapshot(exam: StudentExamRow): CandidateResponseSnapshot & { annotations: AnnotationPayload[] } {
   return {
     answers: JSON.parse(exam.answersJson) as Record<string, string>,
     flags: JSON.parse(exam.flagsJson) as string[],
     selectedQuestionId: exam.selectedQuestionId,
+    annotations: JSON.parse(exam.annotationsJson) as AnnotationPayload[],
   };
 }
 
@@ -363,21 +422,69 @@ function eligibleResponsePhases(timing: ReturnType<typeof timingFor>, now: numbe
   return eligible;
 }
 
-function assertResponseWithinPhases(
+function annotationsWithinPhase(
+  previous: AnnotationPayload[],
+  next: AnnotationPayload[],
+  manifest: PaperManifest,
+  phase: ScheduledExamPhase,
+): AnnotationPayload[] | null {
+  const availability: ExamPhaseAvailability = {
+    availablePhaseIds: [phase.id],
+    availablePhaseKinds: [phase.kind],
+    preview: false,
+  };
+  const allowed = new Set(candidateVisibleManifest(manifest, availability).resources
+    .filter(({ kind }) => kind === "document")
+    .map(({ key }) => key));
+  const previousLocked = previous.filter(({ resourceKey }) => !allowed.has(resourceKey));
+  const nextLocked = next.filter(({ resourceKey }) => !allowed.has(resourceKey));
+  const same = (left: AnnotationPayload, right: AnnotationPayload) => JSON.stringify(left) === JSON.stringify(right);
+  if (previousLocked.length !== nextLocked.length
+    || previousLocked.some((annotation) => !nextLocked.some((candidate) => candidate.id === annotation.id && same(candidate, annotation)))
+    || nextLocked.some((annotation) => !previousLocked.some((candidate) => candidate.id === annotation.id && same(candidate, annotation)))) {
+    return null;
+  }
+  return [...previousLocked, ...next.filter(({ resourceKey }) => allowed.has(resourceKey))];
+}
+
+function responseWithinPhases(
   exam: StudentExamRow,
   manifest: PaperManifest,
   validated: SavedResponseInput,
   phases: ScheduledExamPhase[],
-): void {
+): SavedResponseInput {
   const previous = responseSnapshot(exam);
-  const next = {
-    answers: validated.answers,
-    flags: validated.flags,
-    selectedQuestionId: validated.selectedQuestionId,
-  };
-  if (!phases.some((phase) => responseFitsPhase(manifest, previous, next, phase))) {
-    throw new HttpError("A response from a locked examination section cannot be changed", 409);
+  for (const phase of phases) {
+    if (!phase.responseAllowed) continue;
+    const annotations = annotationsWithinPhase(previous.annotations, validated.annotations, manifest, phase);
+    if (!annotations) continue;
+    if (!phase.sectionId) return { ...validated, annotations };
+    const allowed = new Set(manifest.questions
+      .filter(({ sectionId }) => sectionId === phase.sectionId)
+      .map(({ id }) => id));
+    const answers = { ...previous.answers };
+    let invalid = false;
+    for (const [questionId, answer] of Object.entries(validated.answers)) {
+      if (!allowed.has(questionId) && answer !== (previous.answers[questionId] ?? "")) invalid = true;
+      else if (allowed.has(questionId)) answers[questionId] = answer;
+    }
+    const previousFlags = new Set(previous.flags);
+    if (validated.flags.some((questionId) => !allowed.has(questionId) && !previousFlags.has(questionId))) invalid = true;
+    const flags = [
+      ...previous.flags.filter((questionId) => !allowed.has(questionId)),
+      ...validated.flags.filter((questionId) => allowed.has(questionId)),
+    ];
+    const selectedQuestionId = validated.selectedQuestionId === null
+      && previous.selectedQuestionId
+      && !allowed.has(previous.selectedQuestionId)
+      ? previous.selectedQuestionId
+      : validated.selectedQuestionId;
+    const next = { answers, flags, selectedQuestionId };
+    if (!invalid && responseFitsPhase(manifest, previous, next, phase)) {
+      return { ...validated, ...next, annotations };
+    }
   }
+  throw new HttpError("A response from a locked examination section cannot be changed", 409);
 }
 
 function studentAudioContext(studentId: string, sessionId: string, resourceKey: string): {
@@ -387,7 +494,10 @@ function studentAudioContext(studentId: string, sessionId: string, resourceKey: 
   const exam = getStudentExam(studentId, sessionId);
   if (!exam) throw new HttpError("No live examination", 404);
   const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-  if (!manifest.resources.some((resource) => resource.key === resourceKey && resource.kind === "audio")) {
+  if (
+    !manifest.resources.some((resource) => resource.key === resourceKey && resource.kind === "audio")
+    || !candidateAssetAuthorized(manifest, resourceKey, candidateAvailability(exam, Date.now()))
+  ) {
     throw new HttpError("Audio resource not found", 404);
   }
   return {
@@ -530,6 +640,7 @@ function publicManifest(manifest: PaperManifest, paperId: string, sessionId: str
     paper: manifest.paper,
     durationMinutes: manifest.durationMinutes,
     readingTimeMinutes: manifest.readingTimeMinutes,
+    calculatorEnabled: manifest.calculatorEnabled === true,
     phases: manifest.phases,
     maximumMarks: manifest.maximumMarks,
     subjectWeightPercent: manifest.subjectWeightPercent,
@@ -573,6 +684,7 @@ function previewExamState(paper: NonNullable<ReturnType<typeof getPaper>>) {
       selectedQuestionId: null,
       answers: {},
       flags: [],
+      annotations: [],
       audioPlays: {},
       notepad: "",
       updatedAt: startedAt,
@@ -580,6 +692,43 @@ function previewExamState(paper: NonNullable<ReturnType<typeof getPaper>>) {
     },
     serverTime: startedAt,
   };
+}
+
+function validatedAnnotations(value: unknown, manifest: PaperManifest): AnnotationPayload[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 500) throw new HttpError("Annotations must be a list", 400);
+  return value.map((raw, index) => {
+    const item = asRecord(raw, `Annotation ${index + 1}`);
+    const kind = item.kind === "note" || item.kind === "highlight" ? item.kind : null;
+    if (!kind) throw new HttpError(`Annotation ${index + 1} has an invalid type`, 400);
+    const id = requiredText(item.id, "Annotation id", 100);
+    const resourceKey = requiredText(item.resourceKey, "Annotation resource", 100);
+    const resource = manifest.resources.find(({ key }) => key === resourceKey);
+    if (!resource || resource.kind !== "document") {
+      throw new HttpError(`Annotation ${index + 1} references an unavailable PDF`, 400);
+    }
+    const page = requiredInteger(item.page, "Annotation page", 1, 10_000);
+    const quote = typeof item.quote === "string" ? item.quote : "";
+    const note = typeof item.note === "string" ? item.note : "";
+    if (quote.length > 2_000 || note.length > 2_000) throw new HttpError("Annotation text is too long", 400);
+    if (kind === "note" && !note.trim()) throw new HttpError("Notes must contain text", 400);
+    if (!Array.isArray(item.rects) || item.rects.length === 0 || item.rects.length > 50) {
+      throw new HttpError(`Annotation ${index + 1} has invalid geometry`, 400);
+    }
+    const rects = item.rects.map((rawRect) => {
+      const rect = asRecord(rawRect, "Annotation geometry");
+      const x = Number(rect.x);
+      const y = Number(rect.y);
+      const width = Number(rect.width);
+      const height = Number(rect.height);
+      if ([x, y, width, height].some((value) => !Number.isFinite(value) || value < 0 || value > 1)) {
+        throw new HttpError("Annotation geometry is invalid", 400);
+      }
+      if (width === 0 || height === 0) throw new HttpError("Annotation geometry is invalid", 400);
+      return { x, y, width, height };
+    });
+    return { id, resourceKey, kind, page, quote, note, rects };
+  });
 }
 
 async function validatedResponse(body: Record<string, unknown>, manifest: PaperManifest): Promise<SavedResponseInput> {
@@ -617,11 +766,14 @@ async function validatedResponse(body: Record<string, unknown>, manifest: PaperM
   if (new Set(flags).size !== flags.length || flags.some((flag) => !questionById.has(flag))) {
     throw new HttpError("Flags contain an invalid question", 400);
   }
+  const annotations = validatedAnnotations(body.annotations, manifest);
   if (typeof body.notepad !== "string" || body.notepad.length > 100_000) {
     throw new HttpError("Notepad is too long", 400);
   }
 
-  return { sessionId, selectedQuestionId, answers, flags, notepad: body.notepad };
+  const expectedRevision = requiredInteger(body.expectedRevision, "Response revision", 0, Number.MAX_SAFE_INTEGER - 1);
+  const clientId = requiredText(body.clientId, "Response client", 100);
+  return { sessionId, selectedQuestionId, answers, flags, annotations, notepad: body.notepad, expectedRevision, clientId };
 }
 
 function databaseError(error: Error): HttpError {
@@ -636,6 +788,7 @@ function databaseError(error: Error): HttpError {
     || error.message.includes("No audio plays")
     || error.message.includes("live exam")
     || error.message.includes("Restore the class")
+    || error.message.includes("Cannot restore")
   ) return new HttpError(error.message, 409);
   return new HttpError(error.message, 400);
 }
@@ -687,9 +840,25 @@ async function handleApi(
 
   if (path === "/api/login/student" && method === "POST") {
     const body = await jsonBody(request);
+    const address = clientAddress(request, server);
+    const secure = new URL(request.url).protocol === "https:";
+    const token = optionalText(body.token, "Candidate access link", 100);
+    if (token) {
+      const limiterKey = `student-token:${address}:${candidateTokenLookup(token)}`;
+      if (!allowLoginAttempt(limiterKey)) throw new HttpError("Too many login attempts. Try again later", 429);
+      const candidate = findCandidateCredentialByToken(token);
+      if (!candidate || !(await verifyCandidateToken(storedCandidateCredentials(candidate), token))) {
+        throw new HttpError("Candidate access link is invalid or has expired", 401);
+      }
+      clearLoginAttempts(limiterKey);
+      touchStudent(candidate.id);
+      const cookie = issueCandidateSession(candidate, secure);
+      if (!cookie) throw new HttpError("Candidate access link is invalid or has expired", 401);
+      return json({ role: "student", name: candidate.name, sessionId: candidate.sessionId }, 200, { "Set-Cookie": cookie });
+    }
+
     const className = requiredText(body.className, "Class name", 100);
     const studentName = requiredText(body.studentName, "Student name", 100);
-    const address = clientAddress(request, server);
     const classKey = identityKey(className);
     const studentKey = identityKey(studentName);
     const limiterKeys = [
@@ -701,13 +870,30 @@ async function handleApi(
       throw new HttpError("Too many login attempts. Try again later", 429);
     }
     const student = findStudentLogin(className, studentName);
-    if (!student) {
-      throw new HttpError("Class or student name is incorrect", 401);
+    if (!student) throw new HttpError("Class, student name or candidate PIN is incorrect", 401);
+
+    const pin = optionalText(body.pin, "Candidate PIN", 32);
+    if (pin) {
+      const protectedSessions = findCandidateCredentialOptions(className, studentName);
+      const verified = (await Promise.all(protectedSessions.map(async (candidate) => (
+        await verifyCandidatePin(storedCandidateCredentials(candidate), pin) ? candidate : null
+      )))).find((candidate) => candidate !== null);
+      if (!verified) throw new HttpError("Class, student name or candidate PIN is incorrect", 401);
+      limiterKeys.forEach(clearLoginAttempts);
+      touchStudent(student.id);
+      const cookie = issueCandidateSession(verified, secure);
+      if (!cookie) throw new HttpError("Class, student name or candidate PIN is incorrect", 401);
+      return json({ role: "student", name: student.name, sessionId: verified.sessionId }, 200, { "Set-Cookie": cookie });
     }
+    const hasLegacySession = listStudentExamSessions(student.id).some((session) => !session.requireCandidatePin);
+    if (candidateCredentialRequired(student.id) && !hasLegacySession) {
+      throw new HttpError("Enter the candidate PIN supplied by your teacher", 401);
+    }
+
     limiterKeys.forEach(clearLoginAttempts);
     touchStudent(student.id);
-    const cookie = issueSession("student", student.id, new URL(request.url).protocol === "https:");
-    return json({ role: "student", name: student.name }, 200, { "Set-Cookie": cookie });
+    const cookie = issueSession("student", student.id, secure);
+    return json({ role: "student", name: student.name, sessionId: null }, 200, { "Set-Cookie": cookie });
   }
 
   if (path === "/api/logout" && method === "POST") {
@@ -729,6 +915,7 @@ async function handleApi(
         classes: listClasses(true),
         students: listStudents(true),
         sessions: listAdminExamSessions(true),
+        papers: listPapers(true),
       },
       serverTime: Date.now(),
     });
@@ -801,6 +988,16 @@ async function handleApi(
     return json({ id: result.id, archived: action === "archive", archivedAt: result.archivedAt });
   }
 
+  const paperLifecycleMatch = path.match(/^\/api\/admin\/papers\/([a-f0-9-]+)\/(archive|restore)$/);
+  if (paperLifecycleMatch && method === "POST") {
+    requireRole(request, "admin");
+    const id = paperLifecycleMatch[1] as string;
+    const action = paperLifecycleMatch[2] as "archive" | "restore";
+    const result = action === "archive" ? archivePaper(id) : restorePaper(id);
+    publish(server, "admin", "admin-state");
+    return json({ id: result.id, archived: action === "archive", archivedAt: result.archivedAt });
+  }
+
   if (path === "/api/admin/classes" && method === "POST") {
     requireRole(request, "admin");
     const body = await jsonBody(request);
@@ -847,10 +1044,33 @@ async function handleApi(
 
   if (path === "/api/admin/papers" && method === "POST") {
     requireRole(request, "admin");
-    const imported = await parsePaperUpload(await request.formData());
-    const created = createPaper(imported);
+    const form = await request.formData();
+    const imported = await parsePaperUpload(form);
+    const requestedReplacement = form.get("replacePaperId");
+    const replacePaperId = typeof requestedReplacement === "string" && requestedReplacement
+      ? requestedReplacement
+      : null;
+    const result = importPaperAtomic(imported, replacePaperId);
+    if (result.status === "conflict") {
+      if (replacePaperId) {
+        const selected = result.conflicts.find(({ id }) => id === replacePaperId);
+        throw new HttpError(
+          selected
+            ? "This paper is already used by an exam sitting and cannot be replaced"
+            : "The selected paper no longer matches this import",
+          409,
+        );
+      }
+      return json({
+        error: "A paper with the same title, subject, level, paper, and assessment session already exists",
+        code: "paper_import_conflict",
+        conflicts: result.conflicts,
+      }, 409);
+    }
     publish(server, "admin", "admin-state");
-    return json(created, 201);
+    return result.status === "replaced"
+      ? json({ ...result.conflict, replaced: true })
+      : json(result.paper, 201);
   }
 
   const paperExportMatch = path.match(/^\/api\/admin\/papers\/([a-f0-9-]+)\/export$/);
@@ -865,12 +1085,12 @@ async function handleApi(
       throw new HttpError("This paper is not explicitly authorized for portable export", 403);
     }
     const bytes = await encodePortablePaper(stored.manifest, listPaperAssets(stored.row.id));
-    const filename = `${stored.manifest.title.normalize("NFKD").replace(/[^a-z0-9]+/giu, "-").replace(/^-|-$/gu, "").slice(0, 80) || "digitaldp-paper"}.digitaldp-paper`;
+    const filename = `${stored.manifest.title.normalize("NFKD").replace(/[^a-z0-9]+/giu, "-").replace(/^-|-$/gu, "").slice(0, 80) || "pacepaper"}.pp`;
     return responseWithSecurity(new Response(bytes, {
       headers: {
         "Cache-Control": "no-store",
         "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
-        "Content-Type": "application/vnd.digitaldp.paper+gzip",
+        "Content-Type": "application/vnd.pacepaper+gzip",
       },
     }));
   }
@@ -888,10 +1108,20 @@ async function handleApi(
     const body = await jsonBody(request);
     const classId = requiredText(body.classId, "Class", 64);
     const paperId = requiredText(body.paperId, "Paper", 64);
-    const id = createExamSession(classId, paperId);
+    const created = await createExamSessionWithCredentials(classId, paperId);
     publish(server, `class:${classId}`, "exam-list-changed");
     publish(server, "admin", "admin-state");
-    return json({ id, status: "draft" }, 201);
+    return json({ ...created, status: "draft" }, 201);
+  }
+
+  const credentialResetMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/credentials\/reset$/);
+  if (credentialResetMatch && method === "POST") {
+    requireRole(request, "admin");
+    const sessionId = credentialResetMatch[1] as string;
+    const credentials = await resetCandidateCredentials(sessionId);
+    if (!credentials) throw new HttpError("Active exam session not found", 404);
+    publish(server, "admin", "admin-state");
+    return json({ sessionId, credentials });
   }
 
   const timingMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/timing$/);
@@ -1005,6 +1235,8 @@ async function handleApi(
         studentName: response.studentName,
         answers: JSON.parse(response.answersJson) as Record<string, string>,
         selectedQuestionId: response.selectedQuestionId,
+        annotations: JSON.parse(response.annotationsJson) as AnnotationPayload[],
+        revision: response.revision,
         notepad: response.notepad,
         updatedAt: response.updatedAt,
         submittedAt: response.submittedAt,
@@ -1024,6 +1256,7 @@ async function handleApi(
         at: revision.at,
         answers: JSON.parse(revision.answersJson) as Record<string, string>,
         flags: JSON.parse(revision.flagsJson) as string[],
+        annotations: JSON.parse(revision.annotationsJson) as AnnotationPayload[],
         notepad: revision.notepad,
         selectedQuestionId: revision.selectedQuestionId,
       })),
@@ -1041,12 +1274,33 @@ async function handleApi(
     return json({ id: sessionId, status: "live" });
   }
 
+  const endControlMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/end\/(begin|readiness|cancel)$/);
+  if (endControlMatch) {
+    requireRole(request, "admin");
+    const sessionId = endControlMatch[1] as string;
+    const action = endControlMatch[2] as string;
+    const session = listExamSessions().find((item) => item.id === sessionId);
+    if (action === "begin" && method === "POST") {
+      const readiness = beginExamEnd(sessionId);
+      if (session) publish(server, `class:${session.classId}`, "exam-ending");
+      return json(readiness);
+    }
+    if (action === "readiness" && method === "GET") return json(getExamEndReadiness(sessionId));
+    if (action === "cancel" && method === "POST") {
+      cancelExamEnd(sessionId);
+      if (session) publish(server, `class:${session.classId}`, "exam-end-cancelled");
+      return json({ id: sessionId, status: "live" });
+    }
+  }
+
   const endMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/end$/);
   if (endMatch && method === "POST") {
-    requireRole(request, "admin");
+    const actor = requireRole(request, "admin");
     const sessionId = endMatch[1] as string;
     const session = listExamSessions().find((item) => item.id === sessionId);
-    endExamSession(sessionId);
+    const body = await jsonBody(request);
+    const overrideReason = optionalText(body.overrideReason, "Override reason", 500) ?? undefined;
+    finalizeExamSession(sessionId, actor.actorId, overrideReason);
     if (session) publish(server, `class:${session.classId}`, "exam-ended");
     publish(server, "admin", "admin-state");
     return json({ id: sessionId, status: "ended" });
@@ -1057,7 +1311,10 @@ async function handleApi(
     const student = getStudent(actor.actorId);
     if (!student) throw new HttpError("Student account not found", 404);
     touchStudent(student.id);
-    const sessions = listStudentExamSessions(student.id);
+    const allSessions = listStudentExamSessions(student.id);
+    const sessions = actor.scopeId === null
+      ? allSessions.filter((session) => !session.requireCandidatePin)
+      : allSessions.filter((session) => session.id === actor.scopeId);
     const selectedSessionId = optionalText(new URL(request.url).searchParams.get("session"), "Session", 64);
     if (!selectedSessionId) {
       return json({ status: "selecting", student: { name: student.name }, sessions, serverTime: Date.now() });
@@ -1092,7 +1349,9 @@ async function handleApi(
       publish(server, "admin", "admin-state");
     }
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const phase = phaseForResponse(timing, Date.now());
+    const now = Date.now();
+    const phase = phaseForResponse(timing, now);
+    const visibleManifest = candidateVisibleManifest(manifest, candidateAvailability(exam, now));
     return json({
       status: exam.sessionStatus === "ended" ? "history" : exam.submittedAt === null ? "live" : "submitted",
       student: { name: student.name, extraMinutes: student.extraMinutes },
@@ -1101,59 +1360,82 @@ async function handleApi(
         status: exam.sessionStatus,
         startedAt: exam.startedAt,
         endedAt: exam.endedAt,
+        endingAt: exam.endingAt,
         readingEndsAt: timing.readingEndsAt,
         deadline: timing.deadline,
         phase: publicPhase(phase),
         timeline: timing.timeline.map(publicPhase),
       },
-      paper: publicManifest(manifest, exam.paperId, exam.sessionId),
+      paper: publicManifest(visibleManifest, exam.paperId, exam.sessionId),
       response: {
         id: exam.responseId,
         selectedQuestionId: exam.selectedQuestionId,
         answers: JSON.parse(exam.answersJson) as Record<string, string>,
         flags: JSON.parse(exam.flagsJson) as string[],
+        annotations: JSON.parse(exam.annotationsJson) as AnnotationPayload[],
         audioPlays: JSON.parse(exam.audioPlaysJson) as Record<string, number>,
         notepad: exam.notepad,
         updatedAt: exam.updatedAt,
+        revision: exam.revision,
         submittedAt: exam.submittedAt,
       },
       serverTime: Date.now(),
     });
   }
-
   if (path === "/api/student/response" && method === "PUT") {
     const actor = requireRole(request, "student");
     const body = await jsonBody(request, RESPONSE_BODY_BYTES);
     const sessionId = requiredText(body.sessionId, "Session", 64);
     const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam) throw new HttpError("No live examination", 404);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
     if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
     const timing = timingFor(exam);
     const now = Date.now();
+    if (body.acknowledgeOnly === true) {
+      const expectedRevision = requiredInteger(body.expectedRevision, "Response revision", 0, Number.MAX_SAFE_INTEGER - 1);
+      const clientId = requiredText(body.clientId, "Response client", 100);
+      if (expectedRevision !== exam.revision) {
+        throw new ResponseRevisionConflictError(expectedRevision, exam.revision);
+      }
+      if (!acknowledgeResponseClient(exam.responseId, clientId, expectedRevision)) {
+        throw new ResponseRevisionConflictError(expectedRevision, getStudentExam(actor.actorId, sessionId)?.revision ?? exam.revision);
+      }
+      touchStudent(actor.actorId);
+      publish(server, "admin", "admin-state");
+      return json({ savedAt: now, revision: exam.revision, acknowledged: true });
+    }
     const phases = eligibleResponsePhases(timing, now);
     if (phases.length === 0) throw new HttpError("Student entry is locked during this exam phase", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const validated = await validatedResponse(body, manifest);
-    assertResponseWithinPhases(exam, manifest, validated, phases);
+    const validated = responseWithinPhases(
+      exam,
+      manifest,
+      await validatedResponse(body, manifest),
+      phases,
+    );
     const payload: ResponsePayload = {
       answersJson: JSON.stringify(validated.answers),
       selectedQuestionId: validated.selectedQuestionId,
       flagsJson: JSON.stringify(validated.flags),
+      annotationsJson: JSON.stringify(validated.annotations),
       notepad: validated.notepad,
+      expectedRevision: validated.expectedRevision,
+      clientId: validated.clientId,
     };
     if (now >= timing.deadline) {
       if (now <= timing.deadline + DEADLINE_GRACE_MS) {
-        const submittedAt = saveAndSubmitResponse(exam.responseId, payload);
+        const { submittedAt, revision } = saveAndSubmitResponse(exam.responseId, payload);
         publish(server, "admin", "admin-state");
-        return json({ savedAt: submittedAt, submittedAt, expired: true });
+        return json({ savedAt: submittedAt, submittedAt, revision, expired: true });
       }
       if (exam.submittedAt === null) submitResponse(exam.responseId);
       throw new HttpError("Time has expired and the response was submitted", 409);
     }
-    saveResponse(exam.responseId, payload);
+    const revision = saveResponse(exam.responseId, payload, now);
     touchStudent(actor.actorId);
     publish(server, "admin", "admin-state");
-    return json({ savedAt: Date.now() });
+    return json({ savedAt: now, revision });
   }
 
   if (path === "/api/student/submit" && method === "POST") {
@@ -1162,6 +1444,7 @@ async function handleApi(
     const sessionId = requiredText(body.sessionId, "Session", 64);
     const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam) throw new HttpError("No live examination", 404);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
     if (exam.sessionStatus !== "live" || exam.submittedAt !== null) throw new HttpError("Response is not available", 409);
     const timing = timingFor(exam);
     const now = Date.now();
@@ -1169,20 +1452,28 @@ async function handleApi(
     if (!phase?.responseAllowed) throw new HttpError("Student entry is locked during this exam phase", 409);
     if (!phase.canSubmit) throw new HttpError("Final submission opens in the last work section", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const validated = await validatedResponse(body, manifest);
-    assertResponseWithinPhases(exam, manifest, validated, [phase]);
+    const validated = responseWithinPhases(
+      exam,
+      manifest,
+      await validatedResponse(body, manifest),
+      [phase],
+    );
+    const payload: ResponsePayload = {
+      answersJson: JSON.stringify(validated.answers),
+      selectedQuestionId: validated.selectedQuestionId,
+      flagsJson: JSON.stringify(validated.flags),
+      annotationsJson: JSON.stringify(validated.annotations),
+      notepad: validated.notepad,
+      expectedRevision: validated.expectedRevision,
+      clientId: validated.clientId,
+    };
     if (now > timing.deadline + DEADLINE_GRACE_MS) {
       submitResponse(exam.responseId);
       throw new HttpError("Time has expired and the last saved response was submitted", 409);
     }
-    const submittedAt = saveAndSubmitResponse(exam.responseId, {
-      answersJson: JSON.stringify(validated.answers),
-      selectedQuestionId: validated.selectedQuestionId,
-      flagsJson: JSON.stringify(validated.flags),
-      notepad: validated.notepad,
-    });
+    const { submittedAt, revision } = saveAndSubmitResponse(exam.responseId, payload);
     publish(server, "admin", "admin-state");
-    return json({ submittedAt });
+    return json({ submittedAt, revision });
   }
 
   if (path === "/api/student/audio-play" && method === "POST") {
@@ -1191,6 +1482,7 @@ async function handleApi(
     const sessionId = requiredText(body.sessionId, "Session", 64);
     const resourceKey = requiredText(body.resourceKey, "Audio resource", 64);
     const { exam, identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
     const timing = availableAudioTiming(exam);
     const usedPlays = getAudioPlayCount(exam.responseId, resourceKey);
     if (usedPlays >= AUDIO_PLAY_LIMIT) throw new HttpError("Both audio listens have been used", 409);
@@ -1211,6 +1503,7 @@ async function handleApi(
     const playToken = requiredText(body.playToken, "Audio authorization", 64);
     if (typeof body.durationSeconds !== "number") throw new HttpError("Audio duration is required", 400);
     const { exam, identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
     availableAudioTiming(exam);
     const started = audioPlayback.start(
       playToken,
@@ -1228,7 +1521,8 @@ async function handleApi(
     const sessionId = requiredText(body.sessionId, "Session", 64);
     const resourceKey = requiredText(body.resourceKey, "Audio resource", 64);
     const playToken = requiredText(body.playToken, "Audio authorization", 64);
-    const { identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
+    const { exam, identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
     return json(audioPlayback.complete(playToken, identity));
   }
 
@@ -1240,11 +1534,11 @@ async function handleApi(
     if (kind !== "focus_lost" && kind !== "focus_gained") {
       throw new HttpError("Unknown focus event", 400);
     }
-    // Only a live, not-yet-submitted exam owned by this student records an event.
     const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam || exam.sessionStatus !== "live" || exam.submittedAt !== null) {
       throw new HttpError("Exam is not in progress", 409);
     }
+    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
     recordStudentFocusEvent(sessionId, actor.actorId, kind);
     publish(server, "admin", "admin-state");
     return json({ ok: true }, 201);
@@ -1263,8 +1557,12 @@ async function handleApi(
       if (!exam || exam.sessionStatus === "draft" || exam.paperId !== paperId) {
         throw new HttpError("Asset is not available", 403);
       }
+      requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
       const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
       const resource = manifest.resources.find((item) => item.key === assetKey);
+      if (!candidateAssetAuthorized(manifest, assetKey, candidateAvailability(exam, Date.now()))) {
+        throw new HttpError("Asset is not available", 403);
+      }
       if (!resource) throw new HttpError("Asset is not available", 403);
       if (resource.kind === "audio") {
         if (exam.sessionStatus !== "live" || exam.submittedAt !== null) throw new HttpError("Asset is not available", 403);
@@ -1363,6 +1661,17 @@ const server = Bun.serve<SocketData>({
       response.headers.set("Cache-Control", "no-cache");
       return responseWithSecurity(response);
     } catch (error) {
+      if (error instanceof ResponseRevisionConflictError) {
+        return json({
+          error: error.message,
+          code: error.code,
+          expectedRevision: error.expectedRevision,
+          currentRevision: error.currentRevision,
+        }, error.status);
+      }
+      if (error instanceof ExamEndBlockedError) {
+        return json({ error: error.message, code: error.code, ...error.preview }, error.status);
+      }
       const normalized = error instanceof HttpError ? error : databaseError(error instanceof Error ? error : new Error("Unexpected error"));
       if (normalized.status >= 400) {
         console.warn(`${request.method.toUpperCase()} ${url.pathname} -> ${normalized.status}`);

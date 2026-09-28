@@ -40,11 +40,11 @@ Classes keep rosters, names, and extra time together; this sample class has two 
 
 Start the exam from Sessions and watch it live: who is online, how many have submitted, and the reading and writing time.
 
-Student sign-in uses the class name and each student's own name. The sign-in page does not list the roster.
+Student sign-in can use the class and student name alone for legacy or deliberately open practice sittings. A teacher may also issue an optional per-sitting PIN or direct sign-in link; when supplied, it scopes access to that sitting.
 
 ![PacePaper student chooses exam](docs/user-guide/screenshots/student-choose-exam.png)
 
-The student confirms the paper the teacher prepared and joins its waiting room.
+The student confirms the assigned paper and joins its waiting room. A PIN or direct link opens only its assigned sitting.
 
 ![PacePaper student waiting room](docs/user-guide/screenshots/student-waiting.png)
 
@@ -72,7 +72,7 @@ If a candidate leaves the exam window, the teacher dashboard raises a focus aler
 1. **Prepare.** Sign in on the teacher computer and choose **Settings** to set a password you will remember.
 2. **Add your class.** In **Classes and students**, create a class and add students (or import a CSV class list). Names must be unique within a class.
 3. **Choose a paper.** The preloaded **Sample paper** demonstrates the app. For real practice, build a paper in the **Paper library** with the guided builder (it follows the format of your chosen exam system) or import a prepared PacePaper paper file.
-4. **Set up an exam.** In **Sessions**, choose the class and paper. Students open the **Student sign-in** address on their own devices (the bare address is enough — it opens student sign-in), then enter the class name and their own name. Check that address under **Classroom sharing** on the teacher dashboard — PacePaper shares the classroom network by default, and you can choose another detected address there if the network changed.
+4. **Set up an exam.** In **Sessions**, choose the class and paper. If PacePaper shows a candidate access list, save it securely and give each student only their own optional PIN or direct link. Check the **Student sign-in** address under **Classroom sharing** on the teacher dashboard.
 5. **Run the exam.** Click **Start exam** when candidates are ready. The exam clock, per-candidate progress, and **Focus alerts** (candidates leaving the window) are on the dashboard; open the **examination clock** on a second screen to project the countdown. Responses autosave, and the exam submits automatically at the deadline.
 6. **Review.** Open a session's submissions to read, print, or save each candidate's complete paper as a PDF. **Answer history** replays what a candidate had written earlier in the sitting.
 
@@ -141,7 +141,7 @@ The release builder produces shareable, self-contained macOS, Windows, and Linux
 
 The Mac bundle must be signed with a Developer ID Application certificate and notarized by Apple. The release builder deliberately refuses to create an ad-hoc-signed Mac download, because Gatekeeper can report that download as damaged without offering **Open Anyway**.
 
-**Version 0.1.0-demo.15 is prepared for Windows x64 and Linux x64.** Paper Builder can store teacher-only answers or marking guidance for each question. PacePaper shows the guidance beside live and submitted work but excludes it from candidate data. School custom papers can also use a teacher-entered exam type instead of the generic profile name. The release lets teachers watch saved candidate work during a sitting and rehearse any paper with the real candidate interface. It retains the classroom network selector, light and dark themes, IB MYP eAssessment profiles, video stimulus material, live timing corrections, focus alerts, and a generic **Sample paper** for new installations. A macOS app remains withheld because signing and notarization are not configured. See the [release notes](release/RELEASE_NOTES-0.1.0-demo.15.md).
+**Version 0.1.0-demo.16 is prepared for Windows x64 and Linux x64.** Candidate access is optional: new or legacy sittings may use name-only sign-in, while a teacher can issue per-sitting PINs and direct links when scoped access is useful. Candidate saves use revision checks, and safe exam ending waits for each active candidate's latest save unless the teacher records an override reason. Startup database checks and verified pre-migration snapshots protect existing work. The release retains teacher-only marking guidance, the paper builder, candidate preview, live work monitoring, timing corrections, focus alerts, and the generic **Sample paper**. A macOS app remains withheld because signing and notarization are not configured.
 
 Once the signing and notarization credentials described below are available, run `bun run release:build`. The generated archives, standalone user guides, and checksums are placed in `release/`. On macOS, use the notarized `macos-universal` archive for both Apple-silicon and Intel Macs; extract the correct platform archive and start its PacePaper app or executable. The macOS bundle and Windows executable carry the PacePaper icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the illustrated teacher-facing [`USER_GUIDE.html`](USER_GUIDE.html), its editable [`USER_GUIDE.md`](USER_GUIDE.md) source, and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
 
@@ -190,7 +190,7 @@ For packaged releases, `PORT` may be set by an advanced launcher; otherwise Pace
 
 The `data/` directory is intentionally excluded from Git. Stop PacePaper and back up its complete data folder before updating or testing recovery. The app launcher and basic development server use different default data locations; see the [user guide](USER_GUIDE.md#back-up-all-classroom-data).
 
-Saved papers live in the current installation's SQLite library. Papers made in the internal teacher builder can be downloaded as one `.digitaldp-paper` file and restored through the visible import form on another installation with a new local paper ID. Imported legacy or reference-only packages retain their existing export restrictions.
+Saved papers live in the current installation's SQLite library. Papers made in the internal teacher builder can be downloaded as one `.digitaldp-paper` file and restored through the visible import form on another installation. A matching import does not silently create another copy: PacePaper identifies the conflicting library records and requires the teacher to choose an unused paper to replace or cancel. Papers referenced by any exam sitting cannot be replaced. Imported legacy or reference-only packages retain their existing export restrictions.
 
 In **Sessions**, choose the class, exam system, and a paper from that system to create a sitting. The same **Paper library** paper can be reused for separate dates or classes. Students sign in, choose the exact session, and wait until the teacher selects **Start exam**. Different classes can run simultaneously; each class can have only one live session.
 
@@ -198,7 +198,7 @@ Open the room clock from the specific session for a projector or second screen. 
 
 Linked clocks follow authoritative timing across windows, independently of decorative titles and names. Timing saves reject stale edits from another window. For a simple paper, reading and writing minutes can be corrected from the clock while the exam is ready or live: a live save moves candidate phase boundaries and deadlines immediately, which is the fastest recovery when a sitting must be extended. Ended exams and fixed timed sections remain read-only. Mounted student views refresh their server timeline without replacing editors. Check the student view before a classroom trial.
 
-Each published build is summarised in its release notes; see the [current release notes](release/RELEASE_NOTES-0.1.0-demo.15.md) for what ships and the verification limits.
+Each published build is summarized in its release notes. See the [current release notes](release/RELEASE_NOTES-0.1.0-demo.16.md) for what ships and the verification limits.
 
 Teacher-facing **Remove** actions archive records instead of permanently deleting them. Removed students cannot sign in, removed classes are unavailable for new sittings, and removed sittings disappear from the active exam list; all remain available under the corresponding **Removed** disclosure for restoration. Existing submissions stay retained and printable. Live sittings cannot be removed, classes with a live sitting must be ended first, and a student with unfinished live work cannot be removed until that response is submitted or the sitting ends.
 
