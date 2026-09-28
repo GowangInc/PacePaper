@@ -2,7 +2,7 @@
 
 This step-by-step guide covers the current PacePaper classroom demo. PacePaper runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.
 
-This guide matches PacePaper **0.1.0-demo.16**.
+This guide matches PacePaper **0.1.0-demo.17**.
 
 PacePaper is for **practice and candidate familiarisation only**. It does not deliver an official examination. A fresh installation starts with one preloaded **Sample paper** that has no subject, level, or IB branding, so you can try the whole exam workflow before building your own. An older app download does not update itself; use the guide supplied with your version.
 
@@ -29,17 +29,16 @@ Follow this order for a complete practice exam:
 
 1. Start PacePaper and sign in as the teacher.
 2. Check the **Student sign-in** address shown under **Classroom sharing** in **Overview** (PacePaper shares the classroom network by default; choose a different address there if the network changed).
-3. Copy the **Student sign-in** address and test it on one student device. The bare address is enough: opening it goes straight to candidate sign-in.
+3. Copy the **Student sign-in** address and test it on one student device. The bare address is enough: opening it goes straight to roster sign-in.
 4. In **Classes**, create or import the class and check every student's details.
 5. In **Paper library**, choose an included example or create/import a paper. Use **Preview as student** to see exactly what candidates will see before the lesson.
 6. In **Sessions**, choose the class, exam system, and paper, then select **Set up exam**.
-7. If PacePaper shows a **Candidate access** list, download it and give each student only their own optional PIN or direct link.
-8. Open that session's clock on the second screen.
-9. Ask students to sign in and wait.
-10. Check that the correct students are present.
-11. Select **Start exam**. Reading time begins now, when applicable.
-12. Monitor online and submitted counts while students work.
-13. After submission, open **View submissions** and select **Print or save PDF**.
+7. Open that session's clock on the second screen.
+8. Ask students to sign in by selecting their class and name.
+9. Check that the correct students are present.
+10. Select **Start exam**. Reading time begins now, when applicable.
+11. Monitor online and submitted counts while students work.
+12. After submission, open **View submissions** and select **Print or save PDF**.
 
 The detailed instructions below follow the same order.
 
@@ -245,13 +244,12 @@ Select **Sessions**.
 3. Choose the **Paper**. Only papers from the chosen system are shown.
 4. Read **Before you start**. Check the number of question cards, marks, timing, instructions, and any calculator or materials requirements.
 5. Select **Set up exam**.
-6. If PacePaper shows a **Candidate access** dialog, select **Download CSV** and store the list securely. Candidate access is optional; a sitting can allow name-only sign-in.
-7. Find the new session in the list.
-8. Confirm that it says **Ready to start**.
+6. Find the new session in the list.
+7. Confirm that it says **Ready to start**.
 
-Setting up a session may create private PINs and direct links for the active students. These credentials are optional: if the sitting allows name-only sign-in, students can join with their class and name. If the roster changes, reset the access credentials only when the session uses them; this replaces every PIN and link and signs out candidates from that sitting.
+Setting up a session makes the exam available to every student in that class. Students choose the class and their own name from the active roster. No candidate PIN or direct link is created.
 
-Setting up a session does not start its clock. It makes the exam available to candidates using the configured name-only or candidate-access sign-in method.
+Setting up a session does not start its clock. It makes the exam available to candidates on the classroom network.
 
 One question card may contain several parts. Check the questions, timing, and marks before students join.
 
@@ -280,19 +278,17 @@ The clock remains on **Ready to start** until the teacher selects **Start exam**
 
 ## Step 7 — Ask students to join
 
-Give each student the **Student sign-in** address, class name, and own name. If the sitting uses candidate access, give each student only their own PIN or direct link.
+Give each student the **Student sign-in** address. Students choose their class and own name from the active roster.
 
 Ask each student to:
 
 1. Open the exact address supplied by the teacher.
-2. If the teacher supplied a direct link, check the paper title and wait.
-3. Otherwise, enter the **Class name**.
-4. Enter your own name.
-5. If the sitting asks for it, enter your **Candidate PIN**. Leave it blank when name-only sign-in is allowed.
-6. Select **Continue**.
-7. Check the paper title and wait for the teacher.
+2. Select the **Class name**.
+3. Select your own name.
+4. Select **Continue**.
+5. Check the paper title and wait for the teacher.
 
-An optional PIN or direct link opens only its assigned sitting. PacePaper rejects an old credential after the teacher resets access. Name-only sign-in is available for sittings that do not require candidate access.
+The class and name are used only to join the current classroom sitting. PacePaper does not require a PIN, account, email, or internet access.
 
 Their sign-in screen and waiting room both state that the teacher can see their work during the sitting: answers, drawings, notes, and flagged questions, within PacePaper only.
 
@@ -425,8 +421,8 @@ Restoring a backup returns the installation to the date of that backup. Later wo
 Teachers may give this section directly to students.
 
 1. Open the address supplied by your teacher.
-2. If your teacher supplied a direct link, check the paper title and wait.
-3. Otherwise, enter the class name, your own name, and your candidate PIN.
+2. Select your class.
+3. Select your own name.
 4. Select **Continue**.
 5. Check the paper title and wait for the teacher.
 6. Answer in the area below each question. Work saves automatically.
@@ -451,8 +447,8 @@ The built-in calculator supports arithmetic, powers, parentheses, π, e, `Ans`, 
 - **The Mac app says it is damaged:** Do not bypass Gatekeeper. Confirm that the release is notarized. If you are working from a source checkout, use `Start PacePaper.command` from the project folder.
 - **The app does not open:** Extract the complete download, use the correct platform file, and close any second copy of PacePaper.
 - **Students cannot connect:** Confirm that classroom sharing is on, use the displayed private-network address, and test it on a real student device. Do not give students `localhost` or `127.0.0.1`.
-- **A student cannot sign in:** Check the class name and student name. If this sitting uses candidate access, also check the individual PIN or direct link; reset access credentials only if needed.
-- **An exam is missing:** Check that the teacher selected **Set up exam**. For a new roster member, reset the sitting's access PINs.
+- **A student cannot sign in:** Check that the teacher selected the correct class and that the student name is in the active roster.
+- **An exam is missing:** Check that the teacher selected **Set up exam** and that the student selected the correct class.
 - **A student is stuck on Connecting or Reconnecting:** Keep the page open. Confirm that PacePaper is running and both devices are still on the same network.
 - **The clock is counting the wrong session:** Choose the exam from the clock's session list, or reopen the clock from the correct session row.
 - **Clock timing cannot be edited:** Simple reading/writing papers support timing edits while the exam is ready or live — a live save moves candidate deadlines immediately. Fixed-section papers and ended exams use the saved schedule. Read Step 6; changing display details never changes student time.
@@ -460,6 +456,6 @@ The built-in calculator supports arithmetic, powers, parentheses, π, e, `Ans`, 
 
 ## Demo safety
 
-A fresh installation uses the default teacher login `admin` / `admin`. Change it in **Settings** before real use. Candidate access is optional: a sitting can use name-only sign-in, or the teacher can issue one private PIN and direct link per student. Classroom traffic uses unencrypted HTTP, so use a trusted private network and approved material.
+A fresh installation uses the default teacher login `admin` / `admin`. Change it in **Settings** before real use. Student sign-in uses the active class roster and name only. Classroom traffic uses unencrypted HTTP, so use a trusted private network and approved material.
 
 Use fake candidates, approved practice material, and a trusted private network only. PacePaper is not the official IB Digital Examination System and is not affiliated with or endorsed by the International Baccalaureate.
