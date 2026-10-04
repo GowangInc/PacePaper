@@ -13,7 +13,7 @@ mock.module("/app.js", () => ({
 const { buildStudentLoginPayload } = await import("./student.js");
 
 describe("student candidate login", () => {
-  test("sends names and the teacher-issued PIN without unrelated form data", () => {
+  test("sends only class and student names", () => {
     const payload = buildStudentLoginPayload(new Map([
       ["className", "English A"],
       ["studentName", "Sam Lee"],
@@ -21,7 +21,17 @@ describe("student candidate login", () => {
       ["pin", "ABCD-2345"],
       ["studentId", "must-not-leak"],
     ]));
-    expect(payload).toEqual({ className: "English A", studentName: "Sam Lee", pin: "ABCD-2345" });
+    expect(payload).toEqual({ className: "English A", studentName: "Sam Lee" });
+    expect(payload).not.toHaveProperty("pin");
+    expect(payload).not.toHaveProperty("candidateCode");
+    expect(payload).not.toHaveProperty("studentId");
   });
 
+});
+
+test("reuses the initial roster when rebuilding sign-in controls", async () => {
+  const source = await Bun.file(new URL("./student.js", import.meta.url)).text();
+  expect(source).toContain("function authFrame(bootstrap = studentBootstrap)");
+  expect(source).toContain("studentBootstrap = bootstrap ?? {};");
+  expect(source.match(/authFrame\(studentBootstrap\);/gu)?.length).toBe(3);
 });

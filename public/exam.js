@@ -9,6 +9,7 @@ import { createPreviewAudioApi } from "./preview-audio.js";
 import { createResponseSaveState, downloadResponseRecovery } from "./response-save-state.js";
 import { mountExamCalculator, phaseAllowsCalculator } from "./calculator.js";
 import { createPdfAnnotationViewer, normalizePdfAnnotations } from "./pdf-annotations.js";
+import { createClientId } from "./client-id.js";
 
 const RICH_TAGS = new Set([
   "div", "p", "br", "b", "strong", "i", "em", "u", "sup", "sub", "ol", "ul", "li",
@@ -113,11 +114,11 @@ export function mountExam(state, { onSubmitted, onStateRefresh, preview = false 
   try {
     clientId = clientIdKey ? sessionStorage.getItem(clientIdKey) : null;
     if (!clientId && clientIdKey) {
-      clientId = crypto.randomUUID();
+      clientId = createClientId();
       sessionStorage.setItem(clientIdKey, clientId);
     }
   } catch {
-    clientId = crypto.randomUUID();
+    clientId = createClientId();
   }
   const questionIds = new Set(paper.questions.map((question) => question.id));
   const resourceKeys = new Set(paper.resources.map((resource) => resource.key));

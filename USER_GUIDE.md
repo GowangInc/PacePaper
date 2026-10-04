@@ -2,7 +2,7 @@
 
 This step-by-step guide covers the current PacePaper classroom demo. PacePaper runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.
 
-This guide matches PacePaper **0.1.0-demo.18**.
+This guide matches PacePaper **0.1.0-demo.19**.
 
 PacePaper is for **practice and candidate familiarisation only**. It does not deliver an official examination. A fresh installation starts with one preloaded **Sample paper** that has no subject, level, or IB branding, so you can try the whole exam workflow before building your own. An older app download does not update itself; use the guide supplied with your version.
 
@@ -195,7 +195,7 @@ For papers with fixed timed sections, the reading and total-time fields are read
 
 The selected profile changes the terminology, timing, marks, materials, suggested question cards, available response areas, delivery description, phase plan, and tool guidance. For an AP paper, assign every question to the correct section or part using the field shown on its question card. PacePaper then locks earlier sections, blocks entry during explicitly locked phases and the monitored break, and changes the displayed calculator/material rule for each part. AP English's optional 15-minute reading period remains inside its writable 135-minute free-response phase; it is not a separate lock.
 
-The AP profiles target **May 2027** and remain visibly marked **Adapted practice**. PacePaper currently uses one fixed classroom break timer that advances automatically; the official digital application waits for each candidate to select **Resume Testing** after the break timer. AP hybrid free-response practice should use a physical response booklet when closest format rehearsal is required. For eligible mathematics practice papers, PacePaper can provide its own numeric scientific and graphing calculator when the teacher enables it; this is not a TI product, an approved calculator emulator, or a substitute for the calculator type required by an official paper. Check the current official course guide, specification, and session instructions before a full mock exam.
+The AP profiles target **May 2027** and remain visibly marked **Adapted practice**. PacePaper currently uses one fixed classroom break timer that advances automatically; the official digital application waits for each candidate to select **Resume Testing** after the break timer. AP hybrid free-response practice should use a physical response booklet when closest format rehearsal is required. For eligible mathematics practice papers, PacePaper can provide its own numeric practice calculator with graph analysis, tables, and basic statistics/probability tools when the teacher enables it. It uses a TI-Nspire CX II handheld layout with an independent numeric engine, and it does not replace the calculator allowed by an official paper. Check the current official course guide, specification, and session instructions before a full mock exam.
 
 ### Add paper materials
 
@@ -440,7 +440,11 @@ For a handwritten question, use **Draw**, **Eraser**, **Undo**, **Redo**, or **A
 
 For listening audio, select **Start first listen** only when ready and let it play to the end. After completion, **Start final listen** becomes available.
 
-The built-in calculator supports arithmetic, powers, parentheses, π, e, `Ans`, square roots, absolute values, trigonometric and inverse-trigonometric functions, logarithms, exponential functions, rounding, minima, and maxima. It has degree and radian modes and graphs numeric functions of `x`. It deliberately does not provide CAS, symbolic solving, saved programs, statistics, matrices, geometry, or certification as any named calculator model. Open **Supported functions and keyboard controls** inside the calculator for the exact function names.
+The calculator follows the TI-Nspire CX II handheld layout. **Enter** submits the current line; the next line starts fresh, and an operator continues from `Ans`. **Ctrl**, then **Enter** gives a decimal result. The **Scratchpad** key switches Calculate/Graph; **Home / On** opens the home screen; **Menu** opens numbered tool menus; **Esc** dismisses menus before closing the calculator. On a computer keyboard, **F1** opens Menu and **Ctrl+Enter** gives a decimal. Use the touchpad or number keys to navigate menus. Blue labels above physical keys are accessed through **Ctrl**.
+
+Enter `5→a` using **Ctrl**, then **var**, to store a value, or type `a:=5`. Recall stored values with **var**. The up/down keys recall calculations. History and stored variables remain available during the current browser sitting. **Menu → Algebra → Numerical Solve** solves an equation within chosen bounds; **Menu → Calculus** provides derivative and integral dialogs; **Menu → Statistics** and **Probability** open data and distribution tools. **doc → Document Settings** changes the angle mode. Fraction, radical and power notation is shown in calculation history.
+
+The built-in calculator supports arithmetic, powers, parentheses, π, e, `Ans`, square roots, absolute values, trigonometric and inverse-trigonometric functions, logarithms, exponential functions, rounding, minima, maxima, factorials (`!`), permutations (`nPr`) and combinations (`nCr`). Direct commands include `binomPdf`, `binomCdf`, `normalPdf`, `normalCdf` and `invNorm`. It has degree and radian modes and graphs up to three numeric functions of `x`. Graph tools include trace, numerical zeros and intersections, approximate extrema, numerical derivatives and definite integrals, and value tables. Statistics tools include one-variable summaries, linear regression, binomial probabilities, normal probabilities, and inverse normal. These numeric routines are practice approximations; the calculator does not provide CAS or symbolic solving, saved programs, spreadsheets, matrices, geometry, or model certification. Open **Supported functions and keyboard controls** inside the calculator for the exact function names and limits.
 
 ## Troubleshooting
 

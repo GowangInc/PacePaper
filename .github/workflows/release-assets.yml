@@ -7,7 +7,7 @@ on:
       tag:
         description: Existing draft release tag
         required: true
-        default: v0.1.0-demo.18
+        default: v0.1.0-demo.19
         type: string
       include_macos:
         description: Include macOS (requires Developer ID signing and Apple notarization secrets)
@@ -427,7 +427,7 @@ jobs:
               assert.equal(state.classes.length, 0, "Release must not include classroom data");
               assert.equal(state.students.length, 0);
               assert.equal(state.sessions.length, 0);
-              for (const path of ["/admin", "/student", "/clock", "/exam.js", "/paper-builder-drafts.js", "/admin-end-exam.js", "/response-save-state.js", "/exam-phase-model.js"]) {
+              for (const path of ["/admin", "/student", "/clock", "/exam.js", "/paper-builder-drafts.js", "/admin-end-exam.js", "/response-save-state.js", "/exam-phase-model.js", "/calculator", "/calculator.js", "/calculator-handheld.js", "/calculator-entry.js", "/calculator-tools.js", "/client-id.js"]) {
                 const response = await fetch(`${origin}${path}`);
                 assert.equal(response.status, 200, `${path} is embedded`);
                 assert.ok((await response.text()).length > 100, `${path} is not empty`);

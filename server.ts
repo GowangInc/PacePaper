@@ -7,7 +7,7 @@ import {
   configureDemoAdmin,
   createAdmin,
   createClass,
-  createExamSessionWithCredentials,
+  createExamSession,
   createStudent,
   deleteAdminSessions,
   deleteExpiredAuthSessions,
@@ -19,9 +19,7 @@ import {
   findAdmin,
   findAdminById,
   findCandidateCredentialByToken,
-  findCandidateCredentialOptions,
   findStudentLogin,
-  candidateCredentialRequired,
   candidateTokenLookup,
   storedCandidateCredentials,
   updateAdminPasswordHash,
@@ -73,7 +71,6 @@ import {
   requireRole,
   revokeSession,
 } from "./src/auth.ts";
-import { verifyCandidatePin, verifyCandidateToken } from "./src/candidate-credentials.ts";
 import {
   AUDIO_PLAY_LIMIT,
   encodePortablePaper,
@@ -81,6 +78,7 @@ import {
   sanitizeRichText,
   type PaperManifest,
 } from "./src/papers.ts";
+import { verifyCandidateToken } from "./src/candidate-credentials.ts";
 import { normalizeInkAnswer } from "./src/ink.ts";
 import { parseByteRange, type ByteRangeResult } from "./src/http-range.ts";
 import {
@@ -150,9 +148,12 @@ class HttpError extends Error {
 function requireStudentSessionScope(
   scopeId: string | null,
   sessionId: string,
-  requireCandidatePin: boolean,
+  exam: Pick<StudentExamRow, "requireCandidatePin"> | null = null,
 ): void {
-  if ((requireCandidatePin && scopeId !== sessionId) || (!requireCandidatePin && scopeId !== null && scopeId !== sessionId)) {
+  if (scopeId === null && exam?.requireCandidatePin) {
+    throw new HttpError("This examination is not available through roster sign-in", 403);
+  }
+  if (scopeId !== null && scopeId !== sessionId) {
     throw new HttpError("This sign-in is not valid for that examination", 403);
   }
 }
@@ -809,6 +810,10 @@ async function handleApi(
       setupRequired: localRequest && setupRequired(),
       role,
       studentOrigin: studentJoinOrigin({ lanOrigin: network.lanOrigin, port, addresses: privateLanAddresses() }),
+      studentRoster: {
+        classes: listClasses().map(({ id, name }) => ({ id, name })),
+        students: listStudents().map(({ id, classId, name }) => ({ id, classId, name })),
+      },
     });
   }
 
@@ -870,25 +875,8 @@ async function handleApi(
       throw new HttpError("Too many login attempts. Try again later", 429);
     }
     const student = findStudentLogin(className, studentName);
-    if (!student) throw new HttpError("Class, student name or candidate PIN is incorrect", 401);
+    if (!student) throw new HttpError("Class or student name is incorrect", 401);
 
-    const pin = optionalText(body.pin, "Candidate PIN", 32);
-    if (pin) {
-      const protectedSessions = findCandidateCredentialOptions(className, studentName);
-      const verified = (await Promise.all(protectedSessions.map(async (candidate) => (
-        await verifyCandidatePin(storedCandidateCredentials(candidate), pin) ? candidate : null
-      )))).find((candidate) => candidate !== null);
-      if (!verified) throw new HttpError("Class, student name or candidate PIN is incorrect", 401);
-      limiterKeys.forEach(clearLoginAttempts);
-      touchStudent(student.id);
-      const cookie = issueCandidateSession(verified, secure);
-      if (!cookie) throw new HttpError("Class, student name or candidate PIN is incorrect", 401);
-      return json({ role: "student", name: student.name, sessionId: verified.sessionId }, 200, { "Set-Cookie": cookie });
-    }
-    const hasLegacySession = listStudentExamSessions(student.id).some((session) => !session.requireCandidatePin);
-    if (candidateCredentialRequired(student.id) && !hasLegacySession) {
-      throw new HttpError("Enter the candidate PIN supplied by your teacher", 401);
-    }
 
     limiterKeys.forEach(clearLoginAttempts);
     touchStudent(student.id);
@@ -1108,10 +1096,10 @@ async function handleApi(
     const body = await jsonBody(request);
     const classId = requiredText(body.classId, "Class", 64);
     const paperId = requiredText(body.paperId, "Paper", 64);
-    const created = await createExamSessionWithCredentials(classId, paperId);
+    const sessionId = createExamSession(classId, paperId);
     publish(server, `class:${classId}`, "exam-list-changed");
     publish(server, "admin", "admin-state");
-    return json({ ...created, status: "draft" }, 201);
+    return json({ id: sessionId, status: "draft" }, 201);
   }
 
   const credentialResetMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/credentials\/reset$/);
@@ -1341,6 +1329,7 @@ async function handleApi(
 
     const exam = getStudentExam(student.id, selectedSession.id);
     if (!exam) throw new HttpError("Student response is not available for this examination", 409);
+    requireStudentSessionScope(actor.scopeId, selectedSession.id, exam);
 
     const timing = timingFor(exam);
     if (exam.sessionStatus === "live" && exam.submittedAt === null && Date.now() >= timing.deadline + DEADLINE_GRACE_MS) {
@@ -1388,7 +1377,7 @@ async function handleApi(
     const sessionId = requiredText(body.sessionId, "Session", 64);
     const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam) throw new HttpError("No live examination", 404);
-    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam);
     if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
     const timing = timingFor(exam);
     const now = Date.now();
@@ -1444,7 +1433,7 @@ async function handleApi(
     const sessionId = requiredText(body.sessionId, "Session", 64);
     const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam) throw new HttpError("No live examination", 404);
-    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam);
     if (exam.sessionStatus !== "live" || exam.submittedAt !== null) throw new HttpError("Response is not available", 409);
     const timing = timingFor(exam);
     const now = Date.now();
@@ -1482,7 +1471,7 @@ async function handleApi(
     const sessionId = requiredText(body.sessionId, "Session", 64);
     const resourceKey = requiredText(body.resourceKey, "Audio resource", 64);
     const { exam, identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
-    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam);
     const timing = availableAudioTiming(exam);
     const usedPlays = getAudioPlayCount(exam.responseId, resourceKey);
     if (usedPlays >= AUDIO_PLAY_LIMIT) throw new HttpError("Both audio listens have been used", 409);
@@ -1503,7 +1492,7 @@ async function handleApi(
     const playToken = requiredText(body.playToken, "Audio authorization", 64);
     if (typeof body.durationSeconds !== "number") throw new HttpError("Audio duration is required", 400);
     const { exam, identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
-    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam);
     availableAudioTiming(exam);
     const started = audioPlayback.start(
       playToken,
@@ -1522,7 +1511,7 @@ async function handleApi(
     const resourceKey = requiredText(body.resourceKey, "Audio resource", 64);
     const playToken = requiredText(body.playToken, "Audio authorization", 64);
     const { exam, identity } = studentAudioContext(actor.actorId, sessionId, resourceKey);
-    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam);
     return json(audioPlayback.complete(playToken, identity));
   }
 
@@ -1538,7 +1527,7 @@ async function handleApi(
     if (!exam || exam.sessionStatus !== "live" || exam.submittedAt !== null) {
       throw new HttpError("Exam is not in progress", 409);
     }
-    requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
+    requireStudentSessionScope(actor.scopeId, sessionId, exam);
     recordStudentFocusEvent(sessionId, actor.actorId, kind);
     publish(server, "admin", "admin-state");
     return json({ ok: true }, 201);
@@ -1557,7 +1546,7 @@ async function handleApi(
       if (!exam || exam.sessionStatus === "draft" || exam.paperId !== paperId) {
         throw new HttpError("Asset is not available", 403);
       }
-      requireStudentSessionScope(actor.scopeId, sessionId, exam.requireCandidatePin);
+      requireStudentSessionScope(actor.scopeId, sessionId, exam);
       const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
       const resource = manifest.resources.find((item) => item.key === assetKey);
       if (!candidateAssetAuthorized(manifest, assetKey, candidateAvailability(exam, Date.now()))) {

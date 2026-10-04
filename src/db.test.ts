@@ -152,7 +152,30 @@ describe("database schema migration", () => {
         .toContain("updated_at");
       expect(upgraded.query<{ version: number }, []>(
         "SELECT version FROM schema_migrations ORDER BY version",
-      ).all().map(({ version }) => version)).toEqual([1, 2, 3, 4]);
+      ).all().map(({ version }) => version)).toEqual([1, 2, 3, 4, 5]);
+    } finally {
+      upgraded.close();
+    }
+  });
+
+  test("normalizes legacy candidate-protected sessions", () => {
+    const upgraded = new Database(":memory:", { create: true, strict: true });
+    try {
+      upgraded.exec(`
+        CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL);
+        INSERT INTO schema_migrations (version, applied_at) VALUES (1, 1), (2, 2), (3, 3), (4, 4);
+        CREATE TABLE exam_sessions (
+          id TEXT PRIMARY KEY,
+          require_candidate_pin INTEGER NOT NULL DEFAULT 0
+        );
+        INSERT INTO exam_sessions (id, require_candidate_pin) VALUES ('legacy', 1), ('name-only', 0);
+      `);
+
+      initializeDatabaseSchema(upgraded);
+
+      expect(upgraded.query<{ requireCandidatePin: number }, []>(
+        "SELECT require_candidate_pin AS requireCandidatePin FROM exam_sessions ORDER BY id",
+      ).all()).toEqual([{ requireCandidatePin: 0 }, { requireCandidatePin: 0 }]);
     } finally {
       upgraded.close();
     }

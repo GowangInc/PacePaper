@@ -368,7 +368,6 @@ export function sessionActionModel(session, archived = false) {
   }
   if (session.status === "live") actions.push("watch");
   if (session.status !== "ended") actions.push("clock", session.status === "draft" ? "start" : "end");
-  if (session.requireCandidatePin && session.status !== "ended") actions.push("access");
   if (session.status !== "draft") actions.push("responses");
   if (session.status !== "live") actions.push("archive");
   return actions;
@@ -418,14 +417,6 @@ function renderSessionActions(documentRoot, session, actions, archived) {
       container.append(watch);
     } else if (action === "responses") {
       container.append(responseButton(documentRoot, session));
-    } else if (action === "access") {
-      const access = documentRoot.createElement("button");
-      access.type = "button";
-      access.dataset.candidateAccess = session.id;
-      access.className = "compact";
-      access.textContent = "Reset access PINs";
-      access.setAttribute("aria-label", `Reset candidate access PINs for ${label}`);
-      container.append(access);
     } else {
       container.append(lifecycleButton(documentRoot, {
         action,

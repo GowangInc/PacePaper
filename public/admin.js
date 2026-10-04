@@ -906,97 +906,17 @@ async function refreshState(silent = false) {
   }
 }
 
-function candidateAccessLink(token) {
-  const url = new URL("/student", studentConnectionOrigin ?? location.origin);
-  url.searchParams.set("token", token);
-  return url.href;
-}
-
-function candidateAccessCsv(credentials) {
-  const quote = (value) => `"${String(value).replaceAll('"', '""')}"`;
-  return [
-    ["Candidate", "PIN", "Access link"],
-    ...credentials.map((credential) => [
-      credential.studentName,
-      credential.pin,
-      candidateAccessLink(credential.token),
-    ]),
-  ].map((row) => row.map(quote).join(",")).join("\r\n");
-}
-
-function showCandidateAccess(credentials, trigger = null) {
-  const dialog = document.createElement("dialog");
-  dialog.className = "candidate-access-dialog";
-  dialog.setAttribute("aria-labelledby", "candidate-access-title");
-  dialog.setAttribute("aria-describedby", "candidate-access-warning");
-  const title = copy("h2", "", "Candidate access");
-  title.id = "candidate-access-title";
-  const warning = copy("p", "callout warning",
-    "Save or print this list now. PacePaper stores only protected credential hashes and cannot show these PINs again.");
-  warning.id = "candidate-access-warning";
-  const table = document.createElement("table");
-  table.innerHTML = "<thead><tr><th>Candidate</th><th>PIN</th><th>Direct link</th></tr></thead>";
-  const body = document.createElement("tbody");
-  for (const credential of credentials) {
-    const row = document.createElement("tr");
-    const name = document.createElement("td");
-    name.textContent = credential.studentName;
-    const pin = document.createElement("td");
-    const code = document.createElement("code");
-    code.textContent = credential.pin;
-    pin.append(code);
-    const linkCell = document.createElement("td");
-    const link = document.createElement("a");
-    link.href = candidateAccessLink(credential.token);
-    link.textContent = "Open sign-in link";
-    link.target = "_blank";
-    link.rel = "noopener";
-    linkCell.append(link);
-    row.append(name, pin, linkCell);
-    body.append(row);
-  }
-  table.append(body);
-  const actions = document.createElement("div");
-  actions.className = "dialog-actions";
-  const download = copy("button", "", "Download CSV");
-  download.type = "button";
-  download.disabled = credentials.length === 0;
-  download.addEventListener("click", () => {
-    const url = URL.createObjectURL(new Blob([candidateAccessCsv(credentials)], { type: "text/csv;charset=utf-8" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "PacePaper-candidate-access.csv";
-    anchor.click();
-    URL.revokeObjectURL(url);
-  });
-  const close = copy("button", "primary-action", "Done");
-  close.type = "button";
-  close.addEventListener("click", () => dialog.close());
-  actions.append(download, close);
-  dialog.append(title, warning);
-  if (credentials.length === 0) {
-    dialog.append(copy("p", "empty-state", "This class has no active students. Add the roster, then reset access PINs from the exam sitting."));
-  } else {
-    dialog.append(table);
-  }
-  dialog.append(actions);
-  rememberDialogTrigger(dialog, trigger);
-  dialog.addEventListener("close", () => dialog.remove(), { once: true });
-  document.body.append(dialog);
-  dialog.showModal();
-}
 
 async function createSession(form) {
   const submit = form.querySelector("button[type=submit]");
   submit.disabled = true;
   try {
-    const result = await api("/api/admin/sessions", {
+    await api("/api/admin/sessions", {
       method: "POST",
       body: Object.fromEntries(new FormData(form)),
     });
     form.reset();
-    showCandidateAccess(result.credentials ?? [], submit);
-    announce("Exam set up with individual candidate access", "success");
+    announce("Exam set up. Students can choose their class and name to join.", "success");
   } catch (error) {
     announce(error instanceof Error ? error.message : "Could not set up exam", "error");
   } finally {
@@ -1004,12 +924,6 @@ async function createSession(form) {
   }
 }
 
-async function resetCandidateAccess(sessionId, trigger = null) {
-  if (!confirm("Reset every candidate PIN and direct link for this sitting? Anyone already signed in to this sitting will be signed out.")) return;
-  const result = await api(`/api/admin/sessions/${sessionId}/credentials/reset`, { method: "POST" });
-  showCandidateAccess(result.credentials ?? [], trigger);
-  announce("Candidate access reset", "success");
-}
 
 async function mutate(form, path, transform) {
   const submit = form.querySelector("button[type=submit]");
@@ -1180,23 +1094,11 @@ function bindCollectionController() {
 
   root.addEventListener("click", async (event) => {
     const button = event.target.closest(
-      "button[data-edit-student], button[data-session-action], button[data-candidate-access], button[data-live-work], button[data-responses], button[data-collection-action]",
+      "button[data-edit-student], button[data-session-action], button[data-live-work], button[data-responses], button[data-collection-action]",
     );
     if (!button || button.disabled) return;
-
     if (button.dataset.editStudent) {
       openStudentEditor(button.dataset.editStudent, button);
-      return;
-    }
-    if (button.dataset.candidateAccess) {
-      button.disabled = true;
-      try {
-        await resetCandidateAccess(button.dataset.candidateAccess, button);
-      } catch (error) {
-        announce(error instanceof Error ? error.message : "Could not reset candidate access", "error");
-      } finally {
-        button.disabled = false;
-      }
       return;
     }
     if (button.dataset.liveWork) {
@@ -1246,15 +1148,13 @@ function bindCollectionController() {
         }
         await api(`/api/admin/sessions/${sessionId}/${action}`, { method: "POST", body });
         await refreshState(true);
-        announce(button.dataset.sessionAction === "start" ? "Exam started" : "Exam ended and responses submitted", "success");
+        announce(action === "start" ? "Exam started" : "Exam ended and responses submitted", "success");
       } catch (error) {
         if (action === "end" && endingBegan) {
           try {
             await api(`/api/admin/sessions/${sessionId}/end/cancel`, { method: "POST" });
             await refreshState(true);
-          } catch {
-            // The end may already have committed; refresh on the next dashboard poll.
-          }
+          } catch {}
         }
         announce(error instanceof Error ? error.message : "Session action failed", "error");
       } finally {
@@ -1262,24 +1162,23 @@ function bindCollectionController() {
       }
       return;
     }
-
     const target = readCollectionTarget(button);
     if (!target) return;
     if (target.action === "archive") {
       pendingArchive = target;
       archiveTrigger = button;
-      dialog.returnValue = "";
       populateArchiveDialog(dialog, target);
       dialog.showModal();
       return;
     }
-
     button.disabled = true;
     try {
-      const focusTarget = await changeCollectionLifecycle(target);
-      focusTarget?.focus();
+      await changeCollectionLifecycle(target);
+      await refreshState(true);
+      announce("Saved", "success");
     } catch (error) {
       announce(error instanceof Error ? error.message : "Could not restore this item", "error");
+    } finally {
       button.disabled = false;
     }
   });
@@ -1445,7 +1344,7 @@ async function renderDashboard() {
             <div>
               <strong id="student-connection-title">Student sign-in</strong>
               <a data-student-connection-link href="/" target="_blank" rel="noopener">PacePaper</a>
-              <small>This is the address students open on their own devices. Turn on classroom sharing below to allow connections.</small>
+              <small>This is the address students open on their own devices. It is ready on the trusted LAN; use **This computer only** below to disable sharing.</small>
             </div>
             <div class="session-actions">
               <button data-copy-student-connection type="button" aria-describedby="student-connection-copy-status">Copy URL</button>
@@ -1557,7 +1456,7 @@ async function renderDashboard() {
           </div>
           <form id="session-form" class="utility-form" method="post">
             <fieldset><legend>Set up an exam</legend>
-              <small>This creates a new draft sitting and one private PIN and direct sign-in link per candidate. Save the access list when it appears; PacePaper cannot show the same PINs again.</small>
+              <small>Students choose their class and name from the sign-in page. They wait here until you select Start exam.</small>
               <label for="session-class">Class</label><select id="session-class" name="classId" required></select>
               <label for="session-system">Exam system</label><select id="session-system" required></select>
               <label for="session-paper">Paper</label><select id="session-paper" name="paperId" required></select>

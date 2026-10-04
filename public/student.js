@@ -12,6 +12,7 @@ let refreshPending = false;
 let selectedSessionId = null;
 let connectionState = "connecting";
 let connectionGeneration = 0;
+let studentBootstrap = {};
 
 function renderConnectionState() {
   const indicator = document.querySelector("#connection-state");
@@ -35,7 +36,6 @@ export function buildStudentLoginPayload(entries) {
   return {
     className: values.className,
     studentName: values.studentName,
-    pin: values.pin,
   };
 }
 
@@ -71,7 +71,10 @@ function sessionListSignature(sessions) {
   return sessions.map((session) => `${session.id}:${session.status}:${session.submittedAt ?? ""}`).join("|");
 }
 
-function authFrame() {
+function authFrame(bootstrap = studentBootstrap) {
+  const roster = bootstrap.studentRoster ?? {};
+  const classes = Array.isArray(roster.classes) ? roster.classes : [];
+  const students = Array.isArray(roster.students) ? roster.students : [];
   setView(`
     <section class="auth-shell student-auth">
       <a class="back-link" href="/">← Workspaces</a>
@@ -79,15 +82,17 @@ function authFrame() {
         <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
         <p class="eyebrow">Student sign in</p>
         <h1>Find your examination</h1>
-        <p>Enter your class name, your own name, and the candidate PIN supplied by your teacher.</p>
+        <p>Choose your class and your name to continue.</p>
         <p class="supervision-notice">Your teacher can see your work during a sitting: your answers, drawings, notes, and flagged questions. This covers only PacePaper — nothing else on your computer.</p>
         <form id="student-login" method="post">
           <label for="class-name">Class name</label>
-          <input id="class-name" name="className" autocomplete="organization" maxlength="100" required>
+          <select id="class-name" name="className" autocomplete="organization" required>
+            <option value="">Choose your class</option>
+          </select>
           <label for="student-name-input">Your name</label>
-          <input id="student-name-input" name="studentName" autocomplete="name" maxlength="100" required>
-          <label for="candidate-pin">Candidate PIN <small>(leave blank only for an older sitting)</small></label>
-          <input id="candidate-pin" name="pin" autocomplete="one-time-code" autocapitalize="characters" maxlength="32">
+          <select id="student-name-input" name="studentName" autocomplete="name" required disabled>
+            <option value="">Choose your name</option>
+          </select>
           <button class="primary-action" type="submit">Continue</button>
         </form>
         <p id="global-status" class="status-message" role="status" aria-live="polite" hidden></p>
@@ -96,6 +101,31 @@ function authFrame() {
   `);
 
   const form = document.querySelector("#student-login");
+  const classSelect = form.querySelector("#class-name");
+  const studentSelect = form.querySelector("#student-name-input");
+  for (const schoolClass of classes) {
+    const option = document.createElement("option");
+    option.value = schoolClass.name ?? "";
+    option.textContent = schoolClass.name ?? "";
+    classSelect.append(option);
+  }
+  const classByName = new Map(classes.map((schoolClass) => [String(schoolClass.name), schoolClass]));
+  const renderStudents = () => {
+    const selectedClass = classByName.get(String(classSelect.value));
+    const className = selectedClass?.name ?? classSelect.value;
+    studentSelect.replaceChildren(new Option("Choose your name", ""));
+    for (const student of students) {
+      if (String(student.classId) !== String(selectedClass?.id) && student.className !== className) continue;
+      const option = document.createElement("option");
+      option.value = student.name ?? "";
+      option.textContent = student.name ?? "";
+      studentSelect.append(option);
+    }
+    studentSelect.disabled = studentSelect.options.length <= 1;
+    studentSelect.value = "";
+  };
+  classSelect.addEventListener("change", renderStudents);
+  renderStudents();
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submit = form.querySelector("button[type=submit]");
@@ -143,7 +173,7 @@ async function logout() {
   clearInterval(pollTimer);
   selectedSessionId = null;
   await api("/api/logout", { method: "POST" });
-  authFrame();
+  authFrame(studentBootstrap);
 }
 
 function chooseAnotherExam() {
@@ -556,7 +586,7 @@ async function loadState() {
       stopExam();
       stopLiveConnection();
       clearInterval(pollTimer);
-      authFrame();
+      authFrame(studentBootstrap);
     } else {
       announce(error instanceof Error ? error.message : "Could not contact the examination server", "error");
     }
@@ -588,9 +618,10 @@ function beginLiveConnection() {
 }
 
 export async function renderStudent(bootstrap) {
-  if (bootstrap.role !== "student") {
+  studentBootstrap = bootstrap ?? {};
+  if (studentBootstrap.role !== "student") {
     stopLiveConnection();
-    authFrame();
+    authFrame(studentBootstrap);
     return;
   }
   beginLiveConnection();

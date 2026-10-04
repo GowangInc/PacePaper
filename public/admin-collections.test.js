@@ -224,12 +224,12 @@ describe("teacher dashboard collections", () => {
       .toEqual(["Advanced Placement", "Advanced Placement (AP)", "Other exam system"]);
   });
 
-  test("never offers removal for a live sitting and retains ended submissions", () => {
+  test("keeps lifecycle actions focused on exam supervision", () => {
     expect(sessionActionModel(session({ status: "live" }))).toEqual(["watch", "clock", "end", "responses"]);
     expect(sessionActionModel(session({ status: "ended" }))).toEqual(["responses", "archive"]);
     expect(sessionActionModel(session({ status: "ended" }), true)).toEqual(["restore", "responses"]);
     expect(sessionActionModel(session({ status: "draft", requireCandidatePin: true })))
-      .toEqual(["clock", "start", "access", "archive"]);
+      .toEqual(["clock", "start", "archive"]);
     expect(classHasLiveSession([session({ status: "live" })], "class-1")).toBe(true);
     expect(classHasLiveSession([session({ status: "ended" })], "class-1")).toBe(false);
   });

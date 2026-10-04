@@ -56,12 +56,18 @@ The current `calculatorEnabled` Boolean means only “provide PacePaper’s nume
 - The student **Calculator** button appears only when the paper enables it and the current work phase does not prohibit calculator use. It is absent during reading, breaks, locked phases, and after submission.
 - The calculator runs entirely in the page. Its expression parser uses an allowlist and does not use `eval`, `Function`, external scripts, or network calls.
 - Supported numeric work: arithmetic, implicit multiplication, powers, parentheses, π, e, `Ans`, square roots, absolute values, trigonometric and inverse-trigonometric functions, degree/radian modes, natural/common logs, exponentials, rounding, minima, and maxima.
-- Graphing supports up to three numeric functions of `x` with teacher-independent student bounds. History, angle mode, expressions, functions, and bounds persist only in `sessionStorage` for the current sitting.
-- The UI deliberately identifies itself as a practice tool, not a TI product or approved calculator emulator.
+- Graphing supports up to three numeric functions of `x` with student-set bounds. The graph tools include pointer/keyboard trace, numerical zeros and intersections, approximate minima and maxima, a five-point numerical derivative, adaptive Simpson definite integration, and x/y value tables.
+- Statistics and probability tools include one-variable summaries (mean, median, quartiles, minimum/maximum, population/sample standard deviation), least-squares linear regression, binomial point/lower-tail/upper-tail probability, normal left-tail/right-tail/between probabilities, and inverse normal for a given left-tail probability.
+- Calculator settings, graph functions, angle mode, expressions, graph bounds, calculation history and stored numeric variables persist only in `sessionStorage` for the current sitting. Entered data and analysis inputs are not saved.
+- The UI identifies the calculator as a TI-Nspire CX II handheld simulator with an independent numeric engine and states that it is not made by or approved by TI. It is not an approved or certified exam calculator.
+
+### Handheld behavior update — 2026-10-05
+
+The calculator uses a portrait shell, a 4:3 display above the physical key layout, an alphabet keypad, the directional touchpad, and one-shot Ctrl/Shift keys. Home, Scratchpad, numbered application menus, document settings, and contextual Escape behavior replace the visible web-form tabs. Tools stay inside the screen. MathML displays fractions, powers, and radicals in the history; Ctrl+Enter requests decimals. Arrow-store and `:=` assignment retain numeric variables for the sitting. Added factorials, nPr/nCr, direct binomial/normal probability commands, and a bounded numerical-equation solver. This is a browser implementation of selected handheld workflows, not TI firmware.
 
 ### Deliberate boundary
 
-The first implementation covers the two core TI-Nspire Scratchpad activities documented by Texas Instruments: calculations with history and function graphing. It does not reproduce TI-Nspire trade dress or firmware and does not provide CAS, symbolic solving, saved documents/programs, statistics, spreadsheets, matrices, geometry, finance packages, data collection, Press-to-Test, or model certification.
+The calculator covers common numeric Scratchpad workflows for exam practice. It does not provide CAS or symbolic solving, saved documents/programs, spreadsheets, matrices, geometry, finance packages, data collection, Press-to-Test, or model certification. Numerical graph search and calculus routines are approximations; candidates should check working and use an approved calculator for formal examinations.
 
 Use school-approved physical calculators whenever an official or live examination requires an approved model. PacePaper should display the paper rule (“GDC required”, “calculator permitted”, or “not permitted”) even when its built-in tool is unavailable. Before a full mock, compare the paper against the current course guide, PRC conduct instructions, and annual calculator guidance.
 

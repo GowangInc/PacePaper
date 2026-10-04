@@ -17,6 +17,9 @@ import appIcon512 from "../public/app-icon-512.png" with { type: "file" };
 import app from "../public/app.js" with { type: "file" };
 import appleTouchIcon from "../public/apple-touch-icon.png" with { type: "file" };
 import classRosters from "../public/class-rosters.js" with { type: "file" };
+import calculatorHandheld from "../public/calculator-handheld.js" with { type: "file" };
+import calculatorEntry from "../public/calculator-entry.js" with { type: "file" };
+import calculatorTools from "../public/calculator-tools.js" with { type: "file" };
 import calculator from "../public/calculator.js" with { type: "file" };
 import calculatorDemo from "../public/calculator-demo.js" with { type: "file" };
 import contextMenuLock from "../public/context-menu-lock.js" with { type: "file" };
@@ -27,6 +30,7 @@ import examAudio from "../public/exam-audio.js" with { type: "file" };
 import examFormatProfiles from "../public/exam-format-profiles.js" with { type: "file" };
 import examPhaseModel from "../public/exam-phase-model.js" with { type: "file" };
 import exam from "../public/exam.js" with { type: "file" };
+import clientId from "../public/client-id.js" with { type: "file" };
 import inkCanvas from "../public/ink-canvas.js" with { type: "file" };
 import index from "../public/index.html" with { type: "file" };
 import paperBuilder from "../public/paper-builder.js" with { type: "file" };
@@ -63,6 +67,10 @@ export default {
   "public/apple-touch-icon.png": appleTouchIcon,
   "public/calculator-demo.js": calculatorDemo,
   "public/calculator.js": calculator,
+  "public/calculator-handheld.js": calculatorHandheld,
+  "public/calculator-entry.js": calculatorEntry,
+  "public/calculator-tools.js": calculatorTools,
+  "public/client-id.js": clientId,
   "public/class-rosters.js": classRosters,
   "public/context-menu-lock.js": contextMenuLock,
   "public/countdown-model.js": countdownModel,

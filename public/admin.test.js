@@ -67,7 +67,7 @@ describe("teacher dashboard presentation", () => {
     expect(source).toContain("bootstrap.studentOrigin ?? location.origin");
     expect(source).toContain("data-student-connection-link");
     expect(source).toContain("data-copy-student-connection");
-    expect(source).toContain('new URL("/student", studentConnectionOrigin ?? location.origin)');
+    expect(source).toContain('<a data-student-connection-link href="/"');
   });
 
   test("uses one archive confirmation dialog while restore remains direct", () => {

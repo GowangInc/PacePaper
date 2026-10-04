@@ -1,3 +1,4 @@
+import { createClientId } from "./client-id.js";
 let pdfjs;
 
 async function loadPdfJs() {
@@ -115,7 +116,7 @@ export function createPdfAnnotationViewer({ resource, annotations = [], signal, 
       if (!text) return;
     }
     state.annotations.push({
-      id: crypto.randomUUID(),
+      id: createClientId(),
       resourceKey: resource.key,
       kind,
       page: selection.page,

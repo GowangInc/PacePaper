@@ -3,7 +3,7 @@ import { identityKey } from "./class-rosters.ts";
 
 const archivableTables = ["classes", "students", "papers", "exam_sessions"] as const;
 
-export const DATABASE_SCHEMA_VERSION = 4;
+export const DATABASE_SCHEMA_VERSION = 5;
 
 export interface DatabaseSchema {
   legacyClassCode: boolean;
@@ -376,6 +376,12 @@ export function initializeDatabaseSchema(db: Database): DatabaseSchema {
 
   applyMigration(db, 4, () => {
     ensureColumn(db, "response_clients", "updated_at", "INTEGER NOT NULL DEFAULT 0");
+  });
+
+  applyMigration(db, 5, () => {
+    if (tableColumns(db, "exam_sessions").includes("require_candidate_pin")) {
+      db.run("UPDATE exam_sessions SET require_candidate_pin = 0 WHERE require_candidate_pin <> 0");
+    }
   });
 
   const classColumns = tableColumns(db, "classes");
