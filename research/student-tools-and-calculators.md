@@ -59,15 +59,21 @@ The current `calculatorEnabled` Boolean means only “provide PacePaper’s nume
 - Graphing supports up to three numeric functions of `x` with student-set bounds. The graph tools include pointer/keyboard trace, numerical zeros and intersections, approximate minima and maxima, a five-point numerical derivative, adaptive Simpson definite integration, and x/y value tables.
 - Statistics and probability tools include one-variable summaries (mean, median, quartiles, minimum/maximum, population/sample standard deviation), least-squares linear regression, binomial point/lower-tail/upper-tail probability, normal left-tail/right-tail/between probabilities, and inverse normal for a given left-tail probability.
 - Calculator settings, graph functions, angle mode, expressions, graph bounds, calculation history and stored numeric variables persist only in `sessionStorage` for the current sitting. Entered data and analysis inputs are not saved.
-- The UI identifies the calculator as a TI-Nspire CX II handheld simulator with an independent numeric engine and states that it is not made by or approved by TI. It is not an approved or certified exam calculator.
+- The calculator uses a handheld interface and an independently written numeric engine. It is not an approved or certified exam calculator.
 
 ### Handheld behavior update — 2026-10-05
 
 The calculator uses a portrait shell, a 4:3 display above the physical key layout, an alphabet keypad, the directional touchpad, and one-shot Ctrl/Shift keys. Home, Scratchpad, numbered application menus, document settings, and contextual Escape behavior replace the visible web-form tabs. Tools stay inside the screen. MathML displays fractions, powers, and radicals in the history; Ctrl+Enter requests decimals. Arrow-store and `:=` assignment retain numeric variables for the sitting. Added factorials, nPr/nCr, direct binomial/normal probability commands, and a bounded numerical-equation solver. This is a browser implementation of selected handheld workflows, not TI firmware.
 
+### Independent engine expansion — 2026-10-05
+
+The calculator now includes named lists/functions, conditional expressions and finite sequences; complex arithmetic; matrices, linear systems, vectors and polynomial roots; parametric/polar/explicit sequence graphs with trace and tables; seven regression models, frequency statistics and data plots; expanded probability distributions, statistical tests/intervals and one-way ANOVA; and TVM/NPV finance. See [the independent engine record](calculator/independent-engine.md) for commands, clean-room provenance, numerical conventions, limits and validation status.
+
+Expanded form inputs, lists and function definitions persist within the current sitting. Plot outputs remain temporary. Browser bundling and TypeScript compilation pass; numerical and workflow validation of the expansion has not been performed.
+
 ### Deliberate boundary
 
-The calculator covers common numeric Scratchpad workflows for exam practice. It does not provide CAS or symbolic solving, saved documents/programs, spreadsheets, matrices, geometry, finance packages, data collection, Press-to-Test, or model certification. Numerical graph search and calculus routines are approximations; candidates should check working and use an approved calculator for formal examinations.
+This is an independently written numeric practice tool. It does not provide CAS, TI firmware or TNS compatibility, saved programs/documents, dynamic geometry, 3D graphs, general spreadsheets, hardware data collection, Press-to-Test or model certification. Numerical solvers/calculus are approximate and the feature profile explicitly records limits such as 2×2 eigenvalues and degree-six polynomial roots. It is not yet a validated replacement for an approved calculator.
 
 Use school-approved physical calculators whenever an official or live examination requires an approved model. PacePaper should display the paper rule (“GDC required”, “calculator permitted”, or “not permitted”) even when its built-in tool is unavailable. Before a full mock, compare the paper against the current course guide, PRC conduct instructions, and annual calculator guidance.
 

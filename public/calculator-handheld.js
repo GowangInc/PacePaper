@@ -1,3 +1,5 @@
+import { functionNames } from "./calculator-engine.js";
+
 // Handheld controls and screen navigation are kept separate from the math engine.
 function node(tag, className, text) {
   const item = document.createElement(tag);
@@ -83,6 +85,7 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
   let powered = true;
   let toolOpen = false;
   let toolReturn = null;
+  let menuContext = null;
 
   function updateStatus() {
     statusPage.textContent = home ? "Home" : ({ calculate: "Scratchpad A", graph: "Scratchpad B", table: "Lists & Spreadsheet", statistics: "Data & Statistics" })[getPanel()];
@@ -91,7 +94,7 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     controls.querySelector('[data-key="shift"]').setAttribute("aria-pressed", String(shift));
   }
   function focusInput() {
-    const candidates = [...panels[getPanel()].querySelectorAll("input, select, button, canvas[tabindex]")].filter((item) => item.checkVisibility());
+    const candidates = [...panels[getPanel()].querySelectorAll("input, select, button, canvas[tabindex]")].filter((item) => item.checkVisibility() && !item.disabled);
     const target = candidates.includes(lastInput) ? lastInput : candidates[0];
     target?.focus();
   }
@@ -109,6 +112,7 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     menuPath = [];
     currentItems = [];
     toolOpen = false;
+    menuContext = null;
     focusInput();
   }
   function activate(name) {
@@ -135,10 +139,17 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     overlay.setAttribute("aria-label", title);
     overlay.hidden = false;
     tool.hidden = false;
-    tool.querySelector("input, select, button")?.focus();
+    const firstInput = [...tool.querySelectorAll("input")].find((input) => !input.disabled && input.checkVisibility());
+    if (firstInput) lastInput = firstInput;
+    [...tool.querySelectorAll("input, select, button")].find((input) => !input.disabled && input.checkVisibility())?.focus();
   }
   const goTool = (title, tool) => ({ label: title, run: () => showTool(title, tool) });
-  const token = (label, value = label) => ({ label, run: () => { closeOverlay(); insert(value, lastInput); } });
+  const token = (label, value = label) => ({ label, run: () => {
+    const context = menuContext, target = context?.input ?? lastInput;
+    closeOverlay();
+    if (context?.tool) showTool(context.title, context.tool);
+    insert(value, target.checkVisibility() && !target.disabled ? target : expression);
+  } });
   const menu = (label, items) => ({ label, items });
   const graphTools = [
     goTool("Window Settings", tools.bounds),
@@ -146,14 +157,20 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     { label: "Zoom Out", run: () => { closeOverlay(); actions.zoomOut(); } },
     { label: "Zoom Standard", run: () => { closeOverlay(); actions.resetView(); } },
   ];
-  const statistics = [goTool("One-Variable Statistics", tools.data), goTool("Linear Regression (mx+b)", tools.regression)];
-  const probability = [token("Factorial (!)", "!"), token("Permutations", "nPr("), token("Combinations", "nCr("), goTool("Binomial Distribution", tools.binomial), goTool("Normal Distribution", tools.normal)];
+  const inference = [
+    ["One-sample t · test / interval", "ttest"], ["One-sample z · test / interval", "ztest"], ["Two-sample t (Welch)", "twottest"], ["Paired t", "pairedtest"], ["One-proportion z", "proptest"], ["Two-proportion z", "twoproptest"], ["Chi-squared goodness of fit", "chigoodness"], ["Chi-squared independence", "chiindependence"], ["One-way ANOVA", "anova"],
+  ].map(([title, id]) => goTool(title, tools[id]));
+  const statistics = [goTool("One-Variable Statistics", tools.data), goTool("Linear Regression (mx+b)", tools.regression), goTool("Frequency Statistics", tools.frequency), goTool("Regression Models", tools.models), goTool("Statistical Plots", tools.plots), menu("Tests & Confidence Intervals", inference)];
+  const probability = [token("Factorial (!)", "!"), token("Permutations", "nPr("), token("Combinations", "nCr("), goTool("Binomial Distribution", tools.binomial), goTool("Normal Distribution", tools.normal), goTool("t, χ², F, Poisson & Geometric", tools.distributions)];
   const calcMenu = [
     menu("Actions", [{ label: "Clear History", run: () => { actions.clearHistory(); closeOverlay(); } }, { label: "Clear Entry", run: () => { expression.value = ""; closeOverlay(); } }]),
-    menu("Number", [token("Absolute Value", "abs("), token("Square Root", "sqrt("), token("Logarithm", "log("), token("Natural Logarithm", "ln("), token("Round", "round(")]),
-    menu("Algebra", [goTool("Numerical Solve", tools.solver)]),
+    menu("Number", [token("Absolute Value", "abs("), token("Square Root", "sqrt("), token("Logarithm", "log("), token("Natural Logarithm", "ln("), token("Round", "round("), token("Complex Number", "complex("), token("Polar Complex Number", "polar("), token("nth Root", "root(")]),
+    menu("Algebra", [goTool("Numerical Solve", tools.solver), goTool("Define Function", tools.define), goTool("Polynomial Roots", tools.polynomial)]),
     menu("Calculus", [goTool("Numerical Derivative", tools.derivative), goTool("Numerical Integral", tools.integral)]),
     menu("Probability", probability), menu("Statistics", statistics),
+    goTool("Matrices & Linear Systems", tools.matrix),
+    menu("Lists & Sequences", [goTool("Named Lists", tools.lists), token("Sequence", "seq("), token("Sum", "sum("), token("Product", "product(")]),
+    menu("Finance", [goTool("TVM Solver", tools.finance), goTool("Cash Flows · NPV", tools.cashflow)]),
   ];
   const graphMenu = [
     goTool("Graph Entry/Edit", tools.functions),
@@ -161,6 +178,7 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     { label: "Graph Trace", run: () => { closeOverlay(); actions.trace(); } },
     menu("Analyze Graph", [["Zero", "zeros"], ["Minimum", "minimum"], ["Maximum", "maximum"], ["Intersection", "intersections"], ["dy/dx", "derivative"], ["Integral", "integral"]].map(([label, action]) => ({ label, run: () => { actions.prepareAnalysis(action); showTool(label, tools.analysis); } }))),
     { label: "Table", run: () => activate("table") },
+    goTool("Parametric / Polar / Sequence", tools.curves),
   ];
   function focusMenu(index) {
     currentIndex = (index + currentItems.length) % currentItems.length;
@@ -190,6 +208,7 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     focusMenu(0);
   }
   function openMenu(title, items) {
+    menuContext = toolOpen && toolReturn ? { tool: toolReturn.tool, title: overlay.querySelector(".calculator-overlay-title")?.textContent, input: lastInput } : { input: lastInput };
     restoreTool();
     menuPath = [{ title, items }];
     renderMenu();
@@ -210,13 +229,16 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     if (!overlay.hidden) {
       if (menuPath.length > 1) { menuPath.pop(); renderMenu(); }
       else if (home) activate(getPanel());
-      else closeOverlay();
+      else if (menuContext?.tool && !toolOpen) {
+        const context = menuContext;
+        closeOverlay(); showTool(context.title, context.tool); context.input?.focus();
+      } else closeOverlay();
     } else if (home) activate(getPanel());
     else dialog.close();
   }
   function activeControls() {
     const region = toolOpen ? overlay : panels[getPanel()];
-    return [...region.querySelectorAll("input, select, button, canvas[tabindex]")].filter((item) => item.checkVisibility());
+    return [...region.querySelectorAll("input, select, button, canvas[tabindex]")].filter((item) => item.checkVisibility() && !item.disabled);
   }
   function move(direction) {
     if (currentItems.length && !overlay.hidden) {
@@ -240,7 +262,7 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
       const index = items.indexOf(focused);
       items[(index + (direction === "up" ? -1 : 1) + items.length) % items.length]?.focus();
     }
-    document.activeElement.scrollIntoView({ block: "nearest" });
+    document.activeElement?.scrollIntoView({ block: "nearest" });
   }
   function enter(approximate = false) {
     if (currentItems.length && !overlay.hidden) { choose(currentItems[currentIndex]); return; }
@@ -252,7 +274,12 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     }
     execute(approximate);
   }
+  function inputTarget() {
+    if (lastInput.checkVisibility() && !lastInput.disabled) return lastInput;
+    return activeControls().find((item) => item instanceof HTMLInputElement && !item.disabled) ?? expression;
+  }
   function backspace(clear = false) {
+    lastInput = inputTarget();
     if (clear) lastInput.value = "";
     else {
       const start = lastInput.selectionStart ?? lastInput.value.length;
@@ -267,23 +294,23 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     home: showHome, off: () => { powered = false; closeOverlay(); screen.classList.add("is-off"); },
     scratchpad: () => activate(getPanel() === "graph" ? "calculate" : "graph"),
     escape, tab: () => { const items = activeControls(); items[(items.indexOf(document.activeElement) + 1) % items.length]?.focus(); },
-    menu: () => openMenu(getPanel() === "graph" ? "Graphs" : "Calculator", getPanel() === "graph" ? graphMenu : getPanel() === "table" ? [goTool("Table Settings", tools.tableSettings)] : calcMenu),
+    menu: () => openMenu(getPanel() === "graph" ? "Graphs" : "Calculator", getPanel() === "graph" ? graphMenu : getPanel() === "table" ? [goTool("Table Settings", tools.tableSettings), goTool("Named Lists", tools.lists), goTool("Frequency Statistics", tools.frequency)] : calcMenu),
     document: () => openMenu("Document", [
       menu("Add Application", [{ label: "Calculator", run: () => activate("calculate") }, { label: "Graphs", run: () => activate("graph") }, { label: "Lists & Spreadsheet", run: () => activate("table") }, { label: "Data & Statistics", run: () => activate("statistics") }]),
       goTool("Document Settings", tools.settings), { label: "Clear Scratchpad", run: () => { actions.clearHistory(); expression.value = ""; activate("calculate"); } },
     ]),
     ctrl: () => { ctrl = !ctrl; updateStatus(); }, shift: () => { shift = !shift; updateStatus(); }, caps: () => { shift = !shift; updateStatus(); },
     backspace: () => backspace(), clear: () => backspace(true), enter: () => enter(), approximate: () => enter(true),
-    trig: () => openMenu("Trigonometry", ["sin", "cos", "tan", "asin", "acos", "atan"].map((name) => token(name, `${name}(`))),
-    constants: () => openMenu("Constants", [token("π", "pi"), token("e")]),
+    trig: () => openMenu("Trigonometry", ["sin", "cos", "tan", "asin", "acos", "atan", "sinh", "cosh", "tanh"].map((name) => token(name, `${name}(`))),
+    constants: () => openMenu("Constants", [token("π", "pi"), token("e"), token("i"), token("Large bound", "1E99")]),
     symbols: () => openMenu("Punctuation", [token(","), token("!"), token("%", "/100")]),
-    relations: () => openMenu("Relations", [token("=", "="), token("Store →", "→")]),
-    templates: () => openMenu("Math Templates", [token("Fraction", "()/()"), token("Square Root", "sqrt()"), token("Power", "^()"), token("Exponential", "exp()")]),
-    fraction: () => insert("()/()", lastInput), root: () => insert("^(1/", lastInput),
-    store: () => insert("→", lastInput), negate: () => insert("-", lastInput), degree: () => insert("°", lastInput),
+    relations: () => openMenu("Relations", [token("=", "="), token("≠", "!="), token("<"), token(">"), token("≤", "<="), token("≥", ">="), token("Store →", "→"), token("Assign :=", ":=")]),
+    templates: () => openMenu("Math Templates", [token("Fraction", "()/()"), token("Square Root", "sqrt()"), token("Power", "^()"), token("Exponential", "exp()"), token("List", "{}"), token("Matrix", "[[,],[,]]"), token("Conditional", "when(")]),
+    fraction: () => insert("()/()", inputTarget()), root: () => insert("root(", inputTarget()),
+    store: () => insert("→", inputTarget()), negate: () => insert("-", inputTarget()), degree: () => insert("°", inputTarget()),
     integral: () => showTool("Numerical Integral", tools.integral), derivative: () => showTool("Numerical Derivative", tools.derivative),
     variables: () => openMenu("Variables", [token("Ans", "ans"), ...Object.keys(getVariables()).map((name) => token(name))]),
-    catalog: () => openMenu("Catalog", ["abs", "acos", "asin", "atan", "binomCdf", "binomPdf", "cos", "exp", "floor", "invNorm", "ln", "log", "nCr", "nPr", "normalCdf", "normalPdf", "round", "sin", "sqrt", "tan"].map((name) => token(name, `${name}(`))),
+    catalog: () => openMenu("Catalog", [["A–D", "abcd"], ["E–H", "efgh"], ["I–L", "ijkl"], ["M–P", "mnop"], ["Q–T", "qrst"], ["U–Z", "uvwxyz"]].map(([label, letters]) => menu(label, functionNames.filter((name) => letters.includes(name[0])).map((name) => token(name, `${name}(`))))),
     undo: () => actions.undo(), save: persist,
   };
   function handle(action) {
@@ -291,7 +318,7 @@ export function wireHandheld({ dialog, screen, content, controls, expression, mo
     if (action.startsWith("pad-")) { action === "pad-center" ? enter() : move(action.slice(4)); return; }
     if (currentItems.length && !overlay.hidden && /^[1-9]$/u.test(action)) { const item = currentItems[Number(action) - 1]; if (item) choose(item); return; }
     if (handlers[action]) handlers[action]();
-    else { if (home) activate("calculate"); insert(shift ? action.toUpperCase() : action, lastInput); }
+    else { if (home) activate("calculate"); insert(shift ? action.toUpperCase() : action, inputTarget()); }
     if (!["ctrl", "shift", "caps"].includes(action)) { ctrl = false; shift = false; updateStatus(); }
     persist();
   }

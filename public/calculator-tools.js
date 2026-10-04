@@ -1,37 +1,10 @@
-import { compileExpression, numericalDerivative, numericalIntegral, numericalRoots } from "./calculator.js";
+import { compileExpression } from "./calculator-engine.js";
+import { numericalDerivative, numericalIntegral, numericalRoots } from "./calculator-numeric.js";
+
+import { createToolForm } from "./calculator-tool-form.js";
 
 export function createNumericalTools({ mode, getVariables, signal }) {
-  function tool(title, fields, calculate) {
-    const section = document.createElement("section");
-    section.className = "calculator-numeric-tool";
-    const inputs = fields.map(([name, initial]) => {
-      const label = document.createElement("label");
-      label.textContent = name;
-      const input = document.createElement("input");
-      input.value = initial;
-      input.type = "text";
-      input.spellcheck = false;
-      input.maxLength = 200;
-      label.append(input);
-      section.append(label);
-      return input;
-    });
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "primary-action";
-    button.textContent = title;
-    const output = document.createElement("output");
-    output.setAttribute("aria-live", "polite");
-    button.addEventListener("click", () => {
-      try {
-        const result = calculate(inputs.map((input) => input.value));
-        output.textContent = typeof result === "number" ? Number(result.toPrecision(12)).toString() : result;
-        delete output.dataset.error;
-      } catch (error) { output.textContent = error.message; output.dataset.error = "true"; }
-    }, { signal });
-    section.append(button, output);
-    return section;
-  }
+  const tool = (title, fields, calculate) => createToolForm({ title, fields, calculate, signal }).section;
   const numeric = (value) => {
     const result = compileExpression(value, mode.value)(getVariables());
     if (!Number.isFinite(result)) throw new Error("Enter a finite value.");

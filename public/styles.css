@@ -3809,6 +3809,14 @@ mark[data-color="yellow"] { background: oklch(91% 0.15 95); }
 .calculator-table { overflow: auto; background: #fff; }
 .calculator-table > .calculator-table-controls { display: none; }
 .calculator-table-status { font: 9px Arial,sans-serif; margin: 2px 5px; }
+.calculator-numeric-tool .calculator-tool-note { grid-column: 1 / -1; font: 11px/1.4 Arial,sans-serif; color: #424e5b; margin: 0 0 6px; }
+.calculator-numeric-tool .calculator-tool-result { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 160px; overflow: auto; }
+.calculator-numeric-tool .calculator-tool-canvas { display: block; width: 100%; max-width: 100%; grid-column: 1 / -1; border: 1px solid #9ba8b5; background: #f7f7f2; }
+.calculator-numeric-tool > details { grid-column: 1 / -1; }
+.calculator-numeric-tool label[hidden] { display: none; }
+.calculator-numeric-tool .calculator-solving-field { opacity: .65; }
+.calculator-numeric-tool .calculator-solving-field::after { content: "solving"; font: 10px Arial,sans-serif; }
+.calculator-history-result { overflow-wrap: anywhere; }
 .calculator-value-table { width: 100%; border-collapse: collapse; font: 13px Cambria,serif; }
 .calculator-value-table caption { display: none; }
 .calculator-value-table :is(th,td) { text-align: right; border: 1px solid #b8c0c8; padding: 4px 8px; }

@@ -1,449 +1,14 @@
 import { createHandheldControls, wireHandheld } from "./calculator-handheld.js";
-import { evaluateHandheldEntry, fractionResult, entryAfterResult, mathExpression } from "./calculator-entry.js";
+import { evaluateHandheldEntry, fractionResult, entryAfterResult, mathExpression, storeVariable, validFunction } from "./calculator-entry.js";
 import { createNumericalTools } from "./calculator-tools.js";
 
-const MAX_EXPRESSION_LENGTH = 200;
-const MAX_TOKENS = 256;
-const MAX_DEPTH = 32;
-
-const CONSTANTS = Object.freeze({ pi: Math.PI, e: Math.E });
-function factorial(value) {
-  if (!Number.isInteger(value) || value < 0 || value > 170) throw new Error("Factorial requires an integer from 0 to 170.");
-  let result = 1;
-  for (let n = 2; n <= value; n += 1) result *= n;
-  return result;
-}
-function permutation(n, r) {
-  if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n || n > 1000) throw new Error("Use integers with 0 ≤ r ≤ n ≤ 1000.");
-  let result = 1;
-  for (let i = 0; i < r; i += 1) result *= n - i;
-  return finite(result);
-}
-function combination(n, r) {
-  if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n || n > 1000) throw new Error("Use integers with 0 ≤ r ≤ n ≤ 1000.");
-  let result = 1;
-  for (let i = 1; i <= Math.min(r, n - r); i += 1) result *= (n - Math.min(r, n - r) + i) / i;
-  return finite(result);
-}
-const FUNCTIONS = Object.freeze({
-  factorial,
-  npr: permutation,
-  ncr: combination,
-  binompdf: (n, p, x) => binomialProbability(n, p, x),
-  binomcdf: (n, p, lower, upper) => upper === undefined ? binomialProbability(n, p, lower, "atMost") : binomialProbability(n, p, upper, "atMost") - binomialProbability(n, p, lower - 1, "atMost"),
-  normalcdf: (lower, upper, mean = 0, sd = 1) => normalCdf(upper, mean, sd) - normalCdf(lower, mean, sd),
-  normalpdf: (x, mean = 0, sd = 1) => { if (sd <= 0) throw new Error("Standard deviation must be positive."); return Math.exp(-0.5 * ((x - mean) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI)); },
-  invnorm: inverseNormal,
-  abs: Math.abs,
-  acos: Math.acos,
-  asin: Math.asin,
-  atan: Math.atan,
-  ceil: Math.ceil,
-  cos: Math.cos,
-  exp: Math.exp,
-  floor: Math.floor,
-  ln: Math.log,
-  log: Math.log10,
-  max: Math.max,
-  min: Math.min,
-  round: Math.round,
-  sin: Math.sin,
-  sqrt: Math.sqrt,
-  tan: Math.tan,
-});
-const ANGLE_FUNCTIONS = new Set(["sin", "cos", "tan"]);
-const INVERSE_ANGLE_FUNCTIONS = new Set(["asin", "acos", "atan"]);
-const FUNCTION_ARITIES = { npr: [2], ncr: [2], binompdf: [3], binomcdf: [3, 4], normalcdf: [2, 3, 4], normalpdf: [1, 2, 3], invnorm: [1, 2, 3] };
-
-function tokenize(source) {
-  if (typeof source !== "string" || !source.trim()) throw new Error("Enter an expression.");
-  if (source.length > MAX_EXPRESSION_LENGTH) throw new Error(`Expressions are limited to ${MAX_EXPRESSION_LENGTH} characters.`);
-  const input = source.replaceAll("π", "pi").replaceAll("×", "*").replaceAll("÷", "/").replaceAll("−", "-");
-  const tokens = [];
-  let index = 0;
-  while (index < input.length) {
-    const character = input[index];
-    if (/\s/u.test(character)) { index += 1; continue; }
-    if (/[0-9.]/u.test(character)) {
-      const match = input.slice(index).match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/iu);
-      if (!match) throw new Error(`Invalid number near position ${index + 1}.`);
-      const value = Number(match[0]);
-      if (!Number.isFinite(value)) throw new Error("Number is outside the supported range.");
-      tokens.push({ type: "number", value });
-      index += match[0].length;
-    } else if (/[a-z]/iu.test(character)) {
-      const match = input.slice(index).match(/^[a-z][a-z0-9_]*/iu);
-      const value = match[0].toLowerCase();
-      tokens.push({ type: "name", value });
-      index += match[0].length;
-    } else if ("+-*/^(),!°".includes(character)) {
-      tokens.push({ type: character, value: character });
-      index += 1;
-    } else {
-      throw new Error(`Unsupported character “${character}”.`);
-    }
-    if (tokens.length > MAX_TOKENS) throw new Error("Expression is too complex.");
-  }
-  tokens.push({ type: "end", value: "" });
-  return tokens;
-}
-
-function parser(tokens) {
-  let index = 0;
-  let depth = 0;
-  const current = () => tokens[index];
-  const take = (type) => {
-    if (current().type !== type) throw new Error(`Expected “${type}”.`);
-    return tokens[index++];
-  };
-  const startsPrimary = () => ["number", "name", "("].includes(current().type);
-
-  function expression() {
-    let node = term();
-    while (current().type === "+" || current().type === "-") {
-      const operator = tokens[index++].type;
-      node = { type: "binary", operator, left: node, right: term() };
-    }
-    return node;
-  }
-
-  function term() {
-    let node = unary();
-    while (current().type === "*" || current().type === "/" || startsPrimary()) {
-      const operator = current().type === "*" || current().type === "/" ? tokens[index++].type : "*";
-      node = { type: "binary", operator, left: node, right: unary() };
-    }
-    return node;
-  }
-
-  function unary() {
-    if (current().type === "+" || current().type === "-") {
-      const operator = tokens[index++].type;
-      return { type: "unary", operator, value: unary() };
-    }
-    return power();
-  }
-
-  function power() {
-    let left = primary();
-    while (["!", "°"].includes(current().type)) {
-      const operator = tokens[index++].type;
-      left = { type: "postfix", operator, value: left };
-    }
-    return current().type === "^"
-      ? { type: "binary", operator: take("^").type, left, right: unary() }
-      : left;
-  }
-
-  function primary() {
-    if (current().type === "number") return { type: "number", value: tokens[index++].value };
-    if (current().type === "name") {
-      const name = tokens[index++].value;
-      if (current().type !== "(") return { type: "name", name };
-      if (!Object.hasOwn(FUNCTIONS, name)) throw new Error(`Unknown function “${name}”.`);
-      take("(");
-      depth += 1;
-      if (depth > MAX_DEPTH) throw new Error("Expression nesting is too deep.");
-      const argumentsList = [];
-      if (current().type !== ")") {
-        argumentsList.push(expression());
-        while (current().type === ",") { take(","); argumentsList.push(expression()); }
-      }
-      take(")");
-      depth -= 1;
-      return { type: "call", name, arguments: argumentsList };
-    }
-    if (current().type === "(") {
-      take("(");
-      depth += 1;
-      if (depth > MAX_DEPTH) throw new Error("Expression nesting is too deep.");
-      const node = expression();
-      take(")");
-      depth -= 1;
-      return node;
-    }
-    throw new Error("Expression is incomplete.");
-  }
-
-  const tree = expression();
-  if (current().type !== "end") throw new Error(`Unexpected “${current().value}”.`);
-  return tree;
-}
-
-function finite(value) {
-  if (!Number.isFinite(value)) throw new Error("Result is undefined or outside the supported range.");
-  return Math.abs(value) < 1e-14 ? 0 : value;
-}
-
-function evaluateNode(node, variables, angleMode) {
-  if (node.type === "number") return node.value;
-  if (node.type === "name") {
-    if (Object.hasOwn(variables, node.name)) return finite(Number(variables[node.name]));
-    if (Object.hasOwn(CONSTANTS, node.name)) return CONSTANTS[node.name];
-    throw new Error(`Unknown value “${node.name}”.`);
-  }
-  if (node.type === "unary") {
-    const value = evaluateNode(node.value, variables, angleMode);
-    return node.operator === "-" ? -value : value;
-  }
-  if (node.type === "postfix") {
-    const value = evaluateNode(node.value, variables, angleMode);
-    return node.operator === "!" ? factorial(value) : angleMode === "radian" ? value * Math.PI / 180 : value;
-  }
-  if (node.type === "binary") {
-    const left = evaluateNode(node.left, variables, angleMode);
-    const right = evaluateNode(node.right, variables, angleMode);
-    if (node.operator === "+") return finite(left + right);
-    if (node.operator === "-") return finite(left - right);
-    if (node.operator === "*") return finite(left * right);
-    if (node.operator === "/") return finite(left / right);
-    return finite(left ** right);
-  }
-  const values = node.arguments.map((argument) => evaluateNode(argument, variables, angleMode));
-  if (!values.length || (!["min", "max"].includes(node.name) && !(FUNCTION_ARITIES[node.name] ?? [1]).includes(values.length))) {
-    throw new Error(`${node.name} has the wrong number of arguments.`);
-  }
-  if (ANGLE_FUNCTIONS.has(node.name) && angleMode === "degree") values[0] *= Math.PI / 180;
-  let result = FUNCTIONS[node.name](...values);
-  if (INVERSE_ANGLE_FUNCTIONS.has(node.name) && angleMode === "degree") result *= 180 / Math.PI;
-  return finite(result);
-}
-
-export function compileExpression(source, angleMode = "radian") {
-  if (!new Set(["radian", "degree"]).has(angleMode)) throw new Error("Unknown angle mode.");
-  const tree = parser(tokenize(source));
-  return (variables = {}) => evaluateNode(tree, variables, angleMode);
-}
-
-function checkedRange(lower, upper) {
-  if (!Number.isFinite(lower) || !Number.isFinite(upper) || lower >= upper || upper - lower > 1e9) {
-    throw new Error("Use finite bounds with the minimum below the maximum.");
-  }
-}
-
-function bisect(fn, lower, upper, fLower, fUpper) {
-  let left = lower;
-  let right = upper;
-  let leftValue = fLower;
-  for (let iteration = 0; iteration < 64; iteration += 1) {
-    const middle = (left + right) / 2;
-    const middleValue = fn(middle);
-    if (!Number.isFinite(middleValue)) return null;
-    if (Math.abs(middleValue) < 1e-11 || right - left < 1e-11 * Math.max(1, Math.abs(middle))) return middle;
-    if (Math.sign(leftValue) !== Math.sign(middleValue)) right = middle;
-    else { left = middle; leftValue = middleValue; }
-  }
-  const root = (left + right) / 2;
-  return Math.abs(fn(root)) < 1e-7 * Math.max(1, Math.abs(fLower), Math.abs(fUpper)) ? root : null;
-}
-
-export function numericalRoots(fn, lower, upper, resolution = 400) {
-  checkedRange(lower, upper);
-  const roots = [];
-  let previousX = lower;
-  let previousY;
-  try { previousY = fn(previousX); } catch { previousY = Number.NaN; }
-  for (let step = 1; step <= resolution; step += 1) {
-    const x = lower + (upper - lower) * step / resolution;
-    let y;
-    try { y = fn(x); } catch { y = Number.NaN; }
-    if (Number.isFinite(y) && Math.abs(y) < 1e-10) roots.push(x);
-    if (Number.isFinite(previousY) && Number.isFinite(y) && previousY * y < 0) {
-      let root = null;
-      try { root = bisect(fn, previousX, x, previousY, y); } catch { /* Skip discontinuities. */ }
-      if (root !== null) roots.push(root);
-    }
-    previousX = x;
-    previousY = y;
-  }
-  roots.sort((a, b) => a - b);
-  return roots.filter((root, index) => index === 0 || Math.abs(root - roots[index - 1]) > 1e-6 * Math.max(1, Math.abs(root)));
-}
-
-export function numericalDerivative(fn, x) {
-  if (!Number.isFinite(x)) throw new Error("Enter a finite x value.");
-  const step = 0.0001 * Math.max(1, Math.abs(x));
-  const result = (-fn(x + 2 * step) + 8 * fn(x + step) - 8 * fn(x - step) + fn(x - 2 * step)) / (12 * step);
-  if (!Number.isFinite(result)) throw new Error("The derivative is undefined at that x value.");
-  return result;
-}
-
-export function numericalIntegral(fn, lower, upper, tolerance = 1e-8) {
-  if (lower === upper) return 0;
-  const sign = lower > upper ? -1 : 1;
-  const a = Math.min(lower, upper);
-  const b = Math.max(lower, upper);
-  checkedRange(a, b);
-  const midpoint = (a + b) / 2;
-  const fa = fn(a), fm = fn(midpoint), fb = fn(b);
-  if (![fa, fm, fb].every(Number.isFinite)) throw new Error("The function is undefined within the integration range.");
-  const simpson = (left, right, fLeft, fMiddle, fRight) => (right - left) * (fLeft + 4 * fMiddle + fRight) / 6;
-  function refine(left, right, fLeft, fMiddle, fRight, whole, remaining, depth) {
-    const middle = (left + right) / 2;
-    const leftMiddle = (left + middle) / 2;
-    const rightMiddle = (middle + right) / 2;
-    const fLeftMiddle = fn(leftMiddle), fRightMiddle = fn(rightMiddle);
-    if (![fLeftMiddle, fRightMiddle].every(Number.isFinite)) throw new Error("The function is undefined within the integration range.");
-    const leftArea = simpson(left, middle, fLeft, fLeftMiddle, fMiddle);
-    const rightArea = simpson(middle, right, fMiddle, fRightMiddle, fRight);
-    const delta = leftArea + rightArea - whole;
-    if (depth <= 0 || Math.abs(delta) <= 15 * remaining) return leftArea + rightArea + delta / 15;
-    return refine(left, middle, fLeft, fLeftMiddle, fMiddle, leftArea, remaining / 2, depth - 1)
-      + refine(middle, right, fMiddle, fRightMiddle, fRight, rightArea, remaining / 2, depth - 1);
-  }
-  return sign * refine(a, b, fa, fm, fb, simpson(a, b, fa, fm, fb), tolerance, 16);
-}
-
-export function numericalExtremum(fn, lower, upper, kind = "maximum") {
-  checkedRange(lower, upper);
-  const minimize = kind === "minimum";
-  const points = Array.from({ length: 401 }, (_, index) => {
-    const x = lower + (upper - lower) * index / 400;
-    let y;
-    try { y = fn(x); } catch { y = Number.NaN; }
-    return { x, y };
-  });
-  const candidates = [points[0], points.at(-1)].filter((point) => Number.isFinite(point.y));
-  for (let index = 1; index < points.length - 1; index += 1) {
-    const point = points[index], before = points[index - 1], after = points[index + 1];
-    const isCandidate = [point.y, before.y, after.y].every(Number.isFinite)
-      && (minimize ? point.y <= before.y && point.y <= after.y : point.y >= before.y && point.y >= after.y);
-    if (!isCandidate) continue;
-    let left = before.x, right = after.x;
-    const ratio = (Math.sqrt(5) - 1) / 2;
-    let first = right - ratio * (right - left);
-    let second = left + ratio * (right - left);
-    const score = (x) => {
-      try {
-        const value = fn(x);
-        return Number.isFinite(value) ? (minimize ? value : -value) : Number.POSITIVE_INFINITY;
-      } catch { return Number.POSITIVE_INFINITY; }
-    };
-    let firstScore = score(first), secondScore = score(second);
-    for (let iteration = 0; iteration < 48; iteration += 1) {
-      if (firstScore <= secondScore) {
-        right = second; second = first; secondScore = firstScore;
-        first = right - ratio * (right - left); firstScore = score(first);
-      } else {
-        left = first; first = second; firstScore = secondScore;
-        second = left + ratio * (right - left); secondScore = score(second);
-      }
-    }
-    const x = (left + right) / 2;
-    let y;
-    try { y = fn(x); } catch { y = Number.NaN; }
-    if (Number.isFinite(y)) candidates.push({ x, y });
-  }
-  if (!candidates.length) throw new Error("No defined function values were found in this range.");
-  return candidates.reduce((best, candidate) => (minimize ? candidate.y < best.y : candidate.y > best.y) ? candidate : best);
-}
-
-function erf(value) {
-  const sign = value < 0 ? -1 : 1;
-  const x = Math.abs(value);
-  const t = 1 / (1 + 0.3275911 * x);
-  const polynomial = (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t;
-  return sign * (1 - polynomial * Math.exp(-x * x));
-}
-
-export function normalCdf(value, mean = 0, standardDeviation = 1) {
-  if (![value, mean, standardDeviation].every(Number.isFinite) || standardDeviation <= 0) throw new Error("Standard deviation must be positive.");
-  return (1 + erf((value - mean) / (standardDeviation * Math.SQRT2))) / 2;
-}
-
-export function inverseNormal(probability, mean = 0, standardDeviation = 1) {
-  if (!(probability > 0 && probability < 1) || !Number.isFinite(mean) || !Number.isFinite(standardDeviation) || standardDeviation <= 0) {
-    throw new Error("Use a probability between 0 and 1 and a positive standard deviation.");
-  }
-  const a = [-39.6968302866538, 220.946098424521, -275.928510446969, 138.357751867269, -30.6647980661472, 2.50662827745924];
-  const b = [-54.4760987982241, 161.585836858041, -155.698979859887, 66.8013118877197, -13.2806815528857];
-  const c = [-0.00778489400243029, -0.322396458041136, -2.40075827716184, -2.54973253934373, 4.37466414146497, 2.93816398269878];
-  const d = [0.00778469570904146, 0.32246712907004, 2.445134137143, 3.75440866190742];
-  const low = 0.02425, high = 1 - low;
-  let z;
-  if (probability < low) {
-    const q = Math.sqrt(-2 * Math.log(probability));
-    z = (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5])
-      / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
-  } else if (probability <= high) {
-    const q = probability - 0.5;
-    const r = q * q;
-    z = (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q
-      / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
-  } else {
-    const q = Math.sqrt(-2 * Math.log(1 - probability));
-    z = -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5])
-      / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
-  }
-  return mean + standardDeviation * z;
-}
-
-function logGamma(value) {
-  const coefficients = [676.5203681218851, -1259.1392167224028, 771.3234287776531, -176.6150291621406, 12.50734327868691, -0.13857109526572012, 9.984369578019572e-6, 1.5056327351493116e-7];
-  if (value < 0.5) return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * value)) - logGamma(1 - value);
-  const shifted = value - 1;
-  let sum = 0.9999999999998099;
-  coefficients.forEach((coefficient, index) => { sum += coefficient / (shifted + index + 1); });
-  const t = shifted + coefficients.length - 0.5;
-  return 0.9189385332046727 + (shifted + 0.5) * Math.log(t) - t + Math.log(sum);
-}
-
-function binomialMass(n, p, k) {
-  if (p === 0) return k === 0 ? 1 : 0;
-  if (p === 1) return k === n ? 1 : 0;
-  return Math.exp(logGamma(n + 1) - logGamma(k + 1) - logGamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log1p(-p));
-}
-
-export function binomialProbability(n, p, value, tail = "exact") {
-  if (!Number.isInteger(n) || n < 0 || n > 1000 || !Number.isFinite(p) || p < 0 || p > 1 || !Number.isInteger(value)) {
-    throw new Error("Use whole-number n from 0 to 1000, p from 0 to 1, and a whole-number x.");
-  }
-  if (tail === "exact" && (value < 0 || value > n)) return 0;
-  if (tail === "atMost" && value < 0) return 0;
-  if (tail === "atLeast" && value > n) return 0;
-  if (tail === "exact") return binomialMass(n, p, value);
-  const start = tail === "atLeast" ? Math.max(0, value) : 0;
-  const end = tail === "atMost" ? Math.min(n, value) : n;
-  let total = 0;
-  for (let k = start; k <= end; k += 1) total += binomialMass(n, p, k);
-  return total;
-}
-
-export function summarizeData(values) {
-  if (!values.length || values.some((value) => !Number.isFinite(value))) throw new Error("Enter at least one finite data value.");
-  const sorted = [...values].sort((a, b) => a - b);
-  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
-  const quantile = (position) => {
-    const lower = Math.floor(position), fraction = position - lower;
-    return sorted[lower] + (sorted[Math.min(lower + 1, sorted.length - 1)] - sorted[lower]) * fraction;
-  };
-  const squaredDifferences = values.reduce((sum, value) => sum + (value - mean) ** 2, 0);
-  return {
-    count: values.length, mean, median: quantile((values.length - 1) / 2),
-    q1: quantile((values.length - 1) / 4), q3: quantile(3 * (values.length - 1) / 4),
-    min: sorted[0], max: sorted[sorted.length - 1],
-    populationSd: Math.sqrt(squaredDifferences / values.length),
-    sampleSd: values.length > 1 ? Math.sqrt(squaredDifferences / (values.length - 1)) : Number.NaN,
-  };
-}
-
-export function linearRegression(xValues, yValues) {
-  if (xValues.length < 2 || xValues.length !== yValues.length || [...xValues, ...yValues].some((value) => !Number.isFinite(value))) {
-    throw new Error("Enter at least two finite x-y pairs with matching counts.");
-  }
-  const xMean = xValues.reduce((sum, value) => sum + value, 0) / xValues.length;
-  const yMean = yValues.reduce((sum, value) => sum + value, 0) / yValues.length;
-  const xx = xValues.reduce((sum, value) => sum + (value - xMean) ** 2, 0);
-  const yy = yValues.reduce((sum, value) => sum + (value - yMean) ** 2, 0);
-  if (xx === 0) throw new Error("Regression needs variation in the x values.");
-  const xy = xValues.reduce((sum, value, index) => sum + (value - xMean) * (yValues[index] - yMean), 0);
-  const slope = xy / xx;
-  return {
-    slope, intercept: yMean - slope * xMean,
-    r: yy === 0 ? Number.NaN : xy / Math.sqrt(xx * yy),
-    rSquared: yy === 0 ? Number.NaN : (xy * xy) / (xx * yy),
-  };
-}
+import { compileExpression, parseExpression, MAX_EXPRESSION_LENGTH } from "./calculator-engine.js";
+import { numericalRoots, numericalDerivative, numericalIntegral, numericalExtremum, normalCdf, inverseNormal, binomialProbability, summarizeData, linearRegression } from "./calculator-numeric.js";
+import { normalTails, between } from "./calculator-distributions.js";
+import { formatValue, validValue } from "./calculator-values.js";
+import { createExamTools } from "./calculator-exam-tools.js";
+export { compileExpression } from "./calculator-engine.js";
+export { numericalRoots, numericalDerivative, numericalIntegral, numericalExtremum, normalCdf, inverseNormal, binomialProbability, summarizeData, linearRegression } from "./calculator-numeric.js";
 
 export function phaseAllowsCalculator(phase) {
   if (!phase?.responseAllowed || phase.kind !== "work") return false;
@@ -451,13 +16,7 @@ export function phaseAllowsCalculator(phase) {
   return !/(?:\b(?:no|without)\s+(?:a\s+)?calculators?\b|\bcalculator(?:s|\s+use)?\s+(?:(?:is|are)\s+)?(?:not\s+(?:permitted|allowed)|prohibited)\b)/iu.test(rule);
 }
 
-function formatNumber(value) {
-  if (Number.isInteger(value) && Math.abs(value) < 1e15) return String(value);
-  const absolute = Math.abs(value);
-  return absolute !== 0 && (absolute >= 1e12 || absolute < 1e-9)
-    ? value.toExponential(10).replace(/\.?(?:0+)(e)/u, "$1")
-    : Number(value.toPrecision(12)).toString();
-}
+const formatNumber = formatValue;
 
 function element(tag, className = "", text = "") {
   const node = document.createElement(tag);
@@ -523,10 +82,13 @@ export function mountExamCalculator(shell, { signal, storageKey }) {
   for (const item of [
     "Arithmetic: +, −, ×, ÷, powers (^), parentheses, π, e, and Ans.",
     "Functions: sqrt, abs, sin, cos, tan, asin, acos, atan, ln, log, exp, min, max, floor, ceil, and round.",
-    "Graph tools: plot, trace, roots, intersections, extrema, derivatives, integrals, and value tables.",
-    "Statistics: one-variable summaries, linear regression, binomial probabilities, and normal probabilities/inverse normal.",
+    "Graph tools: Cartesian analysis plus parametric, polar and explicit sequence plots, trace, and sampled tables. Matrix tools: determinant, inverse, transpose, rref and linear systems. Finance: TVM and NPV.",
+    "Statistics: frequency lists, seven regression models, statistical plots, t/z/proportion/chi-squared tests and intervals. Probability: binomial, normal, t, chi-squared, F, Poisson and geometric distributions.",
+    "Lists: {1,2,3}→l1; mean(l1); l1[2]. Matrices: [[2,1],[1,3]]→a; inverse(a); linsolve(a,{5,7}). Functions: f1(x):=x^2; seq(k^2,k,1,10); when(x<0,-x,x).",
+    "Limits: 1000 characters per expression; lists/sequences 1000 entries; real matrices 20×20; polynomial roots degree ≤6; eigvals2 is for 2×2 matrices. Catalog lists direct commands by alphabet range.",
+    "Conventions: indices start at 1; quartiles use linear interpolation; geometric x starts at trial 1. Confidence intervals are two-sided. Finance uses positive receipts and negative payments.",
     "Keyboard: Enter submits a line; Ctrl+Enter gives a decimal; F1 opens Menu; Escape dismisses menus first. Use the physical Scratchpad key to switch Calculate/Graph.",
-    "This independent simulator reproduces common exam workflows. TI firmware, document files, programming, complex arithmetic, matrices, geometry, and CAS are not implemented.",
+    "Independent numeric implementation: lists, matrices, complex values, functions, sequences, statistical tests, regression, and finance. TI firmware, TNS files, programming, geometry, 3D graphs and CAS are not implemented.",
   ]) helpList.append(element("li", "", item));
   helpCopy.append(helpList);
   help.append(helpSummary, helpCopy);
@@ -767,12 +329,17 @@ export function mountExamCalculator(shell, { signal, storageKey }) {
   dialog.append(form);
   shell.append(dialog);
 
-  let ans = Number.isFinite(Number(saved.ans)) ? Number(saved.ans) : 0;
+  let ans = validValue(saved.ans) ? saved.ans : 0;
   let traceX = null;
   let graphImage = null;
   let graphGeometry = null;
   let activePanelName = "calculate";
-  let variables = Object.fromEntries(Object.entries(saved.variables ?? {}).filter(([name, value]) => /^[a-z][a-z0-9_]*$/u.test(name) && !["constructor", "prototype", "__proto__", "pi", "e", "ans"].includes(name) && Number.isFinite(value)).slice(0, 100));
+  let variables = {};
+  for (const [name, value] of Object.entries(saved.variables ?? {}).slice(0, 100)) {
+    try { if (validValue(value) || validFunction(value)) variables = storeVariable(variables, name, value); } catch { /* Ignore malformed saved values. */ }
+  }
+  let examTools;
+
   const historyItems = (Array.isArray(saved.history) ? saved.history : []).filter((item) => typeof item?.expression === "string" && typeof item?.result === "string").slice(-50);
   let newEntry = false;
   let recallIndex = historyItems.length;
@@ -781,7 +348,7 @@ export function mountExamCalculator(shell, { signal, storageKey }) {
     return {
       expression: expressionField.input.value.slice(0, MAX_EXPRESSION_LENGTH),
       angleMode: mode.value,
-      ans, variables, history: historyItems,
+      ans, variables, history: historyItems, toolInputs: examTools?.state() ?? saved.toolInputs ?? {},
       graphs: graphFields.map(({ input }) => input.value.slice(0, MAX_EXPRESSION_LENGTH)),
       bounds: boundFields.map((input) => Number(input.value)),
     };
@@ -799,7 +366,7 @@ export function mountExamCalculator(shell, { signal, storageKey }) {
       const row = element("li");
       const use = element("button", "calculator-history-expression", item.expression.replaceAll("*", "×").replaceAll("/", "÷").replaceAll("pi", "π"));
       use.type = "button";
-      try { use.replaceChildren(mathExpression(parser(tokenize(item.expression)))); } catch { /* Store commands retain their entered notation. */ }
+      try { use.replaceChildren(mathExpression(parseExpression(item.expression))); } catch { /* Store commands retain their entered notation. */ }
       use.setAttribute("aria-label", `Recall ${item.expression}`);
       use.addEventListener("click", () => { newEntry = false; expressionField.input.value = item.expression; expressionField.input.focus(); }, { signal });
       const result = element("span", "calculator-history-result", item.result);
@@ -819,10 +386,10 @@ export function mountExamCalculator(shell, { signal, storageKey }) {
       const expression = expressionField.input.value;
       const evaluated = evaluateHandheldEntry(expression, compileExpression, mode.value, variables, ans);
       variables = evaluated.variables;
-      ans = evaluated.value;
-      display.textContent = formatNumber(ans);
+      if (evaluated.value?.kind !== "function") ans = evaluated.value;
+      display.textContent = formatValue(evaluated.value);
       delete display.dataset.error;
-      historyItems.push({ expression, result: display.textContent, fraction: approximate ? null : fractionResult(expression, ans) });
+      historyItems.push({ expression, result: display.textContent, fraction: approximate ? null : fractionResult(expression, evaluated.value) });
       if (historyItems.length > 50) historyItems.shift();
       renderHistory();
       recallIndex = historyItems.length;
@@ -844,7 +411,8 @@ export function mountExamCalculator(shell, { signal, storageKey }) {
     const next = `${input.value.slice(0, start)}${value}${input.value.slice(end)}`.slice(0, MAX_EXPRESSION_LENGTH);
     input.value = next;
     const emptySlot = value.indexOf("()");
-    const cursor = Math.min(start + (emptySlot >= 0 ? emptySlot + 1 : value.length), next.length);
+    const listSlot = value.indexOf("{}");
+    const cursor = Math.min(start + (emptySlot >= 0 ? emptySlot + 1 : listSlot >= 0 ? listSlot + 1 : value.length), next.length);
     input.setSelectionRange(cursor, cursor);
     input.focus();
     input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1021,12 +589,11 @@ export function mountExamCalculator(shell, { signal, storageKey }) {
         normalOutput.textContent = `x = ${formatNumber(result)}`;
       } else {
         const x = numericField(normalX.input, normalTail.value === "between" ? "lower bound a" : "x");
-        let probability = normalCdf(x, mean, standardDeviation);
-        if (normalTail.value === "right") probability = 1 - probability;
+        let probability = normalTails(x, mean, standardDeviation)[normalTail.value === "right" ? 1 : 0];
         if (normalTail.value === "between") {
           const upper = numericField(normalUpperX.input, "upper bound b");
           if (upper < x) throw new Error("The upper bound must be at least the lower bound.");
-          probability = normalCdf(upper, mean, standardDeviation) - probability;
+          probability = between((value) => normalTails(value, mean, standardDeviation), x, upper);
         }
         normalOutput.textContent = `Probability: ${formatNumber(probability)}`;
       }
@@ -1167,10 +734,11 @@ export function mountExamCalculator(shell, { signal, storageKey }) {
   }
   renderHistory();
   const tools = createNumericalTools({ mode, getVariables: () => ({ ...variables, ans }), signal });
+  examTools = createExamTools({ mode, getVariables: () => ({ ...variables, ans }), setVariable: (name, value) => { variables = storeVariable(variables, name, value); persist(); }, saved: saved.toolInputs, signal, persist });
   const panelMap = { calculate: calculatePanel, graph: graphPanel, table: tablePanel, statistics: statisticsPanel };
   const hardware = wireHandheld({
     dialog, screen, content: screenContent, controls: deviceControls, expression: expressionField.input, mode,
-    panels: panelMap, tools: { ...tools, settings, functions: functionFields, bounds, analysis, tableSettings: tableControls, data: dataGroup, regression: regressionGroup, binomial: binomialPanel, normal: normalPanel },
+    panels: panelMap, tools: { ...tools, ...examTools.tools, settings, functions: functionFields, bounds, analysis, tableSettings: tableControls, data: dataGroup, regression: regressionGroup, binomial: binomialPanel, normal: normalPanel },
     actions: {
       zoomIn: () => zoomGraph(0.5), zoomOut: () => zoomGraph(2), resetView: () => resetView.click(),
       trace: () => canvas.focus(), recall: recallHistory, undo: () => recallHistory("up"),

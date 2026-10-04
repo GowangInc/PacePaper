@@ -20,7 +20,7 @@ describe("exam calculator", () => {
     expect(() => compileExpression("x + 1")()).toThrow("Unknown value");
     expect(() => compileExpression("sin()")()).toThrow("wrong number");
     expect(() => compileExpression(`${"(".repeat(33)}1${")".repeat(33)}`)()).toThrow("nesting is too deep");
-    expect(() => compileExpression("1+".repeat(100) + "1")()).toThrow("limited to 200 characters");
+    expect(() => compileExpression("1+".repeat(500) + "1")()).toThrow("limited to 1000 characters");
   });
 
   test("only permits the tool during calculator-compatible work phases", () => {

@@ -20,6 +20,19 @@ import classRosters from "../public/class-rosters.js" with { type: "file" };
 import calculatorHandheld from "../public/calculator-handheld.js" with { type: "file" };
 import calculatorEntry from "../public/calculator-entry.js" with { type: "file" };
 import calculatorTools from "../public/calculator-tools.js" with { type: "file" };
+import calculatorNumeric from "../public/calculator-numeric.js" with { type: "file" };
+import calculatorValues from "../public/calculator-values.js" with { type: "file" };
+import calculatorMatrix from "../public/calculator-matrix.js" with { type: "file" };
+import calculatorDistributions from "../public/calculator-distributions.js" with { type: "file" };
+import calculatorStatistics from "../public/calculator-statistics.js" with { type: "file" };
+import calculatorFinance from "../public/calculator-finance.js" with { type: "file" };
+import calculatorAlgebra from "../public/calculator-algebra.js" with { type: "file" };
+import calculatorEngine from "../public/calculator-engine.js" with { type: "file" };
+import calculatorToolForm from "../public/calculator-tool-form.js" with { type: "file" };
+import calculatorExamTools from "../public/calculator-exam-tools.js" with { type: "file" };
+import calculatorChart from "../public/calculator-chart.js" with { type: "file" };
+import calculatorPlots from "../public/calculator-plots.js" with { type: "file" };
+import calculatorCurves from "../public/calculator-curves.js" with { type: "file" };
 import calculator from "../public/calculator.js" with { type: "file" };
 import calculatorDemo from "../public/calculator-demo.js" with { type: "file" };
 import contextMenuLock from "../public/context-menu-lock.js" with { type: "file" };
@@ -66,6 +79,19 @@ export default {
   "public/app.js": app,
   "public/apple-touch-icon.png": appleTouchIcon,
   "public/calculator-demo.js": calculatorDemo,
+  "public/calculator-numeric.js": calculatorNumeric,
+  "public/calculator-values.js": calculatorValues,
+  "public/calculator-matrix.js": calculatorMatrix,
+  "public/calculator-distributions.js": calculatorDistributions,
+  "public/calculator-statistics.js": calculatorStatistics,
+  "public/calculator-finance.js": calculatorFinance,
+  "public/calculator-algebra.js": calculatorAlgebra,
+  "public/calculator-engine.js": calculatorEngine,
+  "public/calculator-tool-form.js": calculatorToolForm,
+  "public/calculator-exam-tools.js": calculatorExamTools,
+  "public/calculator-chart.js": calculatorChart,
+  "public/calculator-plots.js": calculatorPlots,
+  "public/calculator-curves.js": calculatorCurves,
   "public/calculator.js": calculator,
   "public/calculator-handheld.js": calculatorHandheld,
   "public/calculator-entry.js": calculatorEntry,
