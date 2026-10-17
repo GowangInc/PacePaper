@@ -6,8 +6,9 @@ describe("explicit release platforms", () => {
     expect(releasePlatforms([])).toEqual(RELEASE_PLATFORMS);
   });
 
-  test("allows an intentional Windows/Linux-only build in canonical order", () => {
+  test("allows an intentional Windows/Linux-only build and unsigned Mac source archive", () => {
     expect(releasePlatforms(["--platforms=linux-x64,windows-x64"])).toEqual(["windows-x64", "linux-x64"]);
+    expect(releasePlatforms(["--platforms=macos-source,linux-x64,windows-x64"])).toEqual(["macos-source", "windows-x64", "linux-x64"]);
     expect(releasePlatforms(["--platforms=macos-universal"])).toEqual(["macos-universal"]);
   });
 
@@ -19,9 +20,10 @@ describe("explicit release platforms", () => {
     ]) expect(() => releasePlatforms(args)).toThrow();
   });
 
-  test("names only the supported archive formats", () => {
+  test("names the supported archive formats", () => {
     expect(RELEASE_PLATFORMS.map((platform) => releaseArchiveName("0.1.0-demo.5", platform))).toEqual([
       "PacePaper-0.1.0-demo.5-macos-universal.zip",
+      "PacePaper-0.1.0-demo.5-macos-source.zip",
       "PacePaper-0.1.0-demo.5-windows-x64.zip",
       "PacePaper-0.1.0-demo.5-linux-x64.tar.gz",
     ]);

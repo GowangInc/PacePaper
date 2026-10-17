@@ -251,7 +251,7 @@
     <main id="main-content">
       <article class="guide"><h1 id="pacepaper-teacher-guide">PacePaper teacher guide</h1>
 <p>This step-by-step guide covers the current PacePaper classroom demo. PacePaper runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.</p>
-<p>This guide matches PacePaper <strong>0.1.0-demo.19</strong>.</p>
+<p>This guide matches PacePaper <strong>0.1.0-demo.21</strong>.</p>
 <p>PacePaper is for <strong>practice and candidate familiarisation only</strong>. It does not deliver an official examination. A fresh installation starts with one preloaded <strong>Sample paper</strong> that has no subject, level, or IB branding, so you can try the whole exam workflow before building your own. An older app download does not update itself; use the guide supplied with your version.</p>
 <h2 id="the-four-parts-of-the-teacher-dashboard">The four parts of the teacher dashboard</h2>
 <p>Use the left-hand menu to move between these areas:</p>
@@ -287,18 +287,18 @@
 </ol>
 <p>The detailed instructions below follow the same order.</p>
 <h2 id="step-1-start-pacepaper">Step 1 — Start PacePaper</h2>
-<p>PacePaper is a portable app, not an installer. Extract the complete download before opening it.</p>
+<p>The Windows and Linux downloads are portable apps, not installers. The Mac download is a source archive, not a native app. Extract the complete download before starting it.</p>
 <table>
 <thead>
 <tr><th>Computer</th><th>Download</th><th>Open</th></tr>
 </thead>
 <tbody>
-<tr><td>Apple-silicon or Intel Mac</td><td>Use the source option below</td><td><code>Start PacePaper.command</code></td></tr>
-<tr><td>Windows x64</td><td><code>windows-x64.zip</code></td><td><code>PacePaper.exe</code></td></tr>
-<tr><td>Linux x64</td><td><code>linux-x64.tar.gz</code></td><td><code>PacePaper</code></td></tr>
+<tr><td>Apple-silicon or Intel Mac</td><td><code>PacePaper-0.1.0-demo.21-macos-source.zip</code></td><td><code>Start PacePaper.command</code></td></tr>
+<tr><td>Windows 10/11 x64</td><td><code>PacePaper-0.1.0-demo.21-windows-x64.zip</code></td><td><code>PacePaper.exe</code></td></tr>
+<tr><td>Linux x64</td><td><code>PacePaper-0.1.0-demo.21-linux-x64.tar.gz</code></td><td><code>PacePaper</code></td></tr>
 </tbody>
 </table>
-<p>Download the latest release bundle for Windows or Linux from the project's releases page. There is no Mac app bundle; on a Mac, install Bun and follow <strong>Run from a source checkout</strong> below, with IT help for the one-time setup.</p>
+<p>The Mac download is a source archive, not a compiled app. Extract the complete archive and double-click the launcher. If Bun is missing, it offers to install Bun and installs the dependencies; the first launch needs internet. Windows and Linux downloads are self-contained and work offline with bundled content. YouTube and externally hosted HTTPS videos need internet unless hosted on the school network.</p>
 <ol>
 <li>Open PacePaper once on the teacher computer.</li>
 <li>Leave the application running for the whole lesson.</li>
@@ -640,7 +640,7 @@
 <p>These independently implemented tools are for practice and are not validated replacements for approved physical calculators. The calculator does not provide CAS, proprietary firmware or document formats, saved programs, general spreadsheets, geometry, 3D graphing or model certification. Expressions are capped at 1000 characters, lists/sequences at 1000 entries, matrices at 20×20 and polynomial roots at degree 6. Quartiles use linear interpolation, which can differ from a physical calculator. Open <strong>Supported functions and keyboard controls</strong> inside the calculator for commands and conventions.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ul>
-<li><strong>The Mac app says it is damaged:</strong> Do not bypass Gatekeeper. Confirm that the release is notarized. If you are working from a source checkout, use <code>Start PacePaper.command</code> from the project folder.</li>
+<li><strong>The Mac launcher is blocked:</strong> Right-click <code>Start PacePaper.command</code> and choose <strong>Open</strong>, or remove its quarantine attribute once in Terminal as shown in the root README. The Mac download is a source archive, not a notarized app bundle.</li>
 <li><strong>The app does not open:</strong> Extract the complete download, use the correct platform file, and close any second copy of PacePaper.</li>
 <li><strong>Students cannot connect:</strong> Confirm that classroom sharing is on, use the displayed private-network address, and test it on a real student device. Do not give students <code>localhost</code> or <code>127.0.0.1</code>.</li>
 <li><strong>A student cannot sign in:</strong> Check that the teacher selected the correct class and that the student name is in the active roster.</li>

@@ -190,6 +190,14 @@ function archiveNotarizedMacPackage(packageDirectory: string, stagingRoot: strin
   return { archiveName, archivePath };
 }
 
+function buildMacSource(stagingRoot: string): Archive {
+  const packageName = `PacePaper-${version}-macos-source`;
+  const archiveName = releaseArchiveName(version, "macos-source");
+  const archivePath = join(stagingRoot, archiveName);
+  run(["git", "archive", "--format=zip", `--prefix=${packageName}/`, "--output", archivePath, "HEAD"], root);
+  return { archiveName, archivePath };
+}
+
 function prepareMacApp(packageDirectory: string): MacAppPaths {
   const appDirectory = join(packageDirectory, "PacePaper.app");
   const contentsDirectory = join(appDirectory, "Contents");
@@ -288,6 +296,11 @@ try {
     console.log(`Building ${macUniversalTarget.id}…`);
     archives.push(await buildMacUniversal(stagingRoot));
   }
+  if (selectedPlatforms.includes("macos-source")) {
+    console.log("Building macos-source…");
+    archives.push(buildMacSource(stagingRoot));
+  }
+
   for (const target of targets.filter(({ id }) => selectedPlatforms.includes(id))) {
     console.log(`Building ${target.id}…`);
     archives.push(await buildTarget(target, stagingRoot));
@@ -296,7 +309,7 @@ try {
   const omittedArchiveNames = RELEASE_PLATFORMS
     .filter((platform) => !selectedPlatforms.includes(platform))
     .map((platform) => releaseArchiveName(version, platform));
-  // Never leave a previous current-version Mac archive beside a non-Mac build.
+  // Remove stale outputs for platforms omitted from this build.
   for (const archiveName of [...retiredArchiveNames, ...omittedArchiveNames]) {
     rmSync(join(releaseDirectory, archiveName), { force: true });
   }
@@ -314,7 +327,7 @@ try {
     .map((assetName) => `${sha256(join(releaseDirectory, assetName))}  ${assetName}`)
     .join("\n");
   writeFileSync(join(releaseDirectory, "SHA256SUMS.txt"), `${checksums}\n`);
-  console.log(`Created ${archives.length} standalone bundles in ${releaseDirectory}`);
+  console.log(`Created ${archives.length} release archives in ${releaseDirectory}`);
 } finally {
   rmSync(stagingRoot, { recursive: true, force: true });
 }

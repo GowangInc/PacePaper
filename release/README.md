@@ -2,9 +2,9 @@
 
 This folder receives the shareable PacePaper bundles made by `bun run release:build`.
 
-Bundles built from the current source are self-contained: they include the PacePaper executable and all browser interface files. Teachers do not need Bun, Node.js, or source code. Students need only a browser and a connection to the teacher's computer; an Internet connection is not needed during use. The current builder excludes existing databases, teacher papers, submissions, and protected reference resources. A fresh release installs one generic **Sample paper** with no subject, level, or IB branding, so new users can try the exam workflow immediately.
+The Windows and Linux bundles are self-contained: each includes the PacePaper executable and browser interface. The macOS download is a source archive with the project files and launcher; it needs Bun and dependencies, which the launcher offers to install on first run with an internet connection. Students need only a browser and a connection to the teacher's computer. Bundled content works offline; optional YouTube or externally hosted HTTPS video needs internet unless hosted on the school network. The builder excludes existing databases, teacher papers, submissions, and protected reference resources. A fresh release installs one generic **Sample paper** with no subject, level, or IB branding.
 
-Version **0.1.0-demo.20** targets Windows x64 and Linux x64, under the PacePaper name. There is no Mac application in this release because Apple signing and notarization credentials are not configured. Mac users can run the source as described below. A previously downloaded app retains its own code and examples. Check the release notes supplied with that download.
+Version **0.1.0-demo.21** includes self-contained Windows x64 and Linux x64 applications and a macOS source archive for Apple-silicon and Intel Macs. The source archive is not a compiled macOS app; its launcher offers to install Bun and installs the project dependencies. The first Mac launch needs an internet connection. A previously downloaded app retains its own code and examples. Check the release notes supplied with that download.
 
 Student sign-in is deliberately low-friction for a trusted school network: students choose their class and name from the active roster. No candidate PIN or direct link is created or required.
 
@@ -12,13 +12,13 @@ PacePaper now checks the SQLite database at startup. Before a schema upgrade, it
 
 Candidate responses now use revision checks to reject stale saves from another tab or device. Ending an exam waits for each active candidate's latest confirmed save; the teacher can keep the exam running or enter a reason to end it despite unresolved candidates.
 
-Start with `USER-GUIDE.html`, included beside the app or executable in each bundle. It covers the complete teacher and student workflow. A plain-text `USER-GUIDE.txt` is included as an accessible fallback. Both guides are also provided as separate release downloads.
+For the Windows and Linux apps, start with `USER-GUIDE.html` included beside the executable; `USER-GUIDE.txt` is the accessible fallback. The macOS source archive contains the editable project guide files. Both standalone guide formats are also provided as release downloads.
 
 ## Choose the correct download
 
-- macOS — run the source for now; no Mac archive is included in demo.20
-- `PacePaper-*-windows-x64.zip` — most Windows PCs
-- `PacePaper-*-linux-x64.tar.gz` — 64-bit Linux PCs using glibc
+- `PacePaper-0.1.0-demo.21-macos-source.zip` — macOS source archive (Apple silicon or Intel)
+- `PacePaper-0.1.0-demo.21-windows-x64.zip` — Windows 10/11 x64
+- `PacePaper-0.1.0-demo.21-linux-x64.tar.gz` — Linux x64 using glibc
 - `PacePaper-*-User-Guide.html` — illustrated, browser-friendly guide
 - `PacePaper-*-User-Guide.txt` — the same full guide included inside each platform archive
 - `PacePaper-*-Release-Notes.txt` — review focus, important limitations, and verification evidence
@@ -27,21 +27,21 @@ The Windows executable uses the PacePaper application icon. The Linux archive in
 
 Extract the entire archive before starting it. Do not run an executable from inside the archive.
 
-On Windows, double-click `PacePaper.exe`. On Linux, make `PacePaper` executable if required and run it. The app opens the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting PacePaper. A future macOS download must be notarized before use.
+On macOS, extract the complete source archive and double-click `Start PacePaper.command`; if Bun is missing, the launcher offers to install it and installs dependencies. On Windows, double-click `PacePaper.exe`. On Linux, make `PacePaper` executable if required and run it. The packaged apps open the teacher dashboard in the normal browser on the first free local port from `9148` through `9158`; use the address that opens automatically. If every port in that range is occupied, close the conflicting local app or have an advanced launcher set `PORT` before starting PacePaper.
 
-The current source is labelled `0.1.0-demo.20`, and a fresh release installs the generic **Sample paper** described above. See `RELEASE_NOTES-0.1.0-demo.20.md` for the dated review record. Later source edits require a new build and verification. Existing downloads are unchanged.
+The current source is labelled `0.1.0-demo.21`, and a fresh release installs the generic **Sample paper** described above. See `RELEASE_NOTES-0.1.0-demo.21.md` for the release record. Later source edits require a new build and verification. Existing downloads are unchanged.
 
-The release builder will not create a Mac archive without Developer ID signing and successful Apple notarization. Windows may still show a SmartScreen warning while the demo lacks an established publisher reputation.
+This release does not include a compiled macOS app because Developer ID signing and Apple notarization credentials are not configured; it includes the macOS source archive instead. The Windows and Linux builds are unsigned, so Windows may show a SmartScreen warning. macOS may report that the launcher cannot be opened; right-click it and choose **Open**, or remove the quarantine attribute once as described in the root README.
 
 ## Run from a source checkout
 
-Source use requires Bun and a one-time `bun install` in the project folder. On a Mac, open that folder and double-click `Start PacePaper.command`. On Windows or Linux, open a terminal in the folder and run `bun run start:app`. Keep the terminal open while using PacePaper and press Control-C there to stop it. This source launcher uses the same app data, example papers, automatic browser opening, and classroom-sharing controls as a build made from that source.
+Source use requires Bun and project dependencies. On a Mac, double-click `Start PacePaper.command`; it offers to install Bun and runs `bun install` when dependencies are missing, so the first launch needs internet. On Windows or Linux, open a terminal in the project folder and run `bun run start:app` after installing Bun and dependencies. Keep the terminal open while using PacePaper and press Control-C there to stop it. The source launcher uses the same app data, example papers, automatic browser opening, and classroom-sharing controls as a build made from that source.
 
 For source development, `bun run samples:build` regenerates manifests, ignored portable papers, and teacher marking guides. `bun run samples:seed` adds or safely upgrades the library, preserving teacher edits and earlier session versions. The app launcher performs the library upgrade automatically; unchanged input does not create duplicates.
 
 ## Demo boundaries
 
-- It is fully offline: no telemetry, account registration, activation, or licence call is made.
+- The apps make no telemetry, account-registration, activation, or licence calls. Windows and Linux work offline with bundled content; optional hosted video and first-time Mac source setup need internet.
 - A fresh installation starts with teacher login `admin` / `admin`. Change the password in **Settings**.
 - Student sign-in uses the active class roster and student name. It does not require candidate PINs, direct links, accounts, or internet access.
 - It is for familiarisation only. Do not use it with real student data, high-stakes assessment, or copyrighted papers without school approval.

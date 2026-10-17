@@ -7,7 +7,7 @@ on:
       tag:
         description: Existing draft release tag
         required: true
-        default: v0.1.0-demo.20
+        default: v0.1.0-demo.21
         type: string
       include_macos:
         description: Include macOS (requires Developer ID signing and Apple notarization secrets)
@@ -168,7 +168,7 @@ jobs:
           if [[ "$INCLUDE_MACOS" = "true" ]]; then
             bun run release:build
           else
-            bun run release:build --platforms=windows-x64,linux-x64
+            bun run release:build --platforms=macos-source,windows-x64,linux-x64
           fi
 
       - name: Verify built bundles
@@ -178,6 +178,7 @@ jobs:
         run: |
           set -euo pipefail
           files=(
+            "release/PacePaper-${VERSION}-macos-source.zip"
             "release/PacePaper-${VERSION}-windows-x64.zip"
             "release/PacePaper-${VERSION}-linux-x64.tar.gz"
             "release/PacePaper-${VERSION}-User-Guide.html"
@@ -197,6 +198,11 @@ jobs:
           (cd release && shasum -a 256 -c SHA256SUMS.txt)
           unzip -tq "release/PacePaper-${VERSION}-windows-x64.zip"
           tar -tzf "release/PacePaper-${VERSION}-linux-x64.tar.gz" >/dev/null
+          unzip -tq "release/PacePaper-${VERSION}-macos-source.zip"
+          source_package="PacePaper-${VERSION}-macos-source"
+          unzip -p "release/PacePaper-${VERSION}-macos-source.zip" "${source_package}/Start PacePaper.command" > "$RUNNER_TEMP/Start PacePaper.command"
+          bash -n "$RUNNER_TEMP/Start PacePaper.command"
+          unzip -p "release/PacePaper-${VERSION}-macos-source.zip" "${source_package}/package.json" | cmp package.json -
           if [[ "$INCLUDE_MACOS" = "true" ]]; then
             unzip -tq "release/PacePaper-${VERSION}-macos-universal.zip"
             extracted_mac="$RUNNER_TEMP/digitaldp-mac-verification"
@@ -231,6 +237,7 @@ jobs:
             release/PacePaper-${{ steps.meta.outputs.version }}-macos-universal.zip
             release/PacePaper-${{ steps.meta.outputs.version }}-windows-x64.zip
             release/PacePaper-${{ steps.meta.outputs.version }}-linux-x64.tar.gz
+            release/PacePaper-${{ steps.meta.outputs.version }}-macos-source.zip
             release/PacePaper-${{ steps.meta.outputs.version }}-User-Guide.html
             release/PacePaper-${{ steps.meta.outputs.version }}-User-Guide.txt
             release/PacePaper-${{ steps.meta.outputs.version }}-Release-Notes.txt
@@ -243,6 +250,7 @@ jobs:
         run: |
           set -euo pipefail
           files=(
+            "release/PacePaper-${VERSION}-macos-source.zip"
             "release/PacePaper-${VERSION}-windows-x64.zip"
             "release/PacePaper-${VERSION}-linux-x64.tar.gz"
             "release/PacePaper-${VERSION}-User-Guide.html"
@@ -286,6 +294,7 @@ jobs:
             `PacePaper-${version}-User-Guide.txt`,
             `PacePaper-${version}-Release-Notes.txt`,
             "SHA256SUMS.txt",
+            `PacePaper-${version}-macos-source.zip`,
           ];
           if (process.env.INCLUDE_MACOS === "true") expected.push(`PacePaper-${version}-macos-universal.zip`);
 
