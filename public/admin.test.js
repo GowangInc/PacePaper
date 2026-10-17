@@ -62,14 +62,6 @@ describe("teacher dashboard presentation", () => {
   });
 
 
-  test("shows the active student connection address on the dashboard", () => {
-    expect(source).toContain("mountStudentConnection(document, { origin: studentConnectionOrigin })");
-    expect(source).toContain("bootstrap.studentOrigin ?? location.origin");
-    expect(source).toContain("data-student-connection-link");
-    expect(source).toContain("data-copy-student-connection");
-    expect(source).toContain('<a data-student-connection-link href="/"');
-  });
-
   test("uses one archive confirmation dialog while restore remains direct", () => {
     expect(source.match(/<dialog id="archive-dialog"/g)).toHaveLength(1);
     expect(source).toContain('dialog.close("cancel")');

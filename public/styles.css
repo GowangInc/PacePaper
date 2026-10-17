@@ -1397,6 +1397,62 @@ legend {
   gap: var(--space-2);
 }
 
+.student-connection-card {
+  flex-wrap: wrap;
+}
+
+.student-join-qr {
+  flex-basis: 100%;
+  width: 100%;
+  margin-top: var(--space-3);
+  border-top: var(--rule-thin) solid var(--color-rule);
+  padding-top: var(--space-3);
+}
+
+.student-join-qr summary {
+  width: fit-content;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.student-join-qr__body {
+  display: grid;
+  grid-template-columns: minmax(0, var(--student-qr-size, 16rem)) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-3);
+}
+
+.student-join-qr [data-student-qr-image] {
+  grid-row: span 2;
+}
+
+.student-join-qr [data-student-qr-image] > * {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.student-join-qr__body p {
+  margin: 0;
+}
+
+.student-join-qr__body button {
+  justify-self: start;
+  align-self: start;
+}
+
+@media (max-width: 36rem) {
+  .student-join-qr__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-join-qr [data-student-qr-image] {
+    width: min(100%, var(--student-qr-size, 16rem));
+  }
+}
+
 .network-share-panel {
   display: grid;
   gap: var(--space-3);

@@ -94,7 +94,7 @@ If a candidate leaves the exam window, the teacher dashboard raises a focus aler
 1. **Prepare.** Sign in on the teacher computer and choose **Settings** to set a password you will remember.
 2. **Add your class.** In **Classes and students**, create a class and add students (or import a CSV class list). Names must be unique within a class.
 3. **Choose a paper.** The preloaded **Sample paper** demonstrates the app. For real practice, build a paper in the **Paper library** with the guided builder (it follows the format of your chosen exam system) or import a prepared PacePaper paper file.
-4. **Set up an exam.** In **Sessions**, choose the class and paper. Students will see that class and choose their own names at sign-in. Check the **Student sign-in** address under **Classroom sharing** on the teacher dashboard.
+4. **Set up an exam.** In **Sessions**, choose the class and paper. Students will see that class and choose their own names at sign-in. Use **Show QR code** beside **Student sign-in** on the teacher dashboard or examination clock so students can scan to join; **Save QR image** downloads a PNG to share.
 5. **Run the exam.** Click **Start exam** when candidates are ready. The exam clock, per-candidate progress, and **Focus alerts** (candidates leaving the window) are on the dashboard; open the **examination clock** on a second screen to project the countdown. Responses autosave, and the exam submits automatically at the deadline.
 6. **Review.** Open a session's submissions to read, print, or save each candidate's complete paper as a PDF. **Answer history** replays what a candidate had written earlier in the sitting.
 
@@ -121,7 +121,7 @@ Notes for teachers:
 - Legacy reading-then-writing timing plus multi-section phase plans with locked reading periods, fixed monitored breaks, no-return section boundaries, phase-specific tool rules, and extra time applied to the final work phase
 - Second-screen countdown with fullscreen mode and authoritative linked timing; simple-exam reading and writing minutes can be corrected from the clock while the exam is ready or live (fixed-section and ended exams stay read-only)
 - Editable student-name roster on the second-screen clock, without changing student accounts or authoritative timers
-- Visible student sign-in address with a copy action on both the teacher dashboard and projected clock, which also names the linked class
+- Student sign-in address, copy action, toggleable offline QR code, and downloadable QR image on both the teacher dashboard and projected clock, which also names the linked class
 - Timed sessions with autosave, local unsaved-work recovery, and automatic deadline submission
 - Student exam selection after sign-in, with per-exam waiting rooms and completed sittings kept separate from new sessions
 - Reversible removal and restoration of classes, students, and exam sittings without deleting saved candidate responses

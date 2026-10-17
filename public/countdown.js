@@ -374,7 +374,10 @@ function updateStudentConnection(network) {
     if (sharingOff) note.textContent = "Classroom sharing is off. Turn it on in the teacher dashboard before students on other devices can connect.";
   }
   if (document.querySelector("[data-student-connection-link]")) {
-    mountStudentConnection(document, { origin: studentConnectionOrigin });
+    mountStudentConnection(document, {
+      origin: studentConnectionOrigin,
+      available: !(network.managed === true && !network.address),
+    });
   }
 }
 
@@ -586,6 +589,14 @@ function renderClockShell() {
                 <a class="clock-student-url" data-student-connection-link href="/" target="_blank" rel="noopener">PacePaper</a>
                 <button data-copy-student-connection type="button" aria-describedby="clock-student-connect-status">Copy URL</button>
               </div>
+              <details class="student-join-qr" data-student-qr hidden>
+                <summary>Show QR code</summary>
+                <div class="student-join-qr__body">
+                  <div data-student-qr-image></div>
+                  <p>Scan to open student sign-in. Use the same school network.</p>
+                  <button type="button" data-download-student-qr>Save QR image</button>
+                </div>
+              </details>
               <p id="clock-student-connect-status" class="clock-student-connect__status" data-copy-student-connection-status role="status" aria-live="polite" aria-atomic="true" hidden></p>
               <p class="clock-student-connect__note" data-student-connection-note role="status" hidden></p>
             </section>
@@ -615,7 +626,7 @@ export async function renderCountdown(bootstrap) {
     return;
   }
   renderClockShell();
-  mountStudentConnection(document, { origin: bootstrap.studentOrigin ?? location.origin });
+  mountStudentConnection(document, { origin: bootstrap.studentOrigin ?? location.origin, available: false });
   studentConnectionOrigin = bootstrap.studentOrigin ?? location.origin;
   try {
     await fetchState();

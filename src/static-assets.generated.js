@@ -1,6 +1,7 @@
 import pdfAnnotations from "../public/pdf-annotations.js" with { type: "file" };
 import pdfMin from "../public/pdf.min.mjs" with { type: "file" };
 import pdfWorkerMin from "../public/pdf.worker.min.mjs" with { type: "file" };
+import qrcodegen from "../public/qrcodegen.js" with { type: "file" };
 // Bun reads these file imports from disk in development and embeds them when
 // `bun build --compile` creates a standalone executable. Do not use ordinary
 // JavaScript imports here: browsers must receive the source modules unchanged.
@@ -126,6 +127,7 @@ export default {
   "public/pdf-annotations.js": pdfAnnotations,
   "public/pdf.min.mjs": pdfMin,
   "public/pdf.worker.min.mjs": pdfWorkerMin,
+  "public/qrcodegen.js": qrcodegen,
   "paper-authoring/SKILL.md": paperAuthoringGuide,
   "tokens.css": tokens,
   "USER_GUIDE.html": userGuide,

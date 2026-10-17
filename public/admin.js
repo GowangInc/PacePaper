@@ -880,8 +880,14 @@ function updateStudentConnection(network) {
   } catch {
     return;
   }
+  const sharingOff = network.managed === true && !network.address;
+  const note = document.querySelector("[data-student-connection-note]");
+  if (note) {
+    note.hidden = !sharingOff;
+    note.textContent = sharingOff ? "Classroom sharing is off. Turn it on below before students can scan to join." : "";
+  }
   if (document.querySelector("[data-student-connection-link]")) {
-    mountStudentConnection(document, { origin: studentConnectionOrigin });
+    mountStudentConnection(document, { origin: studentConnectionOrigin, available: !sharingOff });
   }
 }
 
@@ -1340,16 +1346,25 @@ async function renderDashboard() {
 
         <section id="overview" class="admin-section">
           <div class="section-heading"><div><h2>Overview</h2><p>Prepare your classes and papers, then start and monitor exam sessions.</p></div></div>
-          <section class="session-row" aria-labelledby="student-connection-title">
+          <section class="session-row student-connection-card" aria-labelledby="student-connection-title">
             <div>
               <strong id="student-connection-title">Student sign-in</strong>
               <a data-student-connection-link href="/" target="_blank" rel="noopener">PacePaper</a>
-              <small>This is the address students open on their own devices. It is ready on the trusted LAN; use **This computer only** below to disable sharing.</small>
+              <small>Students open this address or scan the QR code on the same school network.</small>
+              <p data-student-connection-note role="status" hidden></p>
             </div>
             <div class="session-actions">
               <button data-copy-student-connection type="button" aria-describedby="student-connection-copy-status">Copy URL</button>
               <span id="student-connection-copy-status" data-copy-student-connection-status role="status" aria-live="polite" aria-atomic="true" hidden></span>
             </div>
+            <details class="student-join-qr" data-student-qr hidden>
+              <summary>Show QR code</summary>
+              <div class="student-join-qr__body">
+                <div data-student-qr-image></div>
+                <p>Scan to open student sign-in. Use the same school network.</p>
+                <button type="button" data-download-student-qr>Save QR image</button>
+              </div>
+            </details>
           </section>
           <div id="classroom-network"></div>
           <dl class="metric-strip">
@@ -1536,7 +1551,7 @@ async function renderDashboard() {
     </dialog>
   `);
   document.querySelector(".admin-main").append(document.querySelector("#papers"));
-  mountStudentConnection(document, { origin: studentConnectionOrigin });
+  mountStudentConnection(document, { origin: studentConnectionOrigin, available: false });
   classroomNetworkControls = mountAdminNetwork(document.querySelector("#classroom-network"), {
     request: requestClassroomNetwork,
   });

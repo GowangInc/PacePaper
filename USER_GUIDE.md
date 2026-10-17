@@ -92,13 +92,15 @@ PacePaper is designed for a teacher computer serving students on their own devic
 3. Check the private network used by the teacher and student devices.
 4. If the network changed, choose another detected private IPv4 address and select **Apply classroom sharing**.
 5. Find the **Student sign-in** address.
-6. Select **Copy URL**.
-7. Open that exact address on one real student device.
+6. Select **Copy URL**, or **Show QR code** so students can scan the address.
+7. Open that exact address on one real student device, by typing it or scanning the QR code.
 8. Confirm that the PacePaper student sign-in page appears.
 
 Do this test before students begin. Students must use the private-network address from their own devices; `localhost` and `127.0.0.1` work only on the teacher computer.
 
 The **Student sign-in** address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows `127.0.0.1` or `localhost`, and students can type it without adding `/student` because the bare address opens candidate sign-in. If classroom sharing is disabled, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.
+
+Select **Show QR code** beside **Student sign-in** on the dashboard or examination clock to display a scannable code; select **Hide QR code** to collapse it. **Save QR image** downloads a PNG for a slide, message, or printout. QR generation works offline and does not send the address to an external service. The code updates when the classroom address changes and is hidden when sharing is off. A saved image keeps its original address, so save a new one after changing networks.
 
 The teacher and students must be on a network that allows their devices to communicate. Guest Wi-Fi, different school networks, or network isolation may block access.
 
@@ -263,6 +265,7 @@ You may set up several sessions in advance. Different classes can take different
 4. Check the paper, class, start time, reading time, and writing time.
 5. Edit the displayed student names if needed.
 6. Confirm that the linked class name and student sign-in address are visible.
+7. Optionally select **Show QR code** so students can scan the projected address. The code remains visible when you hide the teacher controls.
 
 For a simple paper with one reading period and one writing period (no fixed timed sections), changing **Reading minutes** or **Writing minutes** and selecting **Save exam timing and update display** saves the configured minutes for that sitting. For example, `0.1` reading minutes is six seconds. You can make this change while the exam is ready or after it has started: saving during a live exam moves the reading/writing boundary and the deadline immediately for every candidate, which is the fastest way to correct a mistaken duration. Check the saved confirmation and the session's timing on the teacher dashboard.
 
@@ -278,11 +281,11 @@ The clock remains on **Ready to start** until the teacher selects **Start exam**
 
 ## Step 7 — Ask students to join
 
-Give each student the **Student sign-in** address. Students choose their class and own name from the active roster.
+Give each student the **Student sign-in** address, or show its QR code on the dashboard or examination clock. Students choose their class and own name from the active roster.
 
 Ask each student to:
 
-1. Open the exact address supplied by the teacher.
+1. Open the exact address supplied by the teacher, or scan its QR code using your device's camera.
 2. Select the **Class name**.
 3. Select your own name.
 4. Select **Continue**.

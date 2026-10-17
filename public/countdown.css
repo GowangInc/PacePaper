@@ -323,6 +323,22 @@ body.countdown-page {
   font-size: 0.875rem;
 }
 
+.clock-student-connect .student-join-qr {
+  --student-qr-size: 14rem;
+  border-color: #475569;
+  text-align: left;
+}
+
+.clock-student-connect .student-join-qr summary {
+  margin-inline: auto;
+  color: #dbeafe;
+}
+
+.clock-student-connect .student-join-qr__body {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+}
+
 .clock-student-list {
   width: min(100%, 65rem);
   margin: clamp(1rem, 2vh, 1.75rem) auto 0;

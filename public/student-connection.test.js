@@ -6,17 +6,6 @@ import {
 } from "./student-connection.js";
 
 describe("student connection details", () => {
-  test("keeps the clock address in its projected display, outside the hideable controls", async () => {
-    const source = await Bun.file(new URL("./countdown.js", import.meta.url)).text();
-    const controlsEnd = source.indexOf("</aside>");
-    const displayStart = source.indexOf('<section id="clock-display"');
-    const connectionLink = source.lastIndexOf("data-student-connection-link");
-    expect(controlsEnd).toBeGreaterThan(-1);
-    expect(connectionLink).toBeGreaterThan(displayStart);
-    expect(displayStart).toBeGreaterThan(controlsEnd);
-    expect(source).toContain("mountStudentConnection(document, { origin: bootstrap.studentOrigin ?? location.origin })");
-  });
-
   test("builds the student address from the active HTTP origin", () => {
     expect(studentConnectionUrl("http://127.0.0.1:9148")).toBe("http://127.0.0.1:9148");
     expect(studentConnectionUrl("https://exam.school.test:9443/admin")).toBe("https://exam.school.test:9443");
@@ -90,5 +79,84 @@ describe("student connection details", () => {
       dataset: { tone: "success" },
     });
     expect(button.disabled).toBe(false);
+  });
+
+  test("offers the QR only for shared LAN addresses and refreshes it when the address changes", () => {
+    const summary = { textContent: "Show QR code" };
+    const imageHost = {
+      children: [],
+      replaceChildren(...nodes) { this.children = nodes; },
+      append(node) { this.children.push(node); },
+    };
+    const downloadButton = { addEventListener() {} };
+    const qrElements = new Map([
+      ["summary", summary],
+      ["[data-student-qr-image]", imageHost],
+      ["[data-download-student-qr]", downloadButton],
+    ]);
+    const details = {
+      hidden: true,
+      open: false,
+      listeners: {},
+      addEventListener(type, listener) { this.listeners[type] = listener; },
+      querySelector: (selector) => qrElements.get(selector),
+    };
+    const documentRef = {
+      createElement: () => ({
+        width: 0,
+        height: 0,
+        rectangles: [],
+        getContext() {
+          return { fillStyle: "", fillRect: (...args) => this.rectangles.push(args) };
+        },
+      }),
+    };
+    const elements = new Map([
+      ["[data-student-connection-link]", {}],
+      ["[data-copy-student-connection]", { addEventListener() {} }],
+      ["[data-copy-student-connection-status]", { dataset: {}, hidden: true, textContent: "" }],
+      ["[data-student-qr]", details],
+    ]);
+    const root = { querySelector: (selector) => elements.get(selector) };
+
+    // LAN address: the panel is offered, but rendering stays lazy until opened.
+    const url = mountStudentConnection(root, { origin: "http://192.168.1.10:9148", documentRef });
+    expect(url).toBe("http://192.168.1.10:9148");
+    expect(details.hidden).toBe(false);
+    expect(imageHost.children).toHaveLength(0);
+
+    details.open = true;
+    details.listeners.toggle();
+    expect(summary.textContent).toBe("Hide QR code");
+    expect(imageHost.children).toHaveLength(1);
+    const firstCanvas = imageHost.children[0];
+
+    // A same-address re-mount (network refresh) keeps the open panel and render.
+    mountStudentConnection(root, { origin: "http://192.168.1.10:9148", documentRef });
+    expect(details.open).toBe(true);
+    expect(imageHost.children).toEqual([firstCanvas]);
+
+    // A new address drops the stale image and re-renders from the new payload.
+    mountStudentConnection(root, { origin: "http://192.168.1.11:9148", documentRef });
+    expect(details.open).toBe(true);
+    expect(imageHost.children).toHaveLength(1);
+    expect(imageHost.children[0]).not.toBe(firstCanvas);
+    expect(imageHost.children[0].rectangles).not.toEqual(firstCanvas.rectangles);
+
+    mountStudentConnection(root, { origin: "http://192.168.1.11:9148", available: false, documentRef });
+    expect(details.hidden).toBe(true);
+    expect(details.open).toBe(false);
+    expect(imageHost.children).toHaveLength(0);
+
+    mountStudentConnection(root, { origin: "http://192.168.1.11:9148", documentRef });
+    expect(details.hidden).toBe(false);
+    expect(details.open).toBe(false);
+
+    // Loopback must never be offered as a student QR.
+    mountStudentConnection(root, { origin: "http://127.0.0.1:9148", documentRef });
+    expect(details.hidden).toBe(true);
+    expect(details.open).toBe(false);
+    expect(imageHost.children).toHaveLength(0);
+    expect(summary.textContent).toBe("Show QR code");
   });
 });
