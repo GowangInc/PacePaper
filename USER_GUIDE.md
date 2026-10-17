@@ -2,7 +2,7 @@
 
 This step-by-step guide covers the current PacePaper classroom demo. PacePaper runs on one teacher computer. Students use a browser to connect to that computer through the school network. Start with the guide supplied with your app download; an older download may not include features described in a newer guide.
 
-This guide matches PacePaper **0.1.0-demo.19**.
+This guide matches PacePaper **0.1.0-demo.21**.
 
 PacePaper is for **practice and candidate familiarisation only**. It does not deliver an official examination. A fresh installation starts with one preloaded **Sample paper** that has no subject, level, or IB branding, so you can try the whole exam workflow before building your own. An older app download does not update itself; use the guide supplied with your version.
 
@@ -44,15 +44,15 @@ The detailed instructions below follow the same order.
 
 ## Step 1 — Start PacePaper
 
-PacePaper is a portable app, not an installer. Extract the complete download before opening it.
+The Windows and Linux downloads are portable apps, not installers. The Mac download is a source archive, not a native app. Extract the complete download before starting it.
 
 | Computer | Download | Open |
 | --- | --- | --- |
-| Apple-silicon or Intel Mac | Use the source option below | `Start PacePaper.command` |
-| Windows x64 | `windows-x64.zip` | `PacePaper.exe` |
-| Linux x64 | `linux-x64.tar.gz` | `PacePaper` |
+| Apple-silicon or Intel Mac | `PacePaper-0.1.0-demo.21-macos-source.zip` | `Start PacePaper.command` |
+| Windows 10/11 x64 | `PacePaper-0.1.0-demo.21-windows-x64.zip` | `PacePaper.exe` |
+| Linux x64 | `PacePaper-0.1.0-demo.21-linux-x64.tar.gz` | `PacePaper` |
 
-Download the latest release bundle for Windows or Linux from the project's releases page. There is no Mac app bundle; on a Mac, install Bun and follow **Run from a source checkout** below, with IT help for the one-time setup.
+The Mac download is a source archive, not a compiled app. Extract the complete archive and double-click the launcher. If Bun is missing, it offers to install Bun and installs the dependencies; the first launch needs internet. Windows and Linux downloads are self-contained and work offline with bundled content. YouTube and externally hosted HTTPS videos need internet unless hosted on the school network.
 
 1. Open PacePaper once on the teacher computer.
 2. Leave the application running for the whole lesson.
@@ -454,7 +454,7 @@ These independently implemented tools are for practice and are not validated rep
 
 ## Troubleshooting
 
-- **The Mac app says it is damaged:** Do not bypass Gatekeeper. Confirm that the release is notarized. If you are working from a source checkout, use `Start PacePaper.command` from the project folder.
+- **The Mac launcher is blocked:** Right-click `Start PacePaper.command` and choose **Open**, or remove its quarantine attribute once in Terminal as shown in the root README. The Mac download is a source archive, not a notarized app bundle.
 - **The app does not open:** Extract the complete download, use the correct platform file, and close any second copy of PacePaper.
 - **Students cannot connect:** Confirm that classroom sharing is on, use the displayed private-network address, and test it on a real student device. Do not give students `localhost` or `127.0.0.1`.
 - **A student cannot sign in:** Check that the teacher selected the correct class and that the student name is in the active roster.

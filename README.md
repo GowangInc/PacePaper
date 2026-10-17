@@ -8,9 +8,27 @@ PacePaper is a local-network workspace for supervised examination practice and c
 
 PacePaper is an independent school-practice tool. It is not an official examination-delivery system, is not affiliated with or endorsed by the International Baccalaureate, Cambridge University Press & Assessment, Pearson, College Board, ACT, or any other awarding body, and should not be used to deliver live high-stakes examinations.
 
+![WeChat contact QR code for PacePaper](docs/wechat-qr.png)
+
+## Download and run
+
+| Your computer | What to do |
+| --- | --- |
+| **Windows 10/11 (x64)** | Download `PacePaper-0.1.0-demo.21-windows-x64.zip`, extract it, and run `PacePaper.exe`. Nothing to install; works offline. |
+| **Linux (x64)** | Download `PacePaper-0.1.0-demo.21-linux-x64.tar.gz`, extract it, and run `PacePaper`. Nothing to install; works offline. |
+| **macOS (Apple silicon or Intel)** | Download `PacePaper-0.1.0-demo.21-macos-source.zip`, extract it, and double-click `Start PacePaper.command`. The launcher offers to install Bun and installs dependencies; first launch needs internet. |
+
+**These downloads are unsigned, so your computer may warn you the first time.**
+
+- **Windows:** SmartScreen may show “Windows protected your PC”. Choose **More info → Run anyway**.
+- **macOS:** If the launcher cannot be opened, right-click it and choose **Open**, or run once in Terminal:
+  `xattr -d com.apple.quarantine "$HOME/Downloads/PacePaper-0.1.0-demo.21-macos-source/Start PacePaper.command"`
+
+PacePaper needs no account or licence key. The bundled sample and ordinary classroom use work offline apart from local-network sharing; optional YouTube or externally hosted HTTPS video needs internet unless hosted on the school network.
+
 ## Try PacePaper in two minutes
 
-**Download the latest demo** for Windows or Linux from the [releases page](https://github.com/GowangInc/PacePaper/releases). Extract the archive, open `PacePaper.exe` (Windows) or `PacePaper` (Linux), and your browser opens the teacher dashboard automatically. There is nothing to install — no Bun, no server setup, no internet connection required. Mac users can run the current source with `Start PacePaper.command` after installing [Bun](https://bun.sh/).
+Use the **Download and run** table above to choose the Windows, Linux, or macOS download.
 
 On first launch you sign in with the default teacher login **`admin` / `admin`** (change it any time from the **Settings** section), and the Paper library already contains one preloaded **Sample paper** with no subject or IB branding. Open it, start a session, and you can try the whole workflow immediately — classes, timed phases, the candidate view, autosave, focus alerts, and printing — without creating anything first.
 
@@ -142,13 +160,13 @@ The development server listens on `127.0.0.1:9148` by default. `public/index.htm
 
 ## For developers — build the desktop releases
 
-The release builder produces shareable, self-contained macOS, Windows, and Linux bundles. They use the normal browser for the existing teacher dashboard and printing workflow; Bun, Node.js, the source checkout, and `public/` folder are not required on the recipient computer.
+The release builder creates self-contained Windows and Linux bundles plus a macOS source archive. With Apple signing and notarization credentials, it can also create a signed universal macOS application. Packaged applications use the normal browser for the teacher dashboard and printing; the source archive contains the project files needed by its launcher.
 
-The Mac bundle must be signed with a Developer ID Application certificate and notarized by Apple. The release builder deliberately refuses to create an ad-hoc-signed Mac download, because Gatekeeper can report that download as damaged without offering **Open Anyway**.
+The compiled Mac application bundle must be signed with a Developer ID Application certificate and notarized by Apple. The release builder refuses to create an ad-hoc-signed app because Gatekeeper can report it as damaged without offering **Open Anyway**. The source archive does not require Apple signing.
 
-**Version 0.1.0-demo.20 is prepared for Windows x64 and Linux x64.** Student sign-in is intentionally low-friction for a trusted school network: students choose their class and name from the active roster, with no PINs or direct links. Candidate saves use revision checks, and safe exam ending waits for each active candidate's latest save unless the teacher records an override reason. Startup database checks and verified pre-migration snapshots protect existing work. The release retains teacher-only marking controls and is not an official examination-delivery system.
+**Version 0.1.0-demo.21 ships Windows x64 and Linux x64 applications plus a macOS source archive for Apple-silicon and Intel Macs.** Student sign-in is intentionally low-friction for a trusted school network: students choose their class and name from the active roster, with no PINs or direct links. Candidate saves use revision checks, and safe exam ending waits for each active candidate's latest save unless the teacher records an override reason. Startup database checks and verified pre-migration snapshots protect existing work. The release retains teacher-only marking controls and is not an official examination-delivery system.
 
-Once the signing and notarization credentials described below are available, run `bun run release:build`. The generated archives, standalone user guides, and checksums are placed in `release/`. On macOS, use the notarized `macos-universal` archive for both Apple-silicon and Intel Macs; extract the correct platform archive and start its PacePaper app or executable. The macOS bundle and Windows executable carry the PacePaper icon; the Linux archive includes the matching PNG for desktop integration. A packaged release automatically opens the teacher dashboard on the first available local port from `9148` through `9158`, so the address may be different from `9148` when another local instance is running. The initial release is intentionally offline: it makes no licence, activation, telemetry, or other network call. See the illustrated teacher-facing [`USER_GUIDE.html`](USER_GUIDE.html), its editable [`USER_GUIDE.md`](USER_GUIDE.md) source, and [`release/README.md`](release/README.md) for concise install, storage, signing, and classroom-sharing notes.
+Run `bun run release:build` to generate selected archives, standalone user guides, release notes, and checksums in `release/`. Without Apple release credentials, build the unsigned macOS source archive and the Windows/Linux applications with `bun run release:build --platforms=macos-source,windows-x64,linux-x64`; the source ZIP is built from the committed tree. With Developer ID and notarization credentials, the default build also produces a signed universal macOS app. Packaged applications open the teacher dashboard on the first available local port from `9148` through `9158`. See the illustrated [`USER_GUIDE.html`](USER_GUIDE.html), its editable [`USER_GUIDE.md`](USER_GUIDE.md) source, and [`release/README.md`](release/README.md) for install, storage, signing, and classroom-sharing details.
 
 ### macOS release credentials
 
@@ -164,13 +182,13 @@ Set `DIGITALDP_MAC_NOTARY_KEYCHAIN` as well when the notary profile is stored in
 
 The GitHub release workflow performs the same process using these repository secrets: `APPLE_DEVELOPER_ID_P12_BASE64`, `APPLE_DEVELOPER_ID_P12_PASSWORD`, `APPLE_NOTARY_KEY_BASE64`, `APPLE_NOTARY_KEY_ID`, and `APPLE_NOTARY_ISSUER_ID`. Do not put certificate passwords or private keys in this repository.
 
-To build only Windows and Linux without Apple credentials, explicitly select them:
+To build the Windows/Linux applications and macOS source archive without Apple credentials:
 
 ```sh
-bun run release:build --platforms=windows-x64,linux-x64
+bun run release:build --platforms=macos-source,windows-x64,linux-x64
 ```
 
-For the GitHub workflow, set `include_macos` to `false` for that same platform set. The default still includes macOS and requires successful signing and notarization. Keep the release as a draft until the build and native Windows/Linux startup checks pass; publish only the files listed in that build's `SHA256SUMS.txt` plus the checksum file itself.
+The source ZIP is built from the committed Git tree. The GitHub workflow builds this platform set when `include_macos` is `false`; its default also builds the signed and notarized `macos-universal` app. Keep the release as a draft until the build and native Windows/Linux startup checks pass; publish only the files listed in `SHA256SUMS.txt` plus the checksum file itself.
 
 The current release builder keeps data outside the replaceable executable, in the per-user application-data location for the platform. It does not package a live database, teacher paper, student response, or protected reference material. A fresh release seeds one generic **Sample paper** with no subject, level, or IB branding, so new users can try the exam workflow immediately; teacher-created and imported papers remain in the local library. Previously downloaded apps retain the code and examples from their own release; source edits do not update those downloads. The teacher login remains `admin` / `admin` and is reset on every app launch; it is not suitable for real student data.
 
@@ -203,7 +221,7 @@ Open the room clock from the specific session for a projector or second screen. 
 
 Linked clocks follow authoritative timing across windows, independently of decorative titles and names. Timing saves reject stale edits from another window. For a simple paper, reading and writing minutes can be corrected from the clock while the exam is ready or live: a live save moves candidate phase boundaries and deadlines immediately, which is the fastest recovery when a sitting must be extended. Ended exams and fixed timed sections remain read-only. Mounted student views refresh their server timeline without replacing editors. Check the student view before a classroom trial.
 
-Each published build is summarized in its release notes. See the [current release notes](release/RELEASE_NOTES-0.1.0-demo.20.md) for what ships and the verification limits.
+Each published build is summarized in its release notes. See the [current release notes](release/RELEASE_NOTES-0.1.0-demo.21.md) for what ships and the verification limits.
 
 Teacher-facing **Remove** actions archive records instead of permanently deleting them. Removed students cannot sign in, removed classes are unavailable for new sittings, and removed sittings disappear from the active exam list; all remain available under the corresponding **Removed** disclosure for restoration. Existing submissions stay retained and printable. Live sittings cannot be removed, classes with a live sitting must be ended first, and a student with unfinished live work cannot be removed until that response is submitted or the sitting ends.
 
@@ -255,4 +273,4 @@ Before a classroom pilot, also test the complete teacher and student journey on 
 
 ## License and support
 
-PacePaper is open source under the [MIT License](LICENSE). The PacePaper name and icon artwork are not part of the MIT grant (see the notice in the LICENSE file). This is an independent project with no affiliation to any awarding body; it is provided for school practice and familiarisation.
+PacePaper is open source under the [MIT License](LICENSE). The PacePaper name and icon artwork are not part of the MIT grant (see [TRADEMARK.md](TRADEMARK.md)). This is an independent project with no affiliation to any awarding body; it is provided for school practice and familiarisation.
