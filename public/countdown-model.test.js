@@ -156,6 +156,8 @@ describe("second-screen countdown", () => {
     expect(configFromSession(session, 0)).toEqual({
       sessionId: "session-1",
       sessionStatus: "live",
+      pausePhase: null,
+      remainingMs: null,
       endedAt: null,
       title: "Mathematics practice",
       subtitle: "DP2 · Mathematics: analysis and approaches · HL · Paper 1",
@@ -164,6 +166,29 @@ describe("second-screen countdown", () => {
       durationMinutes: 120,
       phases: undefined,
     });
+  });
+
+  test("shows the frozen remaining time while the teacher has paused", () => {
+    const paused = configFromSession({
+      id: "session-paused",
+      status: "live",
+      pausePhase: "paused",
+      remainingMs: 300_000,
+      paperTitle: "Paused practice",
+      className: "DP2",
+      subjectLabel: "Mathematics",
+      level: "HL",
+      paper: "Paper 1",
+      startedAt: 5_000,
+      readingTimeMinutes: 5,
+      durationMinutes: 120,
+      endedAt: null,
+    }, 0);
+    // Long after the wall-clock schedule would have expired, the frozen
+    // remaining time still holds.
+    const phase = countdownPhase(paused, 10_000_000);
+    expect(phase.phase).toBe("paused");
+    expect(phase.remainingMs).toBe(300_000);
   });
 
   test("shows each saved timed section and break on the room clock", () => {

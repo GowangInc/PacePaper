@@ -83,7 +83,11 @@ export function initializeDatabaseSchema(db: Database): DatabaseSchema {
       created_at INTEGER NOT NULL,
       archived_at INTEGER,
       duration_minutes_override REAL,
-      reading_time_minutes_override REAL
+      reading_time_minutes_override REAL,
+      run INTEGER NOT NULL DEFAULT 1,
+      running_ms INTEGER NOT NULL DEFAULT 0,
+      run_started_at INTEGER,
+      pause_phase TEXT CHECK (pause_phase IN ('paused', 'lobby'))
     );
 
     CREATE UNIQUE INDEX IF NOT EXISTS one_live_session_per_class
@@ -100,6 +104,8 @@ export function initializeDatabaseSchema(db: Database): DatabaseSchema {
       notepad TEXT NOT NULL DEFAULT '',
       updated_at INTEGER NOT NULL,
       submitted_at INTEGER,
+      extra_minutes_snapshot REAL,
+      joined_run INTEGER,
       UNIQUE(session_id, student_id)
     );
 
@@ -149,6 +155,30 @@ export function initializeDatabaseSchema(db: Database): DatabaseSchema {
     }
     if (!sessionColumns.includes("reading_time_minutes_override")) {
       db.run("ALTER TABLE exam_sessions ADD COLUMN reading_time_minutes_override REAL");
+    }
+    // Class-wide pause support. status keeps its original CHECK (SQLite cannot
+    // extend one in place); frozen states live in pause_phase while status
+    // stays 'live', so the one-sitting-per-class index keeps holding.
+    if (!sessionColumns.includes("run")) {
+      db.run("ALTER TABLE exam_sessions ADD COLUMN run INTEGER NOT NULL DEFAULT 1");
+    }
+    if (!sessionColumns.includes("running_ms")) {
+      db.run("ALTER TABLE exam_sessions ADD COLUMN running_ms INTEGER NOT NULL DEFAULT 0");
+    }
+    if (!sessionColumns.includes("run_started_at")) {
+      db.run("ALTER TABLE exam_sessions ADD COLUMN run_started_at INTEGER");
+    }
+    if (!sessionColumns.includes("pause_phase")) {
+      db.run("ALTER TABLE exam_sessions ADD COLUMN pause_phase TEXT CHECK (pause_phase IN ('paused', 'lobby'))");
+    }
+    const responseColumns = tableColumns(db, "responses");
+    if (!responseColumns.includes("extra_minutes_snapshot")) {
+      db.run("ALTER TABLE responses ADD COLUMN extra_minutes_snapshot REAL");
+    }
+    // Lobby admission: the run whose Start the candidate joined. Null means the
+    // candidate was seeded into the first run from the waiting room.
+    if (!responseColumns.includes("joined_run")) {
+      db.run("ALTER TABLE responses ADD COLUMN joined_run INTEGER");
     }
 
     const classColumns = tableColumns(db, "classes");

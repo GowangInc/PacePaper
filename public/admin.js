@@ -1056,9 +1056,16 @@ function bindCollectionController() {
       try {
         if (action === "end" && !await confirmEndExam({ trigger: button,
           loadResults: () => api(`/api/admin/sessions/${sessionId}/responses`) })) return;
-        await api(`/api/admin/sessions/${sessionId}/${action}`, { method: "POST" });
+        const session = currentState?.sessions?.find((item) => item.id === sessionId);
+        const body = action === "pause" || action === "resume" || (action === "start" && session?.pausePhase === "lobby")
+          ? { run: session?.run }
+          : undefined;
+        await api(`/api/admin/sessions/${sessionId}/${action}`, { method: "POST", ...(body ? { body } : {}) });
         await refreshState(true);
-        announce(button.dataset.sessionAction === "start" ? "Exam started" : "Exam ended and responses submitted", "success");
+        announce(action === "start" ? "Exam started"
+          : action === "pause" ? "Exam paused · student clocks are frozen"
+          : action === "resume" ? "Resumed to the lobby · students can join"
+          : "Exam ended and responses submitted", "success");
       } catch (error) {
         announce(error instanceof Error ? error.message : "Session action failed", "error");
       } finally {

@@ -11,6 +11,7 @@ const listener: AudioPlaybackIdentity = {
   paperId: "paper-1",
   resourceKey: "recording-1",
   responseId: "response-1",
+  run: 1,
 };
 
 function errorFrom(action: () => unknown): AudioPlaybackError {

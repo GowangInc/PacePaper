@@ -7,6 +7,7 @@ import {
   isPrivateIpv4Address,
   parseLanOrigin,
   studentJoinOrigin,
+  verifiedEnglishLocalOrigin,
 } from "./network.ts";
 
 describe("PacePaper network policy", () => {
@@ -54,14 +55,29 @@ describe("PacePaper network policy", () => {
     }
   });
 
-  test("accepts only loopback authority locally and the configured authority remotely", () => {
+  test("accepts only loopback, configured authority, or the verified alias for that active address", () => {
     const lanOrigin = "http://10.80.20.178:9148";
+    const alias = verifiedEnglishLocalOrigin({
+      lanOrigin,
+      port: 9148,
+      addresses: ["10.80.20.178"],
+      resolvedAddresses: ["::1", "10.80.20.178"],
+    });
+    expect(alias).toBe("http://english.local:9148");
     expect(isExpectedRequestAuthority(new URL("http://localhost:9148/student"), 9148, "127.0.0.1", lanOrigin)).toBeTrue();
     expect(isExpectedRequestAuthority(new URL("http://127.0.0.1:9148/admin"), 9148, "::ffff:127.0.0.1", lanOrigin)).toBeTrue();
     expect(isExpectedRequestAuthority(new URL(`${lanOrigin}/student`), 9148, "10.80.20.81", lanOrigin)).toBeTrue();
-    expect(isExpectedRequestAuthority(new URL("http://localhost:9148/student"), 9148, "10.80.20.81", lanOrigin)).toBeFalse();
-    expect(isExpectedRequestAuthority(new URL("http://10.80.20.179:9148/student"), 9148, "10.80.20.81", lanOrigin)).toBeFalse();
-    expect(isExpectedRequestAuthority(new URL("http://evil.example:9148/student"), 9148, "10.80.20.81", lanOrigin)).toBeFalse();
+    expect(isExpectedRequestAuthority(new URL(`${alias}/student`), 9148, "10.80.20.81", lanOrigin, alias)).toBeTrue();
+    expect(isExpectedRequestAuthority(new URL("http://localhost:9148/student"), 9148, "10.80.20.81", lanOrigin, alias)).toBeFalse();
+    expect(isExpectedRequestAuthority(new URL("http://10.80.20.179:9148/student"), 9148, "10.80.20.81", lanOrigin, alias)).toBeFalse();
+    expect(isExpectedRequestAuthority(new URL("http://evil.example:9148/student"), 9148, "10.80.20.81", lanOrigin, alias)).toBeFalse();
+    expect(isExpectedRequestAuthority(new URL("http://english.local:9148/student"), 9148, "10.80.20.81", lanOrigin)).toBeFalse();
+    expect(verifiedEnglishLocalOrigin({
+      lanOrigin, port: 9148, addresses: ["10.80.20.179"], resolvedAddresses: ["10.80.20.178"],
+    })).toBeNull();
+    expect(verifiedEnglishLocalOrigin({
+      lanOrigin, port: 9148, addresses: ["10.80.20.178"], resolvedAddresses: ["10.80.20.179"],
+    })).toBeNull();
   });
 
   test("recognizes loopback clients without trusting LAN or virtual-adapter addresses", () => {
@@ -77,6 +93,8 @@ describe("PacePaper network policy", () => {
     expect(isLanStudentApiRequest("/api/bootstrap", "GET")).toBeTrue();
     expect(isLanStudentApiRequest("/api/student/roster", "POST")).toBeFalse();
     expect(isLanStudentApiRequest("/api/login/student", "POST")).toBeTrue();
+    expect(isLanStudentApiRequest("/api/login/directory", "GET")).toBeTrue();
+    expect(isLanStudentApiRequest("/api/login/directory", "POST")).toBeFalse();
     expect(isLanStudentApiRequest("/api/student/response", "PUT")).toBeTrue();
     expect(isLanStudentApiRequest("/api/login/admin", "POST")).toBeFalse();
     expect(isLanStudentApiRequest("/api/admin/state", "GET")).toBeFalse();
@@ -84,9 +102,25 @@ describe("PacePaper network policy", () => {
     expect(isLanStudentApiRequest("/api/assets/abc-123/audio_1", "POST")).toBeFalse();
   });
 
-  test("always advertises an origin student devices can reach", () => {
-    expect(studentJoinOrigin({ lanOrigin: "http://10.80.20.178:9148", port: 9148, addresses: [] }))
-      .toBe("http://10.80.20.178:9148");
+  test("prefers verified english.local while preserving active and fallback addresses", () => {
+    const preferredOrigin = verifiedEnglishLocalOrigin({
+      lanOrigin: "http://10.80.20.178:9148",
+      port: 9148,
+      addresses: ["10.80.20.178", "192.168.1.20"],
+      resolvedAddresses: ["::1", "10.80.20.178"],
+    });
+    expect(studentJoinOrigin({
+      lanOrigin: "http://10.80.20.178:9148",
+      port: 9148,
+      addresses: [],
+      preferredOrigin,
+    })).toBe("http://english.local:9148");
+    expect(studentJoinOrigin({
+      lanOrigin: "http://10.80.20.178:9148",
+      port: 9148,
+      addresses: [],
+      preferredOrigin: null,
+    })).toBe("http://10.80.20.178:9148");
     expect(studentJoinOrigin({ lanOrigin: null, port: 9148, addresses: ["192.168.1.20", "10.0.0.5"] }))
       .toBe("http://192.168.1.20:9148");
     expect(studentJoinOrigin({ lanOrigin: null, port: 9149, addresses: [] }))

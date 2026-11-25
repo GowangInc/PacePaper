@@ -32,6 +32,7 @@ const phaseDescriptions = {
   writing: "Writing time is in progress.",
   break: "The monitored break is in progress. Examination content and student entry are locked.",
   "standard-ended": "Standard writing time has ended. Candidate-specific extra time may still be in progress.",
+  paused: "The examination is paused by the teacher. The remaining time is frozen.",
   ended: "The examination time has ended.",
 };
 
@@ -58,6 +59,12 @@ function wallTime(timestamp) {
 
 function statusLabel(status) {
   return status === "live" ? "Live" : status === "draft" ? "Ready" : "Ended";
+}
+
+function sessionClockLabel(session) {
+  if (session.pausePhase === "paused") return "Paused";
+  if (session.pausePhase === "lobby") return "In lobby";
+  return statusLabel(session.status);
 }
 
 function setStatus(message, tone = "info") {
@@ -88,7 +95,7 @@ function renderUnavailable(title, message, actionLabel = "Return to teacher dash
 
 function populateSessionOptions(selectedId) {
   const select = document.querySelector("#clock-session");
-  const signature = JSON.stringify(adminState.sessions.map(({ id, status, paperTitle, className }) => [id, status, paperTitle, className]));
+  const signature = JSON.stringify(adminState.sessions.map(({ id, status, pausePhase, paperTitle, className }) => [id, status, pausePhase ?? "", paperTitle, className]));
   if (select.dataset.signature === signature) {
     if (select.value !== selectedId) select.value = selectedId;
     return;
@@ -108,7 +115,7 @@ function populateSessionOptions(selectedId) {
     for (const session of sessions) {
       const option = document.createElement("option");
       option.value = session.id;
-      option.textContent = `${statusLabel(session.status)} · ${session.paperTitle} · ${session.className}`;
+      option.textContent = `${sessionClockLabel(session)} · ${session.paperTitle} · ${session.className}`;
       group.append(option);
     }
     select.append(group);

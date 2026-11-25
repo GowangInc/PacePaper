@@ -49,6 +49,7 @@ export function parseStudentSessionList(result) {
     && typeof session?.durationMinutes === "number"
     && statuses.has(session?.status)
     && (session?.submittedAt === null || typeof session?.submittedAt === "number")
+    && (session?.pausePhase === null || session?.pausePhase === undefined || session?.pausePhase === "paused" || session?.pausePhase === "lobby")
   ))) {
     throw new TypeError("The examination list was not in the expected format");
   }
@@ -58,6 +59,8 @@ export function parseStudentSessionList(result) {
 export function studentSessionState(session) {
   if (session.status === "ended") return session.submittedAt === null ? "Ended" : "Completed";
   if (session.submittedAt !== null) return "Submitted";
+  if (session.status === "live" && session.pausePhase === "paused") return "Paused by the teacher";
+  if (session.status === "live" && session.pausePhase === "lobby") return "In the lobby";
   return session.status === "live" ? "In progress" : "Waiting for teacher";
 }
 
@@ -77,13 +80,17 @@ function authFrame() {
         <img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192">
         <p class="eyebrow">Student sign in</p>
         <h1>Find your examination</h1>
-        <p>Enter your class name and your own name.</p>
+        <p>Choose your class and your own name from the lists.</p>
         <p class="supervision-notice">Your teacher can see your work during a sitting: your answers, drawings, notes, and flagged questions. This covers only PacePaper — nothing else on your computer.</p>
         <form id="student-login" method="post">
-          <label for="class-name">Class name</label>
-          <input id="class-name" name="className" autocomplete="organization" maxlength="100" required>
+          <label for="class-name">Class</label>
+          <select id="class-name" name="className" required disabled>
+            <option value="" selected>Loading the class list…</option>
+          </select>
           <label for="student-name-input">Your name</label>
-          <input id="student-name-input" name="studentName" autocomplete="name" maxlength="100" required>
+          <select id="student-name-input" name="studentName" required disabled>
+            <option value="" selected>Choose your class first</option>
+          </select>
           <button class="primary-action" type="submit">Continue</button>
         </form>
         <p id="global-status" class="status-message" role="status" aria-live="polite" hidden></p>
@@ -92,6 +99,63 @@ function authFrame() {
   `);
 
   const form = document.querySelector("#student-login");
+  const classSelect = form.querySelector("#class-name");
+  const studentSelect = form.querySelector("#student-name-input");
+  let directory = [];
+  let directoryFailures = 0;
+
+  async function loadDirectory() {
+    try {
+      const data = await api("/api/login/directory");
+      directory = Array.isArray(data?.classes) ? data.classes : [];
+      directoryFailures = 0;
+      if (directory.length === 0) {
+        classSelect.innerHTML = '<option value="" selected>No classes yet</option>';
+        announce("No classes are set up yet. Ask your teacher to create one.", "error");
+        return;
+      }
+      classSelect.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Choose your class";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      classSelect.append(placeholder);
+      for (const cls of directory) {
+        const option = document.createElement("option");
+        option.value = cls.name;
+        option.textContent = cls.name;
+        classSelect.append(option);
+      }
+      classSelect.disabled = false;
+    } catch {
+      directoryFailures += 1;
+      if (directoryFailures === 3) {
+        announce("Could not load the class list. Retrying until it appears…", "error");
+      }
+      setTimeout(loadDirectory, 2000);
+    }
+  }
+  loadDirectory();
+
+  classSelect.addEventListener("change", () => {
+    const cls = directory.find((candidate) => candidate.name === classSelect.value);
+    studentSelect.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.textContent = cls?.students.length ? "Choose your name" : "No students in this class";
+    studentSelect.append(placeholder);
+    for (const student of cls?.students ?? []) {
+      const option = document.createElement("option");
+      option.value = student.name;
+      option.textContent = student.name;
+      studentSelect.append(option);
+    }
+    studentSelect.disabled = !cls?.students.length;
+  });
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submit = form.querySelector("button[type=submit]");
@@ -248,6 +312,77 @@ function renderWaiting(state) {
   clearInterval(pollTimer);
   pollTimer = setInterval(loadState, 5_000);
 }
+function renderPaused(state) {
+  const recovery = stopExam();
+  const lobby = state.status === "lobby";
+  const awaiting = state.status === "awaiting-join";
+  const joined = state.session.joined === true;
+  const heading = lobby ? "Waiting to rejoin" : awaiting ? "Your teacher has started the exam again" : "The test is paused";
+  setView(`
+    <section class="waiting-shell pause-shell" data-session-id="${state.session.id}" data-state-key="${state.status}:${state.session.run}:${joined ? 1 : 0}">
+      <header class="waiting-header"><img class="product-mark" src="/app-icon-192.png" alt="" width="192" height="192"><span>PacePaper</span><span class="waiting-actions">${themeToggleMarkup()}</span></header>
+      <div class="waiting-content">
+        <svg class="pause-hand" viewBox="0 0 220 200" role="img" aria-label="A hand holding a sign that says the test is paused">
+          <g>
+            <rect x="20" y="14" width="180" height="86" rx="10" fill="var(--color-surface, #fffdf7)" stroke="currentColor" stroke-width="4"/>
+            <text x="110" y="52" text-anchor="middle" font-size="21" font-weight="700" letter-spacing="1" fill="currentColor">TEST IS</text>
+            <text x="110" y="82" text-anchor="middle" font-size="21" font-weight="700" letter-spacing="1" fill="currentColor">PAUSED</text>
+            <path d="M118 100v46" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+            <path d="M104 146c0-16 6-30 14-30s14 14 14 30-6 22-14 22-14-6-14-22Z" fill="var(--color-surface, #fffdf7)" stroke="currentColor" stroke-width="4"/>
+            <path d="M132 168c10 4 16 12 16 22h-44" fill="var(--color-surface, #fffdf7)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+          </g>
+        </svg>
+        <h1 id="student-name"></h1>
+        <h2>${heading}</h2>
+        <p id="paused-paper"></p>
+        <p>${awaiting
+          ? "Press Join to re-enter your paper. Your saved work and remaining time are kept."
+          : lobby
+            ? "Your teacher has opened the lobby. Press Join below, then wait — the exam restarts when your teacher begins it again, and your saved work and remaining time are kept."
+            : "Your teacher has paused the examination. Your saved answers are kept and the clock is stopped. The exam continues when your teacher resumes it."}</p>
+        <p id="paused-remaining" hidden></p>
+        <p class="supervision-notice">Your teacher can see your work during a sitting: your answers, drawings, notes, and flagged questions. This covers only PacePaper — nothing else on your computer.</p>
+        <p class="connection-state" id="connection-state">Connecting</p>
+        ${lobby || awaiting ? '<button id="join-lobby" class="primary-action" type="button">Join</button>' : ""}
+        <button id="logout" class="quiet-action" type="button">Sign out</button>
+      </div>
+      <p id="global-status" class="status-message" role="status" aria-live="polite" hidden></p>
+    </section>
+  `);
+  renderConnectionState();
+  document.querySelector("#student-name").textContent = state.student.name;
+  document.querySelector("#paused-paper").textContent = state.session.paperTitle;
+  const remaining = Number(state.session.remainingMs);
+  if (Number.isFinite(remaining) && remaining >= 0) {
+    const element = document.querySelector("#paused-remaining");
+    element.hidden = false;
+    element.textContent = lobby || awaiting
+      ? `${Math.ceil(remaining / 60_000)} minute${Math.ceil(remaining / 60_000) === 1 ? "" : "s"} will remain when you re-enter.`
+      : `Time remaining when the exam resumes: ${Math.ceil(remaining / 60_000)} minute${Math.ceil(remaining / 60_000) === 1 ? "" : "s"}.`;
+  }
+  document.querySelector("#logout").addEventListener("click", () => logout());
+  const join = document.querySelector("#join-lobby");
+  if (joined && join) {
+    join.disabled = true;
+    join.textContent = "Joined · waiting for your teacher";
+  } else if (join) {
+    join.addEventListener("click", async () => {
+      join.disabled = true;
+      try {
+        await api("/api/student/join", { method: "POST", body: { sessionId: state.session.id } });
+        join.textContent = "Joined · waiting for your teacher";
+        announce("You are in the lobby. Your teacher will start the exam.", "info");
+        loadState();
+      } catch (error) {
+        join.disabled = false;
+        announce(error instanceof Error ? error.message : "Join failed", "error");
+      }
+    });
+  }
+  clearInterval(pollTimer);
+  pollTimer = setInterval(loadState, 5_000);
+}
+
 function attachRecoveryWarning(recovery, anchor) {
   if (!recovery) return () => true;
   let downloaded = false;
@@ -502,8 +637,15 @@ async function renderExam(state) {
   pollTimer = setInterval(loadState, 30_000);
 }
 
+let refreshQueued = false;
+
 async function loadState() {
-  if (loading) return;
+  if (loading) {
+    // A lifecycle event arrived during a fetch: run one trailing refresh so the
+    // screen cannot stay on a stale state until the next poll.
+    refreshQueued = true;
+    return;
+  }
   loading = true;
   try {
     const endpoint = selectedSessionId
@@ -518,6 +660,12 @@ async function loadState() {
       if (selectionReset || !current || current.dataset.sessionSignature !== sessionListSignature(sessions)) renderExamSelection(state);
     } else if (state.status === "waiting") {
       if (!document.querySelector(`.waiting-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) renderWaiting(state);
+    } else if (state.status === "paused" || state.status === "lobby" || state.status === "awaiting-join") {
+      // Pause, lobby and admission transitions must re-render this shell even
+      // though the session id is unchanged.
+      const key = `${state.status}:${state.session.run}:${state.session.joined ? 1 : 0}`;
+      const shell = document.querySelector(`.pause-shell[data-session-id="${CSS.escape(state.session.id)}"]`);
+      if (!shell || shell.dataset.stateKey !== key) renderPaused(state);
     } else if (state.status === "history") {
       if (!document.querySelector(`.history-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) renderHistory(state);
     } else if (state.status === "submitted") {
@@ -525,7 +673,14 @@ async function loadState() {
     } else if (!document.querySelector(`.exam-shell[data-session-id="${CSS.escape(state.session.id)}"]`)) {
       await renderExam(state);
     } else {
-      cleanupExam?.updateState?.(state);
+      // A run change (pause and Start again) means the mounted editor is stale:
+      // remount so admission, phase and audio tickets match the current run.
+      const shell = document.querySelector(`.exam-shell[data-session-id="${CSS.escape(state.session.id)}"]`);
+      if (Number(shell.dataset.run) !== Number(state.session.run)) {
+        await renderExam(state);
+      } else {
+        cleanupExam?.updateState?.(state);
+      }
     }
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
@@ -538,6 +693,10 @@ async function loadState() {
     }
   } finally {
     loading = false;
+    if (refreshQueued) {
+      refreshQueued = false;
+      void loadState();
+    }
   }
 }
 
@@ -550,10 +709,13 @@ function beginLiveConnection() {
     if (event.type === "socket-open" || event.type === "connected") {
       connectionState = "connected";
       renderConnectionState();
+      // A device that missed a pause, lobby or start event while disconnected
+      // learns the current state here instead of waiting for the next poll.
+      loadState();
     } else if (event.type === "socket-closed") {
       connectionState = "reconnecting";
       renderConnectionState();
-    } else if (["exam-started", "exam-ended", "exam-list-changed"].includes(event.type)) {
+    } else if (["exam-started", "exam-ended", "exam-paused", "exam-lobby", "exam-list-changed"].includes(event.type)) {
       loadState();
     }
   });

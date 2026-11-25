@@ -30,6 +30,7 @@ Follow this order for a complete practice exam:
 1. Start PacePaper and sign in as the teacher.
 2. Check the **Student sign-in** address shown under **Classroom sharing** in **Overview** (PacePaper shares the classroom network by default; choose a different address there if the network changed).
 3. Copy the **Student sign-in** address and test it on one student device. The bare address is enough: opening it goes straight to candidate sign-in.
+Give students the IPv4 address shown under **Classroom sharing**, for example `http://<selected IPv4>:9148/student`. The port may be different if it has been changed. Students must not use `localhost` or `127.0.0.1`.
 4. In **Classes**, create or import the class and check every student's details.
 5. In **Paper library**, choose an included example or create/import a paper. Use **Preview as student** to see exactly what candidates will see before the lesson.
 6. In **Sessions**, choose the class, exam system, and paper, then select **Set up exam**.
@@ -99,6 +100,7 @@ PacePaper shares the classroom network from launch, using the address it saved l
 Do this test before students begin. `localhost` and `127.0.0.1` work only on the teacher computer.
 
 The **Student sign-in** address on the dashboard and on the examination clock is always the private-network address that student devices open — it never shows `127.0.0.1` or `localhost`, and students can type it without adding `/student` because the bare address opens candidate sign-in. If classroom sharing is off, the examination clock still shows the network address but warns that students cannot connect until sharing is applied.
+Use the IPv4 address shown under **Classroom sharing**, for example `http://<selected IPv4>:9148/student`. Replace the placeholder with the displayed IPv4 address. The port may differ if changed.
 
 The teacher and students must be on a network that allows their devices to communicate. Guest Wi-Fi, different school networks, or network isolation may block access.
 
@@ -303,6 +305,21 @@ Ask students to confirm that the correct paper title appears in their waiting ro
 8. At a section boundary, confirm that the previous section disappears and the next section's questions and tool rule appear.
 9. During working time, monitor the **online** and **submitted** counts.
 
+### Pause the exam for the whole class
+
+If the room is interrupted — an assembly call, a drill, a network change — you can stop the exam for everyone and continue it later without losing any work or time.
+
+1. Select **Pause exam** on the running session. Every student's countdown freezes at the same remaining time.
+2. Each student's screen changes to a page showing a hand holding a sign that says **TEST IS PAUSED**. They cannot type, answer questions, or submit, and their saved answers stay in place.
+3. Select **Resume to lobby** when the room is ready. Students return to a lobby page, and each one selects **Join** — PacePaper records who has joined, and the session row shows how many have. The clock stays stopped.
+4. Select **Start exam** again (the button reads **Start exam** on the lobby row). The countdown continues from exactly the time that was left. Only candidates who pressed **Join** re-enter their papers; a student who missed the lobby can still select **Join** after the restart, so no one is locked out by a dropped connection.
+
+A pause is server-ordered: answers and submissions that were already on their way when you paused either complete safely or are rejected, and nothing from before the pause can change the exam after it restarts. An interrupted audio listen is refunded, so the student keeps that listen for the resumed sitting.
+
+Select **End exam** while the exam is paused or in the lobby only when the sitting must finish for good. Ending submits the last saved responses immediately. The countdown does not restart, and the sitting is reviewed like any other ended exam.
+
+The classroom clock shows **Test is paused** and the frozen remaining time while the exam is stopped.
+
 ### Watch candidate work as it is written
 
 While a sitting is live, each session row offers **Watch work**:
@@ -416,8 +433,8 @@ Restoring a backup returns the installation to the date of that backup. Later wo
 Teachers may give this section directly to students.
 
 1. Open the address supplied by your teacher.
-2. Enter the class name.
-3. Enter your own name.
+2. Choose your class from the list.
+3. Choose your own name from the list.
 4. Select **Continue**.
 5. Choose the correct examination and select **Join waiting room**.
 6. Wait for the teacher to start it.

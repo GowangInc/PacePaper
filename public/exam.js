@@ -356,6 +356,10 @@ export function mountExam(state, { onSubmitted, preview = false }) {
   const shell = document.querySelector(".exam-shell");
   if (previewMode) shell.dataset.preview = "true";
   shell.dataset.sessionId = sessionId;
+  // The run this editor was mounted for: writes carry it and the server
+  // rejects an editor whose sitting was paused or restarted underneath it.
+  const mountedRun = Number(state.session.run);
+  shell.dataset.run = String(mountedRun);
   shell.dataset.mode = paper.mode;
   shell.dataset.split = "50";
   shell.dataset.resourceZoom = "1";
@@ -417,6 +421,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
     for (const [id, value] of Object.entries(draft.answers)) if (questionIds.has(id)) answers[id] = value;
     return {
       sessionId,
+      run: mountedRun,
       selectedQuestionId: draft.selectedQuestionId,
       answers,
       flags: [...draft.flags],
@@ -485,6 +490,9 @@ export function mountExam(state, { onSubmitted, preview = false }) {
     showSaveState();
     saving = api("/api/student/response", { method: "PUT", body: payload() })
       .then(({ savedAt, expired }) => {
+        // The view may have been replaced (pause, resubmit flow) while this save
+        // was in flight; a late acknowledgement must not clear the new mount's draft.
+        if (!shell.isConnected) return;
         saveState.acknowledge(sentRevision);
         if (!saveState.pending) {
           draft.updatedAt = savedAt;
@@ -498,6 +506,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
         if (expired) onSubmitted();
       })
       .catch((error) => {
+        if (!shell.isConnected) return;
         if (error instanceof ApiError && error.status === 409) {
           persistLocal();
           saveState.fail(error.message);
@@ -519,6 +528,7 @@ export function mountExam(state, { onSubmitted, preview = false }) {
       })
       .finally(() => {
         saving = null;
+        if (!shell.isConnected) return;
         if (dirty && !submitting) {
           clearTimeout(saveTimer);
           saveTimer = setTimeout(saveNow, 3_000);

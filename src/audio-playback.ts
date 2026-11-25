@@ -12,6 +12,8 @@ export interface AudioPlaybackIdentity {
   paperId: string;
   resourceKey: string;
   responseId: string;
+  /** Sitting run the ticket belongs to; pause and start-again invalidate old tickets. */
+  run: number;
 }
 
 export interface AudioPlaybackIssue {
@@ -61,6 +63,7 @@ function identityKey(identity: AudioPlaybackIdentity): string {
     identity.paperId,
     identity.resourceKey,
     identity.responseId,
+    identity.run,
   ]);
 }
 
@@ -69,7 +72,8 @@ function sameIdentity(ticket: AudioPlaybackTicket, expected: AudioPlaybackIdenti
     && ticket.sessionId === expected.sessionId
     && ticket.paperId === expected.paperId
     && ticket.resourceKey === expected.resourceKey
-    && ticket.responseId === expected.responseId;
+    && ticket.responseId === expected.responseId
+    && ticket.run === expected.run;
 }
 
 /**
@@ -211,5 +215,15 @@ export class AudioPlaybackTickets {
     this.#byToken.delete(ticket.token);
     const key = identityKey(ticket);
     if (this.#tokenByIdentity.get(key) === ticket.token) this.#tokenByIdentity.delete(key);
+  }
+
+  /** Active (started but not completed) listens for a session, for pausing refunds. */
+  activeRefundsForSession(sessionId: string): { responseId: string; resourceKey: string }[] {
+    const refunds = new Map<string, { responseId: string; resourceKey: string }>();
+    for (const ticket of this.#byToken.values()) {
+      if (ticket.sessionId !== sessionId || ticket.state !== "active" || ticket.plays === null) continue;
+      refunds.set(`${ticket.responseId}:${ticket.resourceKey}`, { responseId: ticket.responseId, resourceKey: ticket.resourceKey });
+    }
+    return [...refunds.values()];
   }
 }

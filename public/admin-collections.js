@@ -358,7 +358,14 @@ export function sessionActionModel(session, archived = false) {
     return actions;
   }
   if (session.status === "live") actions.push("watch");
-  if (session.status !== "ended") actions.push("clock", session.status === "draft" ? "start" : "end");
+  if (session.status !== "ended") {
+    actions.push("clock");
+    if (session.status === "draft") actions.push("start");
+    else if (session.pausePhase === "paused") actions.push("resume");
+    else if (session.pausePhase === "lobby") actions.push("start");
+    else if (!session.pausePhase) actions.push("pause");
+    actions.push("end");
+  }
   if (session.status !== "draft") actions.push("responses");
   if (session.status !== "live") actions.push("archive");
   return actions;
@@ -369,9 +376,12 @@ function sessionDetail(documentRoot, session) {
   const title = documentRoot.createElement("strong");
   title.textContent = session.paperTitle;
   const metadata = documentRoot.createElement("span");
-  const status = session.status === "draft" ? "ready" : session.status;
+  const status = session.status === "draft" ? "ready"
+    : session.pausePhase === "paused" ? "paused"
+    : session.pausePhase === "lobby" ? "in the lobby"
+    : session.status;
   const phase = currentSessionPhase(session);
-  metadata.textContent = `${session.className} · ${status}${phase ? ` · ${phase.label}` : ""} · ${formatPaperTime(session)}`;
+  metadata.textContent = `${session.className} · ${status}${phase && !session.pausePhase ? ` · ${phase.label}` : ""} · ${formatPaperTime(session)}`;
   detail.append(title, metadata);
   return detail;
 }
@@ -390,13 +400,18 @@ function renderSessionActions(documentRoot, session, actions, archived) {
       countdown.textContent = "Open clock ↗";
       countdown.setAttribute("aria-label", `Open countdown for ${session.paperTitle} in a new tab`);
       container.append(countdown);
-    } else if (action === "start" || action === "end") {
+    } else if (action === "start" || action === "end" || action === "pause" || action === "resume") {
       const lifecycle = documentRoot.createElement("button");
       lifecycle.type = "button";
       lifecycle.dataset.sessionId = session.id;
       lifecycle.dataset.sessionAction = action;
-      lifecycle.className = action === "start" ? "primary-action compact" : "danger-action compact";
-      lifecycle.textContent = action === "start" ? "Start exam" : "End exam";
+      lifecycle.className = action === "start" ? "primary-action compact"
+        : action === "pause" || action === "resume" ? "compact"
+        : "danger-action compact";
+      lifecycle.textContent = action === "start" ? "Start exam"
+        : action === "pause" ? "Pause exam"
+        : action === "resume" ? "Resume to lobby"
+        : "End exam";
       container.append(lifecycle);
     } else if (action === "watch") {
       const watch = documentRoot.createElement("button");
@@ -436,7 +451,9 @@ function renderSessionList(sessions, container, archived) {
     counts.className = "session-counts";
     counts.textContent = session.status === "draft"
       ? "Ready to start"
-      : `${session.submittedCount}/${session.candidateCount} submitted · ${session.activeCount} online`;
+      : session.pausePhase
+        ? `${session.joinedCount ?? 0}/${session.candidateCount} joined · ${session.submittedCount}/${session.candidateCount} submitted`
+        : `${session.submittedCount}/${session.candidateCount} submitted · ${session.activeCount} online`;
     row.append(
       sessionDetail(documentRoot, session),
       counts,

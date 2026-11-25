@@ -81,7 +81,7 @@ export function revokeSession(request: Request, secure: boolean): string {
   return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secureAttribute}`;
 }
 
-export function allowLoginAttempt(key: string): boolean {
+export function allowLoginAttempt(key: string, limit: number = LOGIN_ATTEMPT_LIMIT): boolean {
   const now = Date.now();
   const current = attempts.get(key);
   if (!current || current.resetAt <= now) {
@@ -89,7 +89,7 @@ export function allowLoginAttempt(key: string): boolean {
     return true;
   }
   current.count += 1;
-  return current.count <= LOGIN_ATTEMPT_LIMIT;
+  return current.count <= limit;
 }
 
 export function clearLoginAttempts(key: string): void {

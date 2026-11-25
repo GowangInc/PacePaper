@@ -1,5 +1,7 @@
+import { lookup } from "node:dns/promises";
 import type { Server } from "bun";
 import {
+  activeSessionClassIds,
   archiveClass,
   archiveExamSession,
   archiveStudent,
@@ -25,6 +27,7 @@ import {
   getStudentExam,
   incrementAudioPlay,
   importClassRosters,
+  joinCurrentRun,
   listClasses,
   listStudentFocusEvents,
   listExamSessions,
@@ -32,20 +35,25 @@ import {
   listPapers,
   listStudentExamSessions,
   listStudents,
+  pauseExamSession,
+  refundAudioPlay,
   restoreClass,
   restoreExamSession,
   restoreStudent,
+  resumeExamSessionToLobby,
   saveAndSubmitResponse,
   recordStudentFocusEvent,
   saveResponse,
   setupRequired,
   startExamSession,
+  startExamSessionAgain,
   submitResponse,
   touchStudent,
   updateExamSessionTiming,
   updateStudent,
   type ResponsePayload,
   type Role,
+  type PaperRow,
   type StudentExamRow,
 } from "./src/db.ts";
 import { blankClassRosterCsv, encodeClassRosterCsv, identityKey, parseClassRosterCsv } from "./src/class-rosters.ts";
@@ -73,6 +81,7 @@ import {
   isLanStudentApiRequest,
   isLoopbackAddress,
   studentJoinOrigin,
+  verifiedEnglishLocalOrigin,
 } from "./src/network.ts";
 import {
   ClassroomNetworkState,
@@ -83,7 +92,7 @@ import {
 } from "./src/classroom-network.ts";
 import { guideStylesheetSource, isStudentStaticPath, staticFilePath } from "./src/static-files.ts";
 import { staticAssetPath } from "./src/static-assets.ts";
-import { examPhaseAt, examTimeline, examTiming, type ScheduledExamPhase } from "./src/timing.ts";
+import { effectiveExamMs, examPhaseAt, examTimeline, examTiming, wallExamTime, type ExamClock, type ScheduledExamPhase } from "./src/timing.ts";
 import { responseFitsPhase, type CandidateResponseSnapshot } from "./src/exam-phase-access.ts";
 import {
   AudioPlaybackError,
@@ -115,6 +124,32 @@ class HttpError extends Error {
 }
 
 const port = Number(process.env.PORT ?? 9148);
+// english.local resolves over mDNS, which can miss a lookup: refresh the
+// address cache on a timer so the verified alias survives network changes
+// instead of being fixed to whatever DNS returned at startup.
+const ENGLISH_LOCAL_TTL_MS = 60_000;
+const englishLocalCache: { addresses: string[]; resolvedAt: number; pending: Promise<void> | null } = {
+  addresses: [],
+  resolvedAt: 0,
+  pending: null,
+};
+async function refreshEnglishLocalAddresses(): Promise<void> {
+  englishLocalCache.pending = null;
+  try {
+    const records = await lookup("english.local", { all: true, verbatim: true });
+    englishLocalCache.addresses = records.filter((record) => record.family === 4).map((record) => record.address);
+  } catch {
+    englishLocalCache.addresses = [];
+  }
+  englishLocalCache.resolvedAt = Date.now();
+}
+function englishLocalAddresses(): string[] {
+  if (Date.now() - englishLocalCache.resolvedAt > ENGLISH_LOCAL_TTL_MS && !englishLocalCache.pending) {
+    englishLocalCache.pending = refreshEnglishLocalAddresses();
+  }
+  return englishLocalCache.addresses;
+}
+await refreshEnglishLocalAddresses();
 if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error("PORT must be a valid TCP port");
 const managedClassroomNetwork = process.env.DIGITALDP_MANAGED_NETWORK === "1";
 const managedDatabasePath = managedClassroomNetwork ? process.env.DIGITALDP_DB : undefined;
@@ -139,6 +174,11 @@ let network = demoNetworkConfig({
 });
 const hostname = network.bindHostname;
 const RESPONSE_BODY_BYTES = 12_000_000;
+// Classroom Wi-Fi often NATs several students behind one address: keep the
+// per-address cap high enough that a whole class can sign in together.
+const LOGIN_ADDRESS_ATTEMPT_LIMIT = 40;
+const LOGIN_CLASS_ATTEMPT_LIMIT = 20;
+const DIRECTORY_ATTEMPT_LIMIT = 120;
 const DEADLINE_GRACE_MS = 5_000;
 const PHASE_BOUNDARY_GRACE_MS = 5_000;
 const CLASS_ROSTER_BYTES = 1_000_000;
@@ -310,25 +350,49 @@ function clientAddress(request: Request, server: Server<SocketData>): string {
   return server.requestIP(request)?.address ?? "unknown";
 }
 
-function timingFor(exam: { startedAt: number; durationMinutes: number; readingTimeMinutes: number; extraMinutes: number; manifestJson: string }) {
+interface ExamTimeContext {
+  clock: ExamClock;
+  frozen: boolean;
+  /** Examination time now: frozen while paused or waiting in the lobby. */
+  examNow: number;
+  readingEndsAt: number;
+  deadline: number;
+  timeline: ScheduledExamPhase[];
+  wall(examMs: number): number | null;
+}
+
+function timingFor(exam: StudentExamRow): ExamTimeContext {
   const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
   const input = {
-    startedAt: exam.startedAt,
     readingTimeMinutes: effectiveReadingTimeMinutes(exam.readingTimeMinutes),
     durationMinutes: exam.durationMinutes,
     extraMinutes: exam.extraMinutes,
     phases: manifest.phases,
   };
-  return { ...examTiming(input), timeline: examTimeline(input) };
+  const frozen = exam.pausePhase !== null;
+  const clock: ExamClock = {
+    runningMs: exam.runningMs,
+    runStartedAt: exam.runStartedAt,
+    startedAt: exam.startedAt,
+    frozen,
+  };
+  return {
+    clock,
+    frozen,
+    examNow: effectiveExamMs(clock, Date.now()),
+    ...examTiming(input),
+    timeline: examTimeline(input),
+    wall: (examMs: number) => wallExamTime(clock, examMs),
+  };
 }
 
-function phaseForResponse(timing: ReturnType<typeof timingFor>, now: number): ScheduledExamPhase | null {
-  if (now < timing.deadline) return examPhaseAt(timing.timeline, now);
-  if (now <= timing.deadline + DEADLINE_GRACE_MS) return examPhaseAt(timing.timeline, timing.deadline - 1);
+function phaseForResponse(timing: ExamTimeContext): ScheduledExamPhase | null {
+  if (timing.examNow < timing.deadline) return examPhaseAt(timing.timeline, timing.examNow);
+  if (timing.examNow <= timing.deadline + DEADLINE_GRACE_MS) return examPhaseAt(timing.timeline, timing.deadline - 1);
   return null;
 }
 
-function publicPhase(phase: ScheduledExamPhase | null) {
+function wallPublicPhase(phase: ScheduledExamPhase | null, timing: ExamTimeContext) {
   if (!phase) return null;
   return {
     id: phase.id,
@@ -337,9 +401,9 @@ function publicPhase(phase: ScheduledExamPhase | null) {
     sectionId: phase.sectionId,
     tools: phase.tools,
     instructions: phase.instructions,
-    startsAt: phase.startsAt,
-    standardEndsAt: phase.standardEndsAt,
-    endsAt: phase.endsAt,
+    startsAt: timing.wall(phase.startsAt),
+    standardEndsAt: timing.wall(phase.standardEndsAt),
+    endsAt: timing.wall(phase.endsAt),
     responseAllowed: phase.responseAllowed,
     canSubmit: phase.canSubmit,
   };
@@ -353,13 +417,13 @@ function responseSnapshot(exam: StudentExamRow): CandidateResponseSnapshot {
   };
 }
 
-function eligibleResponsePhases(timing: ReturnType<typeof timingFor>, now: number): ScheduledExamPhase[] {
-  const current = phaseForResponse(timing, now);
+function eligibleResponsePhases(timing: ExamTimeContext): ScheduledExamPhase[] {
+  const current = phaseForResponse(timing);
   if (!current) return [];
   const eligible = current.responseAllowed ? [current] : [];
   const index = timing.timeline.findIndex(({ id }) => id === current.id);
   const previous = timing.timeline[index - 1];
-  if (previous?.responseAllowed && now - current.startsAt <= PHASE_BOUNDARY_GRACE_MS) eligible.push(previous);
+  if (previous?.responseAllowed && timing.examNow - current.startsAt <= PHASE_BOUNDARY_GRACE_MS) eligible.push(previous);
   return eligible;
 }
 
@@ -386,6 +450,7 @@ function studentAudioContext(studentId: string, sessionId: string, resourceKey: 
 } {
   const exam = getStudentExam(studentId, sessionId);
   if (!exam) throw new HttpError("No live examination", 404);
+  if (exam.pausePhase !== null) throw new HttpError("The examination is paused", 409);
   const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
   if (!manifest.resources.some((resource) => resource.key === resourceKey && resource.kind === "audio")) {
     throw new HttpError("Audio resource not found", 404);
@@ -398,16 +463,17 @@ function studentAudioContext(studentId: string, sessionId: string, resourceKey: 
       paperId: exam.paperId,
       resourceKey,
       responseId: exam.responseId,
+      run: exam.run,
     },
   };
 }
 
 function availableAudioTiming(exam: StudentExamRow) {
   if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
+  if (exam.pausePhase !== null) throw new HttpError("The examination is paused", 409);
   const timing = timingFor(exam);
-  const now = Date.now();
-  const phase = phaseForResponse(timing, now);
-  if (exam.submittedAt !== null || !phase?.responseAllowed || now >= timing.deadline) {
+  const phase = phaseForResponse(timing);
+  if (exam.submittedAt !== null || !phase?.responseAllowed || timing.examNow >= timing.deadline) {
     throw new HttpError("Response is not available", 409);
   }
   return timing;
@@ -418,14 +484,30 @@ function effectiveReadingTimeMinutes(storedMinutes: number): number {
 }
 
 function listAdminExamSessions(archived = false) {
-  return listExamSessions(archived).map((session) => ({
-    ...session,
-    readingTimeMinutes: effectiveReadingTimeMinutes(session.readingTimeMinutes),
-    phases: getPaper(session.paperId)?.manifest.phases,
-  }));
+  return listExamSessions(archived).map((session) => {
+    const phases = getPaper(session.paperId)?.manifest.phases;
+    // The projection clock shows standard time; per-candidate extra time is a
+    // candidate concern, matching the pre-pause display model.
+    const totalExamMs = phases?.length
+      ? phases.reduce((total, phase) => total + phase.durationMinutes * 60_000, 0)
+      : (effectiveReadingTimeMinutes(session.readingTimeMinutes) + session.durationMinutes) * 60_000;
+    return {
+      ...session,
+      startedAt: session.clockZeroAt ?? session.startedAt,
+      readingTimeMinutes: effectiveReadingTimeMinutes(session.readingTimeMinutes),
+      phases,
+      remainingMs: session.pausePhase ? Math.max(0, totalExamMs - session.runningMs) : null,
+    };
+  });
 }
 
 const privateLanAddresses = () => listLocalPrivateIpv4Interfaces().map(({ address }) => address);
+const verifiedEnglishLocal = () => verifiedEnglishLocalOrigin({
+  lanOrigin: network.lanOrigin,
+  port,
+  addresses: privateLanAddresses(),
+  resolvedAddresses: englishLocalAddresses(),
+});
 
 function classroomNetworkApiState() {
   const snapshot = classroomNetwork.snapshot();
@@ -439,7 +521,11 @@ function classroomNetworkApiState() {
     // The saved preference remains private in the runtime state until selected.
     address: snapshot.lanOrigin === null ? null : snapshot.selectedAddress,
     selectedAddress: snapshot.selectedAddress,
-    studentUrl: `${studentJoinOrigin({ lanOrigin: network.lanOrigin, port, addresses: privateLanAddresses() })}/student`,
+    studentUrl: `${studentJoinOrigin({
+      lanOrigin: network.lanOrigin,
+      port,
+      addresses: privateLanAddresses(),
+    })}/student`,
     liveExam,
   };
 }
@@ -546,15 +632,23 @@ function publicManifest(manifest: PaperManifest, paperId: string, sessionId: str
  * the paper alone: no class, no candidate, no stored response. The frontend runs
  * it with preview mode on, so nothing a teacher types in a preview is ever sent.
  */
-function previewExamState(paper: NonNullable<ReturnType<typeof getPaper>>) {
+function previewExamState(paper: { row: PaperRow; manifest: PaperManifest }) {
   const startedAt = Date.now();
-  const timing = timingFor({
-    startedAt,
+  const input = {
+    readingTimeMinutes: effectiveReadingTimeMinutes(paper.manifest.readingTimeMinutes),
     durationMinutes: paper.row.durationMinutes,
-    readingTimeMinutes: paper.manifest.readingTimeMinutes,
     extraMinutes: 0,
-    manifestJson: paper.row.manifestJson,
-  });
+    phases: paper.manifest.phases,
+  };
+  const clock: ExamClock = { runningMs: 0, runStartedAt: startedAt, startedAt };
+  const timing: ExamTimeContext = {
+    clock,
+    frozen: false,
+    examNow: 0,
+    ...examTiming(input),
+    timeline: examTimeline(input),
+    wall: (examMs: number) => wallExamTime(clock, examMs) ?? startedAt + examMs,
+  };
   return {
     status: "live",
     preview: true,
@@ -562,10 +656,10 @@ function previewExamState(paper: NonNullable<ReturnType<typeof getPaper>>) {
     session: {
       id: PREVIEW_SESSION_ID,
       startedAt,
-      readingEndsAt: timing.readingEndsAt,
-      deadline: timing.deadline,
-      phase: publicPhase(phaseForResponse(timing, startedAt)),
-      timeline: timing.timeline.map(publicPhase),
+      readingEndsAt: timing.wall(timing.readingEndsAt),
+      deadline: timing.wall(timing.deadline),
+      phase: wallPublicPhase(examPhaseAt(timing.timeline, 0), timing),
+      timeline: timing.timeline.map((item) => wallPublicPhase(item, timing)),
     },
     paper: { ...publicManifest(paper.manifest, paper.row.id, PREVIEW_SESSION_ID), id: paper.row.id },
     response: {
@@ -636,6 +730,12 @@ function databaseError(error: Error): HttpError {
     || error.message.includes("No audio plays")
     || error.message.includes("live exam")
     || error.message.includes("Restore the class")
+    || error.message === "The examination is paused"
+    || error.message === "The examination changed; refresh and try again"
+    || error.message.includes("changed in another window")
+    || error.message.includes("Only a running exam can be paused")
+    || error.message.includes("Only a paused exam can be resumed")
+    || error.message.includes("Only a resumed lobby can be started again")
   ) return new HttpError(error.message, 409);
   return new HttpError(error.message, 400);
 }
@@ -655,7 +755,11 @@ async function handleApi(
     return json({
       setupRequired: localRequest && setupRequired(),
       role,
-      studentOrigin: studentJoinOrigin({ lanOrigin: network.lanOrigin, port, addresses: privateLanAddresses() }),
+      studentOrigin: studentJoinOrigin({
+        lanOrigin: network.lanOrigin,
+        port,
+        addresses: privateLanAddresses(),
+      }),
     });
   }
 
@@ -685,6 +789,26 @@ async function handleApi(
     return json({ role: "admin" }, 200, { "Set-Cookie": cookie });
   }
 
+  if (path === "/api/login/directory" && method === "GET") {
+    // Sign-in dropdowns for an open sitting. Candidate names are credentials,
+    // so the roster is published only for classes with a live or waiting
+    // exam session, on the classroom LAN, for the duration of the sitting.
+    const address = clientAddress(request, server);
+    if (!allowLoginAttempt(`directory:${address}`, DIRECTORY_ATTEMPT_LIMIT)) {
+      throw new HttpError("Too many requests. Try again later", 429);
+    }
+    const sittingClassIds = new Set(activeSessionClassIds());
+    const classRows = listClasses(false).filter((row) => sittingClassIds.has(row.id));
+    const studentRows = listStudents(false).filter((student) => sittingClassIds.has(student.classId));
+    const byClass = new Map<string, { id: string; name: string; students: { id: string; name: string }[] }>(
+      classRows.map((row) => [row.id, { id: row.id, name: row.name, students: [] as { id: string; name: string }[] }]),
+    );
+    for (const student of studentRows) {
+      byClass.get(student.classId)?.students.push({ id: student.id, name: student.name });
+    }
+    return json({ classes: [...byClass.values()] });
+  }
+
   if (path === "/api/login/student" && method === "POST") {
     const body = await jsonBody(request);
     const className = requiredText(body.className, "Class name", 100);
@@ -697,7 +821,7 @@ async function handleApi(
       `student:${address}:class:${classKey}`,
       `student:${address}:student:${classKey}:${studentKey}`,
     ];
-    if (limiterKeys.some((key) => !allowLoginAttempt(key))) {
+    if (limiterKeys.some((key, index) => !allowLoginAttempt(key, index === 0 ? LOGIN_ADDRESS_ATTEMPT_LIMIT : index === 1 ? LOGIN_CLASS_ATTEMPT_LIMIT : undefined))) {
       throw new HttpError("Too many login attempts. Try again later", 429);
     }
     const student = findStudentLogin(className, studentName);
@@ -1034,11 +1158,50 @@ async function handleApi(
   if (startMatch && method === "POST") {
     requireRole(request, "admin");
     const sessionId = startMatch[1] as string;
+    const existing = listExamSessions().find((item) => item.id === sessionId);
+    if (existing?.pausePhase === "lobby") {
+      const body = await jsonBody(request);
+      const expectedRun = requiredInteger(body.run, "Run", 1, 1_000_000);
+      startExamSessionAgain(sessionId, expectedRun);
+      publish(server, `class:${existing.classId}`, "exam-started");
+      publish(server, "admin", "admin-state");
+      return json({ id: sessionId, status: "live", pausePhase: null });
+    }
     startExamSession(sessionId);
     const session = listExamSessions().find((item) => item.id === sessionId);
     if (session) publish(server, `class:${session.classId}`, "exam-started");
     publish(server, "admin", "admin-state");
-    return json({ id: sessionId, status: "live" });
+    return json({ id: sessionId, status: "live", pausePhase: null });
+  }
+
+  const pauseMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/pause$/);
+  if (pauseMatch && method === "POST") {
+    requireRole(request, "admin");
+    const sessionId = pauseMatch[1] as string;
+    const body = await jsonBody(request);
+    const expectedRun = requiredInteger(body.run, "Run", 1, 1_000_000);
+    const session = listExamSessions().find((item) => item.id === sessionId);
+    pauseExamSession(sessionId, expectedRun);
+    // Active listens cannot finish while frozen; restore their allowance.
+    for (const refund of audioPlayback.activeRefundsForSession(sessionId)) {
+      refundAudioPlay(refund.responseId, refund.resourceKey);
+    }
+    if (session) publish(server, `class:${session.classId}`, "exam-paused");
+    publish(server, "admin", "admin-state");
+    return json({ id: sessionId, status: "live", pausePhase: "paused" });
+  }
+
+  const resumeMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/resume$/);
+  if (resumeMatch && method === "POST") {
+    requireRole(request, "admin");
+    const sessionId = resumeMatch[1] as string;
+    const body = await jsonBody(request);
+    const expectedRun = requiredInteger(body.run, "Run", 1, 1_000_000);
+    const session = listExamSessions().find((item) => item.id === sessionId);
+    resumeExamSessionToLobby(sessionId, expectedRun);
+    if (session) publish(server, `class:${session.classId}`, "exam-lobby");
+    publish(server, "admin", "admin-state");
+    return json({ id: sessionId, status: "live", pausePhase: "lobby" });
   }
 
   const endMatch = path.match(/^\/api\/admin\/sessions\/([a-f0-9-]+)\/end$/);
@@ -1086,25 +1249,53 @@ async function handleApi(
     if (!exam) throw new HttpError("Student response is not available for this examination", 409);
 
     const timing = timingFor(exam);
-    if (exam.sessionStatus === "live" && exam.submittedAt === null && Date.now() >= timing.deadline + DEADLINE_GRACE_MS) {
-      submitResponse(exam.responseId);
+    if (exam.sessionStatus === "live" && exam.submittedAt === null && !timing.frozen && timing.examNow >= timing.deadline + DEADLINE_GRACE_MS) {
+      submitResponse(exam.responseId, exam.run);
       exam.submittedAt = Date.now();
       publish(server, "admin", "admin-state");
     }
+
+    const studentStatus = exam.sessionStatus === "ended" ? "history"
+      : exam.submittedAt !== null ? "submitted"
+      : timing.frozen ? (exam.pausePhase === "paused" ? "paused" : "lobby")
+      : exam.joinedRun === exam.run ? "live"
+      : "awaiting-join";
+
+    if (timing.frozen || studentStatus === "awaiting-join") {
+      return json({
+        status: studentStatus,
+        student: { name: student.name },
+        session: {
+          id: exam.sessionId,
+          paperTitle: exam.paperTitle,
+          status: exam.sessionStatus,
+          pausePhase: timing.frozen ? exam.pausePhase : null,
+          startedAt: timing.wall(0),
+          remainingMs: Math.max(0, timing.deadline - timing.examNow),
+          run: exam.run,
+          joined: exam.joinedRun === exam.run,
+        },
+        serverTime: Date.now(),
+      });
+    }
+
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
-    const phase = phaseForResponse(timing, Date.now());
+    const phase = phaseForResponse(timing);
     return json({
-      status: exam.sessionStatus === "ended" ? "history" : exam.submittedAt === null ? "live" : "submitted",
+      status: studentStatus,
       student: { name: student.name, extraMinutes: student.extraMinutes },
       session: {
         id: exam.sessionId,
         status: exam.sessionStatus,
-        startedAt: exam.startedAt,
+        startedAt: timing.wall(0) ?? exam.startedAt,
         endedAt: exam.endedAt,
-        readingEndsAt: timing.readingEndsAt,
-        deadline: timing.deadline,
-        phase: publicPhase(phase),
-        timeline: timing.timeline.map(publicPhase),
+        readingEndsAt: timing.wall(timing.readingEndsAt),
+        deadline: timing.wall(timing.deadline),
+        phase: wallPublicPhase(phase, timing),
+        timeline: timing.timeline.map((item) => wallPublicPhase(item, timing)),
+        remainingMs: Math.max(0, timing.deadline - timing.examNow),
+        pausePhase: null,
+        run: exam.run,
       },
       paper: publicManifest(manifest, exam.paperId, exam.sessionId),
       response: {
@@ -1121,16 +1312,36 @@ async function handleApi(
     });
   }
 
+  if (path === "/api/student/join" && method === "POST") {
+    const actor = requireRole(request, "student");
+    const body = await jsonBody(request);
+    const sessionId = requiredText(body.sessionId, "Session", 64);
+    const exam = getStudentExam(actor.actorId, sessionId);
+    if (!exam || exam.sessionStatus !== "live" || exam.submittedAt !== null) {
+      throw new HttpError("No live examination", 404);
+    }
+    if (exam.joinedRun === exam.run) return json({ joined: true, run: exam.run });
+    const run = joinCurrentRun(actor.actorId, sessionId);
+    publish(server, "admin", "admin-state");
+    return json({ joined: true, run });
+  }
+
   if (path === "/api/student/response" && method === "PUT") {
     const actor = requireRole(request, "student");
     const body = await jsonBody(request, RESPONSE_BODY_BYTES);
     const sessionId = requiredText(body.sessionId, "Session", 64);
+    const mountedRun = requiredInteger(body.run, "Run", 1, 1_000_000);
     const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam) throw new HttpError("No live examination", 404);
     if (exam.sessionStatus !== "live") throw new HttpError("No live examination", 404);
+    if (exam.pausePhase !== null) throw new HttpError("The examination is paused", 409);
+    // The editor mounts for one run: a save from before a pause or restart is
+    // stale even though the sitting is live again, and an unadmitted
+    // candidate (who skipped Join) must not write into the resumed run.
+    if (mountedRun !== exam.run) throw new HttpError("The examination changed; refresh and try again", 409);
+    if (exam.joinedRun !== exam.run) throw new HttpError("Join the examination before continuing", 409);
     const timing = timingFor(exam);
-    const now = Date.now();
-    const phases = eligibleResponsePhases(timing, now);
+    const phases = eligibleResponsePhases(timing);
     if (phases.length === 0) throw new HttpError("Student entry is locked during this exam phase", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
     const validated = await validatedResponse(body, manifest);
@@ -1141,16 +1352,16 @@ async function handleApi(
       flagsJson: JSON.stringify(validated.flags),
       notepad: validated.notepad,
     };
-    if (now >= timing.deadline) {
-      if (now <= timing.deadline + DEADLINE_GRACE_MS) {
-        const submittedAt = saveAndSubmitResponse(exam.responseId, payload);
+    if (timing.examNow >= timing.deadline) {
+      if (timing.examNow <= timing.deadline + DEADLINE_GRACE_MS) {
+        const submittedAt = saveAndSubmitResponse(exam.responseId, payload, mountedRun);
         publish(server, "admin", "admin-state");
         return json({ savedAt: submittedAt, submittedAt, expired: true });
       }
-      if (exam.submittedAt === null) submitResponse(exam.responseId);
+      if (exam.submittedAt === null) submitResponse(exam.responseId, mountedRun);
       throw new HttpError("Time has expired and the response was submitted", 409);
     }
-    saveResponse(exam.responseId, payload);
+    saveResponse(exam.responseId, payload, mountedRun);
     touchStudent(actor.actorId);
     publish(server, "admin", "admin-state");
     return json({ savedAt: Date.now() });
@@ -1160,19 +1371,22 @@ async function handleApi(
     const actor = requireRole(request, "student");
     const body = await jsonBody(request, RESPONSE_BODY_BYTES);
     const sessionId = requiredText(body.sessionId, "Session", 64);
+    const mountedRun = requiredInteger(body.run, "Run", 1, 1_000_000);
     const exam = getStudentExam(actor.actorId, sessionId);
     if (!exam) throw new HttpError("No live examination", 404);
     if (exam.sessionStatus !== "live" || exam.submittedAt !== null) throw new HttpError("Response is not available", 409);
+    if (exam.pausePhase !== null) throw new HttpError("The examination is paused", 409);
+    if (mountedRun !== exam.run) throw new HttpError("The examination changed; refresh and try again", 409);
+    if (exam.joinedRun !== exam.run) throw new HttpError("Join the examination before continuing", 409);
     const timing = timingFor(exam);
-    const now = Date.now();
-    const phase = phaseForResponse(timing, now);
+    const phase = phaseForResponse(timing);
     if (!phase?.responseAllowed) throw new HttpError("Student entry is locked during this exam phase", 409);
     if (!phase.canSubmit) throw new HttpError("Final submission opens in the last work section", 409);
     const manifest = JSON.parse(exam.manifestJson) as PaperManifest;
     const validated = await validatedResponse(body, manifest);
     assertResponseWithinPhases(exam, manifest, validated, [phase]);
-    if (now > timing.deadline + DEADLINE_GRACE_MS) {
-      submitResponse(exam.responseId);
+    if (timing.examNow > timing.deadline + DEADLINE_GRACE_MS) {
+      submitResponse(exam.responseId, mountedRun);
       throw new HttpError("Time has expired and the last saved response was submitted", 409);
     }
     const submittedAt = saveAndSubmitResponse(exam.responseId, {
@@ -1180,7 +1394,7 @@ async function handleApi(
       selectedQuestionId: validated.selectedQuestionId,
       flagsJson: JSON.stringify(validated.flags),
       notepad: validated.notepad,
-    });
+    }, mountedRun);
     publish(server, "admin", "admin-state");
     return json({ submittedAt });
   }
@@ -1194,7 +1408,7 @@ async function handleApi(
     const timing = availableAudioTiming(exam);
     const usedPlays = getAudioPlayCount(exam.responseId, resourceKey);
     if (usedPlays >= AUDIO_PLAY_LIMIT) throw new HttpError("Both audio listens have been used", 409);
-    const { playToken } = audioPlayback.issue(identity, timing.deadline);
+    const { playToken } = audioPlayback.issue(identity, timing.wall(timing.deadline) ?? Date.now());
     return json({
       plays: usedPlays,
       maxPlays: AUDIO_PLAY_LIMIT,
@@ -1216,7 +1430,7 @@ async function handleApi(
       playToken,
       identity,
       body.durationSeconds,
-      () => incrementAudioPlay(exam.responseId, resourceKey),
+      () => incrementAudioPlay(exam.responseId, resourceKey, exam.run),
     );
     publish(server, "admin", "admin-state");
     return json(started);
@@ -1278,6 +1492,7 @@ async function handleApi(
           paperId,
           resourceKey: assetKey,
           responseId: exam.responseId,
+          run: exam.run,
         }, {
           method,
           rangeHeader: request.headers.get("range"),
@@ -1310,7 +1525,7 @@ const server = Bun.serve<SocketData>({
     try {
       const remoteAddress = activeServer.requestIP(request)?.address;
       const localRequest = isLoopbackAddress(remoteAddress);
-      if (!isExpectedRequestAuthority(url, port, remoteAddress, network.lanOrigin)) {
+      if (!isExpectedRequestAuthority(url, port, remoteAddress, network.lanOrigin, verifiedEnglishLocal())) {
         throw new HttpError("Misdirected request", 421);
       }
       if (url.pathname === "/ws") {

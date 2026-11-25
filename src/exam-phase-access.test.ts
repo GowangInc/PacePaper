@@ -28,7 +28,6 @@ const manifest = parseManifest({
 });
 
 const timeline = examTimeline({
-  startedAt: 0,
   readingTimeMinutes: 0,
   durationMinutes: 25,
   extraMinutes: 0,

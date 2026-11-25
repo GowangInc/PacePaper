@@ -81,23 +81,25 @@ export function isLoopbackAddress(address: string | null | undefined): boolean {
   const ipv4 = normalized.startsWith("::ffff:") ? normalized.slice(7) : normalized;
   return /^127(?:\.\d{1,3}){3}$/u.test(ipv4);
 }
-
 export function isExpectedRequestAuthority(
   url: URL,
   expectedPort: number,
   clientAddress: string | null | undefined,
   lanOrigin: string | null,
+  verifiedAliasOrigin: string | null = null,
 ): boolean {
   if (url.protocol !== "http:" || requestPort(url) !== expectedPort) return false;
   if (isLoopbackAddress(clientAddress)) return LOOPBACK_AUTHORITIES.has(url.hostname.toLowerCase());
-  return lanOrigin !== null && url.origin === lanOrigin;
+  return lanOrigin !== null && (url.origin === lanOrigin || url.origin === verifiedAliasOrigin);
 }
 
 const LAN_STUDENT_API_METHODS: Readonly<Record<string, ReadonlySet<string>>> = {
   "/api/bootstrap": new Set(["GET"]),
+  "/api/login/directory": new Set(["GET"]),
   "/api/login/student": new Set(["POST"]),
   "/api/logout": new Set(["POST"]),
   "/api/student/state": new Set(["GET"]),
+  "/api/student/join": new Set(["POST"]),
   "/api/student/response": new Set(["PUT"]),
   "/api/student/submit": new Set(["POST"]),
   "/api/student/audio-play": new Set(["POST"]),
@@ -114,20 +116,41 @@ export function isLanStudentApiRequest(pathname: string, method: string): boolea
   return LAN_STUDENT_API_METHODS[pathname]?.has(normalizedMethod) ?? false;
 }
 
+/** Returns the alias only when it resolves to the currently enabled physical LAN address. */
+export function verifiedEnglishLocalOrigin({
+  lanOrigin,
+  port,
+  addresses,
+  resolvedAddresses,
+}: {
+  lanOrigin: string | null;
+  port: number;
+  addresses: readonly string[];
+  resolvedAddresses: readonly string[];
+}): string | null {
+  if (!lanOrigin) return null;
+  const hostname = new URL(lanOrigin).hostname;
+  if (!isPrivateIpv4Address(hostname) || !addresses.includes(hostname) || !resolvedAddresses.includes(hostname)) return null;
+  return `http://english.local:${port}`;
+}
+
 /**
- * The origin students should open: the classroom-sharing origin when active,
- * otherwise this machine's first private LAN address. Never a loopback host
- * when a real interface exists, because student devices cannot reach 127.0.0.1.
+ * The origin students should open: verified classroom-sharing alias, otherwise
+ * the classroom-sharing origin, otherwise this machine's first private LAN address.
  */
 export function studentJoinOrigin({
   lanOrigin,
   port,
   addresses,
+  preferredOrigin = null,
 }: {
   lanOrigin: string | null;
   port: number;
   addresses: readonly string[];
+  preferredOrigin?: string | null;
 }): string {
+  if (preferredOrigin && lanOrigin) return preferredOrigin;
   if (lanOrigin) return lanOrigin;
   return `http://${addresses[0] ?? "127.0.0.1"}:${port}`;
 }
+

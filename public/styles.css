@@ -394,6 +394,18 @@ legend {
   animation: wait-spin 1.3s linear infinite;
 }
 
+/* Pause screen: a hand holding the TEST IS PAUSED sign, in the page palette. */
+.pause-hand {
+  width: min(15rem, 60vw);
+  height: auto;
+  margin: 0 auto var(--space-6);
+  color: var(--color-accent-strong);
+}
+
+.pause-shell h2 {
+  margin-bottom: var(--space-3);
+}
+
 @keyframes wait-spin {
   to { transform: rotate(1turn); }
 }

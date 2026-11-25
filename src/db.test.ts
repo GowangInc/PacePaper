@@ -57,6 +57,13 @@ describe("database schema migration", () => {
     const sessionColumns = database.db.query<{ name: string; notnull: number }, []>("PRAGMA table_info(exam_sessions)").all();
     expect(sessionColumns.find(({ name }) => name === "duration_minutes_override")).toMatchObject({ notnull: 0 });
     expect(sessionColumns.find(({ name }) => name === "reading_time_minutes_override")).toMatchObject({ notnull: 0 });
+    // Class-wide pause columns migrate additively onto the legacy database.
+    expect(sessionColumns.find(({ name }) => name === "run")).toMatchObject({ notnull: 1 });
+    expect(sessionColumns.find(({ name }) => name === "running_ms")).toMatchObject({ notnull: 1 });
+    expect(sessionColumns.find(({ name }) => name === "run_started_at")).toMatchObject({ notnull: 0 });
+    expect(sessionColumns.find(({ name }) => name === "pause_phase")).toMatchObject({ notnull: 0 });
+    const responseColumns = database.db.query<{ name: string; notnull: number }, []>("PRAGMA table_info(responses)").all();
+    expect(responseColumns.find(({ name }) => name === "extra_minutes_snapshot")).toMatchObject({ notnull: 0 });
   });
 
   test("quarantines duplicate legacy sign-in names without losing their records", () => {
@@ -411,6 +418,32 @@ describe("student examination selection", () => {
     questions: [{ id: "q1", label: "Question 1", prompt: "Respond.", type: "essay", marks: 10, resourceKeys: [] }],
   });
 
+  test("publishes sign-in directories only for open sittings", () => {
+    const directoryClass = database.createClass("Directory Gate");
+    database.createStudent({ classId: directoryClass.id, name: "Directory Student", extraMinutes: 0 });
+    const otherClass = database.createClass("Directory Ended");
+    database.createStudent({ classId: otherClass.id, name: "Ended Student", extraMinutes: 0 });
+    const openPaper = database.createPaper({ manifest: paperManifest, assets: [] });
+    const endedPaper = database.createPaper({ manifest: paperManifest, assets: [] });
+
+    const draftSession = database.createExamSession(directoryClass.id, openPaper.id);
+    const liveSession = database.createExamSession(directoryClass.id, openPaper.id);
+    database.startExamSession(liveSession);
+    const endedSession = database.createExamSession(otherClass.id, endedPaper.id);
+    database.startExamSession(endedSession);
+    database.endExamSession(endedSession);
+
+    const classIds = new Set(database.activeSessionClassIds());
+    expect(classIds.has(directoryClass.id)).toBe(true);
+    expect(classIds.has(otherClass.id)).toBe(false);
+
+    // Ending and archiving every session in the class stops publication.
+    database.endExamSession(liveSession);
+    database.archiveExamSession(liveSession);
+    database.archiveExamSession(draftSession);
+    expect(new Set(database.activeSessionClassIds()).has(directoryClass.id)).toBe(false);
+  });
+
   test("keeps responses independent when the same student takes the same paper in two sessions", () => {
     const schoolClass = database.createClass("Repeat Sessions");
     const student = database.createStudent({
@@ -438,7 +471,7 @@ describe("student examination selection", () => {
       selectedQuestionId: null,
       flagsJson: "[]",
       notepad: "",
-    });
+    }, 1);
 
     expect(database.getStudentExam(student.id, firstSessionId)?.submittedAt).not.toBeNull();
     expect(database.getStudentExam(student.id, secondSessionId)).toBeNull();
@@ -523,7 +556,7 @@ describe("student examination selection", () => {
 
     expect(database.getAudioPlayCount(exam.responseId, "recording-1")).toBe(0);
     const attempts = await Promise.allSettled(Array.from({ length: 3 }, async () => (
-      database.incrementAudioPlay(exam.responseId, "recording-1")
+      database.incrementAudioPlay(exam.responseId, "recording-1", 1)
     )));
     expect(attempts.filter((attempt) => attempt.status === "fulfilled").map((attempt) => attempt.value).sort()).toEqual([1, 2]);
     const rejected = attempts.find((attempt) => attempt.status === "rejected");
@@ -690,7 +723,7 @@ describe("reversible class, student, and exam lifecycle", () => {
       selectedQuestionId: null,
       flagsJson: "[]",
       notepad: "",
-    });
+    }, 1);
     database.archiveStudent(student.id);
     expect(database.findAuthSession("live-conflict-token")).toBeNull();
     expect(database.listExamSessions()).toContainEqual(expect.objectContaining({
@@ -758,7 +791,7 @@ describe("reversible class, student, and exam lifecycle", () => {
       selectedQuestionId: "q1",
       flagsJson: "[]",
       notepad: "Student notepad content",
-    });
+    }, 1);
     database.endExamSession(sessionId);
     database.archiveExamSession(sessionId);
     database.archiveStudent(student.id);
@@ -819,7 +852,7 @@ describe("candidate answer timeline", () => {
     selectedQuestionId: null,
     flagsJson: "[]",
     notepad: "",
-  }, base + offsetMs);
+  }, 1, base + offsetMs);
 
   test("coalesces writes into writing windows and skips unchanged saves", () => {
     saveAt("First", 0);
@@ -846,7 +879,7 @@ describe("candidate answer timeline", () => {
       selectedQuestionId: "q1",
       flagsJson: JSON.stringify(["q1"]),
       notepad: "Check paragraph two",
-    }, submittedAt);
+    }, 1, submittedAt);
 
     const revisions = database.getResponseRevisionLog(sessionId, responseId)!.revisions;
     expect(revisions).toHaveLength(before + 1);
@@ -862,7 +895,7 @@ describe("candidate answer timeline", () => {
       selectedQuestionId: null,
       flagsJson: "[]",
       notepad: "",
-    }, submittedAt + 1_000)).toThrow("Response is already submitted");
+    }, 1, submittedAt + 1_000)).toThrow("Response is already submitted");
     expect(database.getResponseRevisionLog(sessionId, responseId)!.revisions).toHaveLength(before + 1);
 
     const otherSessionId = database.createExamSession(schoolClass.id, paper.id);
@@ -885,7 +918,7 @@ describe("candidate answer timeline", () => {
       selectedQuestionId: null,
       flagsJson: "[]",
       notepad: "",
-    }, base + offsetMs);
+    }, 1, base + offsetMs);
     const times = () => database.getResponseRevisionLog(largeSessionId, largeResponseId)!.revisions.map((revision) => revision.at);
 
     saveAt(100_000, 0);
@@ -894,5 +927,117 @@ describe("candidate answer timeline", () => {
     expect(times()).toEqual([base + 25_000]);
     saveAt(140_000, 70_000);
     expect(times()).toEqual([base + 25_000, base + 70_000]);
+  });
+});
+
+describe("class-wide pause and resume", () => {
+  const pauseManifest = parseManifest({
+    version: 1,
+    title: "Pause Paper",
+    subject: "test-subject",
+    subjectLabel: "Test Subject",
+    level: "SL",
+    paper: "Paper 1",
+    durationMinutes: 30,
+    readingTimeMinutes: 0,
+    instructions: "Answer the question.",
+    mode: "essay",
+    maximumMarks: 10,
+    selectionMode: "all",
+    sourceClassification: "teacher-authored",
+    exportAuthorized: true,
+    resources: [],
+    questions: [{ id: "q1", label: "Question 1", prompt: "Respond.", type: "essay", marks: 10, resourceKeys: [] }],
+  });
+  const pausePaper = database.createPaper({ manifest: pauseManifest, assets: [] });
+  const pauseClass = database.createClass("Pause Test");
+  const standard = database.createStudent({ classId: pauseClass.id, name: "Standard Candidate", extraMinutes: 0 });
+  const accommodated = database.createStudent({ classId: pauseClass.id, name: "Extra Time Candidate", extraMinutes: 15 });
+  const pauseSessionId = database.createExamSession(pauseClass.id, pausePaper.id);
+  const answerPayload = {
+    answersJson: JSON.stringify({ q1: "Answer during the sitting" }),
+    selectedQuestionId: null,
+    flagsJson: "[]",
+    notepad: "",
+  };
+
+  database.startExamSession(pauseSessionId);
+  const standardExam = database.getStudentExam(standard.id, pauseSessionId)!;
+  const accommodatedExam = database.getStudentExam(accommodated.id, pauseSessionId)!;
+  database.saveResponse(standardExam.responseId, answerPayload, 1);
+
+  test("snapshots each candidate's extra-time allowance at first start", () => {
+    expect(standardExam.extraMinutes).toBe(0);
+    expect(accommodatedExam.extraMinutes).toBe(15);
+    database.updateStudent({ id: accommodated.id, classId: pauseClass.id, name: "Extra Time Candidate", extraMinutes: 0 });
+    expect(database.getStudentExam(accommodated.id, pauseSessionId)?.extraMinutes).toBe(15);
+  });
+
+  test("pauses a running exam and advances the run fence", () => {
+    database.pauseExamSession(pauseSessionId, 1);
+    const row = database.listExamSessions().find(({ id }) => id === pauseSessionId)!;
+    expect(row.pausePhase).toBe("paused");
+    expect(row.run).toBe(2);
+    expect(row.runningMs).toBeGreaterThan(0);
+    expect(row.startedAt).not.toBeNull();
+  });
+
+  test("rejects writes from the paused run and preserves admitted work", () => {
+    expect(() => database.saveResponse(standardExam.responseId, answerPayload, 1))
+      .toThrow("The examination is paused");
+    expect(() => database.submitResponse(standardExam.responseId, 2)).toThrow("The examination is paused");
+    expect(() => database.incrementAudioPlay(standardExam.responseId, "recording-1", 1))
+      .toThrow("The examination is paused");
+    expect(database.getStudentExam(standard.id, pauseSessionId)?.submittedAt).toBeNull();
+  });
+
+  test("keeps writes frozen in the lobby and starts again from the same sitting", () => {
+    database.resumeExamSessionToLobby(pauseSessionId, 2);
+    const lobby = database.listExamSessions().find(({ id }) => id === pauseSessionId)!;
+    expect(lobby.pausePhase).toBe("lobby");
+    expect(lobby.run).toBe(2);
+    expect(() => database.saveResponse(standardExam.responseId, answerPayload, 2)).toThrow("The examination is paused");
+
+    // Only candidates who join the lobby are admitted to the next run.
+    expect(database.joinCurrentRun(standard.id, pauseSessionId)).toBe(2);
+    database.startExamSessionAgain(pauseSessionId, 2);
+    const resumed = database.listExamSessions().find(({ id }) => id === pauseSessionId)!;
+    expect(resumed.pausePhase).toBeNull();
+    expect(resumed.run).toBe(3);
+    expect(resumed.joinedCount).toBe(1);
+    expect(resumed.candidateCount).toBe(2);
+    database.saveResponse(standardExam.responseId, answerPayload, 3);
+    expect(database.getStudentExam(standard.id, pauseSessionId)?.answersJson).toContain("Answer during the sitting");
+  });
+
+  test("keeps a candidate who skipped Join out of the resumed run", () => {
+    const skipped = database.getStudentExam(accommodated.id, pauseSessionId)!;
+    expect(skipped.joinedRun).toBe(1);
+    expect(skipped.joinedRun).not.toBe(skipped.run);
+    // A late arrival can still join the resumed run and then enter.
+    expect(database.joinCurrentRun(accommodated.id, pauseSessionId)).toBe(3);
+    expect(database.getStudentExam(accommodated.id, pauseSessionId)?.joinedRun).toBe(3);
+  });
+
+  test("refuses stale teacher commands and wrong-state transitions", () => {
+    expect(() => database.pauseExamSession(pauseSessionId, 2)).toThrow("changed in another window");
+    expect(() => database.resumeExamSessionToLobby(pauseSessionId, 2)).toThrow("Only a paused exam can be resumed");
+    expect(() => database.startExamSessionAgain(pauseSessionId, 2)).toThrow("Only a resumed lobby can be started again");
+  });
+
+  test("ends a frozen sitting without restarting its clock", () => {
+    database.pauseExamSession(pauseSessionId, 3);
+    const frozen = database.listExamSessions().find(({ id }) => id === pauseSessionId)!;
+    expect(frozen.pausePhase).toBe("paused");
+    const frozenRunningMs = frozen.runningMs;
+    database.endExamSession(pauseSessionId);
+    const ended = database.listExamSessions().find(({ id }) => id === pauseSessionId)!;
+    expect(ended.status).toBe("ended");
+    expect(ended.pausePhase).toBeNull();
+    expect(ended.startedAt).not.toBeNull();
+    expect(ended.runningMs).toBeGreaterThanOrEqual(frozenRunningMs);
+    expect(database.getStudentExam(standard.id, pauseSessionId)?.submittedAt).not.toBeNull();
+    // The class slot is released: a new sitting for the same class can be created.
+    expect(() => database.createExamSession(pauseClass.id, pausePaper.id)).not.toThrow();
   });
 });

@@ -119,6 +119,15 @@ export interface ExamSessionRow {
   candidateCount: number;
   submittedCount: number;
   activeCount: number;
+  /** Candidates admitted to the current run (joined the lobby or were seeded). */
+  joinedCount: number;
+  run: number;
+  pausePhase: "paused" | "lobby" | null;
+  runningMs: number;
+  runStartedAt: number | null;
+  /** Wall time examination time zero maps to for the current run (projection anchor). */
+  clockZeroAt: number | null;
+  remainingMs: number | null;
 }
 
 export interface StudentExamRow {
@@ -141,6 +150,12 @@ export interface StudentExamRow {
   updatedAt: number;
   submittedAt: number | null;
   extraMinutes: number;
+  /** The run this candidate joined; the live exam only admits a matching run. */
+  joinedRun: number | null;
+  run: number;
+  pausePhase: "paused" | "lobby" | null;
+  runningMs: number;
+  runStartedAt: number | null;
 }
 
 export interface StudentExamSessionRow {
@@ -157,6 +172,7 @@ export interface StudentExamSessionRow {
   endedAt: number | null;
   createdAt: number;
   submittedAt: number | null;
+  pausePhase: "paused" | "lobby" | null;
 }
 
 export interface ResponsePayload {
@@ -718,6 +734,7 @@ export function updateExamSessionTiming(sessionId: string, readingTimeMinutes: n
            duration_minutes_override = $durationMinutes
      WHERE id = $sessionId
        AND status IN ('draft', 'live')
+       AND pause_phase IS NULL
        AND archived_at IS NULL
   `).run({ sessionId, readingTimeMinutes, durationMinutes });
   if (changed.changes !== 1) throw new Error("Only a ready or running exam can have its timing changed");
@@ -738,26 +755,153 @@ export function startExamSession(sessionId: string): void {
     if (!session) throw new Error("Active exam session not found");
     if (session.status !== "draft") throw new Error("Only a draft session can be started");
     const now = Date.now();
-    db.query("UPDATE exam_sessions SET status = 'live', started_at = $now WHERE id = $sessionId")
-      .run({ now, sessionId });
-    const students = db.query<{ id: string }, { classId: string }>(
-      "SELECT id FROM students WHERE class_id = $classId AND archived_at IS NULL",
+    db.query(`
+      UPDATE exam_sessions
+         SET status = 'live', started_at = $now, run = 1, running_ms = 0, run_started_at = $now, pause_phase = NULL
+       WHERE id = $sessionId
+    `).run({ now, sessionId });
+    const students = db.query<{ id: string; extraMinutes: number }, { classId: string }>(
+      "SELECT id, extra_minutes AS extraMinutes FROM students WHERE class_id = $classId AND archived_at IS NULL",
     ).all({ classId: session.classId });
     for (const student of students) {
+      // The extra-time allowance is fixed at first start so roster edits made
+      // while the sitting is paused cannot move a candidate's deadline.
       db.query(`
-        INSERT INTO responses (id, session_id, student_id, updated_at)
-        VALUES ($id, $sessionId, $studentId, $now)
-      `).run({ id: crypto.randomUUID(), sessionId, studentId: student.id, now });
+        INSERT INTO responses (id, session_id, student_id, updated_at, extra_minutes_snapshot, joined_run)
+        VALUES ($id, $sessionId, $studentId, $now, $extraMinutes, 1)
+      `).run({ id: crypto.randomUUID(), sessionId, studentId: student.id, now, extraMinutes: student.extraMinutes });
     }
   });
   start();
+}
+
+/** Live examination time for a session row at wall time now, frozen when paused. */
+function effectiveExamMsFor(row: {
+  pausePhase: string | null;
+  startedAt: number | null;
+  runningMs: number;
+  runStartedAt: number | null;
+}, now: number): number {
+  if (row.pausePhase !== null) return row.runningMs;
+  if (row.runStartedAt !== null) return Math.max(0, row.runningMs + (now - row.runStartedAt));
+  if (row.startedAt !== null) return Math.max(0, now - row.startedAt);
+  return 0;
+}
+
+export function pauseExamSession(sessionId: string, expectedRun: number): void {
+  const pause = db.transaction(() => {
+    const session = db.query<{
+      status: ExamStatus;
+      pausePhase: string | null;
+      run: number;
+      startedAt: number | null;
+      runningMs: number;
+      runStartedAt: number | null;
+    }, { sessionId: string }>(`
+      SELECT status, pause_phase AS pausePhase, run, started_at AS startedAt,
+             running_ms AS runningMs, run_started_at AS runStartedAt
+        FROM exam_sessions
+       WHERE id = $sessionId AND archived_at IS NULL
+    `).get({ sessionId });
+    if (!session) throw new Error("Live exam session not found");
+    if (session.status !== "live" || session.pausePhase !== null) {
+      throw new Error("Only a running exam can be paused");
+    }
+    if (session.run !== expectedRun) throw new Error("The exam changed in another window. Reload the dashboard");
+    const runningMs = effectiveExamMsFor(session, Date.now());
+    const changed = db.query(`
+      UPDATE exam_sessions
+         SET running_ms = $runningMs, pause_phase = 'paused', run = run + 1
+       WHERE id = $sessionId AND pause_phase IS NULL AND run = $expectedRun
+    `).run({ sessionId, runningMs, expectedRun });
+    if (changed.changes !== 1) throw new Error("The exam changed in another window. Reload the dashboard");
+  });
+  pause();
+}
+
+export function resumeExamSessionToLobby(sessionId: string, expectedRun: number): void {
+  const resume = db.transaction(() => {
+    const session = db.query<{ status: ExamStatus; pausePhase: string | null; run: number }, { sessionId: string }>(`
+      SELECT status, pause_phase AS pausePhase, run FROM exam_sessions WHERE id = $sessionId AND archived_at IS NULL
+    `).get({ sessionId });
+    if (!session) throw new Error("Paused exam session not found");
+    if (session.status !== "live" || session.pausePhase !== "paused") {
+      throw new Error("Only a paused exam can be resumed");
+    }
+    if (session.run !== expectedRun) throw new Error("The exam changed in another window. Reload the dashboard");
+    const changed = db.query(`
+      UPDATE exam_sessions SET pause_phase = 'lobby'
+       WHERE id = $sessionId AND pause_phase = 'paused' AND run = $expectedRun
+    `).run({ sessionId, expectedRun });
+    if (changed.changes !== 1) throw new Error("The exam changed in another window. Reload the dashboard");
+  });
+  resume();
+}
+
+/**
+ * Records a candidate's lobby Join for the current run. Allowed while the
+ * sitting waits in the lobby and, for a late arrival, while it runs — a
+ * candidate who missed the lobby is not locked out of the whole sitting.
+ */
+export function joinCurrentRun(studentId: string, sessionId: string): number {
+  const join = db.transaction(() => {
+    const session = db.query<{ status: ExamStatus; pausePhase: string | null; run: number }, { sessionId: string }>(`
+      SELECT status, pause_phase AS pausePhase, run FROM exam_sessions WHERE id = $sessionId AND archived_at IS NULL
+    `).get({ sessionId });
+    if (!session || session.status !== "live") throw new Error("No live examination");
+    if (session.pausePhase !== "lobby" && session.pausePhase !== null) {
+      throw new Error("The examination is paused");
+    }
+    const changed = db.query(`
+      UPDATE responses
+         SET joined_run = $run
+       WHERE session_id = $sessionId
+         AND student_id = $studentId
+         AND submitted_at IS NULL
+    `).run({ sessionId, studentId, run: session.run });
+    if (changed.changes !== 1) throw new Error("Response is not available");
+    return session.run;
+  });
+  return join();
+}
+
+export function startExamSessionAgain(sessionId: string, expectedRun: number): void {
+  const restart = db.transaction(() => {
+    const session = db.query<{ status: ExamStatus; pausePhase: string | null; run: number }, { sessionId: string }>(`
+      SELECT status, pause_phase AS pausePhase, run FROM exam_sessions WHERE id = $sessionId AND archived_at IS NULL
+    `).get({ sessionId });
+    if (!session) throw new Error("Paused exam session not found");
+    if (session.status !== "live" || session.pausePhase !== "lobby") {
+      throw new Error("Only a resumed lobby can be started again");
+    }
+    if (session.run !== expectedRun) throw new Error("The exam changed in another window. Reload the dashboard");
+    const changed = db.query(`
+      UPDATE exam_sessions
+         SET pause_phase = NULL, run_started_at = $now, run = run + 1
+       WHERE id = $sessionId AND pause_phase = 'lobby' AND run = $expectedRun
+    `).run({ sessionId, expectedRun, now: Date.now() });
+    if (changed.changes !== 1) throw new Error("The exam changed in another window. Reload the dashboard");
+    // Candidates who joined the lobby are admitted to the new run; everyone
+    // else keeps their previous admission and stays out until they Join.
+    db.query(`
+      UPDATE responses
+         SET joined_run = joined_run + 1
+       WHERE session_id = $sessionId
+         AND joined_run = $expectedRun
+         AND submitted_at IS NULL
+    `).run({ sessionId, expectedRun });
+  });
+  restart();
 }
 
 export function endExamSession(sessionId: string): void {
   const end = db.transaction(() => {
     const now = Date.now();
     const changed = db.query(`
-      UPDATE exam_sessions SET status = 'ended', ended_at = $now
+      UPDATE exam_sessions
+         SET status = 'ended', ended_at = $now, pause_phase = NULL, run_started_at = NULL,
+             running_ms = CASE WHEN pause_phase IS NULL AND run_started_at IS NOT NULL
+                               THEN running_ms + $now - run_started_at ELSE running_ms END
        WHERE id = $sessionId AND status = 'live'
     `).run({ now, sessionId });
     if (changed.changes !== 1) throw new Error("Live exam session not found");
@@ -779,11 +923,11 @@ export type StudentFocusEventRow = {
 };
 
 export function recordStudentFocusEvent(sessionId: string, studentId: string, kind: "focus_lost" | "focus_gained"): void {
-  // Only a live session produces meaningful integrity events.
-  const live = db.query<{ status: ExamStatus }, { sessionId: string }>(
-    "SELECT status FROM exam_sessions WHERE id = $sessionId",
+  // Only a live, unfrozen session produces meaningful integrity events.
+  const live = db.query<{ status: ExamStatus; pausePhase: string | null }, { sessionId: string }>(
+    "SELECT status, pause_phase AS pausePhase FROM exam_sessions WHERE id = $sessionId",
   ).get({ sessionId });
-  if (live?.status !== "live") return;
+  if (live?.status !== "live" || live.pausePhase !== null) return;
   db.query(`
     INSERT INTO student_focus_events (id, session_id, student_id, kind, at)
     VALUES ($id, $sessionId, $studentId, $kind, $at)
@@ -839,9 +983,24 @@ export function listSessionFocusByStudent(sessionId: string): StudentFocusSummar
   return [...byStudent.values()].sort((a, b) => a.studentName.localeCompare(b.studentName));
 }
 
+/**
+ * Classes with an exam session that has not ended (live or waiting to start).
+ * The sign-in directory publishes candidate names only for these classes, and
+ * only while the sitting is open; an ended session stops publishing even
+ * before the teacher archives it.
+ */
+export function activeSessionClassIds(): string[] {
+  return db.query<{ classId: string }, Record<string, never>>(`
+    SELECT DISTINCT class_id AS classId
+      FROM exam_sessions
+     WHERE archived_at IS NULL
+       AND status IN ('live', 'draft')
+  `).all({}).map((row) => row.classId);
+}
+
 export function listExamSessions(archived = false): ExamSessionRow[] {
   const onlineCutoff = Date.now() - 20_000;
-  return db.query<ExamSessionRow, { onlineCutoff: number; archived: number }>(`
+  const rows = db.query<ExamSessionRow, { onlineCutoff: number; archived: number }>(`
     SELECT sessions.id,
            sessions.class_id AS classId,
            classes.name AS className,
@@ -857,8 +1016,14 @@ export function listExamSessions(archived = false): ExamSessionRow[] {
            sessions.ended_at AS endedAt,
            sessions.created_at AS createdAt,
            sessions.archived_at AS archivedAt,
+           sessions.run AS run,
+           sessions.pause_phase AS pausePhase,
+           sessions.running_ms AS runningMs,
+           sessions.run_started_at AS runStartedAt,
            COUNT(responses.id) AS candidateCount,
            COALESCE(SUM(CASE WHEN responses.submitted_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS submittedCount,
+           COALESCE(SUM(CASE WHEN responses.joined_run = sessions.run AND responses.submitted_at IS NULL
+                             THEN 1 ELSE 0 END), 0) AS joinedCount,
            COALESCE(SUM(CASE WHEN students.archived_at IS NULL AND students.last_seen_at >= $onlineCutoff
                              THEN 1 ELSE 0 END), 0) AS activeCount
       FROM exam_sessions AS sessions
@@ -872,7 +1037,16 @@ export function listExamSessions(archived = false): ExamSessionRow[] {
      GROUP BY sessions.id
      ORDER BY sessions.created_at DESC
      LIMIT 30
-  `).all({ onlineCutoff, archived: Number(archived) });
+  `).all({ onlineCutoff, archived: Number(archived) }) as ExamSessionRow[];
+  // The projection clock measures exam time from this anchor. While a sitting
+  // is frozen the anchor is left in place, so the frozen display uses
+  // remainingMs instead of wall arithmetic.
+  return rows.map((row) => ({
+    ...row,
+    pausePhase: row.pausePhase ?? null,
+    clockZeroAt: row.runStartedAt !== null ? row.runStartedAt - row.runningMs : row.startedAt,
+    remainingMs: null,
+  }));
 }
 
 type LifecycleTable = "classes" | "students" | "exam_sessions";
@@ -1038,6 +1212,7 @@ export function listStudentExamSessions(studentId: string): StudentExamSessionRo
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,
            sessions.created_at AS createdAt,
+           sessions.pause_phase AS pausePhase,
            responses.submitted_at AS submittedAt
       FROM students
       JOIN exam_sessions AS sessions ON sessions.class_id = students.class_id
@@ -1069,6 +1244,10 @@ export function getStudentExam(studentId: string, sessionId: string): StudentExa
            papers.manifest_json AS manifestJson,
            sessions.started_at AS startedAt,
            sessions.ended_at AS endedAt,
+           sessions.run AS run,
+           sessions.pause_phase AS pausePhase,
+           sessions.running_ms AS runningMs,
+           sessions.run_started_at AS runStartedAt,
            responses.id AS responseId,
            responses.answers_json AS answersJson,
            responses.selected_question_id AS selectedQuestionId,
@@ -1077,7 +1256,8 @@ export function getStudentExam(studentId: string, sessionId: string): StudentExa
            responses.notepad,
            responses.updated_at AS updatedAt,
            responses.submitted_at AS submittedAt,
-           students.extra_minutes AS extraMinutes
+           responses.joined_run AS joinedRun,
+           COALESCE(responses.extra_minutes_snapshot, students.extra_minutes) AS extraMinutes
       FROM responses
       JOIN exam_sessions AS sessions ON sessions.id = responses.session_id
       JOIN papers ON papers.id = sessions.paper_id
@@ -1179,7 +1359,21 @@ export function getResponseRevisionLog(sessionId: string, responseId: string): R
   return { ...response, revisions };
 }
 
-export const saveResponse = db.transaction((responseId: string, payload: ResponsePayload, at = Date.now()): void => {
+function writableRunOf(responseId: string, expectedRun: number): { run: number; pausePhase: string | null } {
+  const session = db.query<{ run: number; pausePhase: string | null }, { responseId: string }>(`
+    SELECT sessions.run AS run, sessions.pause_phase AS pausePhase
+      FROM responses
+      JOIN exam_sessions AS sessions ON sessions.id = responses.session_id
+     WHERE responses.id = $responseId
+  `).get({ responseId });
+  if (!session) throw new Error("Response is not available");
+  if (session.pausePhase !== null) throw new Error("The examination is paused");
+  if (session.run !== expectedRun) throw new Error("The examination changed; refresh and try again");
+  return session;
+}
+
+export const saveResponse = db.transaction((responseId: string, payload: ResponsePayload, expectedRun: number, at = Date.now()): void => {
+  writableRunOf(responseId, expectedRun);
   const changed = db.query(`
     UPDATE responses
        SET answers_json = $answersJson,
@@ -1193,7 +1387,8 @@ export const saveResponse = db.transaction((responseId: string, payload: Respons
   recordResponseRevision(responseId, payload, at);
 });
 
-export const saveAndSubmitResponse = db.transaction((responseId: string, payload: ResponsePayload, at = Date.now()): number => {
+export const saveAndSubmitResponse = db.transaction((responseId: string, payload: ResponsePayload, expectedRun: number, at = Date.now()): number => {
+  writableRunOf(responseId, expectedRun);
   const changed = db.query(`
     UPDATE responses
        SET answers_json = $answersJson,
@@ -1210,7 +1405,8 @@ export const saveAndSubmitResponse = db.transaction((responseId: string, payload
 });
 
 
-export function submitResponse(responseId: string): void {
+export function submitResponse(responseId: string, expectedRun: number): void {
+  writableRunOf(responseId, expectedRun);
   const now = Date.now();
   const changed = db.query(`
     UPDATE responses SET submitted_at = $now, updated_at = $now
@@ -1219,8 +1415,9 @@ export function submitResponse(responseId: string): void {
   if (changed.changes !== 1) throw new Error("Response is already submitted");
 }
 
-export function incrementAudioPlay(responseId: string, resourceKey: string): number {
+export function incrementAudioPlay(responseId: string, resourceKey: string, expectedRun: number): number {
   const increment = db.transaction(() => {
+    writableRunOf(responseId, expectedRun);
     const row = db.query<{ audioPlaysJson: string; submittedAt: number | null }, { responseId: string }>(`
       SELECT audio_plays_json AS audioPlaysJson, submitted_at AS submittedAt
         FROM responses WHERE id = $responseId
@@ -1235,6 +1432,24 @@ export function incrementAudioPlay(responseId: string, resourceKey: string): num
     return next;
   });
   return increment();
+}
+
+/** Restores one listen allowance when a pause interrupts active playback. */
+export function refundAudioPlay(responseId: string, resourceKey: string): void {
+  const refund = db.transaction(() => {
+    const row = db.query<{ audioPlaysJson: string; submittedAt: number | null }, { responseId: string }>(`
+      SELECT audio_plays_json AS audioPlaysJson, submitted_at AS submittedAt
+        FROM responses WHERE id = $responseId
+    `).get({ responseId });
+    if (!row || row.submittedAt !== null) return;
+    const plays = JSON.parse(row.audioPlaysJson) as Record<string, number>;
+    const current = plays[resourceKey];
+    if (!Number.isInteger(current) || (current ?? 0) <= 0) return;
+    plays[resourceKey] = (current ?? 0) - 1;
+    db.query("UPDATE responses SET audio_plays_json = $audioPlaysJson WHERE id = $responseId")
+      .run({ audioPlaysJson: JSON.stringify(plays), responseId });
+  });
+  refund();
 }
 
 export function getAudioPlayCount(responseId: string, resourceKey: string): number {

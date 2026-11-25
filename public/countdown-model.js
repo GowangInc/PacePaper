@@ -49,6 +49,20 @@ export function countdownPhase(config, now) {
       endedAt,
     };
   }
+  if (config.sessionStatus === "live" && config.pausePhase) {
+    // Frozen sitting: the server publishes the remaining time; wall arithmetic
+    // would wrongly show zero.
+    return {
+      phase: "paused",
+      label: config.pausePhase === "lobby" ? "In the lobby" : "Test is paused",
+      remainingMs: Number.isFinite(Number(config.remainingMs)) ? Math.max(0, Number(config.remainingMs)) : 0,
+      nextLabel: "Paused by the teacher",
+      startAt,
+      readingEndsAt,
+      endsAt,
+      paused: true,
+    };
+  }
   if (currentTime < startAt) {
     return {
       phase: "before-start",
@@ -127,7 +141,7 @@ export function countdownPhase(config, now) {
 }
 
 export function canPersistCandidateTiming(session) {
-  return Boolean((session?.status === "draft" || session?.status === "live") && !session.phases?.length);
+  return Boolean((session?.status === "draft" || (session?.status === "live" && !session?.pausePhase)) && !session.phases?.length);
 }
 
 export function formatCountdown(milliseconds) {
@@ -196,6 +210,8 @@ export function configFromSession(session, now) {
   return {
     sessionId: session.id,
     sessionStatus: session.status,
+    pausePhase: session.pausePhase ?? null,
+    remainingMs: session.remainingMs ?? null,
     endedAt: session.endedAt ?? null,
     title: session.paperTitle,
     subtitle: [session.className, session.subjectLabel, session.level, session.paper].filter(Boolean).join(" · "),

@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createConnection } from "node:net";
+import { lookup } from "node:dns/promises";
 import { Database } from "bun:sqlite";
 import { listLocalPrivateIpv4Interfaces } from "./src/classroom-network.ts";
 
@@ -11,15 +12,19 @@ import { listLocalPrivateIpv4Interfaces } from "./src/classroom-network.ts";
 // previously got wrong: the state held a saved address but the request guard
 // only accepted loopback until a dashboard click.
 const lanAddress = listLocalPrivateIpv4Interfaces()[0]?.address ?? null;
+const resolvedEnglishLocal = await lookup("english.local", { all: true, verbatim: true })
+  .then((records) => records.filter((record) => record.family === 4).map((record) => record.address))
+  .catch(() => []);
+const usesEnglishLocal = lanAddress !== null && resolvedEnglishLocal.includes(lanAddress);
 // ponytail: fixed high port; a collision fails the test loudly rather than silently.
 const port = 19914;
 const origin = `http://127.0.0.1:${port}`;
 
-function directGetStatus(value: string): Promise<number> {
+function directGetStatus(value: string, connectHost?: string): Promise<number> {
   const target = new URL(value);
   const { promise, resolve, reject } = Promise.withResolvers<number>();
   let settled = false;
-  const socket = createConnection({ host: target.hostname, port: Number(target.port) });
+  const socket = createConnection({ host: connectHost ?? target.hostname, port: Number(target.port) });
   const finish = (result: number | Error) => {
     if (settled) return;
     settled = true;
@@ -78,12 +83,14 @@ async function stopServer(server: Bun.Subprocess): Promise<void> {
 describe.skipIf(lanAddress === null)("packaged launch classroom sharing", () => {
   test("serves the LAN student address from launch, and again after a restart", async () => {
     const dataDirectory = mkdtempSync(join(tmpdir(), "pacepaper-lan-startup-test-"));
-    const lanStudentUrl = `http://${lanAddress}:${port}/student`;
+    const ipStudentUrl = `http://${lanAddress}:${port}/student`;
+    const lanStudentUrl = ipStudentUrl;
     try {
       const first = await startServer(dataDirectory);
       try {
         expect(first.signInUrl).toBe(lanStudentUrl);
-        expect(await directGetStatus(lanStudentUrl)).toBe(200);
+        expect(await directGetStatus(lanStudentUrl, lanAddress!)).toBe(200);
+        if (usesEnglishLocal) expect(await directGetStatus(`http://english.local:${port}/student`, lanAddress!)).toBe(200);
 
         const login = await fetch(`${origin}/api/login/admin`, {
           method: "POST",
@@ -103,7 +110,8 @@ describe.skipIf(lanAddress === null)("packaged launch classroom sharing", () => 
       const restarted = await startServer(dataDirectory);
       try {
         expect(restarted.signInUrl).toBe(lanStudentUrl);
-        expect(await directGetStatus(lanStudentUrl)).toBe(200);
+        expect(await directGetStatus(lanStudentUrl, lanAddress!)).toBe(200);
+        if (usesEnglishLocal) expect(await directGetStatus(`http://english.local:${port}/student`, lanAddress!)).toBe(200);
       } finally {
         await stopServer(restarted.server);
       }
