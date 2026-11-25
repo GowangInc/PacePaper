@@ -124,32 +124,9 @@ class HttpError extends Error {
 }
 
 const port = Number(process.env.PORT ?? 9148);
-// english.local resolves over mDNS, which can miss a lookup: refresh the
-// address cache on a timer so the verified alias survives network changes
-// instead of being fixed to whatever DNS returned at startup.
-const ENGLISH_LOCAL_TTL_MS = 60_000;
-const englishLocalCache: { addresses: string[]; resolvedAt: number; pending: Promise<void> | null } = {
-  addresses: [],
-  resolvedAt: 0,
-  pending: null,
-};
-async function refreshEnglishLocalAddresses(): Promise<void> {
-  englishLocalCache.pending = null;
-  try {
-    const records = await lookup("english.local", { all: true, verbatim: true });
-    englishLocalCache.addresses = records.filter((record) => record.family === 4).map((record) => record.address);
-  } catch {
-    englishLocalCache.addresses = [];
-  }
-  englishLocalCache.resolvedAt = Date.now();
-}
-function englishLocalAddresses(): string[] {
-  if (Date.now() - englishLocalCache.resolvedAt > ENGLISH_LOCAL_TTL_MS && !englishLocalCache.pending) {
-    englishLocalCache.pending = refreshEnglishLocalAddresses();
-  }
-  return englishLocalCache.addresses;
-}
-await refreshEnglishLocalAddresses();
+const englishLocalAddresses = await lookup("english.local", { all: true, verbatim: true })
+  .then((records) => records.filter((record) => record.family === 4).map((record) => record.address))
+  .catch(() => []);
 if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error("PORT must be a valid TCP port");
 const managedClassroomNetwork = process.env.DIGITALDP_MANAGED_NETWORK === "1";
 const managedDatabasePath = managedClassroomNetwork ? process.env.DIGITALDP_DB : undefined;
@@ -506,7 +483,7 @@ const verifiedEnglishLocal = () => verifiedEnglishLocalOrigin({
   lanOrigin: network.lanOrigin,
   port,
   addresses: privateLanAddresses(),
-  resolvedAddresses: englishLocalAddresses(),
+  resolvedAddresses: englishLocalAddresses,
 });
 
 function classroomNetworkApiState() {
